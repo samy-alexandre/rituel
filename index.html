@@ -169,7 +169,27 @@
   .social-btn svg { width: 18px; height: 18px; }
 
   .auth-legal { text-align: center; font-size: 11px; color: var(--muted); margin-top: 22px; line-height: 1.5; }
-  .auth-legal a { color: var(--ink-soft); text-decoration: underline; }
+  .auth-legal a { color: var(--ink-soft); text-decoration: underline; cursor: pointer; }
+
+  /* Consentement RGPD */
+  .consent { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--ink-soft); line-height: 1.45; cursor: pointer; padding: 2px 4px; }
+  .consent input { width: 18px; height: 18px; margin-top: 1px; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
+  .consent a { color: var(--accent-deep); text-decoration: underline; cursor: pointer; }
+
+  /* Page Politique de confidentialité (plein écran) */
+  .policy { position: fixed; inset: 0; background: var(--bg); z-index: 400; display: none; flex-direction: column; max-width: 480px; margin: 0 auto; }
+  @media (min-width:680px){ .policy { position: absolute; } }
+  .policy.open { display: flex; }
+  .policy-head { padding: 18px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .policy-head .ptitle { font-family: var(--serif); font-size: 18px; }
+  .policy-close { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--ink-soft); }
+  .policy-body { flex: 1; overflow-y: auto; padding: 20px 22px 40px; }
+  .policy-body h2 { font-family: var(--serif); font-size: 16px; font-weight: 500; margin: 22px 0 8px; color: var(--accent-deep); }
+  .policy-body h2:first-child { margin-top: 0; }
+  .policy-body p, .policy-body li { font-size: 13.5px; line-height: 1.6; color: var(--ink-soft); margin-bottom: 8px; }
+  .policy-body ul { padding-left: 18px; margin-bottom: 8px; }
+  .policy-body strong { color: var(--ink); }
+  .policy-note { background: var(--blush-soft); border-radius: 12px; padding: 12px 14px; font-size: 12px; color: var(--accent-deep); margin: 4px 0 16px; }
 
   /* ===== Onboarding ===== */
   #onboarding { display: none; flex-direction: column; min-height: 100vh; min-height: 100dvh; padding: 0; }
@@ -418,6 +438,7 @@
           <label>Mot de passe</label>
           <input type="password" id="signup-pass" placeholder="6 caractères minimum" autocomplete="new-password">
         </div>
+        <label class="consent"><input type="checkbox" id="signup-consent"><span>J'autorise Rituel à stocker mes photos et mes données pour me proposer un suivi beauté personnalisé. <a onclick="openPolicy()">Politique de confidentialité</a></span></label>
         <div class="auth-error" id="signup-error"></div>
         <button class="btn btn-accent" onclick="doSignup()">Créer mon compte</button>
       </div>
@@ -435,7 +456,7 @@
       </div>
 
       <div class="auth-legal">
-        En continuant, vous acceptez nos <a onclick="showToast('CGU — à rédiger')">Conditions</a> et notre <a onclick="showToast('Politique — à rédiger')">Politique de confidentialité</a>.
+        En continuant, vous acceptez notre <a onclick="openPolicy()">Politique de confidentialité</a>.
       </div>
     </div>
   </div>
@@ -714,9 +735,10 @@
     <div class="profile-section">
       <div class="eyebrow" style="margin-bottom:12px;padding-left:8px;">COMPTE</div>
       <div class="menu-list">
-        <div class="menu-item" onclick="showToast('Export bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Exporter mes données</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="exportData()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Exporter mes données</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openPolicy()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-4z" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Politique de confidentialité</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="doLogout()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Se déconnecter</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
-        <div class="menu-item" onclick="resetApp()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label" style="color:var(--accent);">Réinitialiser l'app</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="deleteAccount()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label" style="color:var(--accent);">Supprimer mon compte et mes données</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
       </div>
     </div>
 
@@ -736,6 +758,57 @@
   <button class="fab" onclick="document.getElementById('photo-input').click()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
   <div class="toast" id="toast"></div>
+
+  <!-- ====================== POLITIQUE DE CONFIDENTIALITÉ ====================== -->
+  <div class="policy" id="policy">
+    <div class="policy-head">
+      <div class="ptitle">Politique de confidentialité</div>
+      <button class="policy-close" onclick="closePolicy()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="policy-body">
+      <div class="policy-note">⚠️ Modèle de départ — à faire relire et à compléter avec tes coordonnées (nom, e-mail de contact) avant le lancement public. Ce n'est pas un conseil juridique.</div>
+
+      <p><strong>Dernière mise à jour :</strong> [DATE]</p>
+      <p>Rituel (« l'application ») accorde une grande importance à la protection de vos données, en particulier vos photos de peau, qui sont des données sensibles. Cette politique explique quelles données nous collectons, pourquoi, et quels sont vos droits, conformément au Règlement Général sur la Protection des Données (RGPD).</p>
+
+      <h2>1. Qui est responsable de vos données</h2>
+      <p>[TON NOM / TON STATUT], éditeur de l'application Rituel. Contact : [TON E-MAIL].</p>
+
+      <h2>2. Quelles données nous collectons</h2>
+      <ul>
+        <li><strong>Votre compte</strong> : adresse e-mail, prénom.</li>
+        <li><strong>Votre profil peau</strong> : type de peau, préoccupations, objectifs.</li>
+        <li><strong>Votre journal</strong> : photos de votre peau, humeur, notes, score peau.</li>
+      </ul>
+
+      <h2>3. Pourquoi nous les utilisons</h2>
+      <p>Uniquement pour vous fournir le service : suivre l'évolution de votre peau dans le temps et vous proposer des conseils beauté personnalisés. <strong>Nous ne vendons jamais vos données. Aucune publicité.</strong></p>
+
+      <h2>4. Sur quelle base légale</h2>
+      <p>Sur la base de <strong>votre consentement</strong>, recueilli à l'inscription. Vous pouvez le retirer à tout moment en supprimant votre compte.</p>
+
+      <h2>5. Où sont stockées vos données</h2>
+      <p>Vos données et vos photos sont hébergées de façon sécurisée par notre prestataire technique <strong>Supabase</strong>, sur des serveurs situés dans l'<strong>Union Européenne</strong>. Vos photos sont stockées dans un espace privé : vous seule pouvez y accéder.</p>
+
+      <h2>6. Combien de temps</h2>
+      <p>Tant que votre compte est actif. Si vous supprimez votre compte, vos photos, votre journal et votre profil sont effacés.</p>
+
+      <h2>7. Vos droits (RGPD)</h2>
+      <ul>
+        <li><strong>Accès et portabilité</strong> : exporter vos données depuis l'app (Profil → Exporter mes données).</li>
+        <li><strong>Suppression</strong> : effacer votre compte et toutes vos données (Profil → Supprimer mon compte).</li>
+        <li><strong>Rectification</strong> : modifier vos informations dans l'app.</li>
+        <li><strong>Retrait du consentement</strong> : à tout moment.</li>
+      </ul>
+      <p>Pour toute question, écrivez à [TON E-MAIL]. Vous pouvez aussi saisir la CNIL (www.cnil.fr) si vous estimez vos droits non respectés.</p>
+
+      <h2>8. Âge minimum</h2>
+      <p>L'application est réservée aux personnes de 15 ans et plus.</p>
+
+      <h2>9. Léa, votre coach beauté</h2>
+      <p>Léa est un assistant de conseil beauté, <strong>pas un professionnel de santé</strong>. Ses suggestions ne remplacent pas l'avis d'un dermatologue. Pour tout problème de peau persistant ou préoccupant, consultez un médecin.</p>
+    </div>
+  </div>
 </div>
 
 <!-- Librairie Supabase (backend : comptes, base de données, stockage photos) -->
@@ -759,6 +832,10 @@
   }
   function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
+  // ===== Politique de confidentialité =====
+  function openPolicy(){ document.getElementById('policy').classList.add('open'); }
+  function closePolicy(){ document.getElementById('policy').classList.remove('open'); }
+
   function setBtnLoading(btn, loading, labelIdle){
     if(!btn) return;
     btn.disabled = loading;
@@ -774,6 +851,7 @@
     if(!name){ err.textContent='Indiquez votre prénom.'; return; }
     if(!validEmail(email)){ err.textContent='E-mail invalide.'; return; }
     if(pass.length<6){ err.textContent='Mot de passe : 6 caractères minimum.'; return; }
+    if(!document.getElementById('signup-consent').checked){ err.textContent='Veuillez accepter la politique de confidentialité pour continuer.'; return; }
     setBtnLoading(btn, true);
     const { data, error } = await sb.auth.signUp({
       email, password: pass,
@@ -856,6 +934,43 @@
       type_peau: state.skinType,
       objectifs: JSON.stringify(state.concerns||[])
     }).eq('id', currentUser.id);
+  }
+
+  // ===== RGPD : export et suppression =====
+  async function exportData(){
+    if(!currentUser){ showToast('Connectez-vous d\'abord'); return; }
+    showToast('Préparation de l\'export…');
+    const profile = await loadProfile();
+    const { data: entries } = await sb.from('entries').select('*').eq('user_id', currentUser.id);
+    const payload = { compte:{ email: currentUser.email }, profil: profile, journal: entries||[], exporte_le: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mes-donnees-rituel.json';
+    a.click();
+    showToast('Vos données ont été exportées ✓');
+  }
+
+  async function deleteAccount(){
+    if(!currentUser){ showToast('Connectez-vous d\'abord'); return; }
+    if(!confirm('Supprimer votre compte ?\n\nVos photos, votre journal et votre profil seront définitivement effacés. Cette action est irréversible.')) return;
+    showToast('Suppression en cours…');
+    try{
+      // 1. supprimer les photos du stockage
+      const { data: files } = await sb.storage.from('photos').list(currentUser.id);
+      if(files && files.length){
+        await sb.storage.from('photos').remove(files.map(f=>`${currentUser.id}/${f.name}`));
+      }
+      // 2. supprimer journal + profil (autorisé par les règles de sécurité)
+      await sb.from('entries').delete().eq('user_id', currentUser.id);
+      await sb.from('profiles').delete().eq('id', currentUser.id);
+      // 3. déconnexion
+      await sb.auth.signOut();
+      alert('Votre compte et toutes vos données ont été supprimés.');
+      location.reload();
+    }catch(e){
+      showToast('Erreur lors de la suppression : '+e.message);
+    }
   }
 
   // ===== Onboarding =====
