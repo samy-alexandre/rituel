@@ -919,7 +919,7 @@
   // ===== Profil (table profiles) =====
   async function loadProfile(){
     if(!currentUser) return null;
-    const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+    const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
     return data;
   }
   function applyProfile(p){
@@ -931,11 +931,13 @@
   }
   async function saveProfile(){
     if(!currentUser) return;
-    await sb.from('profiles').update({
+    const { error } = await sb.from('profiles').upsert({
+      id: currentUser.id,
       prenom: state.name,
       type_peau: state.skinType,
       objectifs: JSON.stringify(state.concerns||[])
-    }).eq('id', currentUser.id);
+    });
+    if(error) console.warn('saveProfile:', error.message);
   }
 
   // ===== RGPD : export et suppression =====
@@ -1209,6 +1211,9 @@
       currentUser = session.user;
       const profile = await loadProfile();
       applyProfile(profile);
+      if(!state.name && currentUser.user_metadata && currentUser.user_metadata.prenom){
+        state.name = currentUser.user_metadata.prenom;
+      }
       if(profile && profile.type_peau){
         enterApp();
       } else {
