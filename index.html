@@ -1000,6 +1000,8 @@
     const btn=document.querySelector('.onb-page[data-page="4"] .btn');
     if(btn){ btn.disabled=true; btn.textContent='Un instant…'; }
     await saveProfile();
+    // filet de sécurité : on mémorise localement que l'onboarding est fait
+    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: state.concerns||[] })); }catch(e){}
     document.getElementById('onboarding').classList.remove('active');
     enterApp();
   }
@@ -1209,11 +1211,23 @@
     const { data:{ session } } = await sb.auth.getSession();
     if(session && session.user){
       currentUser = session.user;
-      const profile = await loadProfile();
+      let profile = await loadProfile();
+      // filet de sécurité : si la base ne renvoie pas le profil, on lit la copie locale
+      let fromCache = false;
+      if(!profile || !profile.type_peau){
+        try{
+          const cached = JSON.parse(localStorage.getItem('rituel_profile_'+currentUser.id) || 'null');
+          if(cached && cached.type_peau){
+            profile = { prenom: (profile&&profile.prenom)||cached.prenom, type_peau: cached.type_peau, objectifs: JSON.stringify(cached.objectifs||[]) };
+            fromCache = true;
+          }
+        }catch(e){}
+      }
       applyProfile(profile);
       if(!state.name && currentUser.user_metadata && currentUser.user_metadata.prenom){
         state.name = currentUser.user_metadata.prenom;
       }
+      if(fromCache){ saveProfile(); } // on tente de réparer la base en arrière-plan
       if(profile && profile.type_peau){
         enterApp();
       } else {
