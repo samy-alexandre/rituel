@@ -661,11 +661,13 @@
       <button style="background:none;border:none;cursor:pointer;color:var(--muted);" onclick="showToast('Bientôt disponible')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
     </div>
     <div class="chat-feed" id="chat-feed">
-      <div class="chat-day">AUJOURD'HUI · 09:42</div>
-      <div class="msg msg-ai">Bonjour 🌿 J'ai regardé vos photos de la semaine. Votre peau respire visiblement mieux qu'il y a 10 jours.</div>
-      <div class="msg-card"><div class="msg-card-title">✨ Ce qui marche</div><div class="msg-card-body">Hydratation matin + SPF quotidien + vitamine C. La trinité parfaite pour votre peau mixte avec taches.</div></div>
-      <div class="msg msg-ai">J'ai une suggestion pour le soir. On ajoute du niacinamide pour resserrer les pores de la zone T ?</div>
-      <div class="msg-suggestions"><button class="sugg" onclick="sendMsg('Oui, montre-moi')">Oui, montre-moi</button><button class="sugg" onclick="sendMsg('Pourquoi le niacinamide ?')">Pourquoi ?</button><button class="sugg" onclick="sendMsg('Pas maintenant')">Pas maintenant</button></div>
+      <div class="chat-day">VOTRE COACH BEAUTÉ</div>
+      <div class="msg msg-ai">Bonjour 🌸 Je suis Léa, votre coach beauté. Posez-moi vos questions sur votre peau, vos produits ou votre routine — je suis là pour vous accompagner.</div>
+      <div class="msg-suggestions" id="chat-starter">
+        <button class="sugg" onclick="leaQuick('Quelle routine du soir pour ma peau ?')">Quelle routine du soir ?</button>
+        <button class="sugg" onclick="leaQuick('Je peux mélanger rétinol et vitamine C ?')">Rétinol + vitamine C ?</button>
+        <button class="sugg" onclick="leaQuick('Comment estomper mes taches ?')">Estomper mes taches ?</button>
+      </div>
     </div>
     <div class="chat-input-bar">
       <textarea class="chat-input" id="chat-input" placeholder="Posez votre question…" rows="1" oninput="resizeChat(this)"></textarea>
@@ -1099,29 +1101,45 @@
     return data ? data.signedUrl : null;
   }
 
-  // ===== Chat =====
-  const coachReplies={
-    'Oui, montre-moi':{reply:"Parfait. Le niacinamide est un actif doux qui :",card:{title:'🌸 Niacinamide — pourquoi pour vous',body:"Resserre l'apparence des pores (2-4 sem.), régule le sébum de la zone T, et éclaircit doucement les taches."},followup:"Je suggère The Ordinary Niacinamide 10% (~7€) ou La Roche-Posay Effaclar (~15€). On l'ajoute à votre routine du soir ?",suggestions:["Ajoute-le","Une marque plus naturelle ?","Pas tout de suite"]},
-    'Pourquoi le niacinamide ?':{reply:"Excellente question 🌿 Le niacinamide (vit. B3) est un des actifs les mieux étudiés. Pour votre peau mixte avec taches, il :",bullets:["Régule le sébum en 2-3 semaines","Resserre l'apparence des pores","Renforce la barrière (moins de rougeurs)","Se combine avec la vit. C sans irriter"],followup:"On peut le marier avec presque tout. Vous voulez des suggestions de produits ?",suggestions:["Oui, montre-moi","Et les effets secondaires ?","Plus tard"]},
-    'Pas maintenant':{reply:"Aucun souci 🌷 Votre routine actuelle est déjà très belle. On en reparlera quand vous voudrez. Continuez vos photos quotidiennes — c'est ce qui me permet de bien vous guider.",suggestions:["Comment prendre la photo ?","Mes prochains objectifs ?"]},
-    'Ajoute-le':{reply:"C'est fait ✓ Ajouté à votre routine du soir, entre le nettoyant et l'hydratant. Premier essai ce soir — et photo demain matin pour suivre l'effet 🌸",suggestions:["Comment l'appliquer ?","Résultats en combien de temps ?"]}
-  };
+  // ===== Chat — vraie Léa via le backend sécurisé (/api/lea) =====
+  let leaHistory = [];
+  let leaBusy = false;
   function typingBubble(){ const t=document.createElement('div'); t.className='typing'; t.id='typing'; t.innerHTML='<span></span><span></span><span></span>'; return t; }
-  function sendMsg(text){
+  function leaQuick(text){ const s=document.getElementById('chat-starter'); if(s) s.remove(); sendMsg(text); }
+
+  async function sendMsg(text){
+    if(leaBusy) return;
     const feed=document.getElementById('chat-feed');
-    feed.querySelectorAll('.msg-suggestions').forEach(s=>s.remove());
+    const starter=document.getElementById('chat-starter'); if(starter) starter.remove();
     const u=document.createElement('div'); u.className='msg msg-user'; u.textContent=text; feed.appendChild(u); feed.scrollTop=feed.scrollHeight;
+    leaHistory.push({ role:'user', content:text });
     feed.appendChild(typingBubble()); feed.scrollTop=feed.scrollHeight;
-    setTimeout(()=>{
+    leaBusy=true;
+    try{
+      const res=await fetch('/api/lea',{
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({
+          messages: leaHistory,
+          profile: { name: state.name, skin: state.skinType, concern: (state.concerns||[]).join(', ') }
+        })
+      });
+      const data=await res.json();
       const tp=document.getElementById('typing'); if(tp) tp.remove();
-      const r=coachReplies[text]||{reply:"Très bonne question ! Donnez-moi quelques jours de données de plus et on creuse ça ensemble 🌿 Continuez votre routine en attendant.",suggestions:["Voir mes stats","Modifier ma routine"]};
-      const a=document.createElement('div'); a.className='msg msg-ai'; a.textContent=r.reply; feed.appendChild(a);
-      if(r.card){ const c=document.createElement('div'); c.className='msg-card'; c.innerHTML=`<div class="msg-card-title">${r.card.title}</div><div class="msg-card-body">${r.card.body}</div>`; feed.appendChild(c); }
-      if(r.bullets){ const b=document.createElement('div'); b.className='msg msg-ai'; b.innerHTML=r.bullets.map(x=>'• '+x).join('<br>'); feed.appendChild(b); }
-      if(r.followup){ const f=document.createElement('div'); f.className='msg msg-ai'; f.textContent=r.followup; feed.appendChild(f); }
-      if(r.suggestions){ const s=document.createElement('div'); s.className='msg-suggestions'; s.innerHTML=r.suggestions.map(x=>`<button class="sugg" onclick="sendMsg('${x.replace(/'/g,"\\'")}')">${x}</button>`).join(''); feed.appendChild(s); }
-      feed.scrollTop=feed.scrollHeight;
-    },900);
+      if(data && data.reply){
+        leaHistory.push({ role:'assistant', content:data.reply });
+        const a=document.createElement('div'); a.className='msg msg-ai'; a.textContent=data.reply; feed.appendChild(a);
+      } else {
+        const e=document.createElement('div'); e.className='msg msg-ai'; e.textContent="Désolée, je n'arrive pas à répondre là 🌿 Réessayez dans un instant.";
+        feed.appendChild(e);
+      }
+    }catch(err){
+      const tp=document.getElementById('typing'); if(tp) tp.remove();
+      const e=document.createElement('div'); e.className='msg msg-ai'; e.textContent="Connexion à Léa impossible pour l'instant 🌿 (Le service IA n'est peut-être pas encore activé.)";
+      feed.appendChild(e);
+    }finally{
+      leaBusy=false; feed.scrollTop=feed.scrollHeight;
+    }
   }
   function sendUserMsg(){ const i=document.getElementById('chat-input'); const t=i.value.trim(); if(!t) return; i.value=''; i.style.height='44px'; sendMsg(t); }
   function resizeChat(el){ el.style.height='44px'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
