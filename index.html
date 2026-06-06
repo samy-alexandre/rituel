@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no"/>
+<meta name="theme-color" content="#F7F1EA"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Rituel"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Rituel — Votre carnet de peau</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+  if('serviceWorker' in navigator){
+    const sw = `self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>clients.claim());self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))));`;
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'})));
+  }
+  const manifest = {
+    name:"Rituel",short_name:"Rituel",
+    description:"Votre carnet de peau quotidien",
+    start_url:".",display:"standalone",orientation:"portrait",
+    background_color:"#F7F1EA",theme_color:"#F7F1EA",
+    icons:[{src:"data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#C95A3F" rx="110"/><text x="256" y="350" font-family="serif" font-size="300" fill="#F7F1EA" text-anchor="middle" font-style="italic">R</text></svg>'),sizes:"512x512",type:"image/svg+xml",purpose:"any"}]
+  };
+  const ml = document.createElement('link');
+  ml.rel='manifest';
+  ml.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));
+  document.head.appendChild(ml);
+</script>
+
+<style>
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body { overscroll-behavior:none; }
+
+  :root {
+    --bg: #F7F1EA;
+    --bg-soft: #EFE6D9;
+    --surface: #FFFDFA;
+    --surface-warm: #FBF5ED;
+    --ink: #2E211C;
+    --ink-soft: #5E4D43;
+    --muted: #968779;
+    --line: #E7DCCB;
+    --accent: #C95A3F;       /* terracotta */
+    --accent-soft: #EBCDC0;
+    --accent-deep: #8E3C26;
+    --blush: #E8A6A0;        /* rose poudré */
+    --blush-soft: #F6E0DC;
+    --rose: #D98B86;
+    --sage: #7A9468;
+    --gold: #BD9A52;
+    --shadow: 0 1px 2px rgba(46,33,28,0.04), 0 8px 24px rgba(46,33,28,0.06);
+    --shadow-lg: 0 4px 12px rgba(46,33,28,0.08), 0 24px 48px rgba(46,33,28,0.12);
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Manrope', -apple-system, sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100vh; min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh; min-height: 100dvh;
+    position: relative;
+    background: var(--bg);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* ===== Desktop : app centrée dans un décor ===== */
+  @media (min-width: 680px) {
+    body {
+      background:
+        radial-gradient(circle at 12% 20%, var(--blush-soft) 0%, transparent 28%),
+        radial-gradient(circle at 88% 75%, #F0E6D6 0%, transparent 32%),
+        radial-gradient(circle at 70% 12%, #F3E2DB 0%, transparent 25%),
+        var(--bg-soft);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    body::before, body::after {
+      content: ''; position: fixed; width: 320px; height: 320px;
+      background: no-repeat center/contain;
+      opacity: 0.5; pointer-events: none; z-index: 0;
+    }
+    body::before {
+      left: 4%; top: 12%;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><g fill='none' stroke='%23C95A3F' stroke-width='1.2' opacity='0.45'><path d='M100 190 C100 130 100 90 100 50'/><path d='M100 120 C70 110 55 85 60 60 C90 70 100 95 100 120'/><path d='M100 100 C130 92 148 68 145 42 C115 50 100 78 100 100'/><path d='M100 75 C78 68 68 48 72 30 C92 40 100 58 100 75'/><circle cx='100' cy='42' r='10'/><circle cx='100' cy='42' r='4' fill='%23C95A3F'/></g></svg>");
+    }
+    body::after {
+      right: 4%; bottom: 10%; transform: scaleX(-1);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><g fill='none' stroke='%23E8A6A0' stroke-width='1.2' opacity='0.5'><path d='M100 190 C100 130 100 90 100 50'/><path d='M100 130 C68 122 52 96 58 70 C90 80 100 105 100 130'/><path d='M100 105 C132 98 150 72 146 46 C116 54 100 80 100 105'/><circle cx='100' cy='46' r='12'/><circle cx='88' cy='52' r='9'/><circle cx='112' cy='52' r='9'/><circle cx='100' cy='62' r='9'/><circle cx='100' cy='52' r='5' fill='%23E8A6A0'/></g></svg>");
+    }
+    #app {
+      height: 880px; max-height: calc(100vh - 48px);
+      border-radius: 46px;
+      box-shadow: var(--shadow-lg), 0 0 0 10px #1c1410, 0 0 0 12px #2a201b;
+      overflow: hidden; position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+    }
+    .scroll-host { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    /* Sur desktop, les éléments fixes se calent dans le cadre */
+    #app .nav, #app .chat-input-bar { position: absolute; }
+    #app .fab { position: absolute; }
+    #app .toast { position: absolute; }
+    #app .modal { position: absolute; }
+  }
+
+  /* Mobile : on garde la scroll-host comme conteneur normal */
+  @media (max-width: 679px) {
+    .scroll-host { min-height: 100vh; min-height: 100dvh; }
+  }
+
+  /* ===== Typo ===== */
+  .serif { font-family: var(--serif); font-weight: 400; font-variation-settings: "SOFT" 30, "WONK" 0; letter-spacing: -0.01em; }
+  .display { font-family: var(--serif); font-weight: 300; font-variation-settings: "SOFT" 50, "WONK" 1; letter-spacing: -0.03em; line-height: 1; }
+  .italic { font-style: italic; }
+  .eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+
+  /* ===== Screens ===== */
+  .screen { display: none; padding-bottom: 96px; animation: fadeIn .4s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== AUTH ===== */
+  #auth { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; padding: 0; position: relative; overflow: hidden; }
+  @media (min-width:680px){ #auth { min-height: 100%; } }
+  #auth.hidden { display: none; }
+  .auth-deco { position: absolute; top: -60px; right: -50px; width: 240px; height: 240px; opacity: 0.4; pointer-events: none; }
+  .auth-deco-2 { position: absolute; bottom: -40px; left: -60px; width: 220px; height: 220px; opacity: 0.3; pointer-events: none; transform: rotate(20deg); }
+  .auth-inner { flex: 1; display: flex; flex-direction: column; padding: 64px 28px 32px; position: relative; z-index: 1; }
+  .auth-brand { text-align: center; margin-bottom: 40px; }
+  .auth-mark { font-family: var(--serif); font-size: 64px; font-style: italic; font-weight: 300; color: var(--accent); line-height: 1; font-variation-settings: "SOFT" 100, "WONK" 1; }
+  .auth-tagline { font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--muted); letter-spacing: 0.04em; margin-top: 8px; }
+  .auth-floral { display: block; margin: 14px auto 0; width: 70px; opacity: 0.8; }
+
+  .auth-toggle { display: flex; background: var(--surface-warm); border-radius: 14px; padding: 4px; margin-bottom: 28px; border: 1px solid var(--line); }
+  .auth-tab { flex: 1; padding: 11px; border: none; background: transparent; border-radius: 10px; font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .25s; }
+  .auth-tab.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+  .auth-form { display: flex; flex-direction: column; gap: 14px; }
+  .auth-form.hidden { display: none; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; font-weight: 500; color: var(--ink-soft); letter-spacing: 0.02em; padding-left: 4px; }
+  .field input { padding: 15px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; font-family: var(--sans); font-size: 15px; color: var(--ink); transition: border-color .2s; }
+  .field input:focus { outline: none; border-color: var(--accent); }
+  .field input::placeholder { color: #C3B5A6; }
+  .auth-error { font-size: 12px; color: var(--accent); padding-left: 4px; min-height: 16px; }
+  .auth-forgot { text-align: right; font-size: 12px; color: var(--muted); cursor: pointer; margin-top: -4px; }
+
+  .auth-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; color: var(--muted); font-size: 12px; }
+  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  .social-btns { display: flex; flex-direction: column; gap: 10px; }
+  .social-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; transition: all .2s; }
+  .social-btn:active { transform: scale(0.98); background: var(--surface-warm); }
+  .social-btn svg { width: 18px; height: 18px; }
+
+  .auth-legal { text-align: center; font-size: 11px; color: var(--muted); margin-top: 22px; line-height: 1.5; }
+  .auth-legal a { color: var(--ink-soft); text-decoration: underline; }
+
+  /* ===== Onboarding ===== */
+  #onboarding { display: none; flex-direction: column; min-height: 100vh; min-height: 100dvh; padding: 0; }
+  @media (min-width:680px){ #onboarding { min-height: 100%; } }
+  #onboarding.active { display: flex; }
+  .onb-page { display: none; flex: 1; flex-direction: column; padding: 56px 28px 32px; animation: fadeIn .5s ease; position: relative; }
+  .onb-page.active { display: flex; }
+  .onb-floral-top { position: absolute; top: 18px; right: 24px; width: 56px; opacity: 0.55; }
+
+  .onb-progress { display: flex; gap: 6px; margin-bottom: 48px; margin-top: 8px; }
+  .onb-dot { flex: 1; height: 2px; background: var(--line); border-radius: 2px; transition: background .4s; }
+  .onb-dot.done { background: var(--accent); }
+
+  .onb-title { font-family: var(--serif); font-weight: 300; font-size: 36px; line-height: 1.08; letter-spacing: -0.025em; margin-bottom: 14px; }
+  .onb-title em { font-style: italic; font-weight: 400; color: var(--accent); font-variation-settings: "SOFT" 100, "WONK" 1; }
+  .onb-sub { color: var(--ink-soft); font-size: 16px; line-height: 1.5; margin-bottom: 36px; max-width: 360px; }
+
+  .onb-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+  .onb-opt { display: flex; align-items: center; gap: 16px; padding: 18px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; cursor: pointer; transition: all .2s; text-align: left; font-family: var(--sans); font-size: 15px; color: var(--ink); }
+  .onb-opt:active { transform: scale(0.98); }
+  .onb-opt.selected { border-color: var(--accent); background: var(--blush-soft); }
+  .onb-opt-emoji { font-size: 24px; }
+  .onb-opt-text { flex: 1; }
+  .onb-opt-title { font-weight: 500; }
+  .onb-opt-desc { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .onb-opt-check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; }
+  .onb-opt.selected .onb-opt-check { background: var(--accent); border-color: var(--accent); }
+  .onb-opt.selected .onb-opt-check::after { content: ''; width: 6px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
+
+  .onb-actions { margin-top: auto; padding-top: 24px; display: flex; flex-direction: column; gap: 12px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 24px; background: var(--ink); color: var(--bg); border: none; border-radius: 100px; font-family: var(--sans); font-size: 15px; font-weight: 500; cursor: pointer; transition: all .2s; min-height: 52px; width: 100%; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-accent { background: var(--accent); color: white; }
+  .btn-ghost { background: transparent; color: var(--ink-soft); }
+
+  .welcome-mark { font-family: var(--serif); font-size: 84px; font-style: italic; font-weight: 300; color: var(--accent); line-height: 1; margin-bottom: 12px; font-variation-settings: "SOFT" 100, "WONK" 1; }
+  .welcome-tagline { font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 40px; }
+
+  /* ===== Top bar ===== */
+  .topbar { padding: 24px 24px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-greet { display: flex; flex-direction: column; gap: 2px; }
+  .topbar-date { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  .topbar-name { font-family: var(--serif); font-size: 26px; font-weight: 300; letter-spacing: -0.02em; }
+  .topbar-name em { font-style: italic; color: var(--accent); font-variation-settings: "SOFT" 100, "WONK" 1; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--blush), var(--accent)); display: flex; align-items: center; justify-content: center; color: white; font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 18px; cursor: pointer; }
+
+  .photo-card { margin: 0 20px 24px; background: var(--surface); border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); position: relative; }
+  .photo-empty { aspect-ratio: 4/5; background: linear-gradient(170deg, #F8EBE2 0%, var(--blush-soft) 55%, #EBD3C8 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; cursor: pointer; position: relative; }
+  .photo-empty::before { content:''; position:absolute; inset:0; background-image: radial-gradient(circle at 20% 25%, rgba(255,255,255,0.5) 0%, transparent 45%), radial-gradient(circle at 82% 72%, rgba(232,166,160,0.3) 0%, transparent 55%); pointer-events:none;}
+  .photo-petals { position: absolute; top: 16px; right: 16px; width: 64px; opacity: 0.6; }
+  .photo-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.65); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; z-index: 1; }
+  .photo-icon svg { width: 28px; height: 28px; color: var(--accent-deep); }
+  .photo-empty-title { font-family: var(--serif); font-size: 24px; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 8px; position: relative; z-index: 1; color: var(--ink); }
+  .photo-empty-title em { font-style: italic; color: var(--accent-deep); font-variation-settings: "SOFT" 100, "WONK" 1; }
+  .photo-empty-sub { font-size: 13px; color: var(--ink-soft); max-width: 240px; position: relative; z-index: 1; }
+  .photo-display { position: relative; background: var(--bg-soft); }
+  .photo-display img { width:100%; height:auto; display:block; }
+  .photo-overlay { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; gap: 8px; }
+  .photo-chip { background: rgba(46,33,28,0.7); backdrop-filter: blur(10px); color: white; padding: 8px 14px; border-radius: 100px; font-size: 12px; font-weight: 500; }
+
+  .streak { display: flex; align-items: center; gap: 16px; margin: 0 20px 28px; padding: 18px 20px; background: var(--surface-warm); border-radius: 18px; border: 1px solid var(--line); }
+  .streak-flame { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #F5C892, var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .streak-text { flex: 1; }
+  .streak-num { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1; }
+  .streak-num em { font-style: italic; color: var(--accent); }
+  .streak-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .streak-mini { display: flex; gap: 3px; }
+  .streak-day { width: 6px; height: 18px; border-radius: 3px; background: var(--line); }
+  .streak-day.active { background: var(--accent); }
+
+  .section { padding: 0 20px; margin-bottom: 28px; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+  .section-title { font-family: var(--serif); font-size: 20px; font-weight: 400; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+  .section-title em { font-style: italic; color: var(--accent); font-variation-settings: "SOFT" 100, "WONK" 1; }
+  .section-title .sprig { width: 18px; opacity: 0.7; }
+  .section-more { font-size: 13px; color: var(--muted); cursor: pointer; }
+
+  .mood-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .mood-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; cursor: pointer; transition: all .2s; font-family: var(--sans); }
+  .mood-btn:active { transform: scale(0.95); }
+  .mood-btn.selected { background: var(--blush-soft); border-color: var(--accent); }
+  .mood-emoji { font-size: 24px; }
+  .mood-label { font-size: 11px; color: var(--muted); }
+  .mood-btn.selected .mood-label { color: var(--accent-deep); font-weight: 500; }
+
+  .routine-list { background: var(--surface); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
+  .routine-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
+  .routine-item:last-child { border-bottom: none; }
+  .routine-item:active { background: var(--surface-warm); }
+  .routine-check { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; }
+  .routine-item.done .routine-check { background: var(--sage); border-color: var(--sage); }
+  .routine-item.done .routine-check::after { content: ''; width: 6px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
+  .routine-info { flex: 1; }
+  .routine-name { font-size: 14px; font-weight: 500; }
+  .routine-item.done .routine-name { text-decoration: line-through; color: var(--muted); }
+  .routine-product { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .routine-time { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-tile { background: var(--surface); border-radius: 18px; padding: 18px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .stat-tile-label { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .stat-tile-value { font-family: var(--serif); font-size: 32px; font-weight: 300; letter-spacing: -0.02em; line-height: 1; }
+  .stat-tile-value em { font-style: italic; color: var(--accent); font-variation-settings: "SOFT" 100, "WONK" 1; }
+  .stat-tile-trend { font-size: 11px; color: var(--sage); margin-top: 8px; display: flex; align-items: center; gap: 4px; font-weight: 500; }
+  .stat-tile-trend.down { color: var(--accent); }
+
+  .journal-month { font-family: var(--serif); font-size: 14px; letter-spacing: 0.05em; color: var(--muted); padding: 0 24px 12px; text-transform: uppercase; }
+  .journal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 0 20px; }
+  .journal-cell { aspect-ratio: 1; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; background: var(--surface-warm); transition: transform .2s; }
+  .journal-cell:active { transform: scale(0.95); }
+  .journal-cell.empty { background: var(--surface-warm); border: 1px dashed var(--line); }
+  .journal-cell .skin-render { width: 100%; height: 100%; }
+  .journal-cell-date { position: absolute; top: 6px; left: 8px; font-size: 10px; color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.4); letter-spacing: 0.05em; }
+  .journal-cell.empty .journal-cell-date { color: var(--muted); text-shadow: none; }
+  .journal-cell-dot { position: absolute; bottom: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; }
+
+  /* ===== Chat ===== */
+  .chat-screen { display: none; flex-direction: column; height: 100vh; height: 100dvh; padding-bottom: 96px; }
+  @media (min-width:680px){ .chat-screen { height: 100%; } }
+  .chat-screen.active { display: flex; }
+  .chat-header { padding: 20px 20px 16px; background: var(--bg); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+  .chat-avatar-large { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--blush), var(--accent)); display: flex; align-items: center; justify-content: center; color: white; font-family: var(--serif); font-style: italic; font-size: 18px; position: relative; }
+  .chat-avatar-large::after { content: ''; position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: var(--sage); border: 2px solid var(--bg); border-radius: 50%; }
+  .chat-coach-name { font-family: var(--serif); font-size: 17px; }
+  .chat-coach-status { font-size: 12px; color: var(--sage); display: flex; align-items: center; gap: 4px; }
+  .chat-feed { flex: 1; overflow-y: auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; }
+  .chat-day { text-align: center; font-size: 11px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin: 8px 0; }
+  .msg { max-width: 78%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; word-wrap: break-word; animation: msgIn .3s ease; }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .msg-ai { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 6px; align-self: flex-start; }
+  .msg-user { background: var(--ink); color: var(--bg); border-bottom-right-radius: 6px; align-self: flex-end; }
+  .msg-card { background: linear-gradient(135deg, var(--blush-soft), var(--surface-warm)); border: 1px solid var(--accent-soft); border-radius: 18px; padding: 16px; max-width: 88%; align-self: flex-start; }
+  .msg-card-title { font-family: var(--serif); font-size: 15px; margin-bottom: 6px; color: var(--accent-deep); }
+  .msg-card-body { font-size: 13px; color: var(--ink-soft); }
+  .msg-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 4px; }
+  .sugg { padding: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 100px; font-size: 13px; cursor: pointer; transition: all .2s; font-family: var(--sans); color: var(--ink-soft); }
+  .sugg:active { transform: scale(0.97); background: var(--surface-warm); }
+  .typing { display: flex; gap: 4px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; border-bottom-left-radius: 6px; align-self: flex-start; width: fit-content; }
+  .typing span { width: 7px; height: 7px; background: var(--muted); border-radius: 50%; animation: bounce 1.2s infinite; }
+  .typing span:nth-child(2){ animation-delay: .2s; } .typing span:nth-child(3){ animation-delay: .4s; }
+  @keyframes bounce { 0%,60%,100%{ transform: translateY(0); opacity:.5;} 30%{ transform: translateY(-5px); opacity:1;} }
+  .chat-input-bar { position: fixed; bottom: 64px; left: 0; right: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: flex-end; max-width: 480px; margin: 0 auto; }
+  .chat-input { flex: 1; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; font-family: var(--sans); font-size: 14px; color: var(--ink); resize: none; max-height: 100px; min-height: 44px; line-height: 1.4; }
+  .chat-input:focus { outline: none; border-color: var(--accent); }
+  .chat-send { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .chat-send:disabled { background: var(--line); }
+
+  .profile-hero { padding: 24px 24px 32px; text-align: center; position: relative; }
+  .profile-floral { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 80px; opacity: 0.35; }
+  .profile-avatar-xl { width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, var(--blush), var(--accent)); display: flex; align-items: center; justify-content: center; color: white; font-family: var(--serif); font-style: italic; font-size: 38px; margin: 0 auto 16px; box-shadow: var(--shadow); position: relative; z-index: 1; }
+  .profile-name { font-family: var(--serif); font-size: 28px; font-weight: 300; letter-spacing: -0.02em; }
+  .profile-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .profile-badges { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .badge { padding: 6px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 100px; font-size: 11px; letter-spacing: 0.05em; color: var(--ink-soft); }
+  .badge-accent { background: var(--blush-soft); border-color: var(--accent-soft); color: var(--accent-deep); }
+
+  .profile-section { padding: 0 20px 24px; }
+  .menu-list { background: var(--surface); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
+  .menu-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
+  .menu-item:last-child { border-bottom: none; }
+  .menu-item:active { background: var(--surface-warm); }
+  .menu-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .menu-icon svg { width: 18px; height: 18px; color: var(--accent-deep); }
+  .menu-label { flex: 1; font-size: 14px; font-weight: 500; }
+  .menu-meta { font-size: 12px; color: var(--muted); }
+  .menu-arrow { color: var(--muted); }
+
+  .premium-card { margin: 0 20px 24px; padding: 24px; background: linear-gradient(135deg, var(--ink) 0%, #3D2A20 100%); border-radius: 22px; color: var(--bg); position: relative; overflow: hidden; cursor: pointer; }
+  .premium-card::before { content: ''; position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(232,166,160,0.4), transparent 70%); }
+  .premium-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--blush); margin-bottom: 8px; position: relative; }
+  .premium-title { font-family: var(--serif); font-size: 22px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 8px; position: relative; }
+  .premium-title em { font-style: italic; color: #F5C892; font-variation-settings: "SOFT" 100, "WONK" 1; }
+  .premium-desc { font-size: 13px; color: rgba(247,241,234,0.7); margin-bottom: 16px; position: relative; }
+  .premium-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: var(--bg); color: var(--ink); border-radius: 100px; font-size: 13px; font-weight: 500; cursor: pointer; position: relative; }
+
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background: rgba(247,241,234,0.92); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(5, 1fr); z-index: 100; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; cursor: pointer; transition: opacity .2s; color: var(--muted); }
+  .nav-item.active { color: var(--accent); }
+  .nav-item svg { width: 22px; height: 22px; }
+  .nav-label { font-size: 10px; letter-spacing: 0.03em; font-weight: 500; }
+
+  .fab { position: fixed; bottom: 88px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; border: none; box-shadow: 0 8px 24px rgba(201,90,63,0.4); cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 50; transition: all .2s; }
+  .fab:active { transform: scale(0.9); }
+  #app[data-screen="home"] .fab { display: flex; }
+
+  .skin-render { position: relative; overflow: hidden; }
+  .skin-render::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.5), transparent 50%); }
+  .skin-render::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 25% 35%, rgba(142,60,38,0.22) 2px, transparent 3px), radial-gradient(circle at 62% 52%, rgba(142,60,38,0.18) 1px, transparent 2px), radial-gradient(circle at 45% 72%, rgba(142,60,38,0.16) 2px, transparent 3px); }
+
+  .hidden { display: none !important; }
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-8px); background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 100px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity .3s, transform .3s; max-width: 90%; box-shadow: var(--shadow-lg); pointer-events:none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .no-select { user-select: none; -webkit-user-select: none; }
+</style>
+</head>
+<body class="no-select">
+
+<div id="app">
+ <div class="scroll-host" id="scroll-host">
+
+  <!-- ====================== AUTH ====================== -->
+  <div id="auth">
+    <svg class="auth-deco" viewBox="0 0 200 200" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.55"><circle cx="140" cy="60" r="16"/><circle cx="124" cy="68" r="13"/><circle cx="156" cy="68" r="13"/><circle cx="132" cy="82" r="13"/><circle cx="148" cy="82" r="13"/><circle cx="140" cy="72" r="7" fill="#E8A6A0"/><path d="M140 95 C140 130 138 150 130 175"/><path d="M138 120 C120 116 110 100 113 86 C130 92 138 104 138 120"/></g></svg>
+    <svg class="auth-deco-2" viewBox="0 0 200 200" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.5"><path d="M60 180 C60 130 62 100 70 60"/><path d="M66 110 C40 104 28 80 33 58 C62 66 66 86 66 110"/><path d="M66 90 C92 82 104 58 100 36 C72 44 66 66 66 90"/><circle cx="70" cy="44" r="11"/><circle cx="70" cy="44" r="4" fill="#C95A3F"/></g></svg>
+
+    <div class="auth-inner">
+      <div class="auth-brand">
+        <div class="auth-mark">Rituel</div>
+        <div class="auth-tagline">le carnet de votre peau</div>
+        <svg class="auth-floral" viewBox="0 0 120 30" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M2 15 H44"/><path d="M118 15 H76"/><circle cx="60" cy="15" r="5"/><circle cx="52" cy="15" r="3.5"/><circle cx="68" cy="15" r="3.5"/><circle cx="60" cy="9" r="3.5"/><circle cx="60" cy="21" r="3.5"/></g></svg>
+      </div>
+
+      <div class="auth-toggle">
+        <button class="auth-tab active" id="tab-login" onclick="switchAuth('login')">Connexion</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchAuth('signup')">Inscription</button>
+      </div>
+
+      <!-- Login -->
+      <div class="auth-form" id="form-login">
+        <div class="field">
+          <label>Adresse e-mail</label>
+          <input type="email" id="login-email" placeholder="vous@exemple.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="auth-forgot" onclick="showToast('Lien de réinitialisation — bientôt')">Mot de passe oublié ?</div>
+        <div class="auth-error" id="login-error"></div>
+        <button class="btn btn-accent" onclick="doLogin()">Se connecter</button>
+      </div>
+
+      <!-- Signup -->
+      <div class="auth-form hidden" id="form-signup">
+        <div class="field">
+          <label>Prénom</label>
+          <input type="text" id="signup-name" placeholder="Votre prénom" autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label>Adresse e-mail</label>
+          <input type="email" id="signup-email" placeholder="vous@exemple.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" id="signup-pass" placeholder="6 caractères minimum" autocomplete="new-password">
+        </div>
+        <div class="auth-error" id="signup-error"></div>
+        <button class="btn btn-accent" onclick="doSignup()">Créer mon compte</button>
+      </div>
+
+      <div class="auth-divider">ou continuer avec</div>
+      <div class="social-btns">
+        <button class="social-btn" onclick="socialAuth('Google')">
+          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.9c-.3 1.4-1 2.6-2.2 3.4v2.8h3.6c2.1-1.9 3.2-4.8 3.2-8.1z"/><path fill="#34A853" d="M12 23c2.9 0 5.4-1 7.2-2.7l-3.6-2.8c-1 .7-2.3 1.1-3.7 1.1-2.8 0-5.2-1.9-6-4.5H2.2v2.9C4 20.6 7.7 23 12 23z"/><path fill="#FBBC05" d="M6 14.1c-.2-.7-.3-1.4-.3-2.1s.1-1.4.3-2.1V7H2.2C1.4 8.5 1 10.2 1 12s.4 3.5 1.2 5l3.8-2.9z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .5 4.1 1.6l3.1-3.1C17.4 2.1 14.9 1 12 1 7.7 1 4 3.4 2.2 7L6 9.9c.8-2.6 3.2-4.5 6-4.5z"/></svg>
+          Google
+        </button>
+        <button class="social-btn" onclick="socialAuth('Apple')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.5c0-2.4 2-3.6 2.1-3.6-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.1-2.9.9-3.6.9-.7 0-1.9-.9-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.6 2.9-.4 7.1 1.2 9.4.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7 2-1.1 2.8-2.1c.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.6zM14.7 5.2c.6-.8 1.1-1.9 1-3-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.8-1 2.8 1 .1 2-.5 2.7-1.2z"/></svg>
+          Apple
+        </button>
+      </div>
+
+      <div class="auth-legal">
+        En continuant, vous acceptez nos <a onclick="showToast('CGU — à rédiger')">Conditions</a> et notre <a onclick="showToast('Politique — à rédiger')">Politique de confidentialité</a>.
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== ONBOARDING ====================== -->
+  <div id="onboarding">
+    <div class="onb-page active" data-page="0">
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+        <div class="welcome-mark">R</div>
+        <div class="welcome-tagline italic serif">bienvenue dans votre rituel</div>
+        <svg style="width:90px;margin-bottom:32px;opacity:0.7;" viewBox="0 0 120 40" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M4 20 H40"/><path d="M116 20 H80"/><circle cx="60" cy="20" r="6"/><circle cx="50" cy="20" r="4"/><circle cx="70" cy="20" r="4"/><circle cx="60" cy="12" r="4"/><circle cx="60" cy="28" r="4"/><circle cx="60" cy="20" r="2.5" fill="#C95A3F"/></g></svg>
+        <h1 class="display" style="font-size:34px;margin-bottom:16px;max-width:300px;">Un instant par jour,<br><em class="italic" style="color:var(--accent);">rien que pour vous</em></h1>
+        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Une photo, une intention, un regard bienveillant sur soi. Voyez votre peau s'épanouir, jour après jour.</p>
+      </div>
+      <div class="onb-actions">
+        <button class="btn btn-accent" onclick="onbNext()">Commencer mon rituel</button>
+      </div>
+    </div>
+
+    <div class="onb-page" data-page="1">
+      <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.6"><circle cx="30" cy="20" r="9"/><circle cx="21" cy="26" r="7"/><circle cx="39" cy="26" r="7"/><circle cx="30" cy="22" r="4" fill="#E8A6A0"/><path d="M30 38 C30 48 28 53 24 58"/></g></svg>
+      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Comment décririez-vous <em>votre peau</em> ?</h2>
+      <p class="onb-sub">Pas d'inquiétude — votre peau évolue, vos réponses aussi.</p>
+      <div class="onb-options">
+        <button class="onb-opt" data-value="seche" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌾</span><div class="onb-opt-text"><div class="onb-opt-title">Sèche</div><div class="onb-opt-desc">Tiraille, manque d'éclat</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="mixte" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🍯</span><div class="onb-opt-text"><div class="onb-opt-title">Mixte</div><div class="onb-opt-desc">Zone T grasse, joues sèches</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="grasse" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">✨</span><div class="onb-opt-text"><div class="onb-opt-title">Grasse</div><div class="onb-opt-desc">Brillance, pores visibles</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="sensible" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Sensible</div><div class="onb-opt-desc">Rougeurs, réactivité</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="normale" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌿</span><div class="onb-opt-text"><div class="onb-opt-title">Normale</div><div class="onb-opt-desc">Équilibrée, peu de soucis</div></div><div class="onb-opt-check"></div></button>
+      </div>
+      <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step1" disabled>Continuer</button></div>
+    </div>
+
+    <div class="onb-page" data-page="2">
+      <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.55"><circle cx="30" cy="22" r="10"/><circle cx="30" cy="22" r="4" fill="#C95A3F"/><path d="M30 40 C30 50 28 54 23 58"/><path d="M30 46 C20 44 15 36 17 28 C27 31 30 38 30 46"/></g></svg>
+      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Sur quoi voulez-vous <em>rayonner</em> ?</h2>
+      <p class="onb-sub">Choisissez tout ce qui vous parle. On affinera ensemble, en douceur.</p>
+      <div class="onb-options">
+        <button class="onb-opt" data-value="acne" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🌷</span><div class="onb-opt-text"><div class="onb-opt-title">Acné, imperfections</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="taches" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🍃</span><div class="onb-opt-text"><div class="onb-opt-title">Taches, hyperpigmentation</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="rides" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🌹</span><div class="onb-opt-text"><div class="onb-opt-title">Rides, fermeté</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="eclat" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">💫</span><div class="onb-opt-text"><div class="onb-opt-title">Éclat, teint terne</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="pores" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🌼</span><div class="onb-opt-text"><div class="onb-opt-title">Pores dilatés</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="cernes" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">👁️</span><div class="onb-opt-text"><div class="onb-opt-title">Cernes, contour des yeux</div></div><div class="onb-opt-check"></div></button>
+      </div>
+      <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step2">Continuer</button></div>
+    </div>
+
+    <div class="onb-page" data-page="3">
+      <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.6"><circle cx="30" cy="20" r="9"/><circle cx="22" cy="25" r="6"/><circle cx="38" cy="25" r="6"/><circle cx="30" cy="22" r="4" fill="#E8A6A0"/><path d="M30 36 C30 48 28 52 25 58"/></g></svg>
+      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Quel est votre <em>objectif</em> du moment ?</h2>
+      <p class="onb-sub">Léa, votre coach, gardera le cap avec vous.</p>
+      <div class="onb-options">
+        <button class="onb-opt" data-value="constance" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🪞</span><div class="onb-opt-text"><div class="onb-opt-title">Tenir une routine</div><div class="onb-opt-desc">La régularité avant tout</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="comprendre" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🔍</span><div class="onb-opt-text"><div class="onb-opt-title">Comprendre ma peau</div><div class="onb-opt-desc">Identifier ce qui marche</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="resultats" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🌟</span><div class="onb-opt-text"><div class="onb-opt-title">Des résultats visibles</div><div class="onb-opt-desc">Voir ma peau se transformer</div></div><div class="onb-opt-check"></div></button>
+      </div>
+      <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step3" disabled>Continuer</button></div>
+    </div>
+
+    <div class="onb-page" data-page="4">
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+        <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;margin-bottom:28px;box-shadow:var(--shadow);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2 class="display" style="font-size:34px;margin-bottom:16px;">Tout est <em class="italic" style="color:var(--accent);">prêt</em>, <span id="onb-name">vous</span>.</h2>
+        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Léa vous attend dans l'app. Prenez votre première photo dès aujourd'hui — c'est le point de départ de votre transformation 🌸</p>
+      </div>
+      <div class="onb-actions"><button class="btn btn-accent" onclick="finishOnboarding()">Entrer dans Rituel</button></div>
+    </div>
+  </div>
+
+  <!-- ====================== HOME ====================== -->
+  <div id="home" class="screen">
+    <div class="topbar">
+      <div class="topbar-greet">
+        <div class="topbar-date" id="topbar-date">MERCREDI 27 MAI</div>
+        <div class="topbar-name">Bonjour, <em id="topbar-name">vous</em></div>
+      </div>
+      <div class="avatar" onclick="navTo('profile')" id="topbar-avatar">V</div>
+    </div>
+
+    <div class="photo-card">
+      <div class="photo-empty" id="photo-empty" onclick="document.getElementById('photo-input').click()">
+        <svg class="photo-petals" viewBox="0 0 60 60" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.5"><circle cx="30" cy="22" r="9"/><circle cx="21" cy="28" r="7"/><circle cx="39" cy="28" r="7"/><circle cx="26" cy="38" r="7"/><circle cx="34" cy="38" r="7"/><circle cx="30" cy="30" r="4" fill="#C95A3F"/></g></svg>
+        <div class="photo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="photo-empty-title">Votre photo du <em class="italic">jour</em></div>
+        <div class="photo-empty-sub">Lumière naturelle, sans maquillage, de face. Ça prend 5 secondes.</div>
+      </div>
+      <div class="photo-display hidden" id="photo-display">
+        <img id="photo-img" alt="">
+        <div class="photo-overlay">
+          <div class="photo-chip">📷 Aujourd'hui</div>
+          <div class="photo-chip" style="background:rgba(122,148,104,0.85);">✨ Score 78</div>
+        </div>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" capture="user" style="display:none;" onchange="handlePhoto(this)">
+    </div>
+
+    <div class="streak">
+      <div class="streak-flame">🌸</div>
+      <div class="streak-text">
+        <div class="streak-num"><em>12</em> jours d'affilée</div>
+        <div class="streak-label">Vous êtes rayonnante de constance ✨</div>
+      </div>
+      <div class="streak-mini"><div class="streak-day active"></div><div class="streak-day active"></div><div class="streak-day active"></div><div class="streak-day active"></div><div class="streak-day active"></div><div class="streak-day active"></div><div class="streak-day active"></div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3 class="section-title">Comment va votre <em>peau</em> ?</h3></div>
+      <div class="mood-row">
+        <button class="mood-btn" onclick="selectMood(this,1)"><div class="mood-emoji">😣</div><div class="mood-label">Difficile</div></button>
+        <button class="mood-btn" onclick="selectMood(this,2)"><div class="mood-emoji">😕</div><div class="mood-label">Moyenne</div></button>
+        <button class="mood-btn" onclick="selectMood(this,3)"><div class="mood-emoji">😌</div><div class="mood-label">Bien</div></button>
+        <button class="mood-btn selected" onclick="selectMood(this,4)"><div class="mood-emoji">😊</div><div class="mood-label">Top</div></button>
+        <button class="mood-btn" onclick="selectMood(this,5)"><div class="mood-emoji">✨</div><div class="mood-label">Sublime</div></button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h3 class="section-title"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Rituel du <em>matin</em></h3>
+        <div class="section-more">3/4</div>
+      </div>
+      <div class="routine-list">
+        <div class="routine-item done" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Nettoyant doux</div><div class="routine-product">Avène Cleanance Gel</div></div><div class="routine-time">07:12</div></div>
+        <div class="routine-item done" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Sérum vitamine C</div><div class="routine-product">The Ordinary 15%</div></div><div class="routine-time">07:14</div></div>
+        <div class="routine-item done" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Hydratant</div><div class="routine-product">CeraVe Lotion</div></div><div class="routine-time">07:16</div></div>
+        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">SPF 50</div><div class="routine-product">La Roche-Posay Anthelios</div></div><div class="routine-time">—</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3 class="section-title">Cette <em>semaine</em></h3><div class="section-more" onclick="navTo('journal')">Voir tout →</div></div>
+      <div class="stats-grid">
+        <div class="stat-tile"><div class="stat-tile-label">Score peau</div><div class="stat-tile-value"><em>78</em><span style="font-size:18px;color:var(--muted);">/100</span></div><div class="stat-tile-trend">↑ +6 cette semaine</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Imperfections</div><div class="stat-tile-value"><em>3</em></div><div class="stat-tile-trend">↓ −4 vs semaine dernière</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Hydratation</div><div class="stat-tile-value"><em>Bonne</em></div><div class="stat-tile-trend">↑ Stable</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Sommeil moyen</div><div class="stat-tile-value"><em>7</em><span style="font-size:18px;color:var(--muted);">h12</span></div><div class="stat-tile-trend down">↓ −0h30</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="msg-card" style="margin:0;max-width:100%;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-family:var(--serif);font-style:italic;font-size:13px;">L</div>
+          <div class="eyebrow">Léa, votre coach</div>
+        </div>
+        <div class="msg-card-title">Vos taches s'éclaircissent — bravo 🌸</div>
+        <div class="msg-card-body">Belle amélioration sur 14 jours, la vitamine C fait son effet. On ajoute une routine du soir avec niacinamide ?</div>
+        <button class="sugg" style="margin-top:12px;background:var(--accent);color:white;border-color:var(--accent);" onclick="navTo('chat')">Parler à Léa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== JOURNAL ====================== -->
+  <div id="journal" class="screen">
+    <div class="topbar">
+      <div class="topbar-greet"><div class="topbar-date">VOTRE CARNET</div><div class="topbar-name">Journal</div></div>
+      <button style="background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:8px 14px;font-family:var(--sans);font-size:12px;color:var(--ink-soft);cursor:pointer;">Mai 2026</button>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3 class="section-title">Évolution du <em>score peau</em></h3></div>
+      <div style="background:var(--surface);border-radius:18px;padding:20px;box-shadow:var(--shadow);">
+        <svg viewBox="0 0 320 120" style="width:100%;height:auto;display:block;">
+          <defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#C95A3F" stop-opacity="0.3"/><stop offset="100%" stop-color="#C95A3F" stop-opacity="0"/></linearGradient></defs>
+          <path d="M 0 80 L 40 75 L 80 70 L 120 65 L 160 55 L 200 48 L 240 42 L 280 35 L 320 28 L 320 120 L 0 120 Z" fill="url(#grad)"/>
+          <path d="M 0 80 L 40 75 L 80 70 L 120 65 L 160 55 L 200 48 L 240 42 L 280 35 L 320 28" stroke="#C95A3F" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="320" cy="28" r="5" fill="#C95A3F"/><circle cx="320" cy="28" r="10" fill="#C95A3F" opacity="0.2"/>
+        </svg>
+        <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--muted);letter-spacing:0.05em;"><span>1 MAI</span><span>15 MAI</span><span style="color:var(--accent);font-weight:600;">AUJ.</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);">
+          <div><div class="eyebrow">DÉPART</div><div class="serif" style="font-size:22px;">61</div></div>
+          <div style="text-align:center;"><div class="eyebrow">PROGRESSION</div><div class="serif" style="font-size:22px;color:var(--sage);">+17</div></div>
+          <div style="text-align:right;"><div class="eyebrow">AUJOURD'HUI</div><div class="serif" style="font-size:22px;color:var(--accent);"><em class="italic">78</em></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="journal-month">MAI 2026 — 14 entrées</div>
+    <div class="journal-grid" id="journal-grid"></div>
+
+    <div class="section" style="margin-top:32px;">
+      <div class="section-head"><h3 class="section-title">Vos <em>découvertes</em></h3></div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:var(--surface);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start;"><div style="font-size:24px;">🌙</div><div style="flex:1;"><div style="font-family:var(--serif);font-size:15px;margin-bottom:4px;">Le sommeil compte vraiment</div><div style="font-size:13px;color:var(--muted);">Moins de 7h de sommeil = votre score baisse de 8 points le lendemain.</div></div></div>
+        <div style="background:var(--surface);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start;"><div style="font-size:24px;">🍷</div><div style="flex:1;"><div style="font-family:var(--serif);font-size:15px;margin-bottom:4px;">L'alcool laisse une trace</div><div style="font-size:13px;color:var(--muted);">Les 3 soirs avec alcool ce mois-ci ont précédé une poussée le surlendemain.</div></div></div>
+        <div style="background:var(--surface);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start;"><div style="font-size:24px;">☀️</div><div style="flex:1;"><div style="font-family:var(--serif);font-size:15px;margin-bottom:4px;">Vitamine C × SPF = ✨</div><div style="font-size:13px;color:var(--muted);">Vos taches s'estompent 2× plus vite depuis cette combinaison.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== CHAT ====================== -->
+  <div id="chat" class="chat-screen">
+    <div class="chat-header">
+      <div class="chat-avatar-large">L</div>
+      <div style="flex:1;"><div class="chat-coach-name">Léa <span style="font-size:11px;color:var(--muted);letter-spacing:0.1em;">· COACH BEAUTÉ</span></div><div class="chat-coach-status">● En ligne</div></div>
+      <button style="background:none;border:none;cursor:pointer;color:var(--muted);" onclick="showToast('Bientôt disponible')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+    </div>
+    <div class="chat-feed" id="chat-feed">
+      <div class="chat-day">AUJOURD'HUI · 09:42</div>
+      <div class="msg msg-ai">Bonjour 🌿 J'ai regardé vos photos de la semaine. Votre peau respire visiblement mieux qu'il y a 10 jours.</div>
+      <div class="msg-card"><div class="msg-card-title">✨ Ce qui marche</div><div class="msg-card-body">Hydratation matin + SPF quotidien + vitamine C. La trinité parfaite pour votre peau mixte avec taches.</div></div>
+      <div class="msg msg-ai">J'ai une suggestion pour le soir. On ajoute du niacinamide pour resserrer les pores de la zone T ?</div>
+      <div class="msg-suggestions"><button class="sugg" onclick="sendMsg('Oui, montre-moi')">Oui, montre-moi</button><button class="sugg" onclick="sendMsg('Pourquoi le niacinamide ?')">Pourquoi ?</button><button class="sugg" onclick="sendMsg('Pas maintenant')">Pas maintenant</button></div>
+    </div>
+    <div class="chat-input-bar">
+      <textarea class="chat-input" id="chat-input" placeholder="Posez votre question…" rows="1" oninput="resizeChat(this)"></textarea>
+      <button class="chat-send" onclick="sendUserMsg()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ====================== ROUTINE ====================== -->
+  <div id="routine" class="screen">
+    <div class="topbar">
+      <div class="topbar-greet"><div class="topbar-date">VOS PRODUITS</div><div class="topbar-name">Routine</div></div>
+      <button style="background:var(--accent);border:none;border-radius:100px;padding:10px 14px;color:white;font-family:var(--sans);font-size:12px;cursor:pointer;" onclick="showToast('Bientôt : scan code-barre')">+ Ajouter</button>
+    </div>
+    <div style="padding:0 20px;margin-bottom:20px;">
+      <div style="display:flex;gap:8px;background:var(--surface-warm);border-radius:14px;padding:4px;">
+        <button class="route-tab active" onclick="switchRouteTab(this,'morning')" style="flex:1;padding:10px;background:var(--surface);border:none;border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;box-shadow:var(--shadow);">☀️ Matin</button>
+        <button class="route-tab" onclick="switchRouteTab(this,'evening')" style="flex:1;padding:10px;background:transparent;border:none;border-radius:10px;font-family:var(--sans);font-size:13px;color:var(--muted);cursor:pointer;">🌙 Soir</button>
+        <button class="route-tab" onclick="switchRouteTab(this,'weekly')" style="flex:1;padding:10px;background:transparent;border:none;border-radius:10px;font-family:var(--sans);font-size:13px;color:var(--muted);cursor:pointer;">✨ Hebdo</button>
+      </div>
+    </div>
+    <div class="section">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:var(--surface);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;"><div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#E8F0E5,#B8D4AC);display:flex;align-items:center;justify-content:center;font-size:28px;">🧴</div><div style="flex:1;"><div style="font-size:11px;letter-spacing:0.15em;color:var(--muted);">ÉTAPE 1 · NETTOYAGE</div><div style="font-family:var(--serif);font-size:16px;margin-top:2px;">Cleanance Gel</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Avène · 200ml · Reste 60%</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="background:var(--surface);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;"><div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#FFE8C8,#F5A623);display:flex;align-items:center;justify-content:center;font-size:28px;">💧</div><div style="flex:1;"><div style="font-size:11px;letter-spacing:0.15em;color:var(--muted);">ÉTAPE 2 · SÉRUM</div><div style="font-family:var(--serif);font-size:16px;margin-top:2px;">Vitamine C 15%</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">The Ordinary · 30ml · Reste 25%</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="background:var(--surface);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;"><div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#E0F0FF,#7BB3E0);display:flex;align-items:center;justify-content:center;font-size:28px;">💎</div><div style="flex:1;"><div style="font-size:11px;letter-spacing:0.15em;color:var(--muted);">ÉTAPE 3 · HYDRATATION</div><div style="font-family:var(--serif);font-size:16px;margin-top:2px;">Moisturizing Lotion</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">CeraVe · 236ml · Reste 80%</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="background:var(--surface);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;"><div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#FFE4B0,#E89B3A);display:flex;align-items:center;justify-content:center;font-size:28px;">☀️</div><div style="flex:1;"><div style="font-size:11px;letter-spacing:0.15em;color:var(--muted);">ÉTAPE 4 · PROTECTION</div><div style="font-family:var(--serif);font-size:16px;margin-top:2px;">Anthelios SPF 50+</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">La Roche-Posay · 50ml · Reste 40%</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div style="background:linear-gradient(135deg,var(--blush-soft),var(--surface-warm));border:1px dashed var(--accent-soft);border-radius:18px;padding:16px;display:flex;gap:14px;align-items:center;"><div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#F5E8DD,var(--accent-soft));display:flex;align-items:center;justify-content:center;font-size:28px;">🌸</div><div style="flex:1;"><div style="font-size:11px;letter-spacing:0.15em;color:var(--accent-deep);">SUGGÉRÉ PAR LÉA</div><div style="font-family:var(--serif);font-size:16px;margin-top:2px;">Niacinamide 10%</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Pour vos pores et la brillance T</div></div><button style="background:var(--accent);border:none;color:white;border-radius:100px;padding:8px 12px;font-family:var(--sans);font-size:12px;cursor:pointer;" onclick="showToast('Ajouté à votre routine ✓')">+ Ajouter</button></div>
+      </div>
+    </div>
+    <div class="section">
+      <div style="background:var(--surface-warm);border-radius:16px;padding:16px;display:flex;justify-content:space-between;align-items:center;">
+        <div><div class="eyebrow">DURÉE TOTALE</div><div class="serif" style="font-size:22px;">4 min 30</div></div>
+        <div style="text-align:right;"><div class="eyebrow">COÛT MENSUEL</div><div class="serif" style="font-size:22px;">~48€</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== PROFILE ====================== -->
+  <div id="profile" class="screen">
+    <div class="profile-hero">
+      <svg class="profile-floral" viewBox="0 0 120 40" fill="none"><g stroke="#E8A6A0" stroke-width="1" opacity="0.6"><path d="M8 20 H44"/><path d="M112 20 H76"/><circle cx="60" cy="20" r="6"/><circle cx="50" cy="20" r="4"/><circle cx="70" cy="20" r="4"/><circle cx="60" cy="12" r="4"/><circle cx="60" cy="28" r="4"/></g></svg>
+      <div class="profile-avatar-xl" id="profile-avatar">V</div>
+      <div class="profile-name" id="profile-name">vous</div>
+      <div class="profile-meta" id="profile-email">membre depuis aujourd'hui</div>
+      <div class="profile-badges">
+        <span class="badge" id="badge-skin">Peau mixte</span>
+        <span class="badge">Taches</span>
+        <span class="badge-accent badge">🌸 Série 12 jours</span>
+      </div>
+    </div>
+
+    <div class="premium-card" onclick="showToast('Abonnement Premium — bientôt')">
+      <div class="premium-eyebrow">RITUEL+</div>
+      <div class="premium-title">Une coach <em>illimitée</em>, des analyses profondes</div>
+      <div class="premium-desc">Photos haute résolution, comparaisons avant/après, conseils approfondis.</div>
+      <button class="premium-btn">Découvrir · 7j offerts →</button>
+    </div>
+
+    <div class="profile-section">
+      <div class="eyebrow" style="margin-bottom:12px;padding-left:8px;">PRÉFÉRENCES</div>
+      <div class="menu-list">
+        <div class="menu-item" onclick="showToast('Bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="menu-label">Rappels & notifications</div><div class="menu-meta">3 actifs</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="showToast('Bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mes objectifs</div><div class="menu-meta">2 en cours</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <div class="eyebrow" style="margin-bottom:12px;padding-left:8px;">COMPTE</div>
+      <div class="menu-list">
+        <div class="menu-item" onclick="showToast('Export bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Exporter mes données</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="doLogout()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Se déconnecter</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="resetApp()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label" style="color:var(--accent);">Réinitialiser l'app</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.2<br><span class="italic serif">— votre carnet de peau —</span></div>
+  </div>
+
+ </div><!-- /scroll-host -->
+
+  <nav class="nav hidden" id="nav">
+    <div class="nav-item active" data-screen="home" onclick="navTo('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9M5 10v10a2 2 0 002 2h3v-6h4v6h3a2 2 0 002-2V10" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Aujourd'hui</div></div>
+    <div class="nav-item" data-screen="journal" onclick="navTo('journal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Journal</div></div>
+    <div class="nav-item" data-screen="chat" onclick="navTo('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Coach</div></div>
+    <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Routine</div></div>
+    <div class="nav-item" data-screen="profile" onclick="navTo('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Moi</div></div>
+  </nav>
+
+  <button class="fab" onclick="document.getElementById('photo-input').click()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- Librairie Supabase (backend : comptes, base de données, stockage photos) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ===== Connexion au backend Supabase =====
+  const SUPABASE_URL = 'https://cozidiruigjtfzgzvjhe.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvemlkaXJ1aWdqdGZ6Z3p2amhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzMwNjQsImV4cCI6MjA5NjMwOTA2NH0.BmVSbWAt9HAXlntY9TdgCcxlLoUNFt9zKe6QQ0VV_eg';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  let currentUser = null; // l'utilisatrice connectée
+
+  // ===== State (cache local de l'écran courant) =====
+  let state = { skinType:null, concerns:[], goal:null, name:'', email:'', onbStep:0 };
+
+  // ===== Auth =====
+  function switchAuth(mode){
+    document.getElementById('tab-login').classList.toggle('active', mode==='login');
+    document.getElementById('tab-signup').classList.toggle('active', mode==='signup');
+    document.getElementById('form-login').classList.toggle('hidden', mode!=='login');
+    document.getElementById('form-signup').classList.toggle('hidden', mode!=='signup');
+  }
+  function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+  function setBtnLoading(btn, loading, labelIdle){
+    if(!btn) return;
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Un instant…' : labelIdle;
+  }
+
+  async function doSignup(){
+    const name=document.getElementById('signup-name').value.trim();
+    const email=document.getElementById('signup-email').value.trim().toLowerCase();
+    const pass=document.getElementById('signup-pass').value;
+    const err=document.getElementById('signup-error'); err.textContent='';
+    const btn=document.querySelector('#form-signup .btn');
+    if(!name){ err.textContent='Indiquez votre prénom.'; return; }
+    if(!validEmail(email)){ err.textContent='E-mail invalide.'; return; }
+    if(pass.length<6){ err.textContent='Mot de passe : 6 caractères minimum.'; return; }
+    setBtnLoading(btn, true);
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options:{ data:{ prenom: name } }
+    });
+    setBtnLoading(btn, false, 'Créer mon compte');
+    if(error){
+      if(/already/i.test(error.message)) err.textContent='Un compte existe déjà avec cet e-mail.';
+      else err.textContent = error.message;
+      return;
+    }
+    // Si la confirmation par e-mail est activée, pas de session immédiate
+    if(!data.session){
+      err.style.color='var(--sage)';
+      err.textContent="Compte créé ! Vérifiez votre e-mail pour confirmer, puis connectez-vous.";
+      switchAuth('login');
+      err.style.color='';
+      return;
+    }
+    currentUser = data.user;
+    state.name = name;
+    document.getElementById('auth').classList.add('hidden');
+    document.getElementById('onboarding').classList.add('active');
+  }
+
+  async function doLogin(){
+    const email=document.getElementById('login-email').value.trim().toLowerCase();
+    const pass=document.getElementById('login-pass').value;
+    const err=document.getElementById('login-error'); err.textContent='';
+    const btn=document.querySelector('#form-login .btn');
+    if(!validEmail(email)){ err.textContent='E-mail invalide.'; return; }
+    setBtnLoading(btn, true);
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    setBtnLoading(btn, false, 'Se connecter');
+    if(error){
+      if(/Invalid login/i.test(error.message)) err.textContent='E-mail ou mot de passe incorrect.';
+      else if(/not confirmed/i.test(error.message)) err.textContent="E-mail pas encore confirmé. Vérifiez votre boîte mail.";
+      else err.textContent = error.message;
+      return;
+    }
+    currentUser = data.user;
+    const profile = await loadProfile();
+    applyProfile(profile);
+    if(profile && profile.type_peau){ enterApp(); }
+    else {
+      // connecté mais onboarding pas terminé
+      document.getElementById('auth').classList.add('hidden');
+      document.getElementById('onboarding').classList.add('active');
+    }
+  }
+
+  function socialAuth(provider){
+    // Pour activer : configurer Google/Apple dans Supabase → Authentication → Providers (voir guide)
+    showToast(`${provider} : à configurer dans Supabase`);
+    // sb.auth.signInWithOAuth({ provider: provider.toLowerCase() });
+  }
+
+  async function doLogout(){
+    await sb.auth.signOut();
+    location.reload();
+  }
+
+  // ===== Profil (table profiles) =====
+  async function loadProfile(){
+    if(!currentUser) return null;
+    const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+    return data;
+  }
+  function applyProfile(p){
+    if(!p) return;
+    if(p.prenom) state.name = p.prenom;
+    if(p.type_peau) state.skinType = p.type_peau;
+    if(p.objectifs){ try{ state.concerns = JSON.parse(p.objectifs); }catch(e){ state.concerns = []; } }
+    state.email = currentUser ? currentUser.email : '';
+  }
+  async function saveProfile(){
+    if(!currentUser) return;
+    await sb.from('profiles').update({
+      prenom: state.name,
+      type_peau: state.skinType,
+      objectifs: JSON.stringify(state.concerns||[])
+    }).eq('id', currentUser.id);
+  }
+
+  // ===== Onboarding =====
+  function onbNext(){
+    state.onbStep++;
+    if(state.onbStep===4){ document.getElementById('onb-name').textContent = state.name || 'vous'; }
+    document.querySelectorAll('.onb-page').forEach(p=>p.classList.remove('active'));
+    const pg=document.querySelector(`.onb-page[data-page="${state.onbStep}"]`);
+    if(pg) pg.classList.add('active');
+  }
+  function toggleOpt(el,key){
+    el.parentElement.querySelectorAll('.onb-opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected'); state[key]=el.dataset.value;
+    if(key==='skinType') document.getElementById('btn-step1').disabled=false;
+    if(key==='goal') document.getElementById('btn-step3').disabled=false;
+  }
+  function toggleOptMulti(el,key){
+    el.classList.toggle('selected'); const v=el.dataset.value;
+    if(el.classList.contains('selected')){ if(!state[key].includes(v)) state[key].push(v); }
+    else state[key]=state[key].filter(x=>x!==v);
+  }
+  async function finishOnboarding(){
+    const btn=document.querySelector('.onb-page[data-page="4"] .btn');
+    if(btn){ btn.disabled=true; btn.textContent='Un instant…'; }
+    await saveProfile();
+    document.getElementById('onboarding').classList.remove('active');
+    enterApp();
+  }
+
+  // ===== Enter app =====
+  function enterApp(){
+    document.getElementById('auth').classList.add('hidden');
+    document.getElementById('onboarding').classList.remove('active');
+    document.getElementById('nav').classList.remove('hidden');
+    updateUserUI();
+    navTo('home');
+    loadTodayPhoto();
+    loadJournalFromDB();
+  }
+
+  function updateUserUI(){
+    const name = state.name || 'vous';
+    const first = name.charAt(0).toUpperCase();
+    document.getElementById('topbar-name').textContent = name;
+    document.getElementById('topbar-avatar').textContent = first;
+    document.getElementById('profile-avatar').textContent = first;
+    document.getElementById('profile-name').textContent = name;
+    if(currentUser && currentUser.email) document.getElementById('profile-email').textContent = currentUser.email;
+    else if(state.email) document.getElementById('profile-email').textContent = state.email;
+    if(state.skinType){
+      const labels={seche:'Peau sèche',mixte:'Peau mixte',grasse:'Peau grasse',sensible:'Peau sensible',normale:'Peau normale'};
+      document.getElementById('badge-skin').textContent = labels[state.skinType]||'Peau mixte';
+    }
+    const d=new Date();
+    const days=['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
+    const months=['JANV','FÉVR','MARS','AVRIL','MAI','JUIN','JUIL','AOÛT','SEPT','OCT','NOV','DÉC'];
+    document.getElementById('topbar-date').textContent = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  }
+
+  // ===== Navigation =====
+  function navTo(screen){
+    document.querySelectorAll('.screen, .chat-screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(screen).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.screen===screen));
+    document.getElementById('app').setAttribute('data-screen', screen);
+    const host=document.getElementById('scroll-host'); if(host) host.scrollTo(0,0);
+    window.scrollTo(0,0);
+  }
+
+  // ===== Interactions =====
+  function selectMood(el){ el.parentElement.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected')); el.classList.add('selected'); showToast('Humeur enregistrée ✓'); }
+  function toggleRoutine(el){
+    el.classList.toggle('done');
+    const list=el.parentElement;
+    const done=list.querySelectorAll('.routine-item.done').length, total=list.querySelectorAll('.routine-item').length;
+    const c=list.parentElement.querySelector('.section-more'); if(c) c.textContent=`${done}/${total}`;
+    if(el.classList.contains('done')) el.querySelector('.routine-time').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  }
+  async function handlePhoto(input){
+    const f=input.files[0]; if(!f) return;
+    // aperçu immédiat
+    const r=new FileReader();
+    r.onload=e=>{
+      document.getElementById('photo-img').src=e.target.result;
+      document.getElementById('photo-empty').classList.add('hidden');
+      document.getElementById('photo-display').classList.remove('hidden');
+    };
+    r.readAsDataURL(f);
+
+    if(!currentUser){ showToast('Connectez-vous pour sauvegarder'); return; }
+    showToast('Envoi de la photo… 🌸');
+    const ext = (f.name.split('.').pop()||'jpg').toLowerCase();
+    const path = `${currentUser.id}/${Date.now()}.${ext}`;
+    const { error: upErr } = await sb.storage.from('photos').upload(path, f, { upsert:true });
+    if(upErr){ showToast('Erreur upload : '+upErr.message); return; }
+
+    // un score fictif pour la démo (en vrai : analyse IA via le backend)
+    const score = 70 + Math.floor(Math.random()*15);
+    const { error: insErr } = await sb.from('entries').insert({
+      user_id: currentUser.id,
+      photo_path: path,
+      score_peau: score
+    });
+    if(insErr){ showToast('Photo envoyée, mais journal : '+insErr.message); return; }
+    showToast(`Photo sauvegardée ✓ Score du jour : ${score}/100`);
+    loadJournalFromDB();
+  }
+
+  // Recharge la photo du jour si elle existe déjà
+  async function loadTodayPhoto(){
+    if(!currentUser) return;
+    const today = new Date().toISOString().slice(0,10);
+    const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', today).order('created_at',{ascending:false}).limit(1);
+    if(data && data.length){
+      const url = await signedPhoto(data[0].photo_path);
+      if(url){
+        document.getElementById('photo-img').src = url;
+        document.getElementById('photo-empty').classList.add('hidden');
+        document.getElementById('photo-display').classList.remove('hidden');
+      }
+    }
+  }
+  async function signedPhoto(path){
+    if(!path) return null;
+    const { data } = await sb.storage.from('photos').createSignedUrl(path, 3600);
+    return data ? data.signedUrl : null;
+  }
+
+  // ===== Chat =====
+  const coachReplies={
+    'Oui, montre-moi':{reply:"Parfait. Le niacinamide est un actif doux qui :",card:{title:'🌸 Niacinamide — pourquoi pour vous',body:"Resserre l'apparence des pores (2-4 sem.), régule le sébum de la zone T, et éclaircit doucement les taches."},followup:"Je suggère The Ordinary Niacinamide 10% (~7€) ou La Roche-Posay Effaclar (~15€). On l'ajoute à votre routine du soir ?",suggestions:["Ajoute-le","Une marque plus naturelle ?","Pas tout de suite"]},
+    'Pourquoi le niacinamide ?':{reply:"Excellente question 🌿 Le niacinamide (vit. B3) est un des actifs les mieux étudiés. Pour votre peau mixte avec taches, il :",bullets:["Régule le sébum en 2-3 semaines","Resserre l'apparence des pores","Renforce la barrière (moins de rougeurs)","Se combine avec la vit. C sans irriter"],followup:"On peut le marier avec presque tout. Vous voulez des suggestions de produits ?",suggestions:["Oui, montre-moi","Et les effets secondaires ?","Plus tard"]},
+    'Pas maintenant':{reply:"Aucun souci 🌷 Votre routine actuelle est déjà très belle. On en reparlera quand vous voudrez. Continuez vos photos quotidiennes — c'est ce qui me permet de bien vous guider.",suggestions:["Comment prendre la photo ?","Mes prochains objectifs ?"]},
+    'Ajoute-le':{reply:"C'est fait ✓ Ajouté à votre routine du soir, entre le nettoyant et l'hydratant. Premier essai ce soir — et photo demain matin pour suivre l'effet 🌸",suggestions:["Comment l'appliquer ?","Résultats en combien de temps ?"]}
+  };
+  function typingBubble(){ const t=document.createElement('div'); t.className='typing'; t.id='typing'; t.innerHTML='<span></span><span></span><span></span>'; return t; }
+  function sendMsg(text){
+    const feed=document.getElementById('chat-feed');
+    feed.querySelectorAll('.msg-suggestions').forEach(s=>s.remove());
+    const u=document.createElement('div'); u.className='msg msg-user'; u.textContent=text; feed.appendChild(u); feed.scrollTop=feed.scrollHeight;
+    feed.appendChild(typingBubble()); feed.scrollTop=feed.scrollHeight;
+    setTimeout(()=>{
+      const tp=document.getElementById('typing'); if(tp) tp.remove();
+      const r=coachReplies[text]||{reply:"Très bonne question ! Donnez-moi quelques jours de données de plus et on creuse ça ensemble 🌿 Continuez votre routine en attendant.",suggestions:["Voir mes stats","Modifier ma routine"]};
+      const a=document.createElement('div'); a.className='msg msg-ai'; a.textContent=r.reply; feed.appendChild(a);
+      if(r.card){ const c=document.createElement('div'); c.className='msg-card'; c.innerHTML=`<div class="msg-card-title">${r.card.title}</div><div class="msg-card-body">${r.card.body}</div>`; feed.appendChild(c); }
+      if(r.bullets){ const b=document.createElement('div'); b.className='msg msg-ai'; b.innerHTML=r.bullets.map(x=>'• '+x).join('<br>'); feed.appendChild(b); }
+      if(r.followup){ const f=document.createElement('div'); f.className='msg msg-ai'; f.textContent=r.followup; feed.appendChild(f); }
+      if(r.suggestions){ const s=document.createElement('div'); s.className='msg-suggestions'; s.innerHTML=r.suggestions.map(x=>`<button class="sugg" onclick="sendMsg('${x.replace(/'/g,"\\'")}')">${x}</button>`).join(''); feed.appendChild(s); }
+      feed.scrollTop=feed.scrollHeight;
+    },900);
+  }
+  function sendUserMsg(){ const i=document.getElementById('chat-input'); const t=i.value.trim(); if(!t) return; i.value=''; i.style.height='44px'; sendMsg(t); }
+  function resizeChat(el){ el.style.height='44px'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+  document.getElementById('chat-input').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendUserMsg(); } });
+
+  // ===== Routine tabs =====
+  function switchRouteTab(el,tab){
+    el.parentElement.querySelectorAll('.route-tab').forEach(t=>{ t.classList.remove('active'); t.style.background='transparent'; t.style.color='var(--muted)'; t.style.boxShadow='none'; });
+    el.classList.add('active'); el.style.background='var(--surface)'; el.style.color='var(--ink)'; el.style.boxShadow='var(--shadow)';
+    if(tab==='evening') showToast('Routine du soir — bientôt'); else if(tab==='weekly') showToast('Soins hebdomadaires — bientôt');
+  }
+
+  // ===== Journal =====
+  function renderJournal(){
+    const grid=document.getElementById('journal-grid'); if(!grid) return;
+    const today=new Date().getDate();
+    const tones=['linear-gradient(135deg,#F5D5BC,#C97A52)','linear-gradient(135deg,#E8C9A8,#A66C42)','linear-gradient(135deg,#F0D8B8,#D89460)','linear-gradient(135deg,#EDC8A8,#B07050)','linear-gradient(135deg,#F5D8C0,#C8825A)'];
+    const dots=['var(--sage)','var(--accent)','var(--gold)','var(--sage)','var(--accent)','var(--sage)','var(--sage)','var(--accent)','var(--sage)','var(--gold)','var(--sage)','var(--sage)','var(--sage)','var(--sage)'];
+    let html='';
+    for(let i=today;i>=1;i--){
+      if(i>today-14){ const tone=tones[i%tones.length], dot=dots[(today-i)%dots.length];
+        html+=`<div class="journal-cell" onclick="openEntry(${i})"><div class="skin-render" style="background:${tone};"></div><div class="journal-cell-date">${i}</div><div class="journal-cell-dot" style="background:${dot};"></div></div>`;
+      } else html+=`<div class="journal-cell empty"><div class="journal-cell-date">${i}</div></div>`;
+    }
+    grid.innerHTML=html;
+  }
+  function openEntry(day){ showToast(`Entrée du ${day} — vue détaillée bientôt`); }
+
+  // Charge les vraies entrées du journal depuis Supabase
+  async function loadJournalFromDB(){
+    const grid=document.getElementById('journal-grid'); if(!grid) return;
+    if(!currentUser){ renderJournal(); return; }
+    const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(30);
+    if(!data || !data.length){ renderJournal(); return; }
+    let html='';
+    for(const e of data){
+      const url = await signedPhoto(e.photo_path);
+      const day = e.date ? parseInt(e.date.slice(8,10),10) : '';
+      const sc = e.score_peau||0;
+      const dot = sc>=80?'var(--sage)':(sc>=70?'var(--gold)':'var(--accent)');
+      if(url){
+        html+=`<div class="journal-cell" onclick="openEntry('${e.date}')"><img src="${url}" style="width:100%;height:100%;object-fit:cover;"><div class="journal-cell-date">${day}</div><div class="journal-cell-dot" style="background:${dot};"></div></div>`;
+      } else {
+        html+=`<div class="journal-cell"><div class="skin-render" style="background:linear-gradient(135deg,#F5D5BC,#C97A52);"></div><div class="journal-cell-date">${day}</div></div>`;
+      }
+    }
+    grid.innerHTML=html;
+  }
+
+  // ===== Toast =====
+  let toastTimer;
+  function showToast(msg){ if(!msg) return; const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2400); }
+
+  // ===== Reset (déconnexion + nettoyage local) =====
+  async function resetApp(){
+    if(confirm('Se déconnecter et réinitialiser cet appareil ?')){
+      await sb.auth.signOut();
+      location.reload();
+    }
+  }
+
+  // ===== Init : on regarde si une session existe déjà =====
+  renderJournal(); // rendu de secours par défaut
+  (async function init(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session && session.user){
+      currentUser = session.user;
+      const profile = await loadProfile();
+      applyProfile(profile);
+      if(profile && profile.type_peau){
+        enterApp();
+      } else {
+        // connectée mais onboarding pas terminé
+        document.getElementById('auth').classList.add('hidden');
+        document.getElementById('onboarding').classList.add('active');
+      }
+    }
+    // sinon : écran de connexion (déjà visible par défaut)
+  })();
+  document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
+</script>
+</body>
+</html>
