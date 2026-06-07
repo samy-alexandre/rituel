@@ -647,12 +647,12 @@
     </div>
 
     <div class="section">
-      <div class="section-head"><h3 class="section-title">Cette <em>semaine</em></h3><div class="section-more" onclick="navTo('journal')">Voir tout →</div></div>
+      <div class="section-head"><h3 class="section-title">Ma <em>journée</em></h3><div class="section-more" onclick="openDaySheet()" style="cursor:pointer;">Noter ›</div></div>
       <div class="stats-grid">
-        <div class="stat-tile"><div class="stat-tile-label">Score peau</div><div class="stat-tile-value"><em>78</em><span style="font-size:18px;color:var(--muted);">/100</span></div><div class="stat-tile-trend">↑ +6 cette semaine</div></div>
-        <div class="stat-tile"><div class="stat-tile-label">Imperfections</div><div class="stat-tile-value"><em>3</em></div><div class="stat-tile-trend">↓ −4 vs semaine dernière</div></div>
-        <div class="stat-tile"><div class="stat-tile-label">Hydratation</div><div class="stat-tile-value"><em>Bonne</em></div><div class="stat-tile-trend">↑ Stable</div></div>
-        <div class="stat-tile"><div class="stat-tile-label">Sommeil moyen</div><div class="stat-tile-value"><em>7</em><span style="font-size:18px;color:var(--muted);">h12</span></div><div class="stat-tile-trend down">↓ −0h30</div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Sommeil</div><div class="stat-tile-value" id="tile-sommeil"><em>—</em></div><div class="stat-tile-trend" id="tile-sommeil-sub">à noter</div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Hydratation</div><div class="stat-tile-value" id="tile-hydra"><em>—</em></div><div class="stat-tile-trend" id="tile-hydra-sub">à noter</div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Alimentation</div><div class="stat-tile-value" id="tile-alim" style="font-size:20px;"><em>—</em></div><div class="stat-tile-trend" id="tile-alim-sub">à noter</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Humeur du jour</div><div class="stat-tile-value" id="tile-humeur" style="font-size:30px;"><em>—</em></div><div class="stat-tile-trend" id="tile-humeur-sub">à noter</div></div>
       </div>
     </div>
 
@@ -789,7 +789,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.6<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.7<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -805,6 +805,33 @@
   <button class="fab" onclick="document.getElementById('photo-input').click()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
   <div class="toast" id="toast"></div>
+
+  <!-- ====================== FICHE MA JOURNÉE ====================== -->
+  <div class="sheet-overlay" id="day-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ma journée</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 20px;line-height:1.5;">Note ton sommeil, ton hydratation et ton alimentation. Léa s'en servira pour des conseils plus justes 🌸</p>
+
+      <div class="intensity" style="margin-bottom:14px;">
+        <div class="intensity-head"><span>💤 Sommeil</span><span id="ds-sommeil-val">7h</span></div>
+        <input type="range" min="0" max="12" value="7" step="0.5" class="intensity-slider" id="ds-sommeil" oninput="onDaySommeil(this.value)">
+      </div>
+
+      <div class="intensity" style="margin-bottom:14px;">
+        <div class="intensity-head"><span>💧 Hydratation</span><span id="ds-hydra-val">6 verres</span></div>
+        <input type="range" min="0" max="12" value="6" step="1" class="intensity-slider" id="ds-hydra" oninput="onDayHydra(this.value)">
+      </div>
+
+      <div class="intensity" style="margin-bottom:20px;">
+        <div class="intensity-head"><span>🥗 Alimentation</span><span id="ds-alim-val">Équilibrée</span></div>
+        <input type="range" min="1" max="5" value="3" step="1" class="intensity-slider" id="ds-alim" oninput="onDayAlim(this.value)">
+      </div>
+
+      <button class="btn btn-accent" onclick="saveDay()">Enregistrer ma journée</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeDaySheet()">Annuler</button>
+    </div>
+  </div>
 
   <!-- ====================== FICHE MA PEAU ====================== -->
   <div class="sheet-overlay" id="skin-sheet">
@@ -1309,6 +1336,7 @@
     applyRoutineState('soir', e ? e.routine_soir : false);
     switchPeriod('matin');
     renderStreak();
+    renderDayTiles(e);
   }
 
   // Construit la checklist de l'accueil à partir des vrais produits du Rituel
@@ -1324,6 +1352,52 @@
         list.innerHTML = products.map(p=>`<div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">${escapeHtml(p.nom||'')}</div>${(p.etape||p.effets)?`<div class="routine-product">${escapeHtml(p.etape||p.effets)}</div>`:''}</div><div class="routine-time">—</div></div>`).join('');
       }
     }
+  }
+
+  // ===== Ma journée (sommeil / hydratation / alimentation) =====
+  const ALIM_LABELS = ['', 'À améliorer', 'Correcte', 'Équilibrée', 'Bonne', 'Parfaite'];
+  function fmtSleep(v){
+    v = parseFloat(v); const h=Math.floor(v); const m=Math.round((v-h)*60);
+    return m ? (h+'h'+(m<10?'0'+m:m)) : (h+'h');
+  }
+  function onDaySommeil(v){ document.getElementById('ds-sommeil-val').textContent = fmtSleep(v); }
+  function onDayHydra(v){ const n=parseInt(v,10); document.getElementById('ds-hydra-val').textContent = n+(n>1?' verres':' verre'); }
+  function onDayAlim(v){ document.getElementById('ds-alim-val').textContent = ALIM_LABELS[parseInt(v,10)]||'—'; }
+
+  async function openDaySheet(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    let som=7, hyd=6, ali=3;
+    const { data } = await sb.from('entries').select('sommeil,hydratation,alimentation').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
+    const e = (data && data.length) ? data[0] : null;
+    if(e){
+      if(e.sommeil!=null) som=e.sommeil;
+      if(e.hydratation!=null) hyd=e.hydratation;
+      if(e.alimentation!=null) ali=e.alimentation;
+    }
+    const s=document.getElementById('ds-sommeil'); s.value=som; onDaySommeil(som);
+    const h=document.getElementById('ds-hydra'); h.value=hyd; onDayHydra(hyd);
+    const a=document.getElementById('ds-alim'); a.value=ali; onDayAlim(ali);
+    document.getElementById('day-sheet').classList.add('open');
+  }
+  function closeDaySheet(){ document.getElementById('day-sheet').classList.remove('open'); }
+  async function saveDay(){
+    const sommeil = parseFloat(document.getElementById('ds-sommeil').value);
+    const hydratation = parseInt(document.getElementById('ds-hydra').value,10);
+    const alimentation = parseInt(document.getElementById('ds-alim').value,10);
+    showToast('Enregistrement…');
+    await updateTodayEntry({ sommeil, hydratation, alimentation });
+    closeDaySheet();
+    showToast('Journée enregistrée 🌸');
+    const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
+    renderDayTiles((data && data.length) ? data[0] : null);
+  }
+  function renderDayTiles(e){
+    const MOOD_EMOJI = ['','😣','😕','😌','😊','✨'];
+    const set=(id, val, sub)=>{ const el=document.getElementById(id); if(el) el.innerHTML='<em>'+val+'</em>'; const s=document.getElementById(id+'-sub'); if(s&&sub!=null) s.textContent=sub; };
+    if(e && e.sommeil!=null) set('tile-sommeil', fmtSleep(e.sommeil), 'aujourd\'hui'); else set('tile-sommeil','—','à noter');
+    if(e && e.hydratation!=null){ const n=e.hydratation; set('tile-hydra', n+'<span style="font-size:15px;color:var(--muted);"> '+(n>1?'verres':'verre')+'</span>', 'aujourd\'hui'); } else set('tile-hydra','—','à noter');
+    if(e && e.alimentation!=null) set('tile-alim', ALIM_LABELS[e.alimentation]||'—', 'aujourd\'hui'); else set('tile-alim','—','à noter');
+    if(e && e.humeur) set('tile-humeur', MOOD_EMOJI[e.humeur]||'—', (e.humeur_intensite!=null ? e.humeur_intensite+'%' : 'aujourd\'hui')); else set('tile-humeur','—','à noter');
   }
 
   // ===== Photo du jour =====
