@@ -330,7 +330,9 @@
   .chat-avatar-large::after { content: ''; position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: var(--sage); border: 2px solid var(--bg); border-radius: 50%; }
   .chat-coach-name { font-family: var(--serif); font-size: 17px; }
   .chat-coach-status { font-size: 12px; color: var(--sage); display: flex; align-items: center; gap: 4px; }
-  .chat-feed { flex: 1; overflow-y: auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; }
+  .chat-feed { flex: 1; overflow-y: auto; padding: 24px 20px 96px; display: flex; flex-direction: column; gap: 16px; }
+  .msg-ai strong { font-weight: 600; color: var(--ink); }
+  .msg-ai em { font-style: italic; }
   .chat-day { text-align: center; font-size: 11px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin: 8px 0; }
   .msg { max-width: 78%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; word-wrap: break-word; animation: msgIn .3s ease; }
   @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -598,7 +600,7 @@
 
     <div class="section">
       <div class="section-head">
-        <h3 class="section-title"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Votre <em>rituel</em></h3>
+        <h3 class="section-title" onclick="navTo('routine')" style="cursor:pointer;"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Votre <em>rituel</em> <span style="color:var(--muted);font-weight:300;">›</span></h3>
         <div class="section-more" id="routine-count">0/0</div>
       </div>
       <div class="period-switch">
@@ -645,7 +647,7 @@
   <!-- ====================== JOURNAL ====================== -->
   <div id="journal" class="screen">
     <div class="topbar">
-      <div class="topbar-greet"><div class="topbar-date">VOTRE CARNET</div><div class="topbar-name">Journal</div></div>
+      <div class="topbar-greet"><div class="topbar-name">Journal</div></div>
       <button style="background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:8px 14px;font-family:var(--sans);font-size:12px;color:var(--ink-soft);cursor:pointer;">Mai 2026</button>
     </div>
 
@@ -689,7 +691,7 @@
     </div>
     <div class="chat-feed" id="chat-feed">
       <div class="chat-day">VOTRE COACH BEAUTÉ</div>
-      <div class="msg msg-ai">Bonjour 🌸 Je suis Léa, votre coach beauté. Posez-moi vos questions sur votre peau, vos produits ou votre routine — je suis là pour vous accompagner.</div>
+      <div class="msg msg-ai">Coucou 🌸 Moi c'est Léa, ta coach beauté. Je suis là pour t'aider avec ta peau, tes produits, ta routine… ou juste pour répondre à tes questions, sans jugement. Dis-moi tout, qu'est-ce qui t'amène aujourd'hui ?</div>
       <div class="msg-suggestions" id="chat-starter">
         <button class="sugg" onclick="leaQuick('Quelle routine du soir pour ma peau ?')">Quelle routine du soir ?</button>
         <button class="sugg" onclick="leaQuick('Je peux mélanger rétinol et vitamine C ?')">Rétinol + vitamine C ?</button>
@@ -705,7 +707,7 @@
   <!-- ====================== ROUTINE ====================== -->
   <div id="routine" class="screen">
     <div class="topbar">
-      <div class="topbar-greet"><div class="topbar-date">VOS PRODUITS</div><div class="topbar-name">Routine</div></div>
+      <div class="topbar-greet"><div class="topbar-date">VOS SOINS</div><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
       <button style="background:var(--accent);border:none;border-radius:100px;padding:10px 14px;color:white;font-family:var(--sans);font-size:12px;cursor:pointer;" onclick="showToast('Bientôt : scan code-barre')">+ Ajouter</button>
     </div>
     <div style="padding:0 20px;margin-bottom:20px;">
@@ -771,7 +773,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.3<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.4<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -780,7 +782,7 @@
     <div class="nav-item active" data-screen="home" onclick="navTo('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9M5 10v10a2 2 0 002 2h3v-6h4v6h3a2 2 0 002-2V10" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Aujourd'hui</div></div>
     <div class="nav-item" data-screen="journal" onclick="navTo('journal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Journal</div></div>
     <div class="nav-item" data-screen="chat" onclick="navTo('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Coach</div></div>
-    <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Routine</div></div>
+    <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Rituel</div></div>
     <div class="nav-item" data-screen="profile" onclick="navTo('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Moi</div></div>
   </nav>
 
@@ -1250,6 +1252,15 @@
   }
 
   // ===== Chat — vraie Léa via le backend sécurisé (/api/lea) =====
+  function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function formatMessage(text){
+    let t = escapeHtml((text||'').trim());
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');           // **gras**
+    t = t.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');           // *italique*
+    t = t.replace(/^\s*[\-•]\s+/gm, '• ');                              // puces propres
+    t = t.replace(/\n{2,}/g, '<br><br>').replace(/\n/g, '<br>');        // sauts de ligne
+    return t;
+  }
   let leaHistory = [];
   let leaBusy = false;
   function typingBubble(){ const t=document.createElement('div'); t.className='typing'; t.id='typing'; t.innerHTML='<span></span><span></span><span></span>'; return t; }
@@ -1276,7 +1287,7 @@
       const tp=document.getElementById('typing'); if(tp) tp.remove();
       if(data && data.reply){
         leaHistory.push({ role:'assistant', content:data.reply });
-        const a=document.createElement('div'); a.className='msg msg-ai'; a.textContent=data.reply; feed.appendChild(a);
+        const a=document.createElement('div'); a.className='msg msg-ai'; a.innerHTML=formatMessage(data.reply); feed.appendChild(a);
       } else {
         const e=document.createElement('div'); e.className='msg msg-ai'; e.textContent="Désolée, je n'arrive pas à répondre là 🌿 Réessayez dans un instant.";
         feed.appendChild(e);
