@@ -957,21 +957,24 @@
 
   async function deleteAccount(){
     if(!currentUser){ showToast('Connectez-vous d\'abord'); return; }
-    if(!confirm('Supprimer votre compte ?\n\nVos photos, votre journal et votre profil seront définitivement effacés. Cette action est irréversible.')) return;
+    if(!confirm('Supprimer votre compte ?\n\nVos photos, votre journal, votre profil ET votre compte seront définitivement effacés. Cette action est irréversible.')) return;
     showToast('Suppression en cours…');
     try{
-      // 1. supprimer les photos du stockage
-      const { data: files } = await sb.storage.from('photos').list(currentUser.id);
-      if(files && files.length){
-        await sb.storage.from('photos').remove(files.map(f=>`${currentUser.id}/${f.name}`));
+      const { data:{ session } } = await sb.auth.getSession();
+      const token = session ? session.access_token : '';
+      const res = await fetch('/api/delete-account', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }
+      });
+      const data = await res.json();
+      if(data && data.success){
+        try{ localStorage.removeItem('rituel_profile_'+currentUser.id); }catch(e){}
+        await sb.auth.signOut();
+        alert('Votre compte et toutes vos données ont été définitivement supprimés.');
+        location.reload();
+      } else {
+        showToast('Erreur : '+((data && data.error) || 'suppression impossible'));
       }
-      // 2. supprimer journal + profil (autorisé par les règles de sécurité)
-      await sb.from('entries').delete().eq('user_id', currentUser.id);
-      await sb.from('profiles').delete().eq('id', currentUser.id);
-      // 3. déconnexion
-      await sb.auth.signOut();
-      alert('Votre compte et toutes vos données ont été supprimés.');
-      location.reload();
     }catch(e){
       showToast('Erreur lors de la suppression : '+e.message);
     }
