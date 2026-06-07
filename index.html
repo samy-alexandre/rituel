@@ -761,11 +761,7 @@
       <div class="profile-avatar-xl" id="profile-avatar">V</div>
       <div class="profile-name" id="profile-name">vous</div>
       <div class="profile-meta" id="profile-email">membre depuis aujourd'hui</div>
-      <div class="profile-badges">
-        <span class="badge" id="badge-skin">Peau mixte</span>
-        <span class="badge">Taches</span>
-        <span class="badge-accent badge">🌸 Série 12 jours</span>
-      </div>
+      <div class="profile-badges" id="profile-badges"></div>
     </div>
 
     <div class="premium-card" onclick="showToast('Abonnement Premium — bientôt')">
@@ -778,8 +774,8 @@
     <div class="profile-section">
       <div class="eyebrow" style="margin-bottom:12px;padding-left:8px;">PRÉFÉRENCES</div>
       <div class="menu-list">
-        <div class="menu-item" onclick="showToast('Bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="menu-label">Rappels & notifications</div><div class="menu-meta">3 actifs</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
-        <div class="menu-item" onclick="showToast('Bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mes objectifs</div><div class="menu-meta">2 en cours</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openSkinSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Ma peau</div><div class="menu-meta" id="menu-skin-meta">type & préoccupations</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="showToast('Bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="menu-label">Rappels & notifications</div><div class="menu-meta">bientôt</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
       </div>
     </div>
 
@@ -793,7 +789,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.5<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.6<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -809,6 +805,21 @@
   <button class="fab" onclick="document.getElementById('photo-input').click()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
   <div class="toast" id="toast"></div>
+
+  <!-- ====================== FICHE MA PEAU ====================== -->
+  <div class="sheet-overlay" id="skin-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ma peau</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Ta peau évolue, ton profil aussi. Modifie-le quand tu veux 🌸</p>
+      <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;">Type de peau</label>
+      <div id="skin-type-opts" class="onb-options" style="margin:10px 0 20px;"></div>
+      <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;">Mes préoccupations</label>
+      <div id="skin-concern-opts" class="onb-options" style="margin:10px 0 20px;"></div>
+      <button class="btn btn-accent" onclick="saveSkinProfile()">Enregistrer</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeSkinSheet()">Annuler</button>
+    </div>
+  </div>
 
   <!-- ====================== FICHE PRODUIT ====================== -->
   <div class="sheet-overlay" id="product-sheet">
@@ -1093,9 +1104,6 @@
     document.getElementById('nav').classList.remove('hidden');
     updateUserUI();
     navTo('home');
-    loadTodayPhoto();
-    loadHomeData();
-    loadJournalFromDB();
   }
 
   function updateUserUI(){
@@ -1107,14 +1115,52 @@
     document.getElementById('profile-name').textContent = name;
     if(currentUser && currentUser.email) document.getElementById('profile-email').textContent = currentUser.email;
     else if(state.email) document.getElementById('profile-email').textContent = state.email;
-    if(state.skinType){
-      const labels={seche:'Peau sèche',mixte:'Peau mixte',grasse:'Peau grasse',sensible:'Peau sensible',normale:'Peau normale'};
-      document.getElementById('badge-skin').textContent = labels[state.skinType]||'Peau mixte';
-    }
+    renderProfileBadges();
     const d=new Date();
     const days=['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
     const months=['JANV','FÉVR','MARS','AVRIL','MAI','JUIN','JUIL','AOÛT','SEPT','OCT','NOV','DÉC'];
     document.getElementById('topbar-date').textContent = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  }
+
+  // ===== Profil : badges + édition de la peau =====
+  const SKIN_LABELS = { seche:'Peau sèche', mixte:'Peau mixte', grasse:'Peau grasse', sensible:'Peau sensible', normale:'Peau normale' };
+  const CONCERN_LABELS = { acne:'Acné', taches:'Taches', rides:'Rides', eclat:'Éclat', pores:'Pores', cernes:'Cernes' };
+  const SKIN_TYPES = [['seche','🌾','Sèche'],['mixte','🍯','Mixte'],['grasse','✨','Grasse'],['sensible','🌸','Sensible'],['normale','🌿','Normale']];
+  const CONCERNS = [['acne','🌷','Acné, imperfections'],['taches','🍃','Taches, pigmentation'],['rides','🌹','Rides, fermeté'],['eclat','💫','Éclat, teint terne'],['pores','🌼','Pores dilatés'],['cernes','👁️','Cernes']];
+
+  async function renderProfileBadges(){
+    const el = document.getElementById('profile-badges'); if(!el) return;
+    let html='';
+    if(state.skinType) html += `<span class="badge">${SKIN_LABELS[state.skinType]||'Peau'}</span>`;
+    (state.concerns||[]).forEach(c=>{ if(CONCERN_LABELS[c]) html += `<span class="badge">${CONCERN_LABELS[c]}</span>`; });
+    const n = currentUser ? await computeStreak() : 0;
+    html += `<span class="badge-accent badge">${n>0 ? ('🔥 Série '+n+' j') : '🌱 Pas encore de série'}</span>`;
+    el.innerHTML = html;
+  }
+
+  let tmpSkin=null, tmpConcerns=[];
+  function openSkinSheet(){
+    tmpSkin = state.skinType;
+    tmpConcerns = [...(state.concerns||[])];
+    renderSkinOpts();
+    document.getElementById('skin-sheet').classList.add('open');
+  }
+  function renderSkinOpts(){
+    document.getElementById('skin-type-opts').innerHTML = SKIN_TYPES.map(([v,e,l])=>`<button class="onb-opt${tmpSkin===v?' selected':''}" onclick="pickSkin('${v}')"><span class="onb-opt-emoji">${e}</span><div class="onb-opt-text"><div class="onb-opt-title">${l}</div></div><div class="onb-opt-check"></div></button>`).join('');
+    document.getElementById('skin-concern-opts').innerHTML = CONCERNS.map(([v,e,l])=>`<button class="onb-opt${tmpConcerns.includes(v)?' selected':''}" onclick="toggleConcern('${v}')"><span class="onb-opt-emoji">${e}</span><div class="onb-opt-text"><div class="onb-opt-title">${l}</div></div><div class="onb-opt-check"></div></button>`).join('');
+  }
+  function pickSkin(v){ tmpSkin=v; renderSkinOpts(); }
+  function toggleConcern(v){ tmpConcerns = tmpConcerns.includes(v) ? tmpConcerns.filter(x=>x!==v) : [...tmpConcerns, v]; renderSkinOpts(); }
+  function closeSkinSheet(){ document.getElementById('skin-sheet').classList.remove('open'); }
+  async function saveSkinProfile(){
+    if(!tmpSkin){ showToast('Choisis un type de peau'); return; }
+    state.skinType = tmpSkin;
+    state.concerns = tmpConcerns;
+    await saveProfile();
+    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: state.concerns })); }catch(e){}
+    closeSkinSheet();
+    renderProfileBadges();
+    showToast('Profil peau mis à jour 🌸');
   }
 
   // ===== Navigation =====
@@ -1125,7 +1171,12 @@
     document.getElementById('app').setAttribute('data-screen', screen);
     const host=document.getElementById('scroll-host'); if(host) host.scrollTo(0,0);
     window.scrollTo(0,0);
-    if(screen==='routine' && currentUser) loadProducts();
+    if(currentUser){
+      if(screen==='home'){ loadHomeData(); loadTodayPhoto(); }
+      else if(screen==='routine'){ loadProducts(); }
+      else if(screen==='journal'){ loadJournalFromDB(); }
+      else if(screen==='profile'){ renderProfileBadges(); }
+    }
   }
 
   // ===== Entrée du jour (une ligne par jour dans 'entries') =====
@@ -1253,10 +1304,26 @@
       const slider=document.getElementById('intensity-slider');
       slider.value = e.humeur_intensite || 50; onIntensity(slider.value);
     }
+    await loadHomeRoutine();
     applyRoutineState('matin', e ? e.routine_matin : false);
     applyRoutineState('soir', e ? e.routine_soir : false);
     switchPeriod('matin');
     renderStreak();
+  }
+
+  // Construit la checklist de l'accueil à partir des vrais produits du Rituel
+  async function loadHomeRoutine(){
+    if(!currentUser) return;
+    for(const moment of ['matin','soir']){
+      const list = document.getElementById('routine-'+moment);
+      const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).eq('moment', moment).order('position',{ascending:true});
+      const products = data || [];
+      if(!products.length){
+        list.innerHTML = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;">Pas encore de soins du ${moment==='soir'?'soir':'matin'}.<br><span style="color:var(--accent-deep);text-decoration:underline;cursor:pointer;" onclick="navTo('routine')">Ajoute-les dans ton rituel →</span></div>`;
+      } else {
+        list.innerHTML = products.map(p=>`<div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">${escapeHtml(p.nom||'')}</div>${(p.etape||p.effets)?`<div class="routine-product">${escapeHtml(p.etape||p.effets)}</div>`:''}</div><div class="routine-time">—</div></div>`).join('');
+      }
+    }
   }
 
   // ===== Photo du jour =====
