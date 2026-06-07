@@ -802,7 +802,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.8<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.9<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1624,6 +1624,58 @@
   function typingBubble(){ const t=document.createElement('div'); t.className='typing'; t.id='typing'; t.innerHTML='<span></span><span></span><span></span>'; return t; }
   function leaQuick(text){ const s=document.getElementById('chat-starter'); if(s) s.remove(); sendMsg(text); }
 
+  // Rassemble le contexte (données perso) envoyé à Léa pour des conseils personnalisés
+  async function buildLeaContext(){
+    const ctx = {
+      name: state.name || '',
+      skin: SKIN_LABELS[state.skinType] || 'non précisé',
+      concern: (state.concerns||[]).map(c=>CONCERN_LABELS[c]||c).join(', ') || 'aucune en particulier'
+    };
+    if(!currentUser) return ctx;
+    try{
+      const since=new Date(); since.setDate(since.getDate()-7);
+      const sinceStr=since.toISOString().slice(0,10);
+      const [streak, tdRes, weekRes, prodRes] = await Promise.all([
+        computeStreak(),
+        sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1),
+        sb.from('entries').select('sommeil,hydratation,alimentation,routine_matin,routine_soir').eq('user_id', currentUser.id).gte('date', sinceStr),
+        sb.from('products').select('nom,moment,position').eq('user_id', currentUser.id).order('position',{ascending:true})
+      ]);
+      ctx.streak = streak;
+      const e = (tdRes.data && tdRes.data.length) ? tdRes.data[0] : null;
+      if(e){
+        const MOOD=['','difficile','moyenne','bien','top','sublime'];
+        ctx.today = {
+          humeur: e.humeur ? MOOD[e.humeur] : null,
+          humeur_intensite: e.humeur_intensite,
+          sommeil: e.sommeil,
+          hydratation: e.hydratation,
+          alimentation: e.alimentation!=null ? ALIM_LABELS[e.alimentation] : null,
+          routine_matin: !!e.routine_matin,
+          routine_soir: !!e.routine_soir
+        };
+      }
+      const week = weekRes.data || [];
+      if(week.length){
+        const avg=(arr)=>{ const v=arr.filter(x=>x!=null).map(parseFloat); return v.length ? (v.reduce((a,b)=>a+b,0)/v.length) : null; };
+        ctx.semaine = {
+          sommeil_moyen: avg(week.map(w=>w.sommeil)),
+          hydratation_moyenne: avg(week.map(w=>w.hydratation)),
+          jours_routine_complete: week.filter(w=>w.routine_matin && w.routine_soir).length,
+          jours_notes: week.length
+        };
+      }
+      const prods = prodRes.data || [];
+      if(prods.length){
+        ctx.routine = {
+          matin: prods.filter(p=>p.moment==='matin').map(p=>p.nom),
+          soir: prods.filter(p=>p.moment==='soir').map(p=>p.nom)
+        };
+      }
+    }catch(e){ /* en cas d'erreur, on envoie au moins le profil de base */ }
+    return ctx;
+  }
+
   async function sendMsg(text){
     if(leaBusy) return;
     const feed=document.getElementById('chat-feed');
@@ -1633,12 +1685,13 @@
     feed.appendChild(typingBubble()); feed.scrollTop=feed.scrollHeight;
     leaBusy=true;
     try{
+      const ctx = await buildLeaContext();
       const res=await fetch('/api/lea',{
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
         body:JSON.stringify({
           messages: leaHistory,
-          profile: { name: state.name, skin: state.skinType, concern: (state.concerns||[]).join(', ') }
+          profile: ctx
         })
       });
       const data=await res.json();
