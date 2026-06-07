@@ -290,6 +290,31 @@
   .period-btn { flex: 1; padding: 11px; border: none; background: transparent; border-radius: 10px; font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .2s; }
   .period-btn.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 
+  /* ===== Rituel : produits ===== */
+  .add-btn { background: var(--accent); border: none; border-radius: 100px; padding: 10px 14px; color: #fff; font-family: var(--sans); font-size: 12px; font-weight: 500; cursor: pointer; }
+  .product-card { background: var(--surface); border-radius: 18px; padding: 14px; box-shadow: var(--shadow); display: flex; gap: 14px; align-items: center; cursor: pointer; transition: transform .15s; }
+  .product-card:active { transform: scale(0.99); }
+  .product-thumb { width: 60px; height: 60px; border-radius: 14px; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; overflow: hidden; }
+  .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .product-step { font-size: 11px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
+  .product-name { font-family: var(--serif); font-size: 16px; margin-top: 2px; }
+  .product-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .add-product-card { width: 100%; margin-top: 12px; padding: 16px; background: transparent; border: 1.5px dashed var(--accent-soft); border-radius: 18px; color: var(--accent-deep); font-family: var(--sans); font-size: 14px; font-weight: 500; cursor: pointer; }
+  .add-product-card:active { background: var(--blush-soft); }
+  .btn-outline-sm { padding: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 100px; font-family: var(--sans); font-size: 13px; color: var(--ink-soft); cursor: pointer; }
+
+  /* Fiche modale (bottom sheet) */
+  .sheet-overlay { position: fixed; inset: 0; background: rgba(46,33,28,0.45); backdrop-filter: blur(6px); z-index: 400; display: none; align-items: flex-end; justify-content: center; }
+  @media (min-width:680px){ .sheet-overlay { position: absolute; } }
+  .sheet-overlay.open { display: flex; animation: fadeIn .25s ease; }
+  .sheet { background: var(--bg); width: 100%; max-width: 480px; border-radius: 26px 26px 0 0; max-height: 92%; overflow-y: auto; padding: 8px 20px 28px; animation: sheetUp .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet-handle { width: 40px; height: 4px; background: var(--line); border-radius: 4px; margin: 10px auto 16px; }
+  .sheet-title { font-family: var(--serif); font-size: 22px; font-weight: 300; margin-bottom: 18px; }
+  .emoji-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+  .emoji-opt { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .emoji-opt.selected { border-color: var(--accent); background: var(--blush-soft); }
+
   .routine-list { background: var(--surface); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
   .routine-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
   .routine-item:last-child { border-bottom: none; }
@@ -707,30 +732,25 @@
   <!-- ====================== ROUTINE ====================== -->
   <div id="routine" class="screen">
     <div class="topbar">
-      <div class="topbar-greet"><div class="topbar-date">VOS SOINS</div><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
-      <button style="background:var(--accent);border:none;border-radius:100px;padding:10px 14px;color:white;font-family:var(--sans);font-size:12px;cursor:pointer;" onclick="showToast('Bientôt : scan code-barre')">+ Ajouter</button>
+      <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
+      <button class="add-btn" onclick="openProductForm(currentRoutineView)">+ Ajouter</button>
     </div>
-    <div style="padding:0 20px;margin-bottom:20px;">
-      <div style="display:flex;gap:8px;background:var(--surface-warm);border-radius:14px;padding:4px;">
-        <button class="route-tab active" onclick="switchRouteTab(this,'morning')" style="flex:1;padding:10px;background:var(--surface);border:none;border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;box-shadow:var(--shadow);">☀️ Matin</button>
-        <button class="route-tab" onclick="switchRouteTab(this,'evening')" style="flex:1;padding:10px;background:transparent;border:none;border-radius:10px;font-family:var(--sans);font-size:13px;color:var(--muted);cursor:pointer;">🌙 Soir</button>
-        <button class="route-tab" onclick="switchRouteTab(this,'weekly')" style="flex:1;padding:10px;background:transparent;border:none;border-radius:10px;font-family:var(--sans);font-size:13px;color:var(--muted);cursor:pointer;">✨ Hebdo</button>
+    <div style="padding:0 20px;margin-bottom:18px;">
+      <div class="period-switch">
+        <button class="period-btn active" id="rt-matin" onclick="switchRoutineView('matin')">☀️ Matin</button>
+        <button class="period-btn" id="rt-soir" onclick="switchRoutineView('soir')">🌙 Soir</button>
       </div>
     </div>
     <div class="section">
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div style="background:var(--surface);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;"><div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#E8F0E5,#B8D4AC);display:flex;align-items:center;justify-content:center;font-size:28px;">🧴</div><div style="flex:1;"><div style="font-size:11px;letter-spacing:0.15em;color:var(--muted);">ÉTAPE 1 · NETTOYAGE</div><div style="font-family:var(--serif);font-size:16px;margin-top:2px;">Cleanance Gel</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Avène · 200ml · Reste 60%</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div style="background:var(--surface);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;"><div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#FFE8C8,#F5A623);display:flex;align-items:center;justify-content:center;font-size:28px;">💧</div><div style="flex:1;"><div style="font-size:11px;letter-spacing:0.15em;color:var(--muted);">ÉTAPE 2 · SÉRUM</div><div style="font-family:var(--serif);font-size:16px;margin-top:2px;">Vitamine C 15%</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">The Ordinary · 30ml · Reste 25%</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div style="background:var(--surface);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;"><div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#E0F0FF,#7BB3E0);display:flex;align-items:center;justify-content:center;font-size:28px;">💎</div><div style="flex:1;"><div style="font-size:11px;letter-spacing:0.15em;color:var(--muted);">ÉTAPE 3 · HYDRATATION</div><div style="font-family:var(--serif);font-size:16px;margin-top:2px;">Moisturizing Lotion</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">CeraVe · 236ml · Reste 80%</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div style="background:var(--surface);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;"><div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#FFE4B0,#E89B3A);display:flex;align-items:center;justify-content:center;font-size:28px;">☀️</div><div style="flex:1;"><div style="font-size:11px;letter-spacing:0.15em;color:var(--muted);">ÉTAPE 4 · PROTECTION</div><div style="font-family:var(--serif);font-size:16px;margin-top:2px;">Anthelios SPF 50+</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">La Roche-Posay · 50ml · Reste 40%</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div style="background:linear-gradient(135deg,var(--blush-soft),var(--surface-warm));border:1px dashed var(--accent-soft);border-radius:18px;padding:16px;display:flex;gap:14px;align-items:center;"><div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#F5E8DD,var(--accent-soft));display:flex;align-items:center;justify-content:center;font-size:28px;">🌸</div><div style="flex:1;"><div style="font-size:11px;letter-spacing:0.15em;color:var(--accent-deep);">SUGGÉRÉ PAR LÉA</div><div style="font-family:var(--serif);font-size:16px;margin-top:2px;">Niacinamide 10%</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Pour vos pores et la brillance T</div></div><button style="background:var(--accent);border:none;color:white;border-radius:100px;padding:8px 12px;font-family:var(--sans);font-size:12px;cursor:pointer;" onclick="showToast('Ajouté à votre routine ✓')">+ Ajouter</button></div>
-      </div>
+      <div id="products-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+      <button class="add-product-card" onclick="openProductForm(currentRoutineView)">＋ Ajouter un produit</button>
     </div>
     <div class="section">
       <div style="background:var(--surface-warm);border-radius:16px;padding:16px;display:flex;justify-content:space-between;align-items:center;">
-        <div><div class="eyebrow">DURÉE TOTALE</div><div class="serif" style="font-size:22px;">4 min 30</div></div>
-        <div style="text-align:right;"><div class="eyebrow">COÛT MENSUEL</div><div class="serif" style="font-size:22px;">~48€</div></div>
+        <div onclick="editDuree()" style="cursor:pointer;"><div class="eyebrow">DURÉE <span id="duree-period">MATIN</span></div><div class="serif" style="font-size:22px;" id="duree-val">— <span style="font-size:12px;color:var(--muted);">ajouter ›</span></div></div>
+        <div style="text-align:right;"><div class="eyebrow">COÛT MENSUEL</div><div class="serif" style="font-size:22px;" id="cout-val">0€</div></div>
       </div>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px;">Le coût se calcule automatiquement à partir du prix de tes produits 🌸</div>
     </div>
   </div>
 
@@ -773,7 +793,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.4<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.5<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -789,6 +809,34 @@
   <button class="fab" onclick="document.getElementById('photo-input').click()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
   <div class="toast" id="toast"></div>
+
+  <!-- ====================== FICHE PRODUIT ====================== -->
+  <div class="sheet-overlay" id="product-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="product-sheet-title">Nouveau produit</div>
+
+      <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">Icône</label>
+      <div class="emoji-picker" id="emoji-picker" style="margin:8px 0 16px;"></div>
+
+      <div class="field"><label>Nom du produit *</label><input id="pf-nom" placeholder="Ex. Sérum vitamine C"></div>
+      <div class="field" style="margin-top:12px;"><label>Étape (optionnel)</label><input id="pf-etape" placeholder="Ex. Nettoyage, Sérum, Hydratation…"></div>
+      <div class="field" style="margin-top:12px;"><label>Effets / bienfaits (optionnel)</label><input id="pf-effets" placeholder="Ex. éclaircit les taches"></div>
+      <div class="field" style="margin-top:12px;"><label>Prix en € (optionnel)</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="Ex. 15"></div>
+
+      <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;display:block;margin-top:16px;">Photo du produit (optionnel)</label>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:12px;">
+        <div class="product-thumb" id="pf-photo-thumb" style="cursor:pointer;" onclick="document.getElementById('pf-photo-input').click()">📷</div>
+        <button type="button" class="btn-outline-sm" onclick="document.getElementById('pf-photo-input').click()">Choisir une photo</button>
+        <input type="file" id="pf-photo-input" accept="image/*" style="display:none" onchange="pfPhotoPreview(this)">
+      </div>
+
+      <div class="auth-error" id="pf-error" style="margin-top:12px;"></div>
+      <button class="btn btn-accent" style="margin-top:8px;" onclick="saveProduct()">Enregistrer</button>
+      <button class="btn" id="pf-delete" style="margin-top:10px;background:transparent;color:var(--accent);display:none;" onclick="deleteProduct()">Supprimer ce produit</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeProductSheet()">Annuler</button>
+    </div>
+  </div>
 
   <!-- ====================== POLITIQUE DE CONFIDENTIALITÉ ====================== -->
   <div class="policy" id="policy">
@@ -1077,6 +1125,7 @@
     document.getElementById('app').setAttribute('data-screen', screen);
     const host=document.getElementById('scroll-host'); if(host) host.scrollTo(0,0);
     window.scrollTo(0,0);
+    if(screen==='routine' && currentUser) loadProducts();
   }
 
   // ===== Entrée du jour (une ligne par jour dans 'entries') =====
@@ -1249,6 +1298,151 @@
     if(!path) return null;
     const { data } = await sb.storage.from('photos').createSignedUrl(path, 3600);
     return data ? data.signedUrl : null;
+  }
+
+  // ===== Rituel : produits perso =====
+  let currentRoutineView = 'matin';
+  let editingProductId = null;
+  let pfPhotoFile = null;
+  let pfPhotoPath = null;
+  let pfEmoji = '🧴';
+  const PRODUCT_EMOJIS = ['🧴','🧼','🫧','💧','💎','✨','☀️','🌙','🌸','🌿','💛','🧪','👁️','💋'];
+
+  function switchRoutineView(m){
+    currentRoutineView = m;
+    document.getElementById('rt-matin').classList.toggle('active', m==='matin');
+    document.getElementById('rt-soir').classList.toggle('active', m==='soir');
+    loadProducts();
+  }
+
+  async function loadProducts(){
+    if(!currentUser) return;
+    const list = document.getElementById('products-list');
+    const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).eq('moment', currentRoutineView).order('position',{ascending:true});
+    const products = data || [];
+    if(!products.length){
+      list.innerHTML = `<div style="text-align:center;padding:30px 16px;color:var(--muted);font-size:14px;line-height:1.6;">Aucun produit pour le ${currentRoutineView==='soir'?'soir':'matin'} pour l'instant.<br>Ajoute ton premier soin 🌸</div>`;
+    } else {
+      let html='';
+      for(let i=0;i<products.length;i++){
+        const p=products[i];
+        let thumb = p.emoji || '🧴';
+        if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) thumb=`<img src="${url}" alt="">`; }
+        const step = `ÉTAPE ${i+1}${p.etape?(' · '+escapeHtml(p.etape).toUpperCase()):''}`;
+        const meta = [p.effets?escapeHtml(p.effets):'', (p.prix!=null&&p.prix!=='')?(p.prix+'€'):''].filter(Boolean).join(' · ');
+        html += `<div class="product-card" onclick="openProductForm('${currentRoutineView}','${p.id}')">
+          <div class="product-thumb">${thumb}</div>
+          <div class="product-info" style="flex:1;">
+            <div class="product-step">${step}</div>
+            <div class="product-name">${escapeHtml(p.nom||'')}</div>
+            ${meta?`<div class="product-meta">${meta}</div>`:''}
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>`;
+      }
+      list.innerHTML = html;
+    }
+    renderRoutineFooter();
+  }
+
+  async function renderRoutineFooter(){
+    if(!currentUser) return;
+    document.getElementById('duree-period').textContent = currentRoutineView.toUpperCase();
+    const { data: all } = await sb.from('products').select('prix').eq('user_id', currentUser.id);
+    let cout=0; (all||[]).forEach(p=>{ const v=parseFloat(p.prix); if(!isNaN(v)) cout+=v; });
+    document.getElementById('cout-val').textContent = cout>0 ? ('~'+Math.round(cout)+'€') : '0€';
+    const prof = await loadProfile();
+    const d = currentRoutineView==='soir' ? (prof&&prof.duree_soir) : (prof&&prof.duree_matin);
+    document.getElementById('duree-val').innerHTML = d ? (d+' min <span style="font-size:12px;color:var(--muted);">modifier ›</span>') : '— <span style="font-size:12px;color:var(--muted);">ajouter ›</span>';
+  }
+
+  async function editDuree(){
+    const v = prompt(`Durée de ta routine du ${currentRoutineView==='soir'?'soir':'matin'} (en minutes) :`, '');
+    if(v===null) return;
+    const n = parseInt(v,10);
+    if(isNaN(n)||n<0){ showToast('Entre un nombre de minutes'); return; }
+    const field = currentRoutineView==='soir' ? { duree_soir:n } : { duree_matin:n };
+    await sb.from('profiles').update(field).eq('id', currentUser.id);
+    renderRoutineFooter();
+  }
+
+  function renderEmojiPicker(){
+    document.getElementById('emoji-picker').innerHTML = PRODUCT_EMOJIS.map(e=>`<button type="button" class="emoji-opt${e===pfEmoji?' selected':''}" onclick="pickEmoji('${e}')">${e}</button>`).join('');
+  }
+  function pickEmoji(e){ pfEmoji=e; renderEmojiPicker(); }
+  function pfPhotoPreview(input){
+    const f=input.files[0]; if(!f) return;
+    pfPhotoFile=f;
+    const r=new FileReader(); r.onload=ev=>{ document.getElementById('pf-photo-thumb').innerHTML=`<img src="${ev.target.result}" alt="">`; }; r.readAsDataURL(f);
+  }
+  function closeProductSheet(){ document.getElementById('product-sheet').classList.remove('open'); }
+
+  async function openProductForm(moment, id){
+    currentRoutineView = moment;
+    editingProductId = id || null;
+    pfPhotoFile = null; pfPhotoPath = null; pfEmoji = '🧴';
+    document.getElementById('pf-error').textContent='';
+    document.getElementById('pf-nom').value='';
+    document.getElementById('pf-etape').value='';
+    document.getElementById('pf-effets').value='';
+    document.getElementById('pf-prix').value='';
+    document.getElementById('pf-photo-input').value='';
+    document.getElementById('pf-photo-thumb').innerHTML='📷';
+    document.getElementById('pf-delete').style.display = id ? 'block' : 'none';
+    document.getElementById('product-sheet-title').textContent = id ? 'Modifier le produit' : 'Nouveau produit';
+    renderEmojiPicker();
+    document.getElementById('product-sheet').classList.add('open');
+    if(id){
+      const { data: p } = await sb.from('products').select('*').eq('id', id).maybeSingle();
+      if(p){
+        document.getElementById('pf-nom').value = p.nom||'';
+        document.getElementById('pf-etape').value = p.etape||'';
+        document.getElementById('pf-effets').value = p.effets||'';
+        document.getElementById('pf-prix').value = (p.prix!=null?p.prix:'');
+        pfEmoji = p.emoji || '🧴'; renderEmojiPicker();
+        pfPhotoPath = p.photo_path || null;
+        if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) document.getElementById('pf-photo-thumb').innerHTML=`<img src="${url}" alt="">`; }
+      }
+    }
+  }
+
+  async function saveProduct(){
+    if(!currentUser) return;
+    const nom = document.getElementById('pf-nom').value.trim();
+    const err = document.getElementById('pf-error');
+    if(!nom){ err.textContent='Donne au moins un nom au produit.'; return; }
+    const etape = document.getElementById('pf-etape').value.trim();
+    const effets = document.getElementById('pf-effets').value.trim();
+    const prixRaw = document.getElementById('pf-prix').value.trim();
+    const prix = prixRaw==='' ? null : parseFloat(prixRaw.replace(',','.'));
+    err.textContent='';
+    showToast('Enregistrement…');
+    let photo_path = pfPhotoPath;
+    if(pfPhotoFile){
+      const ext=(pfPhotoFile.name.split('.').pop()||'jpg').toLowerCase();
+      const path=`${currentUser.id}/products/${Date.now()}.${ext}`;
+      const { error: upErr } = await sb.storage.from('photos').upload(path, pfPhotoFile, { upsert:true });
+      if(!upErr) photo_path = path;
+    }
+    if(editingProductId){
+      await sb.from('products').update({ nom, etape, effets, prix, emoji: pfEmoji, photo_path }).eq('id', editingProductId);
+    } else {
+      const { data: existing } = await sb.from('products').select('id').eq('user_id', currentUser.id).eq('moment', currentRoutineView);
+      const position = existing ? existing.length : 0;
+      await sb.from('products').insert({ user_id: currentUser.id, moment: currentRoutineView, position, nom, etape, effets, prix, emoji: pfEmoji, photo_path });
+    }
+    closeProductSheet();
+    showToast('Produit enregistré ✓');
+    loadProducts();
+  }
+
+  async function deleteProduct(){
+    if(!editingProductId) return;
+    if(!confirm('Supprimer ce produit ?')) return;
+    await sb.from('products').delete().eq('id', editingProductId);
+    closeProductSheet();
+    showToast('Produit supprimé');
+    loadProducts();
   }
 
   // ===== Chat — vraie Léa via le backend sécurisé (/api/lea) =====
