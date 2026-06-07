@@ -277,6 +277,19 @@
   .mood-label { font-size: 11px; color: var(--muted); }
   .mood-btn.selected .mood-label { color: var(--accent-deep); font-weight: 500; }
 
+  /* Intensité de l'humeur */
+  .intensity { margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .intensity-head { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-soft); margin-bottom: 10px; font-weight: 500; }
+  .intensity-head span:last-child { color: var(--accent-deep); font-family: var(--serif); font-size: 15px; }
+  .intensity-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 6px; background: var(--blush-soft); outline: none; }
+  .intensity-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: var(--shadow); }
+  .intensity-slider::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: var(--accent); cursor: pointer; }
+
+  /* Switch Matin / Soir */
+  .period-switch { display: flex; gap: 8px; background: var(--surface-warm); border-radius: 14px; padding: 4px; margin-bottom: 14px; }
+  .period-btn { flex: 1; padding: 11px; border: none; background: transparent; border-radius: 10px; font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .2s; }
+  .period-btn.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
   .routine-list { background: var(--surface); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
   .routine-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
   .routine-item:last-child { border-bottom: none; }
@@ -553,19 +566,19 @@
         <img id="photo-img" alt="">
         <div class="photo-overlay">
           <div class="photo-chip">📷 Aujourd'hui</div>
-          <div class="photo-chip" style="background:rgba(122,148,104,0.85);">✨ Score 78</div>
+          <div class="photo-chip" id="photo-chip-extra" style="background:rgba(122,148,104,0.85);">✓ Enregistrée</div>
         </div>
       </div>
       <input type="file" id="photo-input" accept="image/*" capture="user" style="display:none;" onchange="handlePhoto(this)">
     </div>
 
     <div class="streak">
-      <div class="streak-flame">🌸</div>
+      <div class="streak-flame" id="streak-flame">🌱</div>
       <div class="streak-text">
-        <div class="streak-num"><em>12</em> jours d'affilée</div>
-        <div class="streak-label">Vous êtes rayonnante de constance ✨</div>
+        <div class="streak-num"><em id="streak-num">0</em> <span id="streak-unit">jour</span></div>
+        <div class="streak-label" id="streak-label">Fais ta routine matin + soir pour démarrer ta série ✨</div>
       </div>
-      <div class="streak-mini"><div class="streak-day active"></div><div class="streak-day active"></div><div class="streak-day active"></div><div class="streak-day active"></div><div class="streak-day active"></div><div class="streak-day active"></div><div class="streak-day active"></div></div>
+      <div class="streak-mini" id="streak-mini"></div>
     </div>
 
     <div class="section">
@@ -574,21 +587,35 @@
         <button class="mood-btn" onclick="selectMood(this,1)"><div class="mood-emoji">😣</div><div class="mood-label">Difficile</div></button>
         <button class="mood-btn" onclick="selectMood(this,2)"><div class="mood-emoji">😕</div><div class="mood-label">Moyenne</div></button>
         <button class="mood-btn" onclick="selectMood(this,3)"><div class="mood-emoji">😌</div><div class="mood-label">Bien</div></button>
-        <button class="mood-btn selected" onclick="selectMood(this,4)"><div class="mood-emoji">😊</div><div class="mood-label">Top</div></button>
+        <button class="mood-btn" onclick="selectMood(this,4)"><div class="mood-emoji">😊</div><div class="mood-label">Top</div></button>
         <button class="mood-btn" onclick="selectMood(this,5)"><div class="mood-emoji">✨</div><div class="mood-label">Sublime</div></button>
+      </div>
+      <div class="intensity hidden" id="intensity-box">
+        <div class="intensity-head"><span>Intensité du ressenti</span><span id="intensity-val">50%</span></div>
+        <input type="range" min="0" max="100" value="50" step="5" class="intensity-slider" id="intensity-slider" oninput="onIntensity(this.value)" onchange="saveMood()">
       </div>
     </div>
 
     <div class="section">
       <div class="section-head">
-        <h3 class="section-title"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Rituel du <em>matin</em></h3>
-        <div class="section-more">3/4</div>
+        <h3 class="section-title"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Votre <em>rituel</em></h3>
+        <div class="section-more" id="routine-count">0/0</div>
       </div>
-      <div class="routine-list">
-        <div class="routine-item done" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Nettoyant doux</div><div class="routine-product">Avène Cleanance Gel</div></div><div class="routine-time">07:12</div></div>
-        <div class="routine-item done" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Sérum vitamine C</div><div class="routine-product">The Ordinary 15%</div></div><div class="routine-time">07:14</div></div>
-        <div class="routine-item done" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Hydratant</div><div class="routine-product">CeraVe Lotion</div></div><div class="routine-time">07:16</div></div>
+      <div class="period-switch">
+        <button class="period-btn active" id="pb-matin" onclick="switchPeriod('matin')">☀️ Matin</button>
+        <button class="period-btn" id="pb-soir" onclick="switchPeriod('soir')">🌙 Soir</button>
+      </div>
+      <div class="routine-list" id="routine-matin">
+        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Nettoyant doux</div><div class="routine-product">Avène Cleanance Gel</div></div><div class="routine-time">—</div></div>
+        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Sérum vitamine C</div><div class="routine-product">The Ordinary 15%</div></div><div class="routine-time">—</div></div>
+        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Hydratant</div><div class="routine-product">CeraVe Lotion</div></div><div class="routine-time">—</div></div>
         <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">SPF 50</div><div class="routine-product">La Roche-Posay Anthelios</div></div><div class="routine-time">—</div></div>
+      </div>
+      <div class="routine-list hidden" id="routine-soir">
+        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Démaquillant</div><div class="routine-product">Eau micellaire</div></div><div class="routine-time">—</div></div>
+        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Nettoyant doux</div><div class="routine-product">Avène Cleanance Gel</div></div><div class="routine-time">—</div></div>
+        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Traitement / sérum</div><div class="routine-product">Niacinamide 10%</div></div><div class="routine-time">—</div></div>
+        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Crème de nuit</div><div class="routine-product">CeraVe PM</div></div><div class="routine-time">—</div></div>
       </div>
     </div>
 
@@ -1017,6 +1044,7 @@
     updateUserUI();
     navTo('home');
     loadTodayPhoto();
+    loadHomeData();
     loadJournalFromDB();
   }
 
@@ -1049,18 +1077,134 @@
     window.scrollTo(0,0);
   }
 
-  // ===== Interactions =====
-  function selectMood(el){ el.parentElement.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected')); el.classList.add('selected'); showToast('Humeur enregistrée ✓'); }
-  function toggleRoutine(el){
-    el.classList.toggle('done');
-    const list=el.parentElement;
-    const done=list.querySelectorAll('.routine-item.done').length, total=list.querySelectorAll('.routine-item').length;
-    const c=list.parentElement.querySelector('.section-more'); if(c) c.textContent=`${done}/${total}`;
-    if(el.classList.contains('done')) el.querySelector('.routine-time').textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  // ===== Entrée du jour (une ligne par jour dans 'entries') =====
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+  async function getTodayEntryId(){
+    if(!currentUser) return null;
+    const { data } = await sb.from('entries').select('id').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
+    if(data && data.length) return data[0].id;
+    const { data: ins, error } = await sb.from('entries').insert({ user_id: currentUser.id, date: todayStr() }).select('id').single();
+    if(error){ console.warn('getTodayEntryId:', error.message); return null; }
+    return ins ? ins.id : null;
   }
+  async function updateTodayEntry(fields){
+    const id = await getTodayEntryId();
+    if(!id) return;
+    const { error } = await sb.from('entries').update(fields).eq('id', id);
+    if(error) console.warn('updateTodayEntry:', error.message);
+  }
+
+  // ===== Humeur + intensité =====
+  let currentMood = null;
+  function selectMood(el, val){
+    el.parentElement.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+    el.classList.add('selected');
+    currentMood = val;
+    document.getElementById('intensity-box').classList.remove('hidden');
+    saveMood();
+  }
+  function onIntensity(v){ document.getElementById('intensity-val').textContent = v+'%'; }
+  async function saveMood(){
+    if(!currentUser || !currentMood) return;
+    const intensite = parseInt(document.getElementById('intensity-slider').value,10);
+    await updateTodayEntry({ humeur: currentMood, humeur_intensite: intensite });
+    showToast('Humeur enregistrée ✓');
+  }
+
+  // ===== Routine matin / soir =====
+  let currentPeriod = 'matin';
+  function switchPeriod(p){
+    currentPeriod = p;
+    document.getElementById('pb-matin').classList.toggle('active', p==='matin');
+    document.getElementById('pb-soir').classList.toggle('active', p==='soir');
+    document.getElementById('routine-matin').classList.toggle('hidden', p!=='matin');
+    document.getElementById('routine-soir').classList.toggle('hidden', p!=='soir');
+    updateRoutineCount();
+  }
+  function listStats(period){
+    const list=document.getElementById('routine-'+period);
+    const total=list.querySelectorAll('.routine-item').length;
+    const done=list.querySelectorAll('.routine-item.done').length;
+    return { done, total, complete: total>0 && done===total };
+  }
+  function updateRoutineCount(){
+    const s=listStats(currentPeriod);
+    document.getElementById('routine-count').textContent = `${s.done}/${s.total}`;
+  }
+  async function toggleRoutine(el){
+    el.classList.toggle('done');
+    el.querySelector('.routine-time').textContent = el.classList.contains('done')
+      ? new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '—';
+    const list = el.closest('.routine-list');
+    const period = (list && list.id==='routine-soir') ? 'soir' : 'matin';
+    updateRoutineCount();
+    const complete = listStats(period).complete;
+    await updateTodayEntry(period==='soir' ? { routine_soir: complete } : { routine_matin: complete });
+    renderStreak();
+  }
+  function applyRoutineState(period, complete){
+    const list=document.getElementById('routine-'+period);
+    list.querySelectorAll('.routine-item').forEach(it=>{
+      it.classList.toggle('done', !!complete);
+      it.querySelector('.routine-time').textContent = complete ? '✓' : '—';
+    });
+  }
+
+  // ===== Streak (jours où matin ET soir sont faits) =====
+  async function computeStreak(){
+    if(!currentUser) return 0;
+    const { data } = await sb.from('entries').select('date,routine_matin,routine_soir').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(90);
+    if(!data || !data.length) return 0;
+    const done={}; data.forEach(e=>{ done[e.date] = !!(e.routine_matin && e.routine_soir); });
+    let streak=0; const d=new Date();
+    if(!done[d.toISOString().slice(0,10)]) d.setDate(d.getDate()-1);
+    for(let i=0;i<90;i++){
+      const ds=d.toISOString().slice(0,10);
+      if(done[ds]){ streak++; d.setDate(d.getDate()-1); } else break;
+    }
+    return streak;
+  }
+  async function renderStreak(){
+    if(!currentUser) return;
+    const n = await computeStreak();
+    document.getElementById('streak-num').textContent = n;
+    document.getElementById('streak-unit').textContent = n>1 ? "jours d'affilée" : "jour";
+    document.getElementById('streak-flame').textContent = n===0 ? '🌱' : (n>=7 ? '🔥' : '🌸');
+    const label=document.getElementById('streak-label');
+    if(n===0) label.textContent='Fais ta routine matin + soir pour démarrer ta série ✨';
+    else if(n<3) label.textContent='Beau début, continue comme ça 🌸';
+    else if(n<7) label.textContent='Belle régularité, ça se voit sur la peau ✨';
+    else label.textContent='Tu es rayonnante de constance 🔥';
+    const { data } = await sb.from('entries').select('date,routine_matin,routine_soir').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(14);
+    const done={}; (data||[]).forEach(e=>{ done[e.date]=!!(e.routine_matin&&e.routine_soir); });
+    let mini='';
+    for(let i=6;i>=0;i--){ const dd=new Date(); dd.setDate(dd.getDate()-i); const ds=dd.toISOString().slice(0,10); mini+=`<div class="streak-day${done[ds]?' active':''}"></div>`; }
+    document.getElementById('streak-mini').innerHTML = mini;
+  }
+
+  // ===== Chargement de l'accueil =====
+  async function loadHomeData(){
+    if(!currentUser) return;
+    const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
+    const e = (data && data.length) ? data[0] : null;
+    if(e && e.humeur){
+      const btns=document.querySelectorAll('#home .mood-btn');
+      btns.forEach(b=>b.classList.remove('selected'));
+      if(btns[e.humeur-1]) btns[e.humeur-1].classList.add('selected');
+      currentMood=e.humeur;
+      document.getElementById('intensity-box').classList.remove('hidden');
+      const slider=document.getElementById('intensity-slider');
+      slider.value = e.humeur_intensite || 50; onIntensity(slider.value);
+    }
+    applyRoutineState('matin', e ? e.routine_matin : false);
+    applyRoutineState('soir', e ? e.routine_soir : false);
+    switchPeriod('matin');
+    renderStreak();
+  }
+
+  // ===== Photo du jour =====
   async function handlePhoto(input){
     const f=input.files[0]; if(!f) return;
-    // aperçu immédiat
     const r=new FileReader();
     r.onload=e=>{
       document.getElementById('photo-img').src=e.target.result;
@@ -1068,23 +1212,14 @@
       document.getElementById('photo-display').classList.remove('hidden');
     };
     r.readAsDataURL(f);
-
     if(!currentUser){ showToast('Connectez-vous pour sauvegarder'); return; }
     showToast('Envoi de la photo… 🌸');
     const ext = (f.name.split('.').pop()||'jpg').toLowerCase();
     const path = `${currentUser.id}/${Date.now()}.${ext}`;
     const { error: upErr } = await sb.storage.from('photos').upload(path, f, { upsert:true });
     if(upErr){ showToast('Erreur upload : '+upErr.message); return; }
-
-    // un score fictif pour la démo (en vrai : analyse IA via le backend)
-    const score = 70 + Math.floor(Math.random()*15);
-    const { error: insErr } = await sb.from('entries').insert({
-      user_id: currentUser.id,
-      photo_path: path,
-      score_peau: score
-    });
-    if(insErr){ showToast('Photo envoyée, mais journal : '+insErr.message); return; }
-    showToast(`Photo sauvegardée ✓ Score du jour : ${score}/100`);
+    await updateTodayEntry({ photo_path: path });
+    showToast('Photo du jour enregistrée 🌸');
     loadJournalFromDB();
   }
 
