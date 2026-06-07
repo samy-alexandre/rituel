@@ -315,6 +315,21 @@
   .emoji-opt { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .emoji-opt.selected { border-color: var(--accent); background: var(--blush-soft); }
 
+  /* ===== Cloche & rappels ===== */
+  .bell-btn { position: relative; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .bell-dot { position: absolute; top: 8px; right: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); }
+  .switch { position: relative; width: 46px; height: 28px; flex-shrink: 0; display: inline-block; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .sl { position: absolute; inset: 0; background: var(--line); border-radius: 28px; transition: .2s; cursor: pointer; }
+  .switch .sl:before { content: ''; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; box-shadow: var(--shadow); }
+  .switch input:checked + .sl { background: var(--accent); }
+  .switch input:checked + .sl:before { transform: translateX(18px); }
+  .rem-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .rem-label { font-size: 15px; }
+  .rem-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .rem-time { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-family: var(--sans); font-size: 14px; background: var(--surface); color: var(--ink); }
+  .rem-time:disabled { opacity: .4; }
+
   .routine-list { background: var(--surface); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
   .routine-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
   .routine-item:last-child { border-bottom: none; }
@@ -603,7 +618,13 @@
         <div class="topbar-date" id="topbar-date">MERCREDI 27 MAI</div>
         <div class="topbar-name">Bonjour, <em id="topbar-name">vous</em></div>
       </div>
-      <div class="avatar" onclick="navTo('profile')" id="topbar-avatar">V</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="bell-btn" onclick="openReminderSheet()" aria-label="Rappels">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 01-3.4 0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="bell-dot" id="bell-dot" style="display:none;"></span>
+        </button>
+        <div class="avatar" onclick="navTo('profile')" id="topbar-avatar">V</div>
+      </div>
     </div>
 
     <div class="photo-card">
@@ -802,7 +823,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.9<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.0<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -818,6 +839,36 @@
   <button class="fab" onclick="document.getElementById('photo-input').click()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
   <div class="toast" id="toast"></div>
+
+  <!-- ====================== RAPPELS ====================== -->
+  <div class="sheet-overlay" id="reminder-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Mes rappels</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">De petits rappels en douceur pour ne rien oublier 🌸 (Ils s'affichent quand l'app est ouverte ; les notifications même app fermée arriveront dans une prochaine version.)</p>
+
+      <div class="rem-row">
+        <div><div class="rem-label">Activer les rappels</div><div class="rem-sub" id="rem-perm-sub">Autoriser les notifications</div></div>
+        <label class="switch"><input type="checkbox" id="rem-enabled" onchange="onReminderMaster(this)"><span class="sl"></span></label>
+      </div>
+
+      <div class="rem-row">
+        <div><div class="rem-label">☀️ Routine du matin</div><div class="rem-sub">Bien commencer la journée</div></div>
+        <div style="display:flex;align-items:center;gap:10px;"><input type="time" id="rem-matin-time" class="rem-time" value="08:00"><label class="switch"><input type="checkbox" id="rem-matin-on"><span class="sl"></span></label></div>
+      </div>
+      <div class="rem-row">
+        <div><div class="rem-label">💧 Boire de l'eau</div><div class="rem-sub">Une peau hydratée, c'est tout</div></div>
+        <div style="display:flex;align-items:center;gap:10px;"><input type="time" id="rem-eau-time" class="rem-time" value="14:00"><label class="switch"><input type="checkbox" id="rem-eau-on"><span class="sl"></span></label></div>
+      </div>
+      <div class="rem-row">
+        <div><div class="rem-label">🌙 Routine du soir</div><div class="rem-sub">Le rituel avant de dormir</div></div>
+        <div style="display:flex;align-items:center;gap:10px;"><input type="time" id="rem-soir-time" class="rem-time" value="21:00"><label class="switch"><input type="checkbox" id="rem-soir-on"><span class="sl"></span></label></div>
+      </div>
+
+      <button class="btn btn-accent" style="margin-top:18px;" onclick="saveReminderSheet()">Enregistrer</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeReminderSheet()">Annuler</button>
+    </div>
+  </div>
 
   <!-- ====================== DÉTAIL D'UN JOUR ====================== -->
   <div class="sheet-overlay" id="day-detail">
@@ -1154,6 +1205,8 @@
     document.getElementById('nav').classList.remove('hidden');
     updateUserUI();
     navTo('home');
+    updateBellDot();
+    startReminderScheduler();
   }
 
   function updateUserUI(){
@@ -1820,6 +1873,84 @@
     document.getElementById('day-detail').classList.add('open');
   }
   function closeDayDetail(){ document.getElementById('day-detail').classList.remove('open'); }
+
+  // ===== Rappels (notifications) =====
+  const REMINDER_ITEMS = [
+    { id:'matin', body:'☀️ C\'est l\'heure de ta routine du matin 🌸', defTime:'08:00' },
+    { id:'eau',   body:'💧 Pense à boire un verre d\'eau, ta peau te dira merci', defTime:'14:00' },
+    { id:'soir',  body:'🌙 Petit rappel : ta routine du soir t\'attend 💛', defTime:'21:00' }
+  ];
+  function remKey(){ return 'rituel_reminders_'+(currentUser?currentUser.id:'anon'); }
+  function getReminders(){
+    try{ const r=JSON.parse(localStorage.getItem(remKey())||'null'); if(r && r.items) return r; }catch(e){}
+    return { enabled:false, items: REMINDER_ITEMS.map(it=>({ id:it.id, time:it.defTime, on:true, lastFired:null })) };
+  }
+  function saveReminders(cfg){ try{ localStorage.setItem(remKey(), JSON.stringify(cfg)); }catch(e){} }
+  function updateBellDot(){ const d=document.getElementById('bell-dot'); if(d) d.style.display = getReminders().enabled ? 'block' : 'none'; }
+
+  function refreshPermLabel(){
+    const sub=document.getElementById('rem-perm-sub'); if(!sub) return;
+    if(!('Notification' in window)){ sub.textContent='Non supporté sur ce navigateur'; return; }
+    if(Notification.permission==='granted') sub.textContent='Notifications autorisées ✓';
+    else if(Notification.permission==='denied') sub.textContent='Notifications bloquées (à réactiver dans le navigateur)';
+    else sub.textContent='Autoriser les notifications';
+  }
+  function openReminderSheet(){
+    const cfg=getReminders();
+    document.getElementById('rem-enabled').checked = !!cfg.enabled;
+    REMINDER_ITEMS.forEach(it=>{
+      const saved = cfg.items.find(x=>x.id===it.id) || {};
+      document.getElementById('rem-'+it.id+'-time').value = saved.time || it.defTime;
+      document.getElementById('rem-'+it.id+'-on').checked = saved.on!==false;
+    });
+    refreshPermLabel();
+    document.getElementById('reminder-sheet').classList.add('open');
+  }
+  async function onReminderMaster(el){
+    if(el.checked && ('Notification' in window) && Notification.permission==='default'){
+      const p = await Notification.requestPermission();
+      refreshPermLabel();
+      if(p!=='granted'){ el.checked=false; showToast('Autorise les notifications pour activer les rappels'); }
+    } else { refreshPermLabel(); }
+  }
+  function closeReminderSheet(){ document.getElementById('reminder-sheet').classList.remove('open'); }
+  function saveReminderSheet(){
+    const enabled = document.getElementById('rem-enabled').checked;
+    const items = REMINDER_ITEMS.map(it=>({
+      id: it.id,
+      time: document.getElementById('rem-'+it.id+'-time').value || it.defTime,
+      on: document.getElementById('rem-'+it.id+'-on').checked,
+      lastFired: null
+    }));
+    saveReminders({ enabled, items });
+    updateBellDot();
+    startReminderScheduler();
+    closeReminderSheet();
+    showToast(enabled ? 'Rappels activés 🔔' : 'Rappels enregistrés');
+  }
+  let reminderTimer=null;
+  function startReminderScheduler(){
+    if(reminderTimer) clearInterval(reminderTimer);
+    reminderTimer = setInterval(checkReminders, 30000);
+    checkReminders();
+  }
+  function checkReminders(){
+    const cfg=getReminders();
+    if(!cfg.enabled) return;
+    if(!('Notification' in window) || Notification.permission!=='granted') return;
+    const now=new Date();
+    const hhmm = pad2(now.getHours())+':'+pad2(now.getMinutes());
+    const today = todayStr();
+    let changed=false;
+    cfg.items.forEach(it=>{
+      if(it.on && it.time===hhmm && it.lastFired!==today){
+        const def = REMINDER_ITEMS.find(x=>x.id===it.id);
+        try{ new Notification('Rituel', { body: (def && def.body) || 'Petit rappel 🌸' }); }catch(e){}
+        it.lastFired = today; changed=true;
+      }
+    });
+    if(changed) saveReminders(cfg);
+  }
   let toastTimer;
   function showToast(msg){ if(!msg) return; const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2400); }
 
