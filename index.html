@@ -1185,11 +1185,17 @@
   // ===== Chargement de l'accueil =====
   async function loadHomeData(){
     if(!currentUser) return;
+    // on repart toujours d'une humeur "vierge" à l'affichage…
+    document.querySelectorAll('#home .mood-btn').forEach(b=>b.classList.remove('selected'));
+    document.getElementById('intensity-box').classList.add('hidden');
+    document.getElementById('intensity-slider').value = 50; onIntensity(50);
+    currentMood = null;
+
     const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
     const e = (data && data.length) ? data[0] : null;
+    // …et on ne ré-affiche l'humeur QUE si elle a été notée aujourd'hui
     if(e && e.humeur){
       const btns=document.querySelectorAll('#home .mood-btn');
-      btns.forEach(b=>b.classList.remove('selected'));
       if(btns[e.humeur-1]) btns[e.humeur-1].classList.add('selected');
       currentMood=e.humeur;
       document.getElementById('intensity-box').classList.remove('hidden');
