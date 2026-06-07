@@ -338,6 +338,30 @@
 
   .journal-month { font-family: var(--serif); font-size: 14px; letter-spacing: 0.05em; color: var(--muted); padding: 0 24px 12px; text-transform: uppercase; }
   .journal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 0 20px; }
+
+  /* ===== Calendrier ===== */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; margin-bottom: 14px; }
+  .cal-title { font-family: var(--serif); font-size: 19px; }
+  .cal-nav { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-size: 18px; color: var(--ink-soft); cursor: pointer; line-height: 1; }
+  .cal-weekdays { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin-bottom: 6px; }
+  .cal-weekdays span { text-align: center; font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+  .cal-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; color: var(--ink-soft); position: relative; background: transparent; }
+  .cal-cell.empty { visibility: hidden; }
+  .cal-cell.has { cursor: pointer; transition: transform .12s; }
+  .cal-cell.has:active { transform: scale(0.92); }
+  .cal-cell.complete { background: var(--blush-soft); color: var(--accent-deep); font-weight: 600; }
+  .cal-cell.today { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .cal-cell.cal-future { color: var(--line); }
+  .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 3px; }
+  .cal-cam { position: absolute; top: 2px; right: 5px; font-size: 9px; }
+  .cal-legend { display: flex; gap: 14px; justify-content: center; margin-top: 16px; font-size: 10px; color: var(--muted); flex-wrap: wrap; }
+  .cal-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin-right: 3px; }
+  .cal-legend .dot-complete { background: var(--blush-soft); border: 1px solid var(--accent-soft); }
+  .cal-legend .dot-entry { background: var(--accent); }
+  .dd-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .dd-row span:first-child { color: var(--muted); }
+  .dd-row:last-child { border-bottom: none; }
   .journal-cell { aspect-ratio: 1; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; background: var(--surface-warm); transition: transform .2s; }
   .journal-cell:active { transform: scale(0.95); }
   .journal-cell.empty { background: var(--surface-warm); border: 1px dashed var(--line); }
@@ -673,38 +697,27 @@
   <div id="journal" class="screen">
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Journal</div></div>
-      <button style="background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:8px 14px;font-family:var(--sans);font-size:12px;color:var(--ink-soft);cursor:pointer;">Mai 2026</button>
     </div>
 
     <div class="section">
-      <div class="section-head"><h3 class="section-title">Évolution du <em>score peau</em></h3></div>
-      <div style="background:var(--surface);border-radius:18px;padding:20px;box-shadow:var(--shadow);">
-        <svg viewBox="0 0 320 120" style="width:100%;height:auto;display:block;">
-          <defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#C95A3F" stop-opacity="0.3"/><stop offset="100%" stop-color="#C95A3F" stop-opacity="0"/></linearGradient></defs>
-          <path d="M 0 80 L 40 75 L 80 70 L 120 65 L 160 55 L 200 48 L 240 42 L 280 35 L 320 28 L 320 120 L 0 120 Z" fill="url(#grad)"/>
-          <path d="M 0 80 L 40 75 L 80 70 L 120 65 L 160 55 L 200 48 L 240 42 L 280 35 L 320 28" stroke="#C95A3F" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="320" cy="28" r="5" fill="#C95A3F"/><circle cx="320" cy="28" r="10" fill="#C95A3F" opacity="0.2"/>
-        </svg>
-        <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--muted);letter-spacing:0.05em;"><span>1 MAI</span><span>15 MAI</span><span style="color:var(--accent);font-weight:600;">AUJ.</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);">
-          <div><div class="eyebrow">DÉPART</div><div class="serif" style="font-size:22px;">61</div></div>
-          <div style="text-align:center;"><div class="eyebrow">PROGRESSION</div><div class="serif" style="font-size:22px;color:var(--sage);">+17</div></div>
-          <div style="text-align:right;"><div class="eyebrow">AUJOURD'HUI</div><div class="serif" style="font-size:22px;color:var(--accent);"><em class="italic">78</em></div></div>
-        </div>
+      <div class="cal-head">
+        <button class="cal-nav" onclick="calMonth(-1)">‹</button>
+        <div class="cal-title" id="cal-title">—</div>
+        <button class="cal-nav" onclick="calMonth(1)">›</button>
+      </div>
+      <div class="cal-weekdays"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <span><i class="dot-complete"></i> Routine complète</span>
+        <span><i class="dot-entry"></i> Noté</span>
+        <span>📷 Photo</span>
       </div>
     </div>
 
-    <div class="journal-month">MAI 2026 — 14 entrées</div>
+    <div class="section-head" style="padding:0 20px;margin:8px 0 12px;"><h3 class="section-title">Mes <em>photos</em></h3></div>
     <div class="journal-grid" id="journal-grid"></div>
 
-    <div class="section" style="margin-top:32px;">
-      <div class="section-head"><h3 class="section-title">Vos <em>découvertes</em></h3></div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div style="background:var(--surface);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start;"><div style="font-size:24px;">🌙</div><div style="flex:1;"><div style="font-family:var(--serif);font-size:15px;margin-bottom:4px;">Le sommeil compte vraiment</div><div style="font-size:13px;color:var(--muted);">Moins de 7h de sommeil = votre score baisse de 8 points le lendemain.</div></div></div>
-        <div style="background:var(--surface);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start;"><div style="font-size:24px;">🍷</div><div style="flex:1;"><div style="font-family:var(--serif);font-size:15px;margin-bottom:4px;">L'alcool laisse une trace</div><div style="font-size:13px;color:var(--muted);">Les 3 soirs avec alcool ce mois-ci ont précédé une poussée le surlendemain.</div></div></div>
-        <div style="background:var(--surface);border-radius:16px;padding:16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start;"><div style="font-size:24px;">☀️</div><div style="flex:1;"><div style="font-family:var(--serif);font-size:15px;margin-bottom:4px;">Vitamine C × SPF = ✨</div><div style="font-size:13px;color:var(--muted);">Vos taches s'estompent 2× plus vite depuis cette combinaison.</div></div></div>
-      </div>
-    </div>
+    <div style="height:24px;"></div>
   </div>
 
   <!-- ====================== CHAT ====================== -->
@@ -789,7 +802,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.7<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 0.8<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -805,6 +818,16 @@
   <button class="fab" onclick="document.getElementById('photo-input').click()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
   <div class="toast" id="toast"></div>
+
+  <!-- ====================== DÉTAIL D'UN JOUR ====================== -->
+  <div class="sheet-overlay" id="day-detail">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="dd-title">Jour</div>
+      <div id="dd-body"></div>
+      <button class="btn btn-ghost" style="margin-top:16px;" onclick="closeDayDetail()">Fermer</button>
+    </div>
+  </div>
 
   <!-- ====================== FICHE MA JOURNÉE ====================== -->
   <div class="sheet-overlay" id="day-sheet">
@@ -1201,7 +1224,7 @@
     if(currentUser){
       if(screen==='home'){ loadHomeData(); loadTodayPhoto(); }
       else if(screen==='routine'){ loadProducts(); }
-      else if(screen==='journal'){ loadJournalFromDB(); }
+      else if(screen==='journal'){ loadJournalFromDB(); renderCalendar(); }
       else if(screen==='profile'){ renderProfileBadges(); }
     }
   }
@@ -1683,7 +1706,67 @@
     grid.innerHTML=html;
   }
 
-  // ===== Toast =====
+  // ===== Calendrier du Journal =====
+  const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  let calRef = (function(){ const d=new Date(); d.setDate(1); return d; })();
+  function calMonth(delta){ calRef.setMonth(calRef.getMonth()+delta); renderCalendar(); }
+  function pad2(n){ return n<10 ? ('0'+n) : (''+n); }
+  async function renderCalendar(){
+    const grid=document.getElementById('cal-grid'); if(!grid || !currentUser) return;
+    const year=calRef.getFullYear(), month=calRef.getMonth();
+    document.getElementById('cal-title').textContent = MONTHS_FR[month]+' '+year;
+    const first=new Date(year, month, 1);
+    const lastDay=new Date(year, month+1, 0).getDate();
+    const startStr=year+'-'+pad2(month+1)+'-01';
+    const endStr=year+'-'+pad2(month+1)+'-'+pad2(lastDay);
+    const { data } = await sb.from('entries').select('date,photo_path,humeur,routine_matin,routine_soir,sommeil,hydratation,alimentation,note').eq('user_id', currentUser.id).gte('date', startStr).lte('date', endStr);
+    const map={}; (data||[]).forEach(e=>{ map[e.date]=e; });
+    let wd=first.getDay(); const offset=(wd===0)?6:(wd-1); // lundi en 1er
+    const tStr=todayStr();
+    let html='';
+    for(let i=0;i<offset;i++) html+='<div class="cal-cell empty"></div>';
+    for(let d=1; d<=lastDay; d++){
+      const ds=year+'-'+pad2(month+1)+'-'+pad2(d);
+      const e=map[ds];
+      const isFuture=ds>tStr, isToday=ds===tStr;
+      const complete = e && e.routine_matin && e.routine_soir;
+      const hasEntry = e && (e.photo_path || e.humeur || e.sommeil!=null || e.hydratation!=null || e.alimentation!=null || e.routine_matin || e.routine_soir || e.note);
+      let cls='cal-cell';
+      if(complete) cls+=' complete';
+      if(isToday) cls+=' today';
+      if(isFuture) cls+=' cal-future';
+      const tappable = hasEntry && !isFuture;
+      if(tappable) cls+=' has';
+      const cam = (e && e.photo_path) ? '<span class="cal-cam">📷</span>' : '';
+      const dot = (hasEntry && !complete) ? '<span class="cal-dot"></span>' : '';
+      const oc = tappable ? ` onclick="openDayDetail('${ds}')"` : '';
+      html += `<div class="${cls}"${oc}>${cam}<span>${d}</span>${dot}</div>`;
+    }
+    grid.innerHTML=html;
+  }
+  async function openDayDetail(ds){
+    if(!currentUser) return;
+    const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', ds).order('created_at',{ascending:true}).limit(1);
+    const e=(data && data.length)?data[0]:null;
+    const [y,m,d]=ds.split('-').map(Number);
+    const dObj=new Date(y, m-1, d);
+    const jours=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    document.getElementById('dd-title').textContent = jours[dObj.getDay()]+' '+d+' '+MONTHS_FR[m-1].toLowerCase();
+    const body=document.getElementById('dd-body');
+    if(!e){ body.innerHTML='<p style="color:var(--muted);text-align:center;padding:24px 0;">Rien noté ce jour-là 🌙</p>'; document.getElementById('day-detail').classList.add('open'); return; }
+    let html='';
+    if(e.photo_path){ const url=await signedPhoto(e.photo_path); if(url) html+=`<img src="${url}" style="width:100%;border-radius:16px;margin-bottom:16px;display:block;">`; }
+    const MOOD=['','😣 Difficile','😕 Moyenne','😌 Bien','😊 Top','✨ Sublime'];
+    if(e.humeur) html+=`<div class="dd-row"><span>Humeur</span><span>${MOOD[e.humeur]||''}${e.humeur_intensite!=null?(' · '+e.humeur_intensite+'%'):''}</span></div>`;
+    if(e.sommeil!=null) html+=`<div class="dd-row"><span>💤 Sommeil</span><span>${fmtSleep(e.sommeil)}</span></div>`;
+    if(e.hydratation!=null) html+=`<div class="dd-row"><span>💧 Hydratation</span><span>${e.hydratation} ${e.hydratation>1?'verres':'verre'}</span></div>`;
+    if(e.alimentation!=null) html+=`<div class="dd-row"><span>🥗 Alimentation</span><span>${ALIM_LABELS[e.alimentation]||'—'}</span></div>`;
+    html+=`<div class="dd-row"><span>Routine</span><span>${e.routine_matin?'☀️ ✓':'☀️ —'} &nbsp;&nbsp; ${e.routine_soir?'🌙 ✓':'🌙 —'}</span></div>`;
+    if(e.note) html+=`<div style="margin-top:14px;font-size:14px;color:var(--ink-soft);line-height:1.5;">${escapeHtml(e.note)}</div>`;
+    body.innerHTML=html;
+    document.getElementById('day-detail').classList.add('open');
+  }
+  function closeDayDetail(){ document.getElementById('day-detail').classList.remove('open'); }
   let toastTimer;
   function showToast(msg){ if(!msg) return; const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2400); }
 
