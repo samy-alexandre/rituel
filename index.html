@@ -409,6 +409,13 @@
 
   .journal-month { font-family: var(--serif); font-size: 14px; letter-spacing: 0.05em; color: var(--muted); padding: 0 24px 12px; text-transform: uppercase; }
   .journal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 0 20px; }
+  .ba-card { margin: 0 20px; background: var(--surface); border-radius: 20px; box-shadow: var(--shadow); padding: 14px; display: flex; align-items: center; gap: 10px; }
+  .ba-side { flex: 1; text-align: center; min-width: 0; }
+  .ba-img { width: 100%; aspect-ratio: 3/4; border-radius: 14px; overflow: hidden; background: var(--surface-warm); }
+  .ba-img img { width: 100%; height: 100%; object-fit: cover; }
+  .ba-label { font-size: 12px; color: var(--muted); margin-top: 6px; font-family: var(--serif); }
+  .ba-arrow { color: var(--accent); font-size: 20px; flex-shrink: 0; }
+  .ba-caption { text-align: center; font-size: 13px; color: var(--ink-soft); margin-top: 12px; font-family: var(--serif); font-style: italic; }
 
   /* ===== Calendrier ===== */
   .cal-head { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; margin-bottom: 14px; }
@@ -804,6 +811,16 @@
       </div>
     </div>
 
+    <div class="section" id="ba-section" style="display:none;">
+      <div class="section-head"><h3 class="section-title">Avant <em>/ après</em></h3></div>
+      <div class="ba-card">
+        <div class="ba-side"><div class="ba-img" id="ba-before"></div><div class="ba-label" id="ba-before-label">Jour 1</div></div>
+        <div class="ba-arrow">→</div>
+        <div class="ba-side"><div class="ba-img" id="ba-after"></div><div class="ba-label" id="ba-after-label">Aujourd'hui</div></div>
+      </div>
+      <div class="ba-caption" id="ba-caption"></div>
+    </div>
+
     <div class="section-head" style="padding:0 20px;margin:8px 0 12px;"><h3 class="section-title">Mes <em>photos</em></h3></div>
     <div class="journal-grid" id="journal-grid"></div>
 
@@ -921,7 +938,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.9<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 2.0<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2343,8 +2360,35 @@
   function openEntry(day){ showToast(`Entrée du ${day} — vue détaillée bientôt`); }
 
   // Charge les vraies entrées du journal depuis Supabase
+  // ===== Avant / Après (première photo vs dernière) =====
+  async function loadBeforeAfter(){
+    const sec=document.getElementById('ba-section'); if(!sec) return;
+    sec.style.display='none';
+    if(!currentUser) return;
+    try{
+      const [firstR, lastR] = await Promise.all([
+        sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).order('date',{ascending:true}).limit(1),
+        sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).order('date',{ascending:false}).limit(1)
+      ]);
+      const first=(firstR.data&&firstR.data[0])||null;
+      const last=(lastR.data&&lastR.data[0])||null;
+      if(!first || !last || first.date===last.date) return; // besoin de 2 jours différents
+      const [u1,u2]=await Promise.all([signedPhoto(first.photo_path), signedPhoto(last.photo_path)]);
+      if(!u1 || !u2) return;
+      document.getElementById('ba-before').innerHTML='<img src="'+u1+'" alt="">';
+      document.getElementById('ba-after').innerHTML='<img src="'+u2+'" alt="">';
+      const fmt=(d)=>{ const p=d.split('-'); return p[2]+'/'+p[1]; };
+      const days=Math.round((new Date(last.date)-new Date(first.date))/86400000);
+      document.getElementById('ba-before-label').textContent='Jour 1 · '+fmt(first.date);
+      document.getElementById('ba-after-label').textContent="Aujourd'hui · "+fmt(last.date);
+      document.getElementById('ba-caption').textContent='+'+days+' jour'+(days>1?'s':'')+' entre les deux 🌸';
+      sec.style.display='block';
+    }catch(e){}
+  }
+
   async function loadJournalFromDB(){
     const grid=document.getElementById('journal-grid'); if(!grid) return;
+    loadBeforeAfter();
     if(!currentUser){ renderJournal(); return; }
     const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(30);
     if(!data || !data.length){ renderJournal(); return; }
