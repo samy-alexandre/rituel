@@ -328,6 +328,10 @@
   .product-name { font-family: var(--serif); font-size: 16px; margin-top: 2px; }
   .product-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .add-product-card { width: 100%; margin-top: 12px; padding: 16px; background: transparent; border: 1.5px dashed var(--accent-soft); border-radius: 18px; color: var(--accent-deep); font-family: var(--sans); font-size: 14px; font-weight: 500; cursor: pointer; }
+  .product-dates { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .prod-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 5px; }
+  .prod-badge-red { background: #FBE2DC; color: #B23A1E; }
+  .prod-badge-amber { background: #F7ECCB; color: #8A6A1E; }
   .add-product-card:active { background: var(--blush-soft); }
   .btn-outline-sm { padding: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 100px; font-family: var(--sans); font-size: 13px; color: var(--ink-soft); cursor: pointer; }
 
@@ -956,7 +960,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 2.2<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 2.3<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1151,6 +1155,9 @@
       <div class="field" style="margin-top:12px;"><label>Étape (optionnel)</label><input id="pf-etape" placeholder="Ex. Nettoyage, Sérum, Hydratation…"></div>
       <div class="field" style="margin-top:12px;"><label>Effets / bienfaits (optionnel)</label><input id="pf-effets" placeholder="Ex. éclaircit les taches"></div>
       <div class="field" style="margin-top:12px;"><label>Prix en € (optionnel)</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="Ex. 15"></div>
+      <div class="field" style="margin-top:12px;"><label>Date d'ouverture (optionnel)</label><input id="pf-ouverture" type="date"></div>
+      <div class="field" style="margin-top:12px;"><label>Début d'utilisation (optionnel)</label><input id="pf-debut" type="date"></div>
+      <div class="field" style="margin-top:12px;"><label>Date de péremption (optionnel)</label><input id="pf-peremption" type="date"></div>
 
       <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;display:block;margin-top:16px;">Photo du produit (optionnel)</label>
       <div style="margin-top:8px;display:flex;align-items:center;gap:12px;">
@@ -1987,6 +1994,21 @@
     loadProducts();
   }
 
+  function productDateInfo(p){
+    const fmt=(d)=>{ const x=d.split('-'); return x[2]+'/'+x[1]+'/'+x[0].slice(2); };
+    const parts=[]; let badge='';
+    if(p.date_ouverture) parts.push('Ouvert '+fmt(p.date_ouverture));
+    if(p.date_peremption){
+      parts.push('périme '+fmt(p.date_peremption));
+      const exp=new Date(p.date_peremption); const today=new Date(); today.setHours(0,0,0,0);
+      const days=Math.round((exp-today)/86400000);
+      if(days<0) badge='<div><span class="prod-badge prod-badge-red">⚠️ Périmé</span></div>';
+      else if(days<=30) badge='<div><span class="prod-badge prod-badge-amber">À finir · '+days+'j</span></div>';
+    }
+    const line = parts.length ? '<div class="product-dates">'+parts.join(' · ')+'</div>' : '';
+    return line+badge;
+  }
+
   async function loadProducts(){
     if(!currentUser) return;
     const list = document.getElementById('products-list');
@@ -2008,6 +2030,7 @@
             <div class="product-step">${step}</div>
             <div class="product-name">${escapeHtml(p.nom||'')}</div>
             ${meta?`<div class="product-meta">${meta}</div>`:''}
+            ${productDateInfo(p)}
           </div>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>`;
@@ -2058,6 +2081,9 @@
     document.getElementById('pf-etape').value='';
     document.getElementById('pf-effets').value='';
     document.getElementById('pf-prix').value='';
+    document.getElementById('pf-ouverture').value='';
+    document.getElementById('pf-debut').value='';
+    document.getElementById('pf-peremption').value='';
     document.getElementById('pf-photo-input').value='';
     document.getElementById('pf-photo-thumb').innerHTML='📷';
     document.getElementById('pf-delete').style.display = id ? 'block' : 'none';
@@ -2071,6 +2097,9 @@
         document.getElementById('pf-etape').value = p.etape||'';
         document.getElementById('pf-effets').value = p.effets||'';
         document.getElementById('pf-prix').value = (p.prix!=null?p.prix:'');
+        document.getElementById('pf-ouverture').value = p.date_ouverture || '';
+        document.getElementById('pf-debut').value = p.date_debut || '';
+        document.getElementById('pf-peremption').value = p.date_peremption || '';
         pfEmoji = p.emoji || '🧴'; renderEmojiPicker();
         pfPhotoPath = p.photo_path || null;
         if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) document.getElementById('pf-photo-thumb').innerHTML=`<img src="${url}" alt="">`; }
@@ -2087,6 +2116,9 @@
     const effets = document.getElementById('pf-effets').value.trim();
     const prixRaw = document.getElementById('pf-prix').value.trim();
     const prix = prixRaw==='' ? null : parseFloat(prixRaw.replace(',','.'));
+    const d_ouv = document.getElementById('pf-ouverture').value || null;
+    const d_deb = document.getElementById('pf-debut').value || null;
+    const d_per = document.getElementById('pf-peremption').value || null;
     err.textContent='';
     showToast('Enregistrement…');
     let photo_path = pfPhotoPath;
@@ -2097,11 +2129,11 @@
       if(!upErr) photo_path = path;
     }
     if(editingProductId){
-      await sb.from('products').update({ nom, etape, effets, prix, emoji: pfEmoji, photo_path }).eq('id', editingProductId);
+      await sb.from('products').update({ nom, etape, effets, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per }).eq('id', editingProductId);
     } else {
       const { data: existing } = await sb.from('products').select('id').eq('user_id', currentUser.id).eq('moment', currentRoutineView);
       const position = existing ? existing.length : 0;
-      await sb.from('products').insert({ user_id: currentUser.id, moment: currentRoutineView, position, nom, etape, effets, prix, emoji: pfEmoji, photo_path });
+      await sb.from('products').insert({ user_id: currentUser.id, moment: currentRoutineView, position, nom, etape, effets, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per });
     }
     closeProductSheet();
     showToast('Produit enregistré ✓');
