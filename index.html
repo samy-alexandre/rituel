@@ -131,7 +131,7 @@
   .eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
 
   /* ===== Screens ===== */
-  .screen { display: none; padding-bottom: 96px; animation: fadeIn .4s ease; overflow-x: hidden; }
+  .screen { display: none; padding-bottom: 96px; overflow-x: hidden; }
   img { max-width: 100%; }
 
   /* ===== Plante qui pousse ===== */
@@ -149,6 +149,16 @@
   .photo-mini-title { font-family: var(--serif); font-size: 16px; }
   .photo-mini-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .screen.active { display: block; }
+  .screen.active > * { animation: softRise .55s cubic-bezier(.22,.61,.36,1) both; }
+  .screen.active > *:nth-child(1){ animation-delay:0s }
+  .screen.active > *:nth-child(2){ animation-delay:.05s }
+  .screen.active > *:nth-child(3){ animation-delay:.10s }
+  .screen.active > *:nth-child(4){ animation-delay:.15s }
+  .screen.active > *:nth-child(5){ animation-delay:.20s }
+  .screen.active > *:nth-child(6){ animation-delay:.25s }
+  .screen.active > *:nth-child(n+7){ animation-delay:.30s }
+  @keyframes softRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce){ .screen.active > * { animation: none; } }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
   /* ===== AUTH ===== */
@@ -298,7 +308,7 @@
   .intensity { margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
   .intensity-head { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-soft); margin-bottom: 10px; font-weight: 500; }
   .intensity-head span:last-child { color: var(--accent-deep); font-family: var(--serif); font-size: 15px; }
-  .intensity-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 6px; background: var(--blush-soft); outline: none; }
+  .intensity-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 6px; background: var(--blush-soft); outline: none; touch-action: pan-y; }
   .intensity-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: var(--shadow); }
   .intensity-slider::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: var(--accent); cursor: pointer; }
 
@@ -688,33 +698,6 @@
       <div class="streak-mini" id="streak-mini"></div>
     </div>
 
-    <div class="photo-mini" onclick="document.getElementById('photo-input').click()">
-      <div class="photo-mini-thumb">
-        <div id="photo-empty" class="pm-empty"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5"/></svg></div>
-        <div id="photo-display" class="pm-display hidden"><img id="photo-img" alt=""></div>
-      </div>
-      <div class="photo-mini-text">
-        <div class="photo-mini-title">Photo du <em class="italic">jour</em></div>
-        <div class="photo-mini-sub">Suis l'évolution de ta peau, jour après jour 🌸</div>
-      </div>
-      <input type="file" id="photo-input" accept="image/*" capture="user" style="display:none;" onchange="handlePhoto(this)">
-    </div>
-
-    <div class="section">
-      <div class="section-head"><h3 class="section-title">Comment va votre <em>peau</em> ?</h3></div>
-      <div class="mood-row">
-        <button class="mood-btn" onclick="selectMood(this,1)"><div class="mood-emoji">😣</div><div class="mood-label">Difficile</div></button>
-        <button class="mood-btn" onclick="selectMood(this,2)"><div class="mood-emoji">😕</div><div class="mood-label">Moyenne</div></button>
-        <button class="mood-btn" onclick="selectMood(this,3)"><div class="mood-emoji">😌</div><div class="mood-label">Bien</div></button>
-        <button class="mood-btn" onclick="selectMood(this,4)"><div class="mood-emoji">😊</div><div class="mood-label">Top</div></button>
-        <button class="mood-btn" onclick="selectMood(this,5)"><div class="mood-emoji">✨</div><div class="mood-label">Sublime</div></button>
-      </div>
-      <div class="intensity hidden" id="intensity-box">
-        <div class="intensity-head"><span>Intensité du ressenti</span><span id="intensity-val">50%</span></div>
-        <input type="range" min="0" max="100" value="50" step="5" class="intensity-slider" id="intensity-slider" oninput="onIntensity(this.value)" onchange="saveMood()">
-      </div>
-    </div>
-
     <div class="section">
       <div class="section-head">
         <h3 class="section-title" onclick="navTo('ritual')" style="cursor:pointer;"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Votre <em>rituel</em> <span style="color:var(--muted);font-weight:300;">›</span></h3>
@@ -738,15 +721,41 @@
       </div>
     </div>
 
+    <div class="photo-mini" onclick="document.getElementById('photo-input').click()">
+      <div class="photo-mini-thumb">
+        <div id="photo-empty" class="pm-empty"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+        <div id="photo-display" class="pm-display hidden"><img id="photo-img" alt=""></div>
+      </div>
+      <div class="photo-mini-text">
+        <div class="photo-mini-title">Photo du <em class="italic">jour</em></div>
+        <div class="photo-mini-sub">Suis l'évolution de ta peau, jour après jour 🌸</div>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" capture="user" style="display:none;" onchange="handlePhoto(this)">
+    </div>
+
+    <div class="section" id="mood-section">
+      <div class="section-head"><h3 class="section-title">Comment va votre <em>peau</em> ?</h3></div>
+      <div class="mood-row">
+        <button class="mood-btn" onclick="selectMood(this,1)"><div class="mood-emoji">😣</div><div class="mood-label">Difficile</div></button>
+        <button class="mood-btn" onclick="selectMood(this,2)"><div class="mood-emoji">😕</div><div class="mood-label">Moyenne</div></button>
+        <button class="mood-btn" onclick="selectMood(this,3)"><div class="mood-emoji">😌</div><div class="mood-label">Bien</div></button>
+        <button class="mood-btn" onclick="selectMood(this,4)"><div class="mood-emoji">😊</div><div class="mood-label">Top</div></button>
+        <button class="mood-btn" onclick="selectMood(this,5)"><div class="mood-emoji">✨</div><div class="mood-label">Sublime</div></button>
+      </div>
+      <div class="intensity hidden" id="intensity-box">
+        <div class="intensity-head"><span>Intensité du ressenti</span><span id="intensity-val">50%</span></div>
+        <input type="range" min="0" max="100" value="50" step="5" class="intensity-slider" id="intensity-slider" oninput="onIntensity(this.value)" onchange="saveMood()">
+      </div>
+    </div>
+
     <div class="section">
-      <div class="section-head"><h3 class="section-title">Ma <em>journée</em></h3><div class="section-more" onclick="openDaySheet()" style="cursor:pointer;">Noter ›</div></div>
+      <div class="section-head"><h3 class="section-title" onclick="openDaySheet()" style="cursor:pointer;">Ma <em>journée</em> <span style="color:var(--muted);font-weight:300;">›</span></h3></div>
       <div class="stats-grid">
         <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Sommeil</div><div class="stat-tile-value" id="tile-sommeil"><em>—</em></div><div class="stat-tile-trend" id="tile-sommeil-sub">à noter</div></div>
         <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Hydratation</div><div class="stat-tile-value" id="tile-hydra"><em>—</em></div><div class="stat-tile-trend" id="tile-hydra-sub">à noter</div></div>
         <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Alimentation</div><div class="stat-tile-value" id="tile-alim" style="font-size:20px;"><em>—</em></div><div class="stat-tile-trend" id="tile-alim-sub">à noter</div></div>
-        <div class="stat-tile"><div class="stat-tile-label">Humeur du jour</div><div class="stat-tile-value" id="tile-humeur" style="font-size:30px;"><em>—</em></div><div class="stat-tile-trend" id="tile-humeur-sub">à noter</div></div>
+        <div class="stat-tile" onclick="document.getElementById('mood-section').scrollIntoView({behavior:'smooth',block:'center'})" style="cursor:pointer;"><div class="stat-tile-label">Humeur du jour</div><div class="stat-tile-value" id="tile-humeur" style="font-size:30px;"><em>—</em></div><div class="stat-tile-trend" id="tile-humeur-sub">à noter</div></div>
       </div>
-      <button class="add-product-card" onclick="openDaySheet()" style="margin-top:12px;">＋ Noter ma journée</button>
     </div>
 
     <div class="section">
@@ -912,7 +921,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.8<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.9<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1778,10 +1787,11 @@
   function renderDayTiles(e){
     const MOOD_EMOJI = ['','😣','😕','😌','😊','✨'];
     const set=(id, val, sub)=>{ const el=document.getElementById(id); if(el) el.innerHTML='<em>'+val+'</em>'; const s=document.getElementById(id+'-sub'); if(s&&sub!=null) s.textContent=sub; };
-    if(e && e.sommeil!=null) set('tile-sommeil', fmtSleep(e.sommeil), 'aujourd\'hui'); else set('tile-sommeil','—','à noter');
-    if(e && e.hydratation!=null){ const n=e.hydratation; set('tile-hydra', n+'<span style="font-size:15px;color:var(--muted);"> '+(n>1?'verres':'verre')+'</span>', 'aujourd\'hui'); } else set('tile-hydra','—','à noter');
-    if(e && e.alimentation!=null) set('tile-alim', ALIM_LABELS[e.alimentation]||'—', 'aujourd\'hui'); else set('tile-alim','—','à noter');
-    if(e && e.humeur) set('tile-humeur', MOOD_EMOJI[e.humeur]||'—', (e.humeur_intensite!=null ? e.humeur_intensite+'%' : 'aujourd\'hui')); else set('tile-humeur','—','à noter');
+    const PLUS = '<span style="color:var(--accent);">+</span>';
+    if(e && e.sommeil!=null) set('tile-sommeil', fmtSleep(e.sommeil), 'aujourd\'hui'); else set('tile-sommeil',PLUS,'ajouter');
+    if(e && e.hydratation!=null){ const n=e.hydratation; set('tile-hydra', n+'<span style="font-size:15px;color:var(--muted);"> '+(n>1?'verres':'verre')+'</span>', 'aujourd\'hui'); } else set('tile-hydra',PLUS,'ajouter');
+    if(e && e.alimentation!=null) set('tile-alim', ALIM_LABELS[e.alimentation]||'—', 'aujourd\'hui'); else set('tile-alim',PLUS,'ajouter');
+    if(e && e.humeur) set('tile-humeur', MOOD_EMOJI[e.humeur]||'—', (e.humeur_intensite!=null ? e.humeur_intensite+'%' : 'aujourd\'hui')); else set('tile-humeur',PLUS,'ajouter');
   }
 
   // ===== Photo du jour =====
