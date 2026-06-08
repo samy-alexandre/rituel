@@ -138,6 +138,8 @@
   .plant-card { margin: 0 20px 14px; background: linear-gradient(180deg, var(--surface), var(--surface-warm)); border-radius: 24px; box-shadow: var(--shadow); padding: 18px 20px 16px; display: flex; flex-direction: column; align-items: center; }
   .plant-card svg { display: block; }
   .plant-caption { font-family: var(--serif); font-size: 15px; font-style: italic; color: var(--ink-soft); text-align: center; margin-top: 4px; }
+  .plant-change { margin-top: 10px; background: transparent; border: none; color: var(--accent-deep); font-size: 12px; cursor: pointer; opacity: 0.85; }
+  .plant-change:active { opacity: 0.5; }
   .photo-mini { margin: 0 20px 24px; background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); padding: 12px 14px; display: flex; align-items: center; gap: 14px; cursor: pointer; }
   .photo-mini-thumb { width: 56px; height: 56px; border-radius: 14px; overflow: hidden; flex-shrink: 0; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; }
   .pm-empty { color: var(--accent); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
@@ -674,6 +676,7 @@
     <div class="plant-card">
       <div id="plant-host"></div>
       <div class="plant-caption" id="plant-caption">Ta plante pousse avec ta série 🌱</div>
+      <button class="plant-change" onclick="openPlantSheet()">🌱 Changer de plante</button>
     </div>
 
     <div class="streak">
@@ -759,13 +762,13 @@
     </div>
 
     <div class="section">
-      <div class="msg-card" style="margin:0;max-width:100%;">
+      <div class="msg-card" id="lea-tip-card" style="margin:0;max-width:100%;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-family:var(--serif);font-style:italic;font-size:13px;">L</div>
           <div class="eyebrow">Léa, votre coach</div>
         </div>
-        <div class="msg-card-title">Vos taches s'éclaircissent — bravo 🌸</div>
-        <div class="msg-card-body">Belle amélioration sur 14 jours, la vitamine C fait son effet. On ajoute une routine du soir avec niacinamide ?</div>
+        <div class="msg-card-title" id="lea-tip-title">Ton conseil du jour</div>
+        <div class="msg-card-body" id="lea-tip-body">Léa prépare ton conseil… 🌸</div>
         <button class="sugg" style="margin-top:12px;background:var(--accent);color:white;border-color:var(--accent);" onclick="navTo('chat')">Parler à Léa</button>
       </div>
     </div>
@@ -909,7 +912,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.7<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.8<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -947,6 +950,16 @@
       <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Choisis ton ambiance de couleur — c'est gratuit 🌸</p>
       <div id="theme-list" style="display:flex;flex-direction:column;gap:10px;"></div>
       <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeThemeSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="plant-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ta plante</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Choisis la plante qui poussera avec ta série 🌱</p>
+      <div id="plant-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closePlantSheet()">Fermer</button>
     </div>
   </div>
 
@@ -1554,10 +1567,54 @@
 
   // ===== Plante qui pousse avec la série =====
   function plantStage(n){ if(n<=0) return 0; if(n<3) return 1; if(n<7) return 2; if(n<14) return 3; if(n<21) return 4; return 5; }
-  function plantSVG(stage){
+
+  const PLANT_TYPES = {
+    fleur:     { name:'Fleur',     emoji:'🌸' },
+    tournesol: { name:'Tournesol', emoji:'🌻' },
+    lavande:   { name:'Lavande',   emoji:'🪻' },
+    cactus:    { name:'Cactus',    emoji:'🌵' }
+  };
+  function currentPlant(){ try{ return localStorage.getItem('rituel_plant') || 'fleur'; }catch(e){ return 'fleur'; } }
+
+  function bloomSVG(type, topY, stage){
+    const P=[];
+    if(type==='lavande'){
+      const count = stage>=5 ? 6 : (stage>=4 ? 3 : 0);
+      for(let i=0;i<count;i++){ const yy=topY - i*8; P.push('<ellipse cx="100" cy="'+yy+'" rx="5.5" ry="6.5" fill="'+(i%2?'#9B82D6':'#8B7CC4')+'"/>'); }
+      return P.join('');
+    }
+    if(type==='cactus'){
+      if(stage>=5){
+        for(let k=0;k<5;k++){ const a=-Math.PI/2 + k*(2*Math.PI/5); const px=Math.round(100+Math.cos(a)*7); const py=Math.round(topY+Math.sin(a)*7); P.push('<circle cx="'+px+'" cy="'+py+'" r="5" fill="#E8729B"/>'); }
+        P.push('<circle cx="100" cy="'+topY+'" r="3.5" fill="#F4C84B"/>');
+      }
+      return P.join('');
+    }
+    if(stage>=5){
+      const petals = type==='tournesol' ? 10 : 6;
+      const r  = type==='tournesol' ? 14 : 13;
+      const pr = type==='tournesol' ? 6 : 9;
+      const petalColor  = type==='tournesol' ? '#F4C026' : 'var(--blush)';
+      const centerColor = type==='tournesol' ? '#7A5230' : 'var(--gold)';
+      for(let k=0;k<petals;k++){ const a=k*(2*Math.PI/petals); const px=Math.round(100+Math.cos(a)*r); const py=Math.round(topY+Math.sin(a)*r); P.push('<circle cx="'+px+'" cy="'+py+'" r="'+pr+'" fill="'+petalColor+'"/>'); }
+      P.push('<circle cx="100" cy="'+topY+'" r="8" fill="'+centerColor+'"/>');
+    } else if(stage>=4){
+      const c  = type==='tournesol' ? '#E8C25A' : 'var(--accent-soft)';
+      const c2 = type==='tournesol' ? '#C99B2E' : 'var(--accent)';
+      P.push('<circle cx="100" cy="'+topY+'" r="9" fill="'+c+'"/>');
+      P.push('<path d="M100 '+(topY-9)+' Q109 '+topY+' 100 '+(topY+9)+' Q91 '+topY+' 100 '+(topY-9)+' Z" fill="'+c2+'"/>');
+    }
+    return P.join('');
+  }
+
+  function plantSVG(stage, type){
+    type = type || 'fleur';
     const soilY=150;
     const stemH = 10 + stage*22;
     const topY = soilY - stemH;
+    const isCactus = type==='cactus';
+    const stemW = isCactus ? 13 : 4;
+    const stemColor = isCactus ? '#6FA368' : 'var(--sage)';
     const parts = [];
     parts.push('<path d="M70 150 L75 182 Q76 188 82 188 L118 188 Q124 188 125 182 L130 150 Z" fill="#D7A286"/>');
     parts.push('<path d="M64 144 H136 L134 154 H66 Z" fill="#C68E70"/>');
@@ -1567,34 +1624,58 @@
       parts.push('<path d="M100 150 C105 143 113 142 117 145 C112 150 104 151 100 150 Z" fill="var(--sage)"/>');
     } else {
       const midY = Math.round((soilY+topY)/2);
-      parts.push('<path d="M100 '+soilY+' Q97 '+midY+' 100 '+topY+'" stroke="var(--sage)" stroke-width="4" fill="none" stroke-linecap="round"/>');
+      parts.push('<path d="M100 '+soilY+' Q'+(isCactus?100:97)+' '+midY+' 100 '+topY+'" stroke="'+stemColor+'" stroke-width="'+stemW+'" fill="none" stroke-linecap="round"/>');
       const pairs = Math.min(stage,4);
       for(let i=0;i<pairs;i++){
         const ly = Math.round(soilY - stemH*(i+1)/(pairs+1));
-        parts.push('<path d="M100 '+ly+' C84 '+(ly-9)+' 73 '+(ly-3)+' 71 '+(ly+6)+' C84 '+(ly+8)+' 96 '+(ly+4)+' 100 '+ly+' Z" fill="var(--sage)"/>');
-        parts.push('<path d="M100 '+ly+' C116 '+(ly-9)+' 127 '+(ly-3)+' 129 '+(ly+6)+' C116 '+(ly+8)+' 104 '+(ly+4)+' 100 '+ly+' Z" fill="var(--sage)"/>');
+        if(isCactus){
+          parts.push('<ellipse cx="89" cy="'+ly+'" rx="7" ry="11" fill="#6FA368"/>');
+          parts.push('<ellipse cx="111" cy="'+(ly-4)+'" rx="7" ry="11" fill="#6FA368"/>');
+        } else {
+          parts.push('<path d="M100 '+ly+' C84 '+(ly-9)+' 73 '+(ly-3)+' 71 '+(ly+6)+' C84 '+(ly+8)+' 96 '+(ly+4)+' 100 '+ly+' Z" fill="var(--sage)"/>');
+          parts.push('<path d="M100 '+ly+' C116 '+(ly-9)+' 127 '+(ly-3)+' 129 '+(ly+6)+' C116 '+(ly+8)+' 104 '+(ly+4)+' 100 '+ly+' Z" fill="var(--sage)"/>');
+        }
       }
-      if(stage>=5){
-        const fy=topY;
-        for(let k=0;k<6;k++){ const a=k*Math.PI/3; const px=Math.round(100+Math.cos(a)*13); const py=Math.round(fy+Math.sin(a)*13); parts.push('<circle cx="'+px+'" cy="'+py+'" r="9" fill="var(--blush)"/>'); }
-        parts.push('<circle cx="100" cy="'+fy+'" r="8" fill="var(--gold)"/>');
-      } else if(stage>=4){
-        parts.push('<circle cx="100" cy="'+topY+'" r="9" fill="var(--accent-soft)"/>');
-        parts.push('<path d="M100 '+(topY-9)+' Q109 '+topY+' 100 '+(topY+9)+' Q91 '+topY+' 100 '+(topY-9)+' Z" fill="var(--accent)"/>');
-      }
+      parts.push(bloomSVG(type, topY, stage));
     }
     return '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:150px;height:150px;">'+parts.join('')+'</svg>';
   }
+
   async function renderPlant(n){
     const host=document.getElementById('plant-host'); if(!host) return;
     if(typeof n!=='number'){ n = currentUser ? await computeStreak() : 0; }
     const st=plantStage(n);
-    host.innerHTML = plantSVG(st);
-    const cap=document.getElementById('plant-caption'); if(!cap) return;
-    if(n===0) cap.textContent='Fais ton rituel pour faire pousser ta plante 🌱';
-    else if(st>=5) cap.textContent='En fleur ! '+n+' jours de rituel 🌸';
-    else cap.textContent='Ta plante pousse — '+n+' jour'+(n>1?'s':'')+' 🌿';
+    host.innerHTML = plantSVG(st, currentPlant());
+    const cap=document.getElementById('plant-caption');
+    if(cap){
+      if(n===0) cap.textContent='Fais ton rituel pour faire pousser ta plante 🌱';
+      else if(st>=5) cap.textContent='En fleur ! '+n+' jours de rituel 🌸';
+      else cap.textContent='Ta plante pousse — '+n+' jour'+(n>1?'s':'')+' 🌿';
+    }
+    // Félicitations quand la plante change de palier (pas au tout premier affichage)
+    try{
+      const key = currentUser ? 'rituel_plant_stage_'+currentUser.id : 'rituel_plant_stage';
+      const prev = parseInt(localStorage.getItem(key)||'-1',10);
+      if(st>0 && prev>=0 && st>prev){
+        const msgs={1:'Ta graine a germé 🌱',2:'Ta plante grandit 🌿',3:'De belles feuilles ! 🍃',4:'Un bouton apparaît 🌸',5:'Ta plante est en fleur ! 🌸'};
+        showToast(msgs[st]||'Ta plante a poussé 🌿');
+      }
+      if(st!==prev) localStorage.setItem(key, String(st));
+    }catch(e){}
   }
+
+  function openPlantSheet(){
+    const cur=currentPlant();
+    document.getElementById('plant-list').innerHTML = Object.keys(PLANT_TYPES).map(k=>(
+      '<button onclick="pickPlant(\''+k+'\')" style="display:flex;align-items:center;gap:14px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid '+(k===cur?'var(--accent)':'var(--line)')+';background:'+(k===cur?'var(--blush-soft)':'var(--surface)')+';cursor:pointer;text-align:left;">'+
+        '<div style="width:54px;height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--surface-warm);border-radius:12px;"><div style="transform:scale(0.36);transform-origin:center;">'+plantSVG(5,k)+'</div></div>'+
+        '<div style="flex:1;font-family:var(--serif);font-size:16px;">'+PLANT_TYPES[k].emoji+' '+PLANT_TYPES[k].name+'</div>'+
+      '</button>'
+    )).join('');
+    document.getElementById('plant-sheet').classList.add('open');
+  }
+  function pickPlant(k){ try{ localStorage.setItem('rituel_plant', k); }catch(e){} renderPlant(); openPlantSheet(); showToast(PLANT_TYPES[k].emoji+' Jolie plante !'); }
+  function closePlantSheet(){ document.getElementById('plant-sheet').classList.remove('open'); }
 
   // ===== Chargement de l'accueil =====
   async function loadHomeData(){
@@ -1624,6 +1705,7 @@
     renderDayTiles(e);
     const noteEl=document.getElementById('day-note'); if(noteEl) noteEl.value = (e && e.note) ? e.note : '';
     loadHabits();
+    loadLeaTip();
   }
 
   // Affiche les bons moments sur l'accueil selon le type de rituel choisi
@@ -2151,6 +2233,41 @@
       }
     }catch(e){ /* en cas d'erreur, on envoie au moins le profil de base */ }
     return ctx;
+  }
+
+  // Conseil du jour de Léa sur l'accueil — vrai conseil personnalisé, mis en cache 1×/jour
+  async function loadLeaTip(){
+    const body=document.getElementById('lea-tip-body');
+    const title=document.getElementById('lea-tip-title');
+    if(!body || !title) return;
+    if(!currentUser){ title.textContent='Ton coach beauté'; body.textContent="Ajoute tes infos et je te donnerai des conseils rien que pour toi 🌸"; return; }
+    const key='rituel_tip_'+currentUser.id+'_'+todayStr();
+    try{ const cached=localStorage.getItem(key); if(cached){ title.textContent='Ton conseil du jour'; body.innerHTML=formatMessage(cached); return; } }catch(e){}
+    const ctx=await buildLeaContext();
+    const hasData = (ctx.skin && ctx.skin!=='non précisé') || (ctx.concern && ctx.concern!=='aucune en particulier') || ctx.today || ctx.routine || (ctx.streak>0);
+    if(!hasData){
+      title.textContent='Ton coach beauté';
+      body.textContent="Ajoute tes infos du jour (peau, sommeil, routine) et je te donnerai des conseils rien que pour toi 🌸";
+      return;
+    }
+    title.textContent='Ton conseil du jour';
+    body.textContent='Léa prépare ton conseil… 🌸';
+    try{
+      const res=await fetch('/api/lea',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+        messages:[{ role:'user', content:"(Message automatique de l'app, ce n'est pas une vraie question de l'utilisatrice.) Donne UN seul conseil du jour : court (1 à 2 phrases maximum), chaleureux et personnalisé d'après mes données. Commence directement par le conseil, sans salutation et sans poser de question à la fin." }],
+        profile: ctx
+      }) });
+      const data=await res.json();
+      if(data && data.reply){
+        const tip=data.reply.trim();
+        try{ localStorage.setItem(key, tip); }catch(e){}
+        body.innerHTML=formatMessage(tip);
+      } else {
+        body.textContent="Pose-moi ta question quand tu veux, je suis là 🌸";
+      }
+    }catch(e){
+      body.textContent="Pose-moi ta question quand tu veux, je suis là 🌸";
+    }
   }
 
   async function sendMsg(text){
