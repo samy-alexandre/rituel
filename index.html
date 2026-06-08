@@ -343,6 +343,7 @@
   .lea-bubble { position: fixed; z-index: 350; width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); box-shadow: 0 6px 22px rgba(201,90,63,.5); display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; user-select: none; }
   .lea-bubble:active { cursor: grabbing; transform: scale(0.95); }
   .chat-back { background: none; border: none; cursor: pointer; color: var(--ink-soft); padding: 0 4px 0 0; display: flex; align-items: center; }
+  .dd-lbl { font-size: 12px; font-weight: 600; color: var(--ink-soft); padding-left: 4px; }
 
   .routine-list { background: var(--surface); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
   .routine-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
@@ -873,7 +874,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.2<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.3<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -929,8 +930,38 @@
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title" id="dd-title">Jour</div>
-      <div id="dd-body"></div>
-      <button class="btn btn-ghost" style="margin-top:16px;" onclick="closeDayDetail()">Fermer</button>
+
+      <div id="dd-photo-wrap" style="margin-bottom:12px;"></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+        <button type="button" class="btn-outline-sm" onclick="document.getElementById('dd-photo-input').click()">📷 Ajouter / changer la photo</button>
+        <input type="file" id="dd-photo-input" accept="image/*" style="display:none" onchange="ddPhotoPreview(this)">
+      </div>
+
+      <label class="dd-lbl">Humeur</label>
+      <div class="mood-row" id="dd-mood-row" style="margin-top:8px;">
+        <button class="mood-btn" onclick="ddPickMood(this,1)"><div class="mood-emoji">😣</div><div class="mood-label">Difficile</div></button>
+        <button class="mood-btn" onclick="ddPickMood(this,2)"><div class="mood-emoji">😕</div><div class="mood-label">Moyenne</div></button>
+        <button class="mood-btn" onclick="ddPickMood(this,3)"><div class="mood-emoji">😌</div><div class="mood-label">Bien</div></button>
+        <button class="mood-btn" onclick="ddPickMood(this,4)"><div class="mood-emoji">😊</div><div class="mood-label">Top</div></button>
+        <button class="mood-btn" onclick="ddPickMood(this,5)"><div class="mood-emoji">✨</div><div class="mood-label">Sublime</div></button>
+      </div>
+      <div class="intensity hidden" id="dd-intensity-box" style="margin-top:12px;">
+        <div class="intensity-head"><span>Intensité</span><span id="dd-intensity-val">50%</span></div>
+        <input type="range" min="0" max="100" value="50" step="5" class="intensity-slider" id="dd-intensity" oninput="document.getElementById('dd-intensity-val').textContent=this.value+'%'">
+      </div>
+
+      <div class="intensity" style="margin-top:14px;"><div class="intensity-head"><span>💤 Sommeil</span><span id="dd-sommeil-val">7h</span></div><input type="range" min="0" max="12" value="7" step="0.5" class="intensity-slider" id="dd-sommeil" oninput="ddTouch('som');document.getElementById('dd-sommeil-val').textContent=fmtSleep(this.value)"></div>
+      <div class="intensity" style="margin-top:14px;"><div class="intensity-head"><span>💧 Hydratation</span><span id="dd-hydra-val">6 verres</span></div><input type="range" min="0" max="12" value="6" step="1" class="intensity-slider" id="dd-hydra" oninput="ddTouch('hyd');ddHydraLbl(this.value)"></div>
+      <div class="intensity" style="margin-top:14px;margin-bottom:18px;"><div class="intensity-head"><span>🥗 Alimentation</span><span id="dd-alim-val">Équilibrée</span></div><input type="range" min="1" max="5" value="3" step="1" class="intensity-slider" id="dd-alim" oninput="ddTouch('ali');document.getElementById('dd-alim-val').textContent=ALIM_LABELS[this.value]||'—'"></div>
+
+      <div class="rem-row"><div class="rem-label">☀️ Routine du matin faite</div><label class="switch"><input type="checkbox" id="dd-matin"><span class="sl"></span></label></div>
+      <div class="rem-row"><div class="rem-label">🌙 Routine du soir faite</div><label class="switch"><input type="checkbox" id="dd-soir"><span class="sl"></span></label></div>
+
+      <label class="dd-lbl" style="margin-top:16px;display:block;">Note</label>
+      <textarea id="dd-note" class="day-note" style="margin-top:8px;" placeholder="Un mot sur ce jour…"></textarea>
+
+      <button class="btn btn-accent" style="margin-top:16px;" onclick="saveDayDetail()">Enregistrer</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeDayDetail()">Fermer</button>
     </div>
   </div>
 
@@ -2002,7 +2033,7 @@
       if(complete) cls+=' complete';
       if(isToday) cls+=' today';
       if(isFuture) cls+=' cal-future';
-      const tappable = hasEntry && !isFuture;
+      const tappable = !isFuture;
       if(tappable) cls+=' has';
       const cam = (e && e.photo_path) ? '<span class="cal-cam">📷</span>' : '';
       const dot = (hasEntry && !complete) ? '<span class="cal-dot"></span>' : '';
@@ -2010,6 +2041,29 @@
       html += `<div class="${cls}"${oc}>${cam}<span>${d}</span>${dot}</div>`;
     }
     grid.innerHTML=html;
+  }
+  // ===== Fiche d'un jour (modifiable) =====
+  let ddState = { date:null, mood:null, photoFile:null, photoPath:null, hadSom:false, hadHyd:false, hadAli:false, somTouched:false, hydTouched:false, aliTouched:false };
+  async function getEntryIdForDate(ds){
+    if(!currentUser) return null;
+    const { data } = await sb.from('entries').select('id').eq('user_id', currentUser.id).eq('date', ds).order('created_at',{ascending:true}).limit(1);
+    if(data && data.length) return data[0].id;
+    const { data: ins, error } = await sb.from('entries').insert({ user_id: currentUser.id, date: ds }).select('id').single();
+    if(error){ console.warn('getEntryIdForDate:', error.message); return null; }
+    return ins ? ins.id : null;
+  }
+  function ddTouch(k){ if(k==='som') ddState.somTouched=true; if(k==='hyd') ddState.hydTouched=true; if(k==='ali') ddState.aliTouched=true; }
+  function ddHydraLbl(v){ const n=parseInt(v,10); document.getElementById('dd-hydra-val').textContent = n+(n>1?' verres':' verre'); }
+  function ddPickMood(el,val){
+    document.querySelectorAll('#dd-mood-row .mood-btn').forEach(b=>b.classList.remove('selected'));
+    el.classList.add('selected');
+    ddState.mood = val;
+    document.getElementById('dd-intensity-box').classList.remove('hidden');
+  }
+  function ddPhotoPreview(input){
+    const f=input.files[0]; if(!f) return;
+    ddState.photoFile=f;
+    const r=new FileReader(); r.onload=ev=>{ document.getElementById('dd-photo-wrap').innerHTML=`<img src="${ev.target.result}" style="width:100%;border-radius:16px;display:block;">`; }; r.readAsDataURL(f);
   }
   async function openDayDetail(ds){
     if(!currentUser) return;
@@ -2019,19 +2073,63 @@
     const dObj=new Date(y, m-1, d);
     const jours=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
     document.getElementById('dd-title').textContent = jours[dObj.getDay()]+' '+d+' '+MONTHS_FR[m-1].toLowerCase();
-    const body=document.getElementById('dd-body');
-    if(!e){ body.innerHTML='<p style="color:var(--muted);text-align:center;padding:24px 0;">Rien noté ce jour-là 🌙</p>'; document.getElementById('day-detail').classList.add('open'); return; }
-    let html='';
-    if(e.photo_path){ const url=await signedPhoto(e.photo_path); if(url) html+=`<img src="${url}" style="width:100%;border-radius:16px;margin-bottom:16px;display:block;">`; }
-    const MOOD=['','😣 Difficile','😕 Moyenne','😌 Bien','😊 Top','✨ Sublime'];
-    if(e.humeur) html+=`<div class="dd-row"><span>Humeur</span><span>${MOOD[e.humeur]||''}${e.humeur_intensite!=null?(' · '+e.humeur_intensite+'%'):''}</span></div>`;
-    if(e.sommeil!=null) html+=`<div class="dd-row"><span>💤 Sommeil</span><span>${fmtSleep(e.sommeil)}</span></div>`;
-    if(e.hydratation!=null) html+=`<div class="dd-row"><span>💧 Hydratation</span><span>${e.hydratation} ${e.hydratation>1?'verres':'verre'}</span></div>`;
-    if(e.alimentation!=null) html+=`<div class="dd-row"><span>🥗 Alimentation</span><span>${ALIM_LABELS[e.alimentation]||'—'}</span></div>`;
-    html+=`<div class="dd-row"><span>Routine</span><span>${e.routine_matin?'☀️ ✓':'☀️ —'} &nbsp;&nbsp; ${e.routine_soir?'🌙 ✓':'🌙 —'}</span></div>`;
-    if(e.note) html+=`<div style="margin-top:14px;font-size:14px;color:var(--ink-soft);line-height:1.5;">${escapeHtml(e.note)}</div>`;
-    body.innerHTML=html;
+
+    ddState = { date:ds, mood:(e&&e.humeur)||null, photoFile:null, photoPath:(e&&e.photo_path)||null,
+      hadSom: !!(e && e.sommeil!=null), hadHyd: !!(e && e.hydratation!=null), hadAli: !!(e && e.alimentation!=null),
+      somTouched:false, hydTouched:false, aliTouched:false };
+
+    // photo
+    const pw=document.getElementById('dd-photo-wrap');
+    if(e && e.photo_path){ const url=await signedPhoto(e.photo_path); pw.innerHTML = url?`<img src="${url}" style="width:100%;border-radius:16px;display:block;">`:''; }
+    else pw.innerHTML = `<div style="background:var(--surface-warm);border-radius:16px;padding:24px;text-align:center;color:var(--muted);font-size:13px;">Pas de photo ce jour</div>`;
+
+    // humeur
+    document.querySelectorAll('#dd-mood-row .mood-btn').forEach(b=>b.classList.remove('selected'));
+    const ibox=document.getElementById('dd-intensity-box');
+    if(e && e.humeur){
+      const btns=document.querySelectorAll('#dd-mood-row .mood-btn'); if(btns[e.humeur-1]) btns[e.humeur-1].classList.add('selected');
+      ibox.classList.remove('hidden');
+      document.getElementById('dd-intensity').value = e.humeur_intensite!=null ? e.humeur_intensite : 50;
+      document.getElementById('dd-intensity-val').textContent = (e.humeur_intensite!=null?e.humeur_intensite:50)+'%';
+    } else { ibox.classList.add('hidden'); document.getElementById('dd-intensity').value=50; document.getElementById('dd-intensity-val').textContent='50%'; }
+
+    // sommeil / hydra / alim
+    const som = (e&&e.sommeil!=null)?e.sommeil:7; document.getElementById('dd-sommeil').value=som; document.getElementById('dd-sommeil-val').textContent=fmtSleep(som);
+    const hyd = (e&&e.hydratation!=null)?e.hydratation:6; document.getElementById('dd-hydra').value=hyd; ddHydraLbl(hyd);
+    const ali = (e&&e.alimentation!=null)?e.alimentation:3; document.getElementById('dd-alim').value=ali; document.getElementById('dd-alim-val').textContent=ALIM_LABELS[ali]||'—';
+
+    // routines + note
+    document.getElementById('dd-matin').checked = !!(e && e.routine_matin);
+    document.getElementById('dd-soir').checked = !!(e && e.routine_soir);
+    document.getElementById('dd-note').value = (e && e.note) ? e.note : '';
+
     document.getElementById('day-detail').classList.add('open');
+  }
+  async function saveDayDetail(){
+    if(!currentUser || !ddState.date) return;
+    showToast('Enregistrement…');
+    const fields = {
+      humeur: ddState.mood,
+      humeur_intensite: ddState.mood ? parseInt(document.getElementById('dd-intensity').value,10) : null,
+      routine_matin: document.getElementById('dd-matin').checked,
+      routine_soir: document.getElementById('dd-soir').checked,
+      note: document.getElementById('dd-note').value.trim()
+    };
+    if(ddState.hadSom || ddState.somTouched) fields.sommeil = parseFloat(document.getElementById('dd-sommeil').value);
+    if(ddState.hadHyd || ddState.hydTouched) fields.hydratation = parseInt(document.getElementById('dd-hydra').value,10);
+    if(ddState.hadAli || ddState.aliTouched) fields.alimentation = parseInt(document.getElementById('dd-alim').value,10);
+    if(ddState.photoFile){
+      const ext=(ddState.photoFile.name.split('.').pop()||'jpg').toLowerCase();
+      const path=`${currentUser.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await sb.storage.from('photos').upload(path, ddState.photoFile, { upsert:true });
+      if(!upErr) fields.photo_path = path;
+    }
+    const id = await getEntryIdForDate(ddState.date);
+    if(id) await sb.from('entries').update(fields).eq('id', id);
+    closeDayDetail();
+    showToast('Jour enregistré 🌸');
+    renderCalendar();
+    if(ddState.date===todayStr()){ loadHomeData(); loadJournalFromDB(); }
   }
   function closeDayDetail(){ document.getElementById('day-detail').classList.remove('open'); }
 
