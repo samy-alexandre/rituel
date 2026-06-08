@@ -329,6 +329,20 @@
   .rem-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .rem-time { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-family: var(--sans); font-size: 14px; background: var(--surface); color: var(--ink); }
   .rem-time:disabled { opacity: .4; }
+  .day-note { width: 100%; min-height: 90px; border: 1px solid var(--line); border-radius: 14px; padding: 14px; font-family: var(--sans); font-size: 14px; color: var(--ink); background: var(--surface); resize: vertical; line-height: 1.5; box-sizing: border-box; }
+  .day-note:focus { outline: none; border-color: var(--accent-soft); }
+
+  /* ===== Écran Rituel ===== */
+  .rit-type { display: flex; gap: 10px; }
+  .rit-opt { flex: 1; padding: 16px 6px; border: 1.5px solid var(--line); border-radius: 16px; background: var(--surface); display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 20px; cursor: pointer; transition: all .15s; }
+  .rit-opt span { font-size: 12px; color: var(--ink-soft); font-weight: 500; }
+  .rit-opt.selected { border-color: var(--accent); background: var(--blush-soft); }
+  .rit-opt.selected span { color: var(--accent-deep); }
+
+  /* ===== Bulle Léa flottante ===== */
+  .lea-bubble { position: fixed; z-index: 350; width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); box-shadow: 0 6px 22px rgba(201,90,63,.5); display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; user-select: none; }
+  .lea-bubble:active { cursor: grabbing; transform: scale(0.95); }
+  .chat-back { background: none; border: none; cursor: pointer; color: var(--ink-soft); padding: 0 4px 0 0; display: flex; align-items: center; }
 
   .routine-list { background: var(--surface); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
   .routine-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
@@ -670,7 +684,7 @@
 
     <div class="section">
       <div class="section-head">
-        <h3 class="section-title" onclick="navTo('routine')" style="cursor:pointer;"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Votre <em>rituel</em> <span style="color:var(--muted);font-weight:300;">›</span></h3>
+        <h3 class="section-title" onclick="navTo('ritual')" style="cursor:pointer;"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Votre <em>rituel</em> <span style="color:var(--muted);font-weight:300;">›</span></h3>
         <div class="section-more" id="routine-count">0/0</div>
       </div>
       <div class="period-switch">
@@ -699,6 +713,13 @@
         <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Alimentation</div><div class="stat-tile-value" id="tile-alim" style="font-size:20px;"><em>—</em></div><div class="stat-tile-trend" id="tile-alim-sub">à noter</div></div>
         <div class="stat-tile"><div class="stat-tile-label">Humeur du jour</div><div class="stat-tile-value" id="tile-humeur" style="font-size:30px;"><em>—</em></div><div class="stat-tile-trend" id="tile-humeur-sub">à noter</div></div>
       </div>
+      <button class="add-product-card" onclick="openDaySheet()" style="margin-top:12px;">＋ Noter ma journée</button>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3 class="section-title">Ma <em>note</em> du jour</h3></div>
+      <textarea id="day-note" class="day-note" placeholder="Un mot sur ta peau, ton ressenti, ce que tu as testé aujourd'hui…"></textarea>
+      <button class="btn-outline-sm" onclick="saveDayNote()" style="margin-top:10px;">Enregistrer ma note</button>
     </div>
 
     <div class="section">
@@ -742,8 +763,37 @@
   </div>
 
   <!-- ====================== CHAT ====================== -->
+  <div id="ritual" class="screen">
+    <div class="topbar">
+      <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
+    </div>
+    <div class="section">
+      <div class="streak">
+        <div class="streak-flame" id="rit-flame">🌱</div>
+        <div class="streak-text">
+          <div class="streak-num"><em id="rit-streak">0</em> <span id="rit-unit">jour</span></div>
+          <div class="streak-label" id="rit-label">Fais ton rituel pour démarrer ta série ✨</div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h3 class="section-title">Mon rituel, c'est…</h3></div>
+      <div class="rit-type">
+        <button class="rit-opt" id="rt-type-matin" onclick="setRituelType('matin')">☀️<span>Matin</span></button>
+        <button class="rit-opt" id="rt-type-soir" onclick="setRituelType('soir')">🌙<span>Soir</span></button>
+        <button class="rit-opt" id="rt-type-both" onclick="setRituelType('both')">☀️🌙<span>Les deux</span></button>
+      </div>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px;">C'est ce qui compte pour ta série de jours 🌸</div>
+    </div>
+    <div class="section">
+      <div id="ritual-preview"></div>
+      <button class="add-product-card" onclick="navTo('routine')">Gérer mes produits →</button>
+    </div>
+  </div>
+
   <div id="chat" class="chat-screen">
     <div class="chat-header">
+      <button class="chat-back" onclick="closeChat()" aria-label="Retour"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="chat-avatar-large">L</div>
       <div style="flex:1;"><div class="chat-coach-name">Léa <span style="font-size:11px;color:var(--muted);letter-spacing:0.1em;">· COACH BEAUTÉ</span></div><div class="chat-coach-status">● En ligne</div></div>
       <button style="background:none;border:none;cursor:pointer;color:var(--muted);" onclick="showToast('Bientôt disponible')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
@@ -766,7 +816,7 @@
   <!-- ====================== ROUTINE ====================== -->
   <div id="routine" class="screen">
     <div class="topbar">
-      <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
+      <div class="topbar-greet"><div class="topbar-name">Mes <em style="font-style:italic;color:var(--accent);">produits</em></div></div>
       <button class="add-btn" onclick="openProductForm(currentRoutineView)">+ Ajouter</button>
     </div>
     <div style="padding:0 20px;margin-bottom:18px;">
@@ -823,7 +873,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.0<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.2<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -831,12 +881,16 @@
   <nav class="nav hidden" id="nav">
     <div class="nav-item active" data-screen="home" onclick="navTo('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9M5 10v10a2 2 0 002 2h3v-6h4v6h3a2 2 0 002-2V10" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Aujourd'hui</div></div>
     <div class="nav-item" data-screen="journal" onclick="navTo('journal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Journal</div></div>
-    <div class="nav-item" data-screen="chat" onclick="navTo('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Coach</div></div>
-    <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Rituel</div></div>
+    <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2h4v3l1.2 2A3 3 0 0116 8.7V19a2 2 0 01-2 2h-4a2 2 0 01-2-2V8.7a3 3 0 01.8-1.7L10 5V2z" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 12h7" stroke-linecap="round"/></svg><div class="nav-label">Produits</div></div>
+    <div class="nav-item" data-screen="ritual" onclick="navTo('ritual')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Rituel</div></div>
     <div class="nav-item" data-screen="profile" onclick="navTo('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Moi</div></div>
   </nav>
 
   <button class="fab" onclick="document.getElementById('photo-input').click()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+
+  <div id="lea-bubble" class="lea-bubble" style="display:none;" aria-label="Parler à Léa">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
 
   <div class="toast" id="toast"></div>
 
@@ -1116,6 +1170,7 @@
     if(p.prenom) state.name = p.prenom;
     if(p.type_peau) state.skinType = p.type_peau;
     if(p.objectifs){ try{ state.concerns = JSON.parse(p.objectifs); }catch(e){ state.concerns = []; } }
+    state.rituelType = p.rituel_type || state.rituelType || 'both';
     state.email = currentUser ? currentUser.email : '';
   }
   async function saveProfile(){
@@ -1207,6 +1262,7 @@
     navTo('home');
     updateBellDot();
     startReminderScheduler();
+    initLeaBubble();
   }
 
   function updateUserUI(){
@@ -1268,19 +1324,25 @@
 
   // ===== Navigation =====
   function navTo(screen){
+    const prev = document.getElementById('app').getAttribute('data-screen');
+    if(prev && prev!=='chat') window._lastScreen = prev;
     document.querySelectorAll('.screen, .chat-screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(screen).classList.add('active');
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.screen===screen));
     document.getElementById('app').setAttribute('data-screen', screen);
     const host=document.getElementById('scroll-host'); if(host) host.scrollTo(0,0);
     window.scrollTo(0,0);
+    const bub=document.getElementById('lea-bubble'); if(bub) bub.style.display = (currentUser && screen!=='chat') ? 'flex' : 'none';
     if(currentUser){
       if(screen==='home'){ loadHomeData(); loadTodayPhoto(); }
       else if(screen==='routine'){ loadProducts(); }
+      else if(screen==='ritual'){ loadRitual(); }
       else if(screen==='journal'){ loadJournalFromDB(); renderCalendar(); }
       else if(screen==='profile'){ renderProfileBadges(); }
     }
   }
+  function openChat(){ navTo('chat'); }
+  function closeChat(){ navTo(window._lastScreen || 'home'); }
 
   // ===== Entrée du jour (une ligne par jour dans 'entries') =====
   function todayStr(){ return new Date().toISOString().slice(0,10); }
@@ -1355,12 +1417,19 @@
     });
   }
 
-  // ===== Streak (jours où matin ET soir sont faits) =====
+  // ===== Streak (selon le type de rituel choisi) =====
+  function dayComplete(e){
+    if(!e) return false;
+    const t = state.rituelType || 'both';
+    if(t==='matin') return !!e.routine_matin;
+    if(t==='soir') return !!e.routine_soir;
+    return !!(e.routine_matin && e.routine_soir);
+  }
   async function computeStreak(){
     if(!currentUser) return 0;
     const { data } = await sb.from('entries').select('date,routine_matin,routine_soir').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(90);
     if(!data || !data.length) return 0;
-    const done={}; data.forEach(e=>{ done[e.date] = !!(e.routine_matin && e.routine_soir); });
+    const done={}; data.forEach(e=>{ done[e.date] = dayComplete(e); });
     let streak=0; const d=new Date();
     if(!done[d.toISOString().slice(0,10)]) d.setDate(d.getDate()-1);
     for(let i=0;i<90;i++){
@@ -1376,12 +1445,12 @@
     document.getElementById('streak-unit').textContent = n>1 ? "jours d'affilée" : "jour";
     document.getElementById('streak-flame').textContent = n===0 ? '🌱' : (n>=7 ? '🔥' : '🌸');
     const label=document.getElementById('streak-label');
-    if(n===0) label.textContent='Fais ta routine matin + soir pour démarrer ta série ✨';
+    if(n===0) label.textContent='Fais ton rituel pour démarrer ta série ✨';
     else if(n<3) label.textContent='Beau début, continue comme ça 🌸';
     else if(n<7) label.textContent='Belle régularité, ça se voit sur la peau ✨';
     else label.textContent='Tu es rayonnante de constance 🔥';
     const { data } = await sb.from('entries').select('date,routine_matin,routine_soir').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(14);
-    const done={}; (data||[]).forEach(e=>{ done[e.date]=!!(e.routine_matin&&e.routine_soir); });
+    const done={}; (data||[]).forEach(e=>{ done[e.date]=dayComplete(e); });
     let mini='';
     for(let i=6;i>=0;i--){ const dd=new Date(); dd.setDate(dd.getDate()-i); const ds=dd.toISOString().slice(0,10); mini+=`<div class="streak-day${done[ds]?' active':''}"></div>`; }
     document.getElementById('streak-mini').innerHTML = mini;
@@ -1410,9 +1479,18 @@
     await loadHomeRoutine();
     applyRoutineState('matin', e ? e.routine_matin : false);
     applyRoutineState('soir', e ? e.routine_soir : false);
-    switchPeriod('matin');
+    applyRituelTypeToHome();
     renderStreak();
     renderDayTiles(e);
+    const noteEl=document.getElementById('day-note'); if(noteEl) noteEl.value = (e && e.note) ? e.note : '';
+  }
+
+  // Affiche les bons moments sur l'accueil selon le type de rituel choisi
+  function applyRituelTypeToHome(){
+    const t = state.rituelType || 'both';
+    const sw = document.querySelector('#home .period-switch');
+    if(t==='both'){ if(sw) sw.style.display='flex'; switchPeriod('matin'); }
+    else { if(sw) sw.style.display='none'; switchPeriod(t); }
   }
 
   // Construit la checklist de l'accueil à partir des vrais produits du Rituel
@@ -1466,6 +1544,13 @@
     showToast('Journée enregistrée 🌸');
     const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
     renderDayTiles((data && data.length) ? data[0] : null);
+  }
+  async function saveDayNote(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    const note = document.getElementById('day-note').value.trim();
+    showToast('Enregistrement…');
+    await updateTodayEntry({ note });
+    showToast('Note enregistrée 🌸');
   }
   function renderDayTiles(e){
     const MOOD_EMOJI = ['','😣','😕','😌','😊','✨'];
@@ -1662,6 +1747,82 @@
     loadProducts();
   }
 
+  // ===== Écran Rituel (choix matin/soir/les deux + aperçu) =====
+  async function loadRitual(){
+    if(!currentUser) return;
+    const t = state.rituelType || 'both';
+    ['matin','soir','both'].forEach(x=>{ const el=document.getElementById('rt-type-'+x); if(el) el.classList.toggle('selected', x===t); });
+    const n = await computeStreak();
+    document.getElementById('rit-streak').textContent = n;
+    document.getElementById('rit-unit').textContent = n>1 ? "jours d'affilée" : "jour";
+    document.getElementById('rit-flame').textContent = n===0 ? '🌱' : (n>=7 ? '🔥' : '🌸');
+    const typeLabel = t==='matin' ? 'le matin' : (t==='soir' ? 'le soir' : 'matin et soir');
+    document.getElementById('rit-label').textContent = n===0 ? `Fais ton rituel (${typeLabel}) pour démarrer ta série ✨` : `Ta série de rituel — ${typeLabel} 🌸`;
+    const moments = t==='both' ? ['matin','soir'] : [t];
+    const host=document.getElementById('ritual-preview');
+    let html='';
+    for(const m of moments){
+      const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).eq('moment', m).order('position',{ascending:true});
+      const prods = data || [];
+      html += `<div class="eyebrow" style="margin:6px 0 10px;">${m==='soir'?'🌙 SOIR':'☀️ MATIN'}</div>`;
+      if(!prods.length){
+        html += `<div style="padding:14px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px;">Aucun produit pour ce moment. <span style="color:var(--accent-deep);text-decoration:underline;cursor:pointer;" onclick="navTo('routine')">Ajoute-les →</span></div>`;
+      } else {
+        html += '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">';
+        for(let i=0;i<prods.length;i++){
+          const p=prods[i];
+          let thumb=p.emoji||'🧴';
+          if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) thumb=`<img src="${url}" alt="">`; }
+          html += `<div class="product-card" style="cursor:default;"><div class="product-thumb">${thumb}</div><div class="product-info" style="flex:1;"><div class="product-step">ÉTAPE ${i+1}${p.etape?(' · '+escapeHtml(p.etape).toUpperCase()):''}</div><div class="product-name">${escapeHtml(p.nom||'')}</div></div></div>`;
+        }
+        html += '</div>';
+      }
+    }
+    host.innerHTML = html;
+  }
+  async function setRituelType(t){
+    state.rituelType = t;
+    if(currentUser){ await sb.from('profiles').update({ rituel_type: t }).eq('id', currentUser.id); }
+    loadRitual();
+    showToast('Rituel mis à jour 🌸');
+  }
+
+  // ===== Bulle Léa flottante (déplaçable, se colle aux bords) =====
+  function placeBubble(x,y){
+    const b=document.getElementById('lea-bubble'); if(!b) return;
+    x = Math.max(8, Math.min(x, window.innerWidth - 58 - 8));
+    y = Math.max(60, Math.min(y, window.innerHeight - 58 - 84));
+    b.style.left = x+'px'; b.style.top = y+'px'; b.style.right='auto'; b.style.bottom='auto';
+  }
+  let bubbleInit=false;
+  function initLeaBubble(){
+    const b=document.getElementById('lea-bubble'); if(!b || bubbleInit) return;
+    bubbleInit=true;
+    placeBubble(window.innerWidth - 58 - 14, window.innerHeight - 58 - 96);
+    let dragging=false, moved=false, sx=0, sy=0, ox=0, oy=0;
+    b.addEventListener('pointerdown', e=>{
+      dragging=true; moved=false;
+      try{ b.setPointerCapture(e.pointerId); }catch(_){}
+      sx=e.clientX; sy=e.clientY;
+      const r=b.getBoundingClientRect(); ox=r.left; oy=r.top;
+      b.style.transition='none';
+    });
+    b.addEventListener('pointermove', e=>{
+      if(!dragging) return;
+      const dx=e.clientX-sx, dy=e.clientY-sy;
+      if(Math.abs(dx)>4 || Math.abs(dy)>4) moved=true;
+      placeBubble(ox+dx, oy+dy);
+    });
+    b.addEventListener('pointerup', e=>{
+      if(!dragging) return; dragging=false;
+      b.style.transition='left .25s ease, top .25s ease';
+      if(!moved){ openChat(); return; }
+      const r=b.getBoundingClientRect();
+      const toLeft = (r.left + r.width/2) < window.innerWidth/2;
+      placeBubble(toLeft ? 14 : (window.innerWidth - 58 - 14), r.top);
+    });
+  }
+
   // ===== Chat — vraie Léa via le backend sécurisé (/api/lea) =====
   function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function formatMessage(text){
@@ -1835,7 +1996,7 @@
       const ds=year+'-'+pad2(month+1)+'-'+pad2(d);
       const e=map[ds];
       const isFuture=ds>tStr, isToday=ds===tStr;
-      const complete = e && e.routine_matin && e.routine_soir;
+      const complete = dayComplete(e);
       const hasEntry = e && (e.photo_path || e.humeur || e.sommeil!=null || e.hydratation!=null || e.alimentation!=null || e.routine_matin || e.routine_soir || e.note);
       let cls='cal-cell';
       if(complete) cls+=' complete';
