@@ -77,6 +77,7 @@
     min-height: 100vh; min-height: 100dvh;
     position: relative;
     background: var(--bg);
+    overflow-x: hidden;
     padding-bottom: env(safe-area-inset-bottom);
   }
 
@@ -130,7 +131,21 @@
   .eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
 
   /* ===== Screens ===== */
-  .screen { display: none; padding-bottom: 96px; animation: fadeIn .4s ease; }
+  .screen { display: none; padding-bottom: 96px; animation: fadeIn .4s ease; overflow-x: hidden; }
+  img { max-width: 100%; }
+
+  /* ===== Plante qui pousse ===== */
+  .plant-card { margin: 0 20px 14px; background: linear-gradient(180deg, var(--surface), var(--surface-warm)); border-radius: 24px; box-shadow: var(--shadow); padding: 18px 20px 16px; display: flex; flex-direction: column; align-items: center; }
+  .plant-card svg { display: block; }
+  .plant-caption { font-family: var(--serif); font-size: 15px; font-style: italic; color: var(--ink-soft); text-align: center; margin-top: 4px; }
+  .photo-mini { margin: 0 20px 24px; background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); padding: 12px 14px; display: flex; align-items: center; gap: 14px; cursor: pointer; }
+  .photo-mini-thumb { width: 56px; height: 56px; border-radius: 14px; overflow: hidden; flex-shrink: 0; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; }
+  .pm-empty { color: var(--accent); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  .pm-display { width: 100%; height: 100%; }
+  .pm-display img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-mini-text { flex: 1; }
+  .photo-mini-title { font-family: var(--serif); font-size: 16px; }
+  .photo-mini-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .screen.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -344,6 +359,20 @@
   .lea-bubble:active { cursor: grabbing; transform: scale(0.95); }
   .chat-back { background: none; border: none; cursor: pointer; color: var(--ink-soft); padding: 0 4px 0 0; display: flex; align-items: center; }
   .dd-lbl { font-size: 12px; font-weight: 600; color: var(--ink-soft); padding-left: 4px; }
+  .theme-opt { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1.5px solid var(--line); border-radius: 16px; background: var(--surface); cursor: pointer; width: 100%; font-family: var(--sans); }
+  .theme-opt.selected { border-color: var(--accent); background: var(--blush-soft); }
+  .theme-swatch { display: flex; gap: 4px; }
+  .theme-swatch span { width: 18px; height: 18px; border-radius: 50%; }
+  .theme-opt .theme-name { font-size: 15px; color: var(--ink); flex: 1; text-align: left; }
+  .theme-opt .theme-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); flex-shrink: 0; }
+  .theme-opt.selected .theme-check { border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 3px var(--surface); }
+  .habit-card { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 16px; padding: 12px 14px; box-shadow: var(--shadow); }
+  .habit-emoji { width: 44px; height: 44px; border-radius: 12px; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; cursor: pointer; }
+  .habit-info { flex: 1; cursor: pointer; }
+  .habit-name { font-size: 15px; }
+  .habit-streak { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .habit-toggle { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: transparent; font-size: 15px; }
+  .habit-toggle.done { background: var(--accent); border-color: var(--accent); color: #fff; }
 
   .routine-list { background: var(--surface); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
   .routine-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
@@ -358,7 +387,7 @@
   .routine-product { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .routine-time { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
 
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-width: 0; }
   .stat-tile { background: var(--surface); border-radius: 18px; padding: 18px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
   .stat-tile-label { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
   .stat-tile-value { font-family: var(--serif); font-size: 32px; font-weight: 300; letter-spacing: -0.02em; line-height: 1; }
@@ -375,8 +404,8 @@
   .cal-nav { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-size: 18px; color: var(--ink-soft); cursor: pointer; line-height: 1; }
   .cal-weekdays { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin-bottom: 6px; }
   .cal-weekdays span { text-align: center; font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
-  .cal-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; color: var(--ink-soft); position: relative; background: transparent; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; min-width: 0; }
+  .cal-cell { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; color: var(--ink-soft); position: relative; background: transparent; min-width: 0; }
   .cal-cell.empty { visibility: hidden; }
   .cal-cell.has { cursor: pointer; transition: transform .12s; }
   .cal-cell.has:active { transform: scale(0.92); }
@@ -559,7 +588,7 @@
   <div id="onboarding">
     <div class="onb-page active" data-page="0">
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
-        <div class="welcome-mark">R</div>
+        <div class="welcome-mark" style="font-size:50px;">Rituel</div>
         <div class="welcome-tagline italic serif">bienvenue dans votre rituel</div>
         <svg style="width:90px;margin-bottom:32px;opacity:0.7;" viewBox="0 0 120 40" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M4 20 H40"/><path d="M116 20 H80"/><circle cx="60" cy="20" r="6"/><circle cx="50" cy="20" r="4"/><circle cx="70" cy="20" r="4"/><circle cx="60" cy="12" r="4"/><circle cx="60" cy="28" r="4"/><circle cx="60" cy="20" r="2.5" fill="#C95A3F"/></g></svg>
         <h1 class="display" style="font-size:34px;margin-bottom:16px;max-width:300px;">Un instant par jour,<br><em class="italic" style="color:var(--accent);">rien que pour vous</em></h1>
@@ -642,30 +671,21 @@
       </div>
     </div>
 
-    <div class="photo-card">
-      <div class="photo-empty" id="photo-empty" onclick="document.getElementById('photo-input').click()">
-        <svg class="photo-petals" viewBox="0 0 60 60" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.5"><circle cx="30" cy="22" r="9"/><circle cx="21" cy="28" r="7"/><circle cx="39" cy="28" r="7"/><circle cx="26" cy="38" r="7"/><circle cx="34" cy="38" r="7"/><circle cx="30" cy="30" r="4" fill="#C95A3F"/></g></svg>
-        <div class="photo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="photo-empty-title">Votre photo du <em class="italic">jour</em></div>
-        <div class="photo-empty-sub">Lumière naturelle, sans maquillage, de face. Ça prend 5 secondes.</div>
-      </div>
-      <div class="photo-display hidden" id="photo-display">
-        <img id="photo-img" alt="">
-        <div class="photo-overlay">
-          <div class="photo-chip">📷 Aujourd'hui</div>
-          <div class="photo-chip" id="photo-chip-extra" style="background:rgba(122,148,104,0.85);">✓ Enregistrée</div>
-        </div>
-      </div>
-      <input type="file" id="photo-input" accept="image/*" capture="user" style="display:none;" onchange="handlePhoto(this)">
+    <div class="plant-card">
+      <div id="plant-host"></div>
+      <div class="plant-caption" id="plant-caption">Ta plante pousse avec ta série 🌱</div>
     </div>
 
-    <div class="streak">
-      <div class="streak-flame" id="streak-flame">🌱</div>
-      <div class="streak-text">
-        <div class="streak-num"><em id="streak-num">0</em> <span id="streak-unit">jour</span></div>
-        <div class="streak-label" id="streak-label">Fais ta routine matin + soir pour démarrer ta série ✨</div>
+    <div class="photo-mini" onclick="document.getElementById('photo-input').click()">
+      <div class="photo-mini-thumb">
+        <div id="photo-empty" class="pm-empty"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+        <div id="photo-display" class="pm-display hidden"><img id="photo-img" alt=""></div>
       </div>
-      <div class="streak-mini" id="streak-mini"></div>
+      <div class="photo-mini-text">
+        <div class="photo-mini-title">Photo du <em class="italic">jour</em></div>
+        <div class="photo-mini-sub">Suis l'évolution de ta peau, jour après jour 🌸</div>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" capture="user" style="display:none;" onchange="handlePhoto(this)">
     </div>
 
     <div class="section">
@@ -706,6 +726,15 @@
       </div>
     </div>
 
+    <div class="streak">
+      <div class="streak-flame" id="streak-flame">🌱</div>
+      <div class="streak-text">
+        <div class="streak-num"><em id="streak-num">0</em> <span id="streak-unit">jour</span></div>
+        <div class="streak-label" id="streak-label">Fais ton rituel pour démarrer ta série ✨</div>
+      </div>
+      <div class="streak-mini" id="streak-mini"></div>
+    </div>
+
     <div class="section">
       <div class="section-head"><h3 class="section-title">Ma <em>journée</em></h3><div class="section-more" onclick="openDaySheet()" style="cursor:pointer;">Noter ›</div></div>
       <div class="stats-grid">
@@ -721,6 +750,12 @@
       <div class="section-head"><h3 class="section-title">Ma <em>note</em> du jour</h3></div>
       <textarea id="day-note" class="day-note" placeholder="Un mot sur ta peau, ton ressenti, ce que tu as testé aujourd'hui…"></textarea>
       <button class="btn-outline-sm" onclick="saveDayNote()" style="margin-top:10px;">Enregistrer ma note</button>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3 class="section-title">Mes <em>habitudes</em></h3></div>
+      <div id="habits-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <button class="add-product-card" onclick="openHabitForm()">＋ Nouvelle habitude</button>
     </div>
 
     <div class="section">
@@ -797,7 +832,7 @@
       <button class="chat-back" onclick="closeChat()" aria-label="Retour"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="chat-avatar-large">L</div>
       <div style="flex:1;"><div class="chat-coach-name">Léa <span style="font-size:11px;color:var(--muted);letter-spacing:0.1em;">· COACH BEAUTÉ</span></div><div class="chat-coach-status">● En ligne</div></div>
-      <button style="background:none;border:none;cursor:pointer;color:var(--muted);" onclick="showToast('Bientôt disponible')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+      <button style="background:none;border:none;cursor:pointer;color:var(--muted);" onclick="openThemeSheet()" aria-label="Thème"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
     </div>
     <div class="chat-feed" id="chat-feed">
       <div class="chat-day">VOTRE COACH BEAUTÉ</div>
@@ -874,7 +909,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.3<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 1.7<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -888,6 +923,32 @@
   </nav>
 
   <button class="fab" onclick="document.getElementById('photo-input').click()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+
+  <!-- ====================== FICHE HABITUDE ====================== -->
+  <div class="sheet-overlay" id="habit-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="habit-sheet-title">Nouvelle habitude</div>
+      <label class="dd-lbl">Icône</label>
+      <div class="emoji-picker" id="habit-emoji-picker" style="margin:8px 0 16px;"></div>
+      <div class="field"><label>Nom de l'habitude</label><input id="hf-nom" placeholder="Ex. Boire 2L d'eau, Sport, Masque…"></div>
+      <div class="auth-error" id="hf-error" style="margin-top:10px;"></div>
+      <button class="btn btn-accent" style="margin-top:14px;" onclick="saveHabit()">Enregistrer</button>
+      <button class="btn" id="hf-delete" style="margin-top:10px;background:transparent;color:var(--accent);display:none;" onclick="deleteHabit()">Supprimer cette habitude</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeHabitSheet()">Annuler</button>
+    </div>
+  </div>
+
+  <!-- ====================== THÈME ====================== -->
+  <div class="sheet-overlay" id="theme-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Thème de l'app</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Choisis ton ambiance de couleur — c'est gratuit 🌸</p>
+      <div id="theme-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeThemeSheet()">Fermer</button>
+    </div>
+  </div>
 
   <div id="lea-bubble" class="lea-bubble" style="display:none;" aria-label="Parler à Léa">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -956,6 +1017,9 @@
 
       <div class="rem-row"><div class="rem-label">☀️ Routine du matin faite</div><label class="switch"><input type="checkbox" id="dd-matin"><span class="sl"></span></label></div>
       <div class="rem-row"><div class="rem-label">🌙 Routine du soir faite</div><label class="switch"><input type="checkbox" id="dd-soir"><span class="sl"></span></label></div>
+
+      <label class="dd-lbl" style="margin-top:16px;display:block;">Mes habitudes</label>
+      <div id="dd-habits" style="margin-top:8px;"></div>
 
       <label class="dd-lbl" style="margin-top:16px;display:block;">Note</label>
       <textarea id="dd-note" class="day-note" style="margin-top:8px;" placeholder="Un mot sur ce jour…"></textarea>
@@ -1485,6 +1549,51 @@
     let mini='';
     for(let i=6;i>=0;i--){ const dd=new Date(); dd.setDate(dd.getDate()-i); const ds=dd.toISOString().slice(0,10); mini+=`<div class="streak-day${done[ds]?' active':''}"></div>`; }
     document.getElementById('streak-mini').innerHTML = mini;
+    renderPlant(n);
+  }
+
+  // ===== Plante qui pousse avec la série =====
+  function plantStage(n){ if(n<=0) return 0; if(n<3) return 1; if(n<7) return 2; if(n<14) return 3; if(n<21) return 4; return 5; }
+  function plantSVG(stage){
+    const soilY=150;
+    const stemH = 10 + stage*22;
+    const topY = soilY - stemH;
+    const parts = [];
+    parts.push('<path d="M70 150 L75 182 Q76 188 82 188 L118 188 Q124 188 125 182 L130 150 Z" fill="#D7A286"/>');
+    parts.push('<path d="M64 144 H136 L134 154 H66 Z" fill="#C68E70"/>');
+    parts.push('<ellipse cx="100" cy="150" rx="32" ry="5" fill="#7C5A44"/>');
+    if(stage===0){
+      parts.push('<path d="M100 150 C95 143 87 142 83 145 C88 150 96 151 100 150 Z" fill="var(--sage)"/>');
+      parts.push('<path d="M100 150 C105 143 113 142 117 145 C112 150 104 151 100 150 Z" fill="var(--sage)"/>');
+    } else {
+      const midY = Math.round((soilY+topY)/2);
+      parts.push('<path d="M100 '+soilY+' Q97 '+midY+' 100 '+topY+'" stroke="var(--sage)" stroke-width="4" fill="none" stroke-linecap="round"/>');
+      const pairs = Math.min(stage,4);
+      for(let i=0;i<pairs;i++){
+        const ly = Math.round(soilY - stemH*(i+1)/(pairs+1));
+        parts.push('<path d="M100 '+ly+' C84 '+(ly-9)+' 73 '+(ly-3)+' 71 '+(ly+6)+' C84 '+(ly+8)+' 96 '+(ly+4)+' 100 '+ly+' Z" fill="var(--sage)"/>');
+        parts.push('<path d="M100 '+ly+' C116 '+(ly-9)+' 127 '+(ly-3)+' 129 '+(ly+6)+' C116 '+(ly+8)+' 104 '+(ly+4)+' 100 '+ly+' Z" fill="var(--sage)"/>');
+      }
+      if(stage>=5){
+        const fy=topY;
+        for(let k=0;k<6;k++){ const a=k*Math.PI/3; const px=Math.round(100+Math.cos(a)*13); const py=Math.round(fy+Math.sin(a)*13); parts.push('<circle cx="'+px+'" cy="'+py+'" r="9" fill="var(--blush)"/>'); }
+        parts.push('<circle cx="100" cy="'+fy+'" r="8" fill="var(--gold)"/>');
+      } else if(stage>=4){
+        parts.push('<circle cx="100" cy="'+topY+'" r="9" fill="var(--accent-soft)"/>');
+        parts.push('<path d="M100 '+(topY-9)+' Q109 '+topY+' 100 '+(topY+9)+' Q91 '+topY+' 100 '+(topY-9)+' Z" fill="var(--accent)"/>');
+      }
+    }
+    return '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:150px;height:150px;">'+parts.join('')+'</svg>';
+  }
+  async function renderPlant(n){
+    const host=document.getElementById('plant-host'); if(!host) return;
+    if(typeof n!=='number'){ n = currentUser ? await computeStreak() : 0; }
+    const st=plantStage(n);
+    host.innerHTML = plantSVG(st);
+    const cap=document.getElementById('plant-caption'); if(!cap) return;
+    if(n===0) cap.textContent='Fais ton rituel pour faire pousser ta plante 🌱';
+    else if(st>=5) cap.textContent='En fleur ! '+n+' jours de rituel 🌸';
+    else cap.textContent='Ta plante pousse — '+n+' jour'+(n>1?'s':'')+' 🌿';
   }
 
   // ===== Chargement de l'accueil =====
@@ -1514,6 +1623,7 @@
     renderStreak();
     renderDayTiles(e);
     const noteEl=document.getElementById('day-note'); if(noteEl) noteEl.value = (e && e.note) ? e.note : '';
+    loadHabits();
   }
 
   // Affiche les bons moments sur l'accueil selon le type de rituel choisi
@@ -1854,6 +1964,128 @@
     });
   }
 
+  // ===== Thèmes de couleur =====
+  const THEMES = {
+    terracotta: { name:'Terracotta', vars:{ '--accent':'#C95A3F','--accent-deep':'#8E3C26','--accent-soft':'#EBCDC0','--blush':'#E8A6A0','--blush-soft':'#F6E0DC' }, swatch:['#C95A3F','#E8A6A0','#F6E0DC'] },
+    rose:       { name:'Rose poudré', vars:{ '--accent':'#D2638A','--accent-deep':'#A8456A','--accent-soft':'#F0CBD9','--blush':'#E89BB4','--blush-soft':'#FBE4EC' }, swatch:['#D2638A','#E89BB4','#FBE4EC'] },
+    sauge:      { name:'Sauge', vars:{ '--accent':'#7A9468','--accent-deep':'#5C7650','--accent-soft':'#CEDCC2','--blush':'#A7C291','--blush-soft':'#E9F0E2' }, swatch:['#7A9468','#A7C291','#E9F0E2'] },
+    lavande:    { name:'Lavande', vars:{ '--accent':'#8B7CC4','--accent-deep':'#6B5CA6','--accent-soft':'#D9D0EE','--blush':'#B3A4E0','--blush-soft':'#EDE7F7' }, swatch:['#8B7CC4','#B3A4E0','#EDE7F7'] },
+    bleu:       { name:'Bleu doux', vars:{ '--accent':'#5B89BE','--accent-deep':'#426A9C','--accent-soft':'#C7DAEE','--blush':'#9BBEE0','--blush-soft':'#E5EEF8' }, swatch:['#5B89BE','#9BBEE0','#E5EEF8'] }
+  };
+  function currentTheme(){ try{ return localStorage.getItem('rituel_theme') || 'terracotta'; }catch(e){ return 'terracotta'; } }
+  function applyTheme(key){
+    const t = THEMES[key] || THEMES.terracotta;
+    Object.entries(t.vars).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
+    try{ localStorage.setItem('rituel_theme', key); }catch(e){}
+  }
+  function openThemeSheet(){
+    const cur=currentTheme();
+    document.getElementById('theme-list').innerHTML = Object.entries(THEMES).map(([k,t])=>`<button class="theme-opt${k===cur?' selected':''}" onclick="pickTheme('${k}')"><div class="theme-swatch">${t.swatch.map(c=>`<span style="background:${c};"></span>`).join('')}</div><div class="theme-name">${t.name}</div><div class="theme-check"></div></button>`).join('');
+    document.getElementById('theme-sheet').classList.add('open');
+  }
+  function pickTheme(k){ applyTheme(k); openThemeSheet(); showToast('Thème appliqué 🌸'); }
+  function closeThemeSheet(){ document.getElementById('theme-sheet').classList.remove('open'); }
+  applyTheme(currentTheme());
+
+  // ===== Habitudes (trackers perso) =====
+  const HABIT_EMOJIS = ['💧','🏃','🧘','🧖','💊','🥗','😴','📖','🚶','🧴','☀️','🦷','💪','🌙','🍎','✍️','🚭','🧹'];
+  let editingHabitId = null;
+  let hfEmoji = '💧';
+  function streakFromSet(set){
+    let s=0; const d=new Date();
+    if(!set.has(d.toISOString().slice(0,10))) d.setDate(d.getDate()-1);
+    for(let i=0;i<400;i++){ const ds=d.toISOString().slice(0,10); if(set.has(ds)){ s++; d.setDate(d.getDate()-1); } else break; }
+    return s;
+  }
+  async function loadHabits(){
+    if(!currentUser) return;
+    const list=document.getElementById('habits-list'); if(!list) return;
+    const { data: habits } = await sb.from('habits').select('*').eq('user_id', currentUser.id).order('position',{ascending:true});
+    const hs = habits || [];
+    if(!hs.length){ list.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:13px;padding:14px;line-height:1.5;">Aucune habitude pour l'instant.<br>Suis ce que tu veux : eau, sport, masque… 🌸</div>`; return; }
+    const since=new Date(); since.setDate(since.getDate()-400);
+    const { data: logs } = await sb.from('habit_logs').select('habit_id,date').eq('user_id', currentUser.id).gte('date', since.toISOString().slice(0,10));
+    const byHabit={}; (logs||[]).forEach(l=>{ (byHabit[l.habit_id] = byHabit[l.habit_id] || new Set()).add(l.date); });
+    const today=todayStr();
+    let html='';
+    hs.forEach(h=>{
+      const set=byHabit[h.id] || new Set();
+      const streak=streakFromSet(set);
+      const done=set.has(today);
+      html += `<div class="habit-card">
+        <div class="habit-emoji" onclick="openHabitForm('${h.id}')">${h.emoji||'✨'}</div>
+        <div class="habit-info" onclick="openHabitForm('${h.id}')"><div class="habit-name">${escapeHtml(h.nom||'')}</div><div class="habit-streak">${streak>0?('🔥 '+streak+' jour'+(streak>1?'s':'')):'Pas encore de série'}</div></div>
+        <button class="habit-toggle${done?' done':''}" onclick="toggleHabitToday('${h.id}',${done?'true':'false'})">${done?'✓':''}</button>
+      </div>`;
+    });
+    list.innerHTML = html;
+  }
+  async function toggleHabitToday(id, done){
+    if(!currentUser) return;
+    const today=todayStr();
+    if(done){ await sb.from('habit_logs').delete().eq('user_id', currentUser.id).eq('habit_id', id).eq('date', today); }
+    else { await sb.from('habit_logs').insert({ user_id: currentUser.id, habit_id: id, date: today }); }
+    loadHabits();
+  }
+  function renderHabitEmoji(){
+    document.getElementById('habit-emoji-picker').innerHTML = HABIT_EMOJIS.map(e=>`<button type="button" class="emoji-opt${e===hfEmoji?' selected':''}" onclick="pickHabitEmoji('${e}')">${e}</button>`).join('');
+  }
+  function pickHabitEmoji(e){ hfEmoji=e; renderHabitEmoji(); }
+  function closeHabitSheet(){ document.getElementById('habit-sheet').classList.remove('open'); }
+  async function openHabitForm(id){
+    editingHabitId = id || null;
+    hfEmoji = '💧';
+    document.getElementById('hf-error').textContent='';
+    document.getElementById('hf-nom').value='';
+    document.getElementById('hf-delete').style.display = id ? 'block' : 'none';
+    document.getElementById('habit-sheet-title').textContent = id ? "Modifier l'habitude" : 'Nouvelle habitude';
+    renderHabitEmoji();
+    document.getElementById('habit-sheet').classList.add('open');
+    if(id){
+      const { data: h } = await sb.from('habits').select('*').eq('id', id).maybeSingle();
+      if(h){ document.getElementById('hf-nom').value=h.nom||''; hfEmoji=h.emoji||'💧'; renderHabitEmoji(); }
+    }
+  }
+  async function saveHabit(){
+    if(!currentUser) return;
+    const nom=document.getElementById('hf-nom').value.trim();
+    if(!nom){ document.getElementById('hf-error').textContent='Donne un nom à ton habitude.'; return; }
+    showToast('Enregistrement…');
+    if(editingHabitId){
+      await sb.from('habits').update({ nom, emoji: hfEmoji }).eq('id', editingHabitId);
+    } else {
+      const { data: existing } = await sb.from('habits').select('id').eq('user_id', currentUser.id);
+      await sb.from('habits').insert({ user_id: currentUser.id, nom, emoji: hfEmoji, position: existing ? existing.length : 0 });
+    }
+    closeHabitSheet();
+    showToast('Habitude enregistrée ✓');
+    loadHabits();
+  }
+  async function deleteHabit(){
+    if(!editingHabitId) return;
+    if(!confirm('Supprimer cette habitude et tout son historique ?')) return;
+    await sb.from('habits').delete().eq('id', editingHabitId);
+    closeHabitSheet();
+    showToast('Habitude supprimée');
+    loadHabits();
+  }
+  // Habitudes dans la fiche d'un jour du calendrier
+  async function renderDayHabits(ds){
+    const host=document.getElementById('dd-habits'); if(!host || !currentUser) return;
+    const { data: habits } = await sb.from('habits').select('*').eq('user_id', currentUser.id).order('position',{ascending:true});
+    const hs=habits||[];
+    if(!hs.length){ host.innerHTML='<div style="color:var(--muted);font-size:13px;">Aucune habitude. Crée-en sur l\'accueil 🌸</div>'; return; }
+    const { data: logs } = await sb.from('habit_logs').select('habit_id').eq('user_id', currentUser.id).eq('date', ds);
+    const doneSet=new Set((logs||[]).map(l=>l.habit_id));
+    host.innerHTML = hs.map(h=>`<div class="rem-row" style="padding:10px 0;"><div class="rem-label">${h.emoji||'✨'} ${escapeHtml(h.nom||'')}</div><button class="habit-toggle${doneSet.has(h.id)?' done':''}" onclick="toggleHabitDate('${h.id}','${ds}',this)">${doneSet.has(h.id)?'✓':''}</button></div>`).join('');
+  }
+  async function toggleHabitDate(id, ds, btn){
+    if(!currentUser) return;
+    const isDone=btn.classList.contains('done');
+    if(isDone){ await sb.from('habit_logs').delete().eq('user_id', currentUser.id).eq('habit_id', id).eq('date', ds); btn.classList.remove('done'); btn.textContent=''; }
+    else { await sb.from('habit_logs').insert({ user_id: currentUser.id, habit_id: id, date: ds }); btn.classList.add('done'); btn.textContent='✓'; }
+  }
+
   // ===== Chat — vraie Léa via le backend sécurisé (/api/lea) =====
   function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function formatMessage(text){
@@ -2019,6 +2251,8 @@
     const endStr=year+'-'+pad2(month+1)+'-'+pad2(lastDay);
     const { data } = await sb.from('entries').select('date,photo_path,humeur,routine_matin,routine_soir,sommeil,hydratation,alimentation,note').eq('user_id', currentUser.id).gte('date', startStr).lte('date', endStr);
     const map={}; (data||[]).forEach(e=>{ map[e.date]=e; });
+    const { data: hlogs } = await sb.from('habit_logs').select('date').eq('user_id', currentUser.id).gte('date', startStr).lte('date', endStr);
+    const habitDays=new Set((hlogs||[]).map(l=>l.date));
     let wd=first.getDay(); const offset=(wd===0)?6:(wd-1); // lundi en 1er
     const tStr=todayStr();
     let html='';
@@ -2028,7 +2262,7 @@
       const e=map[ds];
       const isFuture=ds>tStr, isToday=ds===tStr;
       const complete = dayComplete(e);
-      const hasEntry = e && (e.photo_path || e.humeur || e.sommeil!=null || e.hydratation!=null || e.alimentation!=null || e.routine_matin || e.routine_soir || e.note);
+      const hasEntry = (e && (e.photo_path || e.humeur || e.sommeil!=null || e.hydratation!=null || e.alimentation!=null || e.routine_matin || e.routine_soir || e.note)) || habitDays.has(ds);
       let cls='cal-cell';
       if(complete) cls+=' complete';
       if(isToday) cls+=' today';
@@ -2102,6 +2336,7 @@
     document.getElementById('dd-matin').checked = !!(e && e.routine_matin);
     document.getElementById('dd-soir').checked = !!(e && e.routine_soir);
     document.getElementById('dd-note').value = (e && e.note) ? e.note : '';
+    await renderDayHabits(ds);
 
     document.getElementById('day-detail').classList.add('open');
   }
