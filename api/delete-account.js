@@ -20,6 +20,29 @@ export default async function handler(req, res) {
 
   const adminHeaders = { apikey: SERVICE, Authorization: `Bearer ${SERVICE}`, 'Content-Type': 'application/json' };
 
+  // Liste TOUS les fichiers sous un dossier, en descendant dans les sous-dossiers
+  async function listAllFiles(prefix) {
+    const out = [];
+    const res = await fetch(`${URL}/storage/v1/object/list/photos`, {
+      method: 'POST',
+      headers: adminHeaders,
+      body: JSON.stringify({ prefix, limit: 1000, sortBy: { column: 'name', order: 'asc' } })
+    });
+    if (!res.ok) return out;
+    const items = await res.json();
+    for (const it of (items || [])) {
+      const full = prefix ? `${prefix}/${it.name}` : it.name;
+      if (it && it.id === null) {
+        // c'est un dossier → on descend dedans
+        const sub = await listAllFiles(full);
+        for (const f of sub) out.push(f);
+      } else {
+        out.push(full);
+      }
+    }
+    return out;
+  }
+
   try {
     // 1. Vérifier QUI fait la demande (on ne supprime que soi-même)
     const who = await fetch(`${URL}/auth/v1/user`, {
@@ -30,22 +53,15 @@ export default async function handler(req, res) {
     const userId = user.id;
     if (!userId) return res.status(401).json({ error: 'Utilisateur introuvable.' });
 
-    // 2. Supprimer les photos du stockage (best-effort)
+    // 2. Supprimer TOUTES les photos du stockage (racine + sous-dossiers, ex. products/)
     try {
-      const listRes = await fetch(`${URL}/storage/v1/object/list/photos`, {
-        method: 'POST',
-        headers: adminHeaders,
-        body: JSON.stringify({ prefix: userId, limit: 1000 })
-      });
-      if (listRes.ok) {
-        const files = await listRes.json();
-        if (Array.isArray(files) && files.length) {
-          await fetch(`${URL}/storage/v1/object/photos`, {
-            method: 'DELETE',
-            headers: adminHeaders,
-            body: JSON.stringify({ prefixes: files.map(f => `${userId}/${f.name}`) })
-          });
-        }
+      const files = await listAllFiles(userId);
+      if (files.length) {
+        await fetch(`${URL}/storage/v1/object/photos`, {
+          method: 'DELETE',
+          headers: adminHeaders,
+          body: JSON.stringify({ prefixes: files })
+        });
       }
     } catch (e) { /* non bloquant */ }
 
