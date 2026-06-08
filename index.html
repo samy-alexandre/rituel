@@ -664,6 +664,19 @@
     </div>
 
     <div class="onb-page" data-page="4">
+      <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.6"><circle cx="30" cy="20" r="9"/><circle cx="22" cy="25" r="6"/><circle cx="38" cy="25" r="6"/><circle cx="30" cy="22" r="4" fill="#E8A6A0"/><path d="M30 36 C30 48 28 52 25 58"/></g></svg>
+      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div></div>
+      <h2 class="onb-title">Une dernière chose <em>sur vous</em></h2>
+      <p class="onb-sub">Pour personnaliser un peu plus vos conseils. (Vous pourrez le changer.)</p>
+      <div class="onb-options">
+        <button class="onb-opt" data-value="femme" onclick="toggleOpt(this,'genre')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Femme</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="homme" onclick="toggleOpt(this,'genre')"><span class="onb-opt-emoji">🌿</span><div class="onb-opt-text"><div class="onb-opt-title">Homme</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="autre" onclick="toggleOpt(this,'genre')"><span class="onb-opt-emoji">✨</span><div class="onb-opt-text"><div class="onb-opt-title">Autre / je préfère ne pas dire</div></div><div class="onb-opt-check"></div></button>
+      </div>
+      <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step4" disabled>Continuer</button></div>
+    </div>
+
+    <div class="onb-page" data-page="5">
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
         <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;margin-bottom:28px;box-shadow:var(--shadow);">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -785,7 +798,7 @@
       <div class="msg-card" id="lea-tip-card" style="margin:0;max-width:100%;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-family:var(--serif);font-style:italic;font-size:13px;">L</div>
-          <div class="eyebrow">Léa, votre coach</div>
+          <div class="eyebrow" id="lea-tip-eyebrow">Léa, votre coach</div>
         </div>
         <div class="msg-card-title" id="lea-tip-title">Ton conseil du jour</div>
         <div class="msg-card-body" id="lea-tip-body">Léa prépare ton conseil… 🌸</div>
@@ -864,12 +877,12 @@
     <div class="chat-header">
       <button class="chat-back" onclick="closeChat()" aria-label="Retour"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="chat-avatar-large">L</div>
-      <div style="flex:1;"><div class="chat-coach-name">Léa <span style="font-size:11px;color:var(--muted);letter-spacing:0.1em;">· COACH BEAUTÉ</span></div><div class="chat-coach-status">● En ligne</div></div>
+      <div style="flex:1;"><div class="chat-coach-name"><span id="chat-coach-name-text">Léa</span> <span style="font-size:11px;color:var(--muted);letter-spacing:0.1em;">· COACH BEAUTÉ</span></div><div class="chat-coach-status">● En ligne</div></div>
       <button style="background:none;border:none;cursor:pointer;color:var(--muted);" onclick="openThemeSheet()" aria-label="Thème"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
     </div>
     <div class="chat-feed" id="chat-feed">
       <div class="chat-day">VOTRE COACH BEAUTÉ</div>
-      <div class="msg msg-ai">Coucou 🌸 Moi c'est Léa, ta coach beauté. Je suis là pour t'aider avec ta peau, tes produits, ta routine… ou juste pour répondre à tes questions, sans jugement. Dis-moi tout, qu'est-ce qui t'amène aujourd'hui ?</div>
+      <div class="msg msg-ai" id="chat-intro">Coucou 🌸 Moi c'est Léa, ta coach beauté. Je suis là pour t'aider avec ta peau, tes produits, ta routine… ou juste pour répondre à tes questions, sans jugement. Dis-moi tout, qu'est-ce qui t'amène aujourd'hui ?</div>
       <div class="msg-suggestions" id="chat-starter">
         <button class="sugg" onclick="leaQuick('Quelle routine du soir pour ma peau ?')">Quelle routine du soir ?</button>
         <button class="sugg" onclick="leaQuick('Je peux mélanger rétinol et vitamine C ?')">Rétinol + vitamine C ?</button>
@@ -928,6 +941,7 @@
       <div class="eyebrow" style="margin-bottom:12px;padding-left:8px;">PRÉFÉRENCES</div>
       <div class="menu-list">
         <div class="menu-item" onclick="openSkinSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Ma peau</div><div class="menu-meta" id="menu-skin-meta">type & préoccupations</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openCoachSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mon coach</div><div class="menu-meta" id="menu-coach-meta">Léa</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="showToast('Bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="menu-label">Rappels & notifications</div><div class="menu-meta">bientôt</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
       </div>
     </div>
@@ -942,7 +956,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 2.1<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 2.2<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -990,6 +1004,16 @@
       <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Choisis la plante qui poussera avec ta série 🌱</p>
       <div id="plant-list" style="display:flex;flex-direction:column;gap:10px;"></div>
       <button class="btn btn-ghost" style="margin-top:14px;" onclick="closePlantSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="coach-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Mon coach</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Qui t'accompagne au quotidien ? 🌸</p>
+      <div id="coach-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeCoachSheet()">Fermer</button>
     </div>
   </div>
 
@@ -1204,7 +1228,7 @@
   let currentUser = null; // l'utilisatrice connectée
 
   // ===== State (cache local de l'écran courant) =====
-  let state = { skinType:null, concerns:[], goal:null, name:'', email:'', onbStep:0 };
+  let state = { skinType:null, concerns:[], goal:null, name:'', email:'', genre:null, coachGenre:'femme', onbStep:0 };
 
   // ===== Auth =====
   function switchAuth(mode){
@@ -1309,6 +1333,9 @@
     if(p.type_peau) state.skinType = p.type_peau;
     if(p.objectifs){ try{ state.concerns = JSON.parse(p.objectifs); }catch(e){ state.concerns = []; } }
     state.rituelType = p.rituel_type || state.rituelType || 'both';
+    if(p.genre) state.genre = p.genre;
+    state.coachGenre = p.coach_genre || 'femme';
+    applyCoachIdentity();
     state.email = currentUser ? currentUser.email : '';
   }
   async function saveProfile(){
@@ -1317,7 +1344,9 @@
       id: currentUser.id,
       prenom: state.name,
       type_peau: state.skinType,
-      objectifs: JSON.stringify(state.concerns||[])
+      objectifs: JSON.stringify(state.concerns||[]),
+      genre: state.genre,
+      coach_genre: state.coachGenre || 'femme'
     });
     if(error) console.warn('saveProfile:', error.message);
   }
@@ -1365,7 +1394,7 @@
   // ===== Onboarding =====
   function onbNext(){
     state.onbStep++;
-    if(state.onbStep===4){ document.getElementById('onb-name').textContent = state.name || 'vous'; }
+    if(state.onbStep===5){ document.getElementById('onb-name').textContent = state.name || 'vous'; }
     document.querySelectorAll('.onb-page').forEach(p=>p.classList.remove('active'));
     const pg=document.querySelector(`.onb-page[data-page="${state.onbStep}"]`);
     if(pg) pg.classList.add('active');
@@ -1375,6 +1404,7 @@
     el.classList.add('selected'); state[key]=el.dataset.value;
     if(key==='skinType') document.getElementById('btn-step1').disabled=false;
     if(key==='goal') document.getElementById('btn-step3').disabled=false;
+    if(key==='genre') document.getElementById('btn-step4').disabled=false;
   }
   function toggleOptMulti(el,key){
     el.classList.toggle('selected'); const v=el.dataset.value;
@@ -1382,7 +1412,7 @@
     else state[key]=state[key].filter(x=>x!==v);
   }
   async function finishOnboarding(){
-    const btn=document.querySelector('.onb-page[data-page="4"] .btn');
+    const btn=document.querySelector('.onb-page[data-page="5"] .btn');
     if(btn){ btn.disabled=true; btn.textContent='Un instant…'; }
     await saveProfile();
     // filet de sécurité : on mémorise localement que l'onboarding est fait
@@ -1397,6 +1427,7 @@
     document.getElementById('onboarding').classList.remove('active');
     document.getElementById('nav').classList.remove('hidden');
     updateUserUI();
+    applyCoachIdentity();
     navTo('home');
     updateBellDot();
     startReminderScheduler();
@@ -1479,7 +1510,23 @@
       else if(screen==='profile'){ renderProfileBadges(); }
     }
   }
-  function openChat(){ navTo('chat'); }
+  // ===== Identité du coach (Léa / Léo) =====
+  function coachName(){ return state.coachGenre==='homme' ? 'Léo' : 'Léa'; }
+  function coachTitre(){ return state.coachGenre==='homme' ? 'ton coach beauté' : 'ta coach beauté'; }
+  function updateChatIntro(){
+    const el=document.getElementById('chat-intro'); if(!el) return;
+    el.textContent = "Coucou 🌸 Moi c'est "+coachName()+", "+coachTitre()+". Je suis là pour t'aider avec ta peau, tes produits, ta routine… ou juste pour répondre à tes questions, sans jugement. Dis-moi tout, qu'est-ce qui t'amène aujourd'hui ?";
+  }
+  function applyCoachIdentity(){
+    const nm=coachName();
+    const h=document.getElementById('chat-coach-name-text'); if(h) h.textContent=nm;
+    const ey=document.getElementById('lea-tip-eyebrow'); if(ey) ey.textContent=nm+', votre coach';
+    const bub=document.getElementById('lea-bubble'); if(bub) bub.setAttribute('aria-label','Parler à '+nm);
+    const cm=document.getElementById('menu-coach-meta'); if(cm) cm.textContent=nm;
+    updateChatIntro();
+  }
+
+  function openChat(){ updateChatIntro(); navTo('chat'); }
   function closeChat(){ navTo(window._lastScreen || 'home'); }
 
   // ===== Entrée du jour (une ligne par jour dans 'entries') =====
@@ -1706,6 +1753,28 @@
   }
   function pickPlant(k){ try{ localStorage.setItem('rituel_plant', k); }catch(e){} renderPlant(); openPlantSheet(); showToast(PLANT_TYPES[k].emoji+' Jolie plante !'); }
   function closePlantSheet(){ document.getElementById('plant-sheet').classList.remove('open'); }
+
+  // ===== Choix du coach (Léa / Léo) =====
+  const COACHES = { femme:{ nom:'Léa', emoji:'👩', desc:'Douce, attentionnée' }, homme:{ nom:'Léo', emoji:'👨', desc:'Bienveillant, posé' } };
+  function openCoachSheet(){
+    const cur = state.coachGenre==='homme' ? 'homme' : 'femme';
+    document.getElementById('coach-list').innerHTML = Object.keys(COACHES).map(k=>{
+      const c=COACHES[k];
+      return '<button onclick="pickCoach(\''+k+'\')" style="display:flex;align-items:center;gap:14px;width:100%;padding:12px 14px;border-radius:14px;border:1.5px solid '+(k===cur?'var(--accent)':'var(--line)')+';background:'+(k===cur?'var(--blush-soft)':'var(--surface)')+';cursor:pointer;text-align:left;">'+
+        '<div style="width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;background:var(--surface-warm);">'+c.emoji+'</div>'+
+        '<div style="flex:1;"><div style="font-family:var(--serif);font-size:17px;">'+c.nom+'</div><div style="font-size:12px;color:var(--muted);">'+c.desc+'</div></div>'+
+      '</button>';
+    }).join('');
+    document.getElementById('coach-sheet').classList.add('open');
+  }
+  async function pickCoach(k){
+    state.coachGenre = (k==='homme') ? 'homme' : 'femme';
+    applyCoachIdentity();
+    openCoachSheet();
+    showToast(coachName()+' est ton coach 🌸');
+    if(currentUser){ try{ await sb.from('profiles').update({ coach_genre: state.coachGenre }).eq('id', currentUser.id); }catch(e){} }
+  }
+  function closeCoachSheet(){ document.getElementById('coach-sheet').classList.remove('open'); }
 
   // ===== Image à partager (story) =====
   async function shareStreakImage(){
@@ -2266,7 +2335,10 @@
     const ctx = {
       name: state.name || '',
       skin: SKIN_LABELS[state.skinType] || 'non précisé',
-      concern: (state.concerns||[]).map(c=>CONCERN_LABELS[c]||c).join(', ') || 'aucune en particulier'
+      concern: (state.concerns||[]).map(c=>CONCERN_LABELS[c]||c).join(', ') || 'aucune en particulier',
+      coach: (state.coachGenre==='homme') ? 'homme' : 'femme',
+      coachName: coachName(),
+      userGenre: state.genre || null
     };
     if(!currentUser) return ctx;
     try{
