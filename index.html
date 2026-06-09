@@ -754,6 +754,8 @@
       </div>
     </div>
 
+    <div id="lea-proactive" style="display:none;margin:0 20px 20px;"></div>
+
     <div class="plant-card">
       <div id="plant-host"></div>
       <div class="plant-caption" id="plant-caption">Ta plante pousse avec ta série 🌱</div>
@@ -900,6 +902,7 @@
         <div class="ba-side"><div class="ba-img" id="ba-after"></div><div class="ba-label" id="ba-after-label">Aujourd'hui</div></div>
       </div>
       <div class="ba-caption" id="ba-caption"></div>
+      <button class="add-product-card" style="margin-top:14px;" onclick="openTimelapse()">▶ Voir l'évolution en accéléré</button>
     </div>
 
     <div class="section" id="eclat-section" style="display:none;">
@@ -1015,7 +1018,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 4.1<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 4.2<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1063,6 +1066,21 @@
       <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Choisis ta plante 🌱 De <b style="color:var(--accent-deep);font-weight:600;">nouvelles variétés se débloquent</b> au fil de ta série de rituel (3, 7, 14, 30 jours).</p>
       <div id="plant-list" style="display:flex;flex-direction:column;gap:10px;"></div>
       <button class="btn btn-ghost" style="margin-top:14px;" onclick="closePlantSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="timelapse-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ton évolution ✨</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Tes photos jour après jour 🌸</p>
+      <div style="position:relative;width:100%;aspect-ratio:3/4;border-radius:18px;overflow:hidden;background:var(--surface-warm);">
+        <img id="tl-img" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <div id="tl-date" style="position:absolute;bottom:0;left:0;right:0;padding:12px 14px;background:linear-gradient(transparent,rgba(40,28,22,0.6));color:#fff;font-family:var(--serif);font-size:15px;"></div>
+      </div>
+      <input type="range" id="tl-range" min="0" max="0" value="0" style="width:100%;margin:16px 0 8px;accent-color:var(--accent);">
+      <div style="display:flex;justify-content:center;"><button id="tl-play" class="btn btn-accent" style="width:auto;padding:11px 26px;" onclick="tlToggle()">⏸ Pause</button></div>
+      <button class="btn btn-ghost" style="margin-top:12px;" onclick="closeTimelapse()">Fermer</button>
     </div>
   </div>
 
@@ -2105,6 +2123,7 @@
     loadHabits();
     loadLeaTip();
     updateRestBtn(e);
+    loadLeaProactive();
   }
 
   // ===== Jour de repos (joker hebdo qui protège la série) =====
@@ -2816,6 +2835,8 @@
           routine_soir: !!e.routine_soir
         };
       }
+      if(e && e.score_peau!=null) ctx.eclat_photo = e.score_peau;
+      try{ const obs=localStorage.getItem('rituel_last_obs'); if(obs) ctx.derniere_observation_photo = obs; }catch(_e){}
       const week = weekRes.data || [];
       if(week.length){
         const avg=(arr)=>{ const v=arr.filter(x=>x!=null).map(parseFloat); return v.length ? (v.reduce((a,b)=>a+b,0)/v.length) : null; };
@@ -3013,6 +3034,7 @@
       html+='</div>';
       box.innerHTML=html;
       if(eclat!=null){ try{ await updateTodayEntry({ score_peau: eclat }); }catch(e){} }
+      try{ if(d.observation) localStorage.setItem('rituel_last_obs', String(d.observation)); }catch(e){}
     }catch(e){ box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Oups, réessaie 🌿</div>'; }
   }
 
@@ -3039,6 +3061,61 @@
       sec.style.display='block';
     }catch(e){}
   }
+
+  // ===== Timelapse des photos =====
+  let tlPhotos=[], tlIdx=0, tlTimer=null, tlPlaying=false;
+  function fmtDateLong(ds){ try{ const d=new Date(ds+'T00:00:00'); const M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']; return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear(); }catch(e){ return ds; } }
+  async function openTimelapse(){
+    if(!currentUser) return;
+    showToast('Chargement de ton évolution…');
+    const { data } = await sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).order('date',{ascending:true});
+    const rows=(data||[]).filter(r=>r.photo_path);
+    if(rows.length<2){ showToast('Il faut au moins 2 photos 🌸'); return; }
+    tlPhotos=[];
+    for(const r of rows){ const url=await signedPhoto(r.photo_path); if(url) tlPhotos.push({url,date:r.date}); }
+    if(tlPhotos.length<2){ showToast('Photos indisponibles'); return; }
+    const rg=document.getElementById('tl-range'); rg.max=String(tlPhotos.length-1); rg.value='0';
+    rg.oninput=(ev)=>{ tlStop(); tlShow(parseInt(ev.target.value,10)); };
+    document.getElementById('timelapse-sheet').classList.add('open');
+    tlShow(0); tlStart();
+  }
+  function tlShow(i){ tlIdx=i; const p=tlPhotos[i]; if(!p) return; const img=document.getElementById('tl-img'); if(img) img.src=p.url; const dt=document.getElementById('tl-date'); if(dt) dt.textContent=fmtDateLong(p.date)+'  ·  '+(i+1)+'/'+tlPhotos.length; const rg=document.getElementById('tl-range'); if(rg) rg.value=String(i); }
+  function tlStart(){ tlPlaying=true; const b=document.getElementById('tl-play'); if(b) b.textContent='⏸ Pause'; tlTimer=setInterval(()=>{ let n=tlIdx+1; if(n>=tlPhotos.length) n=0; tlShow(n); }, 850); }
+  function tlStop(){ tlPlaying=false; const b=document.getElementById('tl-play'); if(b) b.textContent='▶ Lire'; if(tlTimer){ clearInterval(tlTimer); tlTimer=null; } }
+  function tlToggle(){ tlPlaying ? tlStop() : tlStart(); }
+  function closeTimelapse(){ tlStop(); document.getElementById('timelapse-sheet').classList.remove('open'); }
+
+  // ===== Petit mot proactif de Léa (1×/jour, doux, jamais culpabilisant) =====
+  async function loadLeaProactive(){
+    const box=document.getElementById('lea-proactive'); if(!box) return;
+    if(!currentUser){ box.style.display='none'; return; }
+    const today=todayStr();
+    try{ if(localStorage.getItem('rituel_proa_dismiss')===today){ box.style.display='none'; return; } }catch(e){}
+    let streak=0, e=null;
+    try{
+      streak=await computeStreak();
+      const { data }=await sb.from('entries').select('routine_matin,routine_soir,photo_path,repos').eq('user_id',currentUser.id).eq('date',today).order('created_at',{ascending:true}).limit(1);
+      e=(data&&data.length)?data[0]:null;
+    }catch(err){}
+    const h=new Date().getHours();
+    const done = e && dayComplete(e);
+    const hasPhoto = e && e.photo_path;
+    const nm = coachName();
+    let msg;
+    if(streak>0 && streak%7===0){ msg='Waouh, '+streak+' jours de rituel ! Je suis si fière de toi 🌟 Ta peau adore cette régularité.'; }
+    else if(done && !hasPhoto){ msg='Rituel fait, bravo ✨ Tu veux garder une trace de ta peau du jour avec une petite photo ? 📷'; }
+    else if(done){ msg='Joli, ton rituel est fait pour aujourd\'hui 💛 Prends soin de toi le reste de la journée.'; }
+    else if(h<12){ msg='Coucou 🌸 Un petit rituel du matin pour bien démarrer ? Même version express, ça compte.'; }
+    else if(h<18){ msg='Petit rappel tout doux : ta peau attend son moment rituel aujourd\'hui 🌿'; }
+    else { msg='Bonsoir 🌙 Avant de filer dormir, un rituel du soir ? Ta peau se répare la nuit.'; }
+    box.innerHTML = '<div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow);">'
+      + '<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--serif);font-style:italic;font-size:16px;flex-shrink:0;">'+nm[0]+'</div>'
+      + '<div style="flex:1;min-width:0;"><div class="eyebrow" style="margin-bottom:4px;">'+nm.toUpperCase()+'</div><div style="font-size:13.5px;line-height:1.5;color:var(--ink-soft);">'+escapeHtml(msg)+'</div></div>'
+      + '<button onclick="dismissLeaProactive()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;flex-shrink:0;padding:0 2px;">×</button>'
+      + '</div>';
+    box.style.display='block';
+  }
+  function dismissLeaProactive(){ try{ localStorage.setItem('rituel_proa_dismiss', todayStr()); }catch(e){} const b=document.getElementById('lea-proactive'); if(b) b.style.display='none'; }
 
   // ===== Avant / Après (première photo vs dernière) =====
   async function loadBeforeAfter(){
