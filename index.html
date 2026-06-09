@@ -819,6 +819,10 @@
       <div id="uv-card"></div>
     </div>
 
+    <div class="section" id="cycle-section" style="display:none;">
+      <div id="cycle-card"></div>
+    </div>
+
     <div class="section" id="mood-section">
       <div class="section-head"><h3 class="section-title">Comment va votre <em>peau</em> ?</h3></div>
       <div class="mood-row">
@@ -1008,6 +1012,7 @@
       <div class="menu-list">
         <div class="menu-item" onclick="openSkinSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Ma peau</div><div class="menu-meta" id="menu-skin-meta">type & préoccupations</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="openCoachSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mon coach</div><div class="menu-meta" id="menu-coach-meta">Léa</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openCycleSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 019 9" stroke-linecap="round"/></svg></div><div class="menu-label">Suivi de cycle</div><div class="menu-meta" id="menu-cycle-meta">—</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="showToast('Bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="menu-label">Rappels & notifications</div><div class="menu-meta">bientôt</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
       </div>
     </div>
@@ -1023,7 +1028,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 4.3<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 4.4<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1086,6 +1091,41 @@
       <input type="range" id="tl-range" min="0" max="0" value="0" style="width:100%;margin:16px 0 8px;accent-color:var(--accent);">
       <div style="display:flex;justify-content:center;"><button id="tl-play" class="btn btn-accent" style="width:auto;padding:11px 26px;" onclick="tlToggle()">⏸ Pause</button></div>
       <button class="btn btn-ghost" style="margin-top:12px;" onclick="closeTimelapse()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="barcode-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Scanner un produit</div>
+      <div id="bc-video-wrap" style="display:none;position:relative;border-radius:18px;overflow:hidden;background:#1c1512;aspect-ratio:3/4;">
+        <video id="bc-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>
+        <div style="position:absolute;inset:0;margin:22% 12%;border:2px solid rgba(255,255,255,0.65);border-radius:14px;pointer-events:none;"></div>
+      </div>
+      <div id="bc-status" style="color:var(--muted);font-size:13px;line-height:1.5;margin:12px 2px;text-align:center;"></div>
+      <div class="field"><label>Ou tape le code-barres</label><input id="bc-manual" inputmode="numeric" placeholder="Ex. 3600523351441"></div>
+      <button class="btn btn-accent" style="margin-top:12px;" onclick="bcLookupManual()">Chercher</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeBarcodeSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="cycle-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Suivi de cycle</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Optionnel et discret 🌸 Pour relier l'état de ta peau à ton cycle. Ces infos restent dans ton compte, rien d'autre.</p>
+      <div class="rit-type" style="margin:0 0 6px;">
+        <button class="rit-opt" id="cy-on" onclick="cySetEnabled(true)">🩸<span>Activé</span></button>
+        <button class="rit-opt" id="cy-off" onclick="cySetEnabled(false)">🌙<span>Désactivé</span></button>
+      </div>
+      <div id="cy-body">
+        <div class="field" style="margin-top:14px;"><label>Premier jour de tes dernières règles</label><input type="date" id="cy-start"></div>
+        <button onclick="cyToday()" style="background:none;border:none;color:var(--accent-deep);font-size:12px;cursor:pointer;display:block;margin:8px auto 0;text-decoration:underline;">Mes règles commencent aujourd'hui</button>
+        <div class="field" style="margin-top:14px;"><label>Durée moyenne du cycle (jours)</label><input type="number" id="cy-length" min="20" max="45" value="28"></div>
+      </div>
+      <button class="btn btn-accent" style="margin-top:14px;" onclick="saveCycle()">Enregistrer</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeCycleSheet()">Fermer</button>
+      <p style="color:var(--muted);font-size:11px;line-height:1.5;margin:12px 2px 0;text-align:center;">Estimation indicative — ce n'est ni un outil médical, ni un moyen de contraception.</p>
     </div>
   </div>
 
@@ -1271,6 +1311,7 @@
       <div class="emoji-picker" id="emoji-picker" style="margin:8px 0 16px;"></div>
 
       <div class="field"><label>Nom du produit *</label><input id="pf-nom" placeholder="Ex. Sérum vitamine C"></div>
+      <button class="add-product-card" style="margin-top:10px;" onclick="openBarcodeSheet()">🏷️ Scanner le code-barres</button>
       <div class="field" style="margin-top:12px;"><label>Effets / bienfaits (optionnel)</label><input id="pf-effets" placeholder="Ex. éclaircit les taches"></div>
       <div class="field" style="margin-top:12px;"><label>Prix en € (optionnel)</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="Ex. 15"></div>
       <div class="field" style="margin-top:12px;"><label>Date d'ouverture (optionnel)</label><input id="pf-ouverture" type="date"></div>
@@ -1460,6 +1501,10 @@
     state.rituelType = p.rituel_type || state.rituelType || 'both';
     if(p.genre) state.genre = p.genre;
     state.coachGenre = p.coach_genre || 'femme';
+    state.cycleEnabled = !!p.cycle_enabled;
+    state.cycleLastStart = p.cycle_last_start || null;
+    state.cycleLength = p.cycle_length || 28;
+    updateCycleMenuMeta();
     applyCoachIdentity();
     state.email = currentUser ? currentUser.email : '';
   }
@@ -2130,6 +2175,7 @@
     updateRestBtn(e);
     loadLeaProactive();
     loadUV();
+    loadCycleCard();
   }
 
   // ===== Jour de repos (joker hebdo qui protège la série) =====
@@ -2842,6 +2888,7 @@
         };
       }
       if(e && e.score_peau!=null) ctx.eclat_photo = e.score_peau;
+      try{ const ci=cyclePhaseInfo(); if(ci) ctx.cycle = { jour: ci.day, phase: ci.phase }; }catch(_e){}
       try{ const obs=localStorage.getItem('rituel_last_obs'); if(obs) ctx.derniere_observation_photo = obs; }catch(_e){}
       const week = weekRes.data || [];
       if(week.length){
@@ -3127,6 +3174,115 @@
       doc.save('mon-carnet-rituel.pdf');
       showToast('Carnet PDF prêt ✨');
     }catch(e){ showToast('Oups, export PDF impossible'); }
+  }
+
+  // ===== Scan code-barres (caméra si dispo + saisie manuelle, Open Beauty Facts) =====
+  let bcStream=null, bcTimer=null, bcBusy=false;
+  async function openBarcodeSheet(){
+    document.getElementById('barcode-sheet').classList.add('open');
+    const wrap=document.getElementById('bc-video-wrap');
+    const status=document.getElementById('bc-status');
+    const manual=document.getElementById('bc-manual'); if(manual) manual.value='';
+    if('BarcodeDetector' in window && navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+      try{
+        bcStream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } });
+        const v=document.getElementById('bc-video'); v.srcObject=bcStream;
+        wrap.style.display='block';
+        status.textContent='Vise le code-barres du produit 📷';
+        const det=new BarcodeDetector({ formats:['ean_13','ean_8','upc_a','upc_e','code_128'] });
+        bcTimer=setInterval(async ()=>{
+          if(bcBusy) return; bcBusy=true;
+          try{ const codes=await det.detect(v); if(codes && codes.length && codes[0].rawValue){ const code=codes[0].rawValue; stopBcCamera(); bcLookup(code); } }catch(e){}
+          bcBusy=false;
+        }, 350);
+      }catch(e){ wrap.style.display='none'; status.textContent='Caméra indisponible — tape le code à la main 👇'; }
+    } else {
+      wrap.style.display='none';
+      status.textContent='Le scan caméra n\'est pas supporté ici — tape le code à la main 👇';
+    }
+  }
+  function stopBcCamera(){ if(bcTimer){ clearInterval(bcTimer); bcTimer=null; } if(bcStream){ try{ bcStream.getTracks().forEach(t=>t.stop()); }catch(e){} bcStream=null; } }
+  function closeBarcodeSheet(){ stopBcCamera(); document.getElementById('barcode-sheet').classList.remove('open'); }
+  function bcLookupManual(){ const v=(document.getElementById('bc-manual').value||'').trim(); if(v) bcLookup(v); }
+  async function bcFetchProduct(base, code){
+    try{ const r=await fetch(base+encodeURIComponent(code)+'.json'); const d=await r.json(); if(d && d.status===1 && d.product) return d.product; }catch(e){}
+    return null;
+  }
+  async function bcLookup(code){
+    const status=document.getElementById('bc-status');
+    status.textContent='Recherche du produit…';
+    let p=await bcFetchProduct('https://world.openbeautyfacts.org/api/v2/product/', code);
+    if(!p) p=await bcFetchProduct('https://world.openfoodfacts.org/api/v2/product/', code);
+    if(!p){ status.textContent='Produit introuvable dans la base 😕 Tu peux taper son nom à la main.'; return; }
+    const brand=(p.brands||'').split(',')[0].trim();
+    const name=(p.product_name_fr || p.product_name || '').trim();
+    const full=[brand, name].filter(Boolean).join(' — ');
+    if(!full){ status.textContent='Produit trouvé mais sans nom dans la base 😅 Tape-le à la main.'; return; }
+    const nomEl=document.getElementById('pf-nom'); if(nomEl) nomEl.value=full;
+    closeBarcodeSheet();
+    showToast('Produit trouvé ✨');
+  }
+
+  // ===== Suivi de cycle (opt-in, discret) =====
+  let cyTmp={ enabled:false };
+  function cyclePhaseInfo(){
+    if(!state.cycleEnabled || !state.cycleLastStart) return null;
+    const len=Math.max(20, Math.min(45, parseInt(state.cycleLength,10)||28));
+    const start=new Date(state.cycleLastStart+'T00:00:00');
+    const today=new Date(todayStr()+'T00:00:00');
+    const diff=Math.floor((today-start)/86400000);
+    if(isNaN(diff) || diff<0) return null;
+    const day=(diff % len)+1;
+    const ovu=len-14;
+    let phase, emoji, tip;
+    if(day<=5){ phase='menstruelle'; emoji='🌙'; tip='Peau souvent plus sensible — douceur et hydratation aujourd\'hui.'; }
+    else if(day<ovu-1){ phase='folliculaire'; emoji='🌱'; tip='Ta peau est en forme — bon moment pour tes actifs.'; }
+    else if(day<=ovu+1){ phase='ovulation'; emoji='☀️'; tip='Éclat naturel au rendez-vous ✨'; }
+    else { phase='lutéale'; emoji='🍂'; tip='Imperfections possibles — nettoyage doux et patience.'; }
+    return { day, phase, emoji, tip, len };
+  }
+  function loadCycleCard(){
+    const sec=document.getElementById('cycle-section'), card=document.getElementById('cycle-card');
+    if(!sec || !card) return;
+    const i=cyclePhaseInfo();
+    if(!i){ sec.style.display='none'; return; }
+    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);" onclick="openCycleSheet()">'
+      + '<div style="font-size:24px;flex-shrink:0;">'+i.emoji+'</div>'
+      + '<div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:8px;"><span class="eyebrow">CYCLE · JOUR '+i.day+'</span><span style="font-size:11px;font-weight:600;color:var(--accent-deep);text-transform:capitalize;">'+i.phase+'</span></div>'
+      + '<div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">'+i.tip+'</div></div>'
+      + '</div>';
+    sec.style.display='block';
+  }
+  function updateCycleMenuMeta(){ const m=document.getElementById('menu-cycle-meta'); if(m) m.textContent = state.cycleEnabled ? 'activé' : '—'; }
+  function cySetEnabled(on){
+    cyTmp.enabled=on;
+    const a=document.getElementById('cy-on'), b=document.getElementById('cy-off'), body=document.getElementById('cy-body');
+    if(a) a.classList.toggle('selected', on);
+    if(b) b.classList.toggle('selected', !on);
+    if(body) body.style.display = on ? 'block' : 'none';
+  }
+  function cyToday(){ const el=document.getElementById('cy-start'); if(el) el.value=todayStr(); }
+  function openCycleSheet(){
+    cyTmp={ enabled: !!state.cycleEnabled };
+    const st=document.getElementById('cy-start'); if(st) st.value = state.cycleLastStart || '';
+    const ln=document.getElementById('cy-length'); if(ln) ln.value = state.cycleLength || 28;
+    cySetEnabled(cyTmp.enabled);
+    document.getElementById('cycle-sheet').classList.add('open');
+  }
+  function closeCycleSheet(){ document.getElementById('cycle-sheet').classList.remove('open'); }
+  async function saveCycle(){
+    state.cycleEnabled = cyTmp.enabled;
+    const st=(document.getElementById('cy-start').value||'').trim();
+    state.cycleLastStart = st || null;
+    state.cycleLength = Math.max(20, Math.min(45, parseInt(document.getElementById('cy-length').value,10)||28));
+    if(currentUser){
+      try{ await sb.from('profiles').update({ cycle_enabled: state.cycleEnabled, cycle_last_start: state.cycleLastStart, cycle_length: state.cycleLength }).eq('id', currentUser.id); }catch(e){}
+    }
+    closeCycleSheet();
+    updateCycleMenuMeta();
+    loadCycleCard();
+    if(state.cycleEnabled && !state.cycleLastStart) showToast('Pense à noter le 1er jour de tes règles 🌸');
+    else showToast(state.cycleEnabled ? 'Suivi de cycle activé 🌸' : 'Suivi de cycle désactivé');
   }
 
   // ===== Indice UV du jour (géoloc + Open-Meteo, au tap, mis en cache) =====
