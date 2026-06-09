@@ -918,13 +918,11 @@
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
     </div>
-    <div class="section">
-      <div class="streak">
-        <div class="streak-flame" id="rit-flame">🌱</div>
-        <div class="streak-text">
-          <div class="streak-num"><em id="rit-streak">0</em> <span id="rit-unit">jour</span></div>
-          <div class="streak-label" id="rit-label">Fais ton rituel pour démarrer ta série ✨</div>
-        </div>
+    <div class="streak">
+      <div class="streak-flame" id="rit-flame">🌱</div>
+      <div class="streak-text">
+        <div class="streak-num"><em id="rit-streak">0</em> <span id="rit-unit">jour</span></div>
+        <div class="streak-label" id="rit-label">Crée ton rituel pour démarrer ta série ✨</div>
       </div>
     </div>
     <div class="section">
@@ -1014,7 +1012,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 3.7<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 4.0<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1059,7 +1057,7 @@
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">Ta plante</div>
-      <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Choisis la plante qui poussera avec ta série 🌱</p>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Choisis ta plante 🌱 De <b style="color:var(--accent-deep);font-weight:600;">nouvelles variétés se débloquent</b> au fil de ta série de rituel (3, 7, 14, 30 jours).</p>
       <div id="plant-list" style="display:flex;flex-direction:column;gap:10px;"></div>
       <button class="btn btn-ghost" style="margin-top:14px;" onclick="closePlantSheet()">Fermer</button>
     </div>
@@ -1952,7 +1950,7 @@
       }
       if(st!==prev) localStorage.setItem(key, String(st));
     }catch(e){}
-    // Déblocage de nouvelles plantes selon la série
+    // Déblocage de nouvelles plantes selon la série (notif au passage d'un palier)
     try{
       const uid = currentUser ? currentUser.id : 'anon';
       const ukey='rituel_unlocked_'+uid;
@@ -1984,14 +1982,17 @@
   function plantLockedToast(d){ showToast('🔒 Plante à débloquer dès '+d+' jours de série 🌱'); }
   async function openPlantSheet(){
     const cur=currentPlant();
-    const best=await bestStreak();
+    let best=0;
+    try{ best=await bestStreak(); }catch(e){ best=0; }
     document.getElementById('plant-list').innerHTML = Object.keys(PLANT_TYPES).map(k=>{
       const v=PLANT_TYPES[k];
       const locked = best < (v.unlock||0);
       const onclick = locked ? ('plantLockedToast('+v.unlock+')') : ("pickPlant('"+k+"')");
       const border = (k===cur && !locked) ? 'var(--accent)' : 'var(--line)';
       const bg = (k===cur && !locked) ? 'var(--blush-soft)' : 'var(--surface)';
-      const right = locked ? '<div style="font-size:11px;color:var(--muted);text-align:right;line-height:1.3;flex-shrink:0;">🔒<br>dès '+v.unlock+'j</div>' : '';
+      const right = locked
+        ? '<div style="font-size:11px;color:var(--muted);text-align:right;line-height:1.3;flex-shrink:0;">🔒<br>dès '+v.unlock+' j</div>'
+        : (k===cur ? '<div style="font-size:13px;color:var(--accent-deep);flex-shrink:0;">✓</div>' : '');
       return '<button onclick="'+onclick+'" style="display:flex;align-items:center;gap:14px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid '+border+';background:'+bg+';cursor:pointer;text-align:left;'+(locked?'opacity:0.55;':'')+'">'+
         '<div style="width:54px;height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--surface-warm);border-radius:12px;"><div style="transform:scale(0.36);transform-origin:center;">'+plantSVG(5,k)+'</div></div>'+
         '<div style="flex:1;font-family:var(--serif);font-size:16px;">'+v.emoji+' '+v.name+'</div>'+ right +
@@ -2464,7 +2465,7 @@
     await maybeMigrateRituels();
     const { data } = await sb.from('rituels').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rits = data || [];
-    if(!rits.length){ host.innerHTML=''; return; }
+    if(!rits.length){ host.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;line-height:1.6;margin-top:24px;">Tu n\'as pas encore de rituel 🌱<br>Crée ton premier rituel ci-dessus pour démarrer ta série.</div>'; return; }
     host.innerHTML = '<div class="eyebrow" style="margin:20px 0 12px;">MES RITUELS</div>' + rits.map(r=>{
       const moji = r.moment==='matin'?'☀️ MATIN':(r.moment==='soir'?'🌙 SOIR':'☀️🌙 MATIN & SOIR');
       const cnt = Array.isArray(r.produits)?r.produits.length:0;
@@ -2991,8 +2992,14 @@
     try{
       const ctx=await buildLeaContext();
       const r=await fetch('/api/analyze-photo',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ image:photo.b64, media_type:photo.type, profile:ctx }) });
+      if(!r.ok){
+        const msg = r.status===404
+          ? "L'analyse photo n'est pas encore activée sur le serveur 🌿 (fichier api/analyze-photo.js à déployer)"
+          : 'Oups, réessaie un peu plus tard 🌿';
+        box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;line-height:1.5;">'+msg+'</div>'; return;
+      }
       const d=await r.json();
-      if(!r.ok || d.error){ box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Oups, réessaie un peu plus tard 🌿</div>'; return; }
+      if(d.error){ box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Oups, réessaie un peu plus tard 🌿</div>'; return; }
       const eclat = (typeof d.eclat==='number') ? d.eclat : null;
       let html='<div class="msg-card" style="margin:0;max-width:100%;">';
       html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-family:var(--serif);font-style:italic;font-size:13px;">'+coachName()[0]+'</div><div class="eyebrow">'+coachName()+' regarde ta peau</div></div>';
