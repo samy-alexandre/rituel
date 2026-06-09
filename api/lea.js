@@ -56,6 +56,9 @@ export default async function handler(req, res) {
     if (profile.derniere_observation_photo) {
       ctxLines.push(`Ton dernier petit retour sur sa photo : "${String(profile.derniere_observation_photo).slice(0,300)}".`);
     }
+    if (profile.cycle && profile.cycle.phase) {
+      ctxLines.push(`Elle a activé le suivi de cycle : jour ${profile.cycle.jour}, phase ${profile.cycle.phase} (estimation). Tu peux relier en douceur l'état de sa peau à sa phase quand c'est pertinent, sans jamais être intrusif(ve) ni ramener tout à ça.`);
+    }
 
     if (profile.routine && ((profile.routine.matin && profile.routine.matin.length) || (profile.routine.soir && profile.routine.soir.length))) {
       const m = (profile.routine.matin || []).join(', ') || '—';
