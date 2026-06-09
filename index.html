@@ -262,7 +262,7 @@
   .topbar { padding: 24px 24px 16px; display: flex; align-items: center; justify-content: space-between; }
   .topbar-greet { display: flex; flex-direction: column; gap: 2px; }
   .topbar-date { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
-  .topbar-name { font-family: var(--serif); font-size: 26px; font-weight: 300; letter-spacing: -0.02em; }
+  .topbar-name { font-family: var(--serif); font-size: 28px; font-weight: 300; letter-spacing: -0.02em; }
   .topbar-name em { font-style: italic; color: var(--accent); font-variation-settings: "SOFT" 100, "WONK" 1; }
   .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--blush), var(--accent)); display: flex; align-items: center; justify-content: center; color: white; font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 18px; cursor: pointer; }
 
@@ -290,7 +290,7 @@
   .streak-day { width: 6px; height: 18px; border-radius: 3px; background: var(--line); }
   .streak-day.active { background: var(--accent); }
 
-  .section { padding: 0 20px; margin-bottom: 28px; }
+  .section { padding: 0 20px; margin-bottom: 30px; }
   .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
   .section-title { font-family: var(--serif); font-size: 20px; font-weight: 400; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
   .section-title em { font-style: italic; color: var(--accent); font-variation-settings: "SOFT" 100, "WONK" 1; }
@@ -315,11 +315,19 @@
 
   /* Switch Matin / Soir */
   .period-switch { display: flex; gap: 8px; background: var(--surface-warm); border-radius: 14px; padding: 4px; margin-bottom: 14px; }
+  .moment-chip { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); font-size: 17px; cursor: pointer; opacity: 0.38; transition: all .15s; }
+  .moment-chip.on { opacity: 1; border-color: var(--accent); background: var(--blush-soft); }
+  .rd-card { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 10px; }
+  .rd-card.dragging { opacity: 0.55; box-shadow: var(--shadow); }
+  .rd-handle { cursor: grab; color: var(--muted); font-size: 22px; padding: 4px 4px; touch-action: none; user-select: none; line-height: 1; }
+  .rd-remove { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px; }
+  .rd-emoji { width: 38px; height: 38px; border-radius: 10px; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
   .period-btn { flex: 1; padding: 11px; border: none; background: transparent; border-radius: 10px; font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .2s; }
   .period-btn.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 
   /* ===== Rituel : produits ===== */
-  .add-btn { background: var(--accent); border: none; border-radius: 100px; padding: 10px 14px; color: #fff; font-family: var(--sans); font-size: 12px; font-weight: 500; cursor: pointer; }
+  .add-btn { background: var(--accent); border: none; border-radius: 100px; padding: 10px 14px; color: #fff; font-family: var(--sans); font-size: 12px; font-weight: 500; cursor: pointer; box-shadow: 0 4px 12px rgba(46,33,28,0.12); transition: transform .13s ease, box-shadow .2s ease; }
+  .add-btn:active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(46,33,28,0.10); }
   .product-card { background: var(--surface); border-radius: 18px; padding: 14px; box-shadow: var(--shadow); display: flex; gap: 14px; align-items: center; cursor: pointer; transition: transform .15s; }
   .product-card:active { transform: scale(0.99); }
   .product-thumb { width: 60px; height: 60px; border-radius: 14px; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; overflow: hidden; }
@@ -424,8 +432,9 @@
 
   /* ===== Calendrier ===== */
   .cal-head { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; margin-bottom: 14px; }
-  .cal-title { font-family: var(--serif); font-size: 19px; }
-  .cal-nav { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-size: 18px; color: var(--ink-soft); cursor: pointer; line-height: 1; }
+  .cal-title { font-family: var(--serif); font-size: 20px; }
+  .cal-nav { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--surface-warm); font-size: 18px; color: var(--accent-deep); cursor: pointer; line-height: 1; transition: transform .13s ease, background .2s ease; }
+  .cal-nav:active { transform: scale(0.9); background: var(--blush-soft); }
   .cal-weekdays { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin-bottom: 6px; }
   .cal-weekdays span { text-align: center; font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
   .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; min-width: 0; }
@@ -438,6 +447,7 @@
   .cal-cell.cal-future { color: var(--line); }
   .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 3px; }
   .cal-cam { position: absolute; top: 2px; right: 5px; font-size: 9px; }
+  .cal-rest { position: absolute; top: 2px; left: 5px; font-size: 9px; }
   .cal-legend { display: flex; gap: 14px; justify-content: center; margin-top: 16px; font-size: 10px; color: var(--muted); flex-wrap: wrap; }
   .cal-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin-right: 3px; }
   .cal-legend .dot-complete { background: var(--blush-soft); border: 1px solid var(--accent-soft); }
@@ -532,6 +542,23 @@
   .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-8px); background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 100px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity .3s, transform .3s; max-width: 90%; box-shadow: var(--shadow-lg); pointer-events:none; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .no-select { user-select: none; -webkit-user-select: none; }
+
+  /* ===== Peaufinage : retours tactiles & détails ===== */
+  * { -webkit-tap-highlight-color: transparent; }
+  .btn, .product-card, .menu-item, .routine-item, .add-product-card, .mood-btn, .period-btn, .stat-tile, .nav-item, .sugg, .moment-chip, .rd-card, .plant-change, .onb-opt, .rit-opt, .cal-cell.has { transition: transform .13s ease, opacity .2s ease, background .2s ease, box-shadow .25s ease, border-color .2s ease; }
+  .btn:active { transform: scale(0.97); }
+  .product-card:active, .stat-tile:active, .menu-item:active, .add-product-card:active, .onb-opt:active, .rit-opt:active { transform: scale(0.985); }
+  .routine-item:active, .mood-btn:active, .sugg:active { transform: scale(0.97); }
+  .cal-cell.has:active { transform: scale(0.9); }
+  .nav-item:active { transform: scale(0.9); }
+  .nav-item svg { transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+  .nav-item.active svg { transform: translateY(-2px) scale(1.08); }
+  .nav-item.active .nav-label { font-weight: 600; }
+  .btn-accent { box-shadow: 0 6px 18px rgba(46,33,28,0.10); }
+  .btn-accent:active { box-shadow: 0 3px 10px rgba(46,33,28,0.08); }
+  .mood-btn.selected { box-shadow: 0 5px 16px rgba(46,33,28,0.10); }
+  .product-thumb { transition: transform .2s ease; }
+  .product-card:active .product-thumb { transform: scale(0.94); }
 </style>
 </head>
 <body class="no-select">
@@ -635,6 +662,7 @@
         <button class="onb-opt" data-value="sensible" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Sensible</div><div class="onb-opt-desc">Rougeurs, réactivité</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="normale" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌿</span><div class="onb-opt-text"><div class="onb-opt-title">Normale</div><div class="onb-opt-desc">Équilibrée, peu de soucis</div></div><div class="onb-opt-check"></div></button>
       </div>
+      <button onclick="openQuiz('onboarding')" style="background:transparent;border:none;color:var(--accent-deep);font-size:13px;cursor:pointer;display:block;margin:14px auto 0;text-decoration:underline;">Je ne connais pas mon type — faire le test ✨</button>
       <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step1" disabled>Continuer</button></div>
     </div>
 
@@ -681,6 +709,21 @@
     </div>
 
     <div class="onb-page" data-page="5">
+      <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.55"><circle cx="30" cy="22" r="10"/><circle cx="30" cy="22" r="4" fill="#C95A3F"/><path d="M30 40 C30 50 28 54 23 58"/><path d="M30 46 C20 44 15 36 17 28 C27 31 30 38 30 46"/></g></svg>
+      <h2 class="onb-title">Tes <em>produits</em> du moment</h2>
+      <p class="onb-sub">Ajoute ceux que tu utilises déjà, ou passe — tu pourras le faire à tout moment.</p>
+      <div style="display:flex;gap:8px;align-items:stretch;">
+        <div class="field" style="flex:1;margin:0;"><input id="onb-prod-input" placeholder="Ex. Sérum vitamine C" onkeydown="if(event.key==='Enter'){event.preventDefault();onbAddProduct();}"></div>
+        <button class="btn btn-accent" style="width:auto;padding:0 20px;margin:0;flex-shrink:0;" onclick="onbAddProduct()">＋</button>
+      </div>
+      <div id="onb-prod-list" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
+      <div class="onb-actions" style="gap:10px;">
+        <button class="btn btn-accent" onclick="onbNext()">Continuer</button>
+        <button class="btn btn-ghost" onclick="onbNext()">Passer cette étape</button>
+      </div>
+    </div>
+
+    <div class="onb-page" data-page="6">
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
         <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;margin-bottom:28px;box-shadow:var(--shadow);">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -697,7 +740,7 @@
     <div class="topbar">
       <div class="topbar-greet">
         <div class="topbar-date" id="topbar-date">MERCREDI 27 MAI</div>
-        <div class="topbar-name">Bonjour, <em id="topbar-name">vous</em></div>
+        <div class="topbar-name"><span id="greet-hello">Bonjour</span>, <em id="topbar-name">vous</em></div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <button class="bell-btn" onclick="openReminderSheet()" aria-label="Rappels">
@@ -725,6 +768,7 @@
       </div>
       <div class="streak-mini" id="streak-mini"></div>
     </div>
+    <div style="text-align:center;margin:-16px 20px 26px;"><button id="rest-btn" onclick="takeRestDay()" style="background:none;border:none;color:var(--accent-deep);font-size:12px;cursor:pointer;text-decoration:underline;opacity:0.85;">🧊 Prendre un jour de repos</button></div>
 
     <div class="section">
       <div class="section-head">
@@ -759,6 +803,11 @@
         <div class="photo-mini-sub">Suis l'évolution de ta peau, jour après jour 🌸</div>
       </div>
       <input type="file" id="photo-input" accept="image/*" capture="user" style="display:none;" onchange="handlePhoto(this)">
+    </div>
+
+    <div class="section" id="lea-photo-section">
+      <button class="add-product-card" style="margin-top:0;" onclick="askLeaPhoto()">✨ Demander l'avis de Léa sur ma photo</button>
+      <div id="lea-photo-result" style="display:none;margin-top:12px;"></div>
     </div>
 
     <div class="section" id="mood-section">
@@ -814,7 +863,15 @@
   <!-- ====================== JOURNAL ====================== -->
   <div id="journal" class="screen">
     <div class="topbar">
-      <div class="topbar-greet"><div class="topbar-name">Journal</div></div>
+      <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">journal</em></div></div>
+    </div>
+
+    <div class="section" id="week-recap" style="display:none;">
+      <div class="section-head"><h3 class="section-title">Ma <em>semaine</em></h3></div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;gap:14px;">
+        <div id="wr-summary" style="font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink-soft);line-height:1.5;">—</div>
+        <div class="stats-grid" id="wr-tiles" style="grid-template-columns:1fr 1fr;gap:10px;"></div>
+      </div>
     </div>
 
     <div class="section">
@@ -842,6 +899,14 @@
       <div class="ba-caption" id="ba-caption"></div>
     </div>
 
+    <div class="section" id="eclat-section" style="display:none;">
+      <div class="section-head"><h3 class="section-title">Évolution de l'<em>éclat</em></h3></div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:12px;color:var(--muted);">Tes derniers relevés</span><span style="font-family:var(--serif);"><em id="eclat-last" style="font-size:22px;color:var(--accent);font-style:italic;">—</em><span style="font-size:12px;color:var(--muted);"> /100</span></span></div>
+        <div id="eclat-graph"></div>
+      </div>
+    </div>
+
     <div class="section-head" style="padding:0 20px;margin:8px 0 12px;"><h3 class="section-title">Mes <em>photos</em></h3></div>
     <div class="journal-grid" id="journal-grid"></div>
 
@@ -863,17 +928,10 @@
       </div>
     </div>
     <div class="section">
-      <div class="section-head"><h3 class="section-title">Mon rituel, c'est…</h3></div>
-      <div class="rit-type">
-        <button class="rit-opt" id="rt-type-matin" onclick="setRituelType('matin')">☀️<span>Matin</span></button>
-        <button class="rit-opt" id="rt-type-soir" onclick="setRituelType('soir')">🌙<span>Soir</span></button>
-        <button class="rit-opt" id="rt-type-both" onclick="setRituelType('both')">☀️🌙<span>Les deux</span></button>
-      </div>
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px;">C'est ce qui compte pour ta série de jours 🌸</div>
-    </div>
-    <div class="section">
-      <div id="ritual-preview"></div>
-      <button class="add-product-card" onclick="navTo('routine')">Gérer mes produits →</button>
+      <button class="add-product-card" style="margin-top:0;" onclick="openRituelEditor()">＋ Créer un rituel</button>
+      <button onclick="(function(){var h=document.getElementById('rituel-help');h.style.display=h.style.display==='none'?'block':'none';})()" style="background:none;border:none;color:var(--accent-deep);font-size:12px;cursor:pointer;display:block;margin:10px auto 0;text-decoration:underline;">Comment créer un rituel ?</button>
+      <div id="rituel-help" style="display:none;background:var(--surface-warm);border-radius:14px;padding:14px;margin-top:12px;font-size:13px;color:var(--ink-soft);line-height:1.6;">1. Crée un rituel et donne-lui un nom (ex. « Routine du matin »).<br>2. Choisis quand tu le fais — matin, soir ou les deux.<br>3. Ajoute tes produits, puis <b>glisse les cartes</b> pour les ordonner : les étapes 1, 2, 3… se numérotent toutes seules 🌸</div>
+      <div id="rituels-list"></div>
     </div>
   </div>
 
@@ -903,22 +961,18 @@
   <div id="routine" class="screen">
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mes <em style="font-style:italic;color:var(--accent);">produits</em></div></div>
-      <button class="add-btn" onclick="openProductForm(currentRoutineView)">+ Ajouter</button>
+      <button class="add-btn" onclick="openProductForm()">+ Ajouter</button>
     </div>
-    <div style="padding:0 20px;margin-bottom:18px;">
-      <div class="period-switch">
-        <button class="period-btn active" id="rt-matin" onclick="switchRoutineView('matin')">☀️ Matin</button>
-        <button class="period-btn" id="rt-soir" onclick="switchRoutineView('soir')">🌙 Soir</button>
-      </div>
-    </div>
+    <div style="padding:0 20px 4px;color:var(--muted);font-size:12px;line-height:1.5;">Tous tes produits, au même endroit. Tu choisis lesquels vont le matin / le soir depuis l'onglet <span style="color:var(--accent-deep);">Rituel</span> 🌸</div>
     <div class="section">
       <div id="products-list" style="display:flex;flex-direction:column;gap:12px;"></div>
-      <button class="add-product-card" onclick="openProductForm(currentRoutineView)">＋ Ajouter un produit</button>
+      <button class="add-product-card" onclick="openProductForm()">＋ Ajouter un produit</button>
     </div>
     <div class="section">
-      <div style="background:var(--surface-warm);border-radius:16px;padding:16px;display:flex;justify-content:space-between;align-items:center;">
-        <div onclick="editDuree()" style="cursor:pointer;"><div class="eyebrow">DURÉE <span id="duree-period">MATIN</span></div><div class="serif" style="font-size:22px;" id="duree-val">— <span style="font-size:12px;color:var(--muted);">ajouter ›</span></div></div>
-        <div style="text-align:right;"><div class="eyebrow">COÛT MENSUEL</div><div class="serif" style="font-size:22px;" id="cout-val">0€</div></div>
+      <div style="background:var(--surface-warm);border-radius:18px;padding:18px;display:flex;align-items:center;">
+        <div style="flex:1;text-align:center;"><div class="eyebrow">PRODUITS</div><div class="serif" style="font-size:26px;line-height:1.1;margin-top:4px;" id="prod-count">0</div></div>
+        <div style="width:1px;align-self:stretch;background:var(--line);margin:4px 0;"></div>
+        <div style="flex:1;text-align:center;"><div class="eyebrow">COÛT / MOIS</div><div class="serif" style="font-size:26px;line-height:1.1;margin-top:4px;color:var(--accent);" id="cout-val">0€</div></div>
       </div>
       <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px;">Le coût se calcule automatiquement à partir du prix de tes produits 🌸</div>
     </div>
@@ -960,7 +1014,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 2.3<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 3.7<br><span class="italic serif">— votre carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1134,11 +1188,52 @@
       <div class="sheet-title">Ma peau</div>
       <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Ta peau évolue, ton profil aussi. Modifie-le quand tu veux 🌸</p>
       <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;">Type de peau</label>
-      <div id="skin-type-opts" class="onb-options" style="margin:10px 0 20px;"></div>
+      <div id="skin-type-opts" class="onb-options" style="margin:10px 0 10px;"></div>
+      <button onclick="openQuiz('profile')" style="background:transparent;border:none;color:var(--accent-deep);font-size:13px;cursor:pointer;display:block;margin:0 0 18px 4px;text-decoration:underline;">🧪 Je ne sais pas — faire le test</button>
       <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;">Mes préoccupations</label>
       <div id="skin-concern-opts" class="onb-options" style="margin:10px 0 20px;"></div>
       <button class="btn btn-accent" onclick="saveSkinProfile()">Enregistrer</button>
       <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeSkinSheet()">Annuler</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="quiz-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div id="quiz-body"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeQuiz()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="rituel-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="rd-title">Créer un rituel</div>
+      <div class="field"><label>Nom du rituel</label><input id="rd-nom" placeholder="Ex. Routine du matin"></div>
+      <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;display:block;margin-top:16px;">Quand ?</label>
+      <div class="rit-type" style="margin:10px 0 6px;">
+        <button class="rit-opt" id="rd-m-matin" onclick="rdSetMoment('matin')">☀️<span>Matin</span></button>
+        <button class="rit-opt" id="rd-m-soir" onclick="rdSetMoment('soir')">🌙<span>Soir</span></button>
+        <button class="rit-opt" id="rd-m-both" onclick="rdSetMoment('both')">☀️🌙<span>Les deux</span></button>
+      </div>
+      <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;display:block;margin-top:16px;">Les étapes <span style="font-weight:400;color:var(--muted);">— glisse pour réordonner</span></label>
+      <div id="rd-products" style="display:flex;flex-direction:column;gap:8px;margin:10px 0;"></div>
+      <div id="rd-conflicts"></div>
+      <button class="add-product-card" style="margin-top:0;" onclick="openRdPicker()">＋ Ajouter des produits</button>
+      <button class="btn btn-accent" style="margin-top:14px;" onclick="saveRituel()">Enregistrer</button>
+      <button class="btn" id="rd-delete" style="margin-top:10px;background:transparent;color:var(--accent);display:none;" onclick="deleteRituel()">Supprimer ce rituel</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeRituelSheet()">Annuler</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="rd-picker">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ajouter des produits</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Choisis les produits de ce rituel 🌸</p>
+      <div id="rd-picker-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <button class="btn btn-accent" style="margin-top:14px;" onclick="confirmRdPicker()">Ajouter à mon rituel</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeRdPicker()">Fermer</button>
     </div>
   </div>
 
@@ -1152,7 +1247,6 @@
       <div class="emoji-picker" id="emoji-picker" style="margin:8px 0 16px;"></div>
 
       <div class="field"><label>Nom du produit *</label><input id="pf-nom" placeholder="Ex. Sérum vitamine C"></div>
-      <div class="field" style="margin-top:12px;"><label>Étape (optionnel)</label><input id="pf-etape" placeholder="Ex. Nettoyage, Sérum, Hydratation…"></div>
       <div class="field" style="margin-top:12px;"><label>Effets / bienfaits (optionnel)</label><input id="pf-effets" placeholder="Ex. éclaircit les taches"></div>
       <div class="field" style="margin-top:12px;"><label>Prix en € (optionnel)</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="Ex. 15"></div>
       <div class="field" style="margin-top:12px;"><label>Date d'ouverture (optionnel)</label><input id="pf-ouverture" type="date"></div>
@@ -1401,7 +1495,7 @@
   // ===== Onboarding =====
   function onbNext(){
     state.onbStep++;
-    if(state.onbStep===5){ document.getElementById('onb-name').textContent = state.name || 'vous'; }
+    if(state.onbStep===6){ document.getElementById('onb-name').textContent = state.name || 'vous'; }
     document.querySelectorAll('.onb-page').forEach(p=>p.classList.remove('active'));
     const pg=document.querySelector(`.onb-page[data-page="${state.onbStep}"]`);
     if(pg) pg.classList.add('active');
@@ -1418,10 +1512,25 @@
     if(el.classList.contains('selected')){ if(!state[key].includes(v)) state[key].push(v); }
     else state[key]=state[key].filter(x=>x!==v);
   }
+  let onbProducts=[];
+  function onbAddProduct(){
+    const inp=document.getElementById('onb-prod-input'); if(!inp) return;
+    const v=inp.value.trim(); if(!v) return;
+    onbProducts.push(v); inp.value=''; renderOnbProducts(); inp.focus();
+  }
+  function onbRemoveProduct(i){ onbProducts.splice(i,1); renderOnbProducts(); }
+  function renderOnbProducts(){
+    const el=document.getElementById('onb-prod-list'); if(!el) return;
+    el.innerHTML = onbProducts.map((n,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-warm);border-radius:12px;padding:10px 14px;font-size:14px;"><span>🧴 '+escapeHtml(n)+'</span><button onclick="onbRemoveProduct('+i+')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;">×</button></div>').join('');
+  }
   async function finishOnboarding(){
-    const btn=document.querySelector('.onb-page[data-page="5"] .btn');
+    const btn=document.querySelector('.onb-page[data-page="6"] .btn');
     if(btn){ btn.disabled=true; btn.textContent='Un instant…'; }
     await saveProfile();
+    if(onbProducts.length && currentUser){
+      const rows = onbProducts.map((nom,idx)=>({ user_id: currentUser.id, moment:'matin', position: idx, nom, emoji:'🧴', in_matin:true, in_soir:true }));
+      try{ await sb.from('products').insert(rows); }catch(e){}
+    }
     // filet de sécurité : on mémorise localement que l'onboarding est fait
     try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: state.concerns||[] })); }catch(e){}
     document.getElementById('onboarding').classList.remove('active');
@@ -1455,6 +1564,8 @@
     const days=['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
     const months=['JANV','FÉVR','MARS','AVRIL','MAI','JUIN','JUIL','AOÛT','SEPT','OCT','NOV','DÉC'];
     document.getElementById('topbar-date').textContent = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+    const h=d.getHours();
+    const gh=document.getElementById('greet-hello'); if(gh) gh.textContent = (h>=5 && h<18) ? 'Bonjour' : 'Bonsoir';
   }
 
   // ===== Profil : badges + édition de la peau =====
@@ -1487,6 +1598,89 @@
   function pickSkin(v){ tmpSkin=v; renderSkinOpts(); }
   function toggleConcern(v){ tmpConcerns = tmpConcerns.includes(v) ? tmpConcerns.filter(x=>x!==v) : [...tmpConcerns, v]; renderSkinOpts(); }
   function closeSkinSheet(){ document.getElementById('skin-sheet').classList.remove('open'); }
+
+  // ===== Quizz type de peau (base dermato : type = sébum/sécheresse, sensibilité à part) =====
+  const QUIZ=[
+    { q:"3-4h après t'être lavé le visage (sans rien appliquer), ta peau…", opts:[
+      {l:"Tiraille, un peu rêche", t:'seche'},
+      {l:"Brille un peu partout", t:'grasse'},
+      {l:"Brille sur le front/nez/menton, normale ailleurs", t:'mixte'},
+      {l:"Est confortable, équilibrée", t:'normale'} ] },
+    { q:"Tes pores sont plutôt…", opts:[
+      {l:"Quasi invisibles", t:'seche'},
+      {l:"Visibles sur le nez / le front", t:'mixte'},
+      {l:"Dilatés un peu partout", t:'grasse'},
+      {l:"Peu visibles", t:'normale'} ] },
+    { q:"En milieu de journée, ton front et ton nez…", opts:[
+      {l:"Restent mats", t:'normale'},
+      {l:"Deviennent brillants un peu partout", t:'grasse'},
+      {l:"Brillent seulement sur la zone T", t:'mixte'},
+      {l:"Tiraillent, inconfort", t:'seche'} ] },
+    { q:"Tiraillements ou peau qui pèle, c'est…", opts:[
+      {l:"Souvent", t:'seche'},
+      {l:"De temps en temps", t:'mixte'},
+      {l:"Rarement / jamais", t:'normale'} ] },
+    { q:"Face à un nouveau produit, au froid ou au parfum, ta peau…", opts:[
+      {l:"Rougit / picote facilement", t:null, sens:2},
+      {l:"Réagit un peu, parfois", t:null, sens:1},
+      {l:"Tolère bien, aucun souci", t:'normale', sens:0} ] },
+    { q:"Boutons / imperfections ?", opts:[
+      {l:"Fréquents", t:'grasse'},
+      {l:"Occasionnels", t:'mixte'},
+      {l:"Rares", t:'normale'} ] }
+  ];
+  let quizStep=0, quizAns=[], quizCtx='profile';
+  function openQuiz(ctx){ quizCtx=ctx||'profile'; quizStep=0; quizAns=[]; renderQuiz(); document.getElementById('quiz-sheet').classList.add('open'); }
+  function closeQuiz(){ document.getElementById('quiz-sheet').classList.remove('open'); }
+  function quizPick(i){ quizAns[quizStep]=QUIZ[quizStep].opts[i]; quizStep++; renderQuiz(); }
+  function quizBack(){ if(quizStep>0){ quizStep--; renderQuiz(); } }
+  function quizResult(){
+    const sc={seche:0,grasse:0,mixte:0,normale:0}; let sens=0;
+    quizAns.forEach(o=>{ if(o){ if(o.t && sc[o.t]!=null) sc[o.t]++; if(o.sens!=null) sens=Math.max(sens,o.sens); } });
+    const order=['mixte','grasse','seche','normale']; let best=order[0];
+    order.forEach(t=>{ if(sc[t]>sc[best]) best=t; });
+    if(sens>=2) best='sensible';
+    return { type:best, sens };
+  }
+  function renderQuiz(){
+    const body=document.getElementById('quiz-body'); if(!body) return;
+    if(quizStep < QUIZ.length){
+      const Q=QUIZ[quizStep];
+      body.innerHTML =
+        '<div class="onb-progress" style="margin-bottom:18px;">'+QUIZ.map((_,k)=>'<div class="onb-dot'+(k<quizStep?' done':'')+'"></div>').join('')+'</div>'+
+        '<h2 class="onb-title" style="font-size:20px;">'+Q.q+'</h2>'+
+        '<div class="onb-options" style="margin-top:16px;">'+Q.opts.map((o,i)=>'<button class="onb-opt" onclick="quizPick('+i+')"><div class="onb-opt-text"><div class="onb-opt-title">'+o.l+'</div></div><div class="onb-opt-check"></div></button>').join('')+'</div>'+
+        (quizStep>0?'<button class="btn btn-ghost" style="margin-top:6px;" onclick="quizBack()">← Précédent</button>':'');
+    } else {
+      const r=quizResult();
+      const meta=SKIN_TYPES.find(s=>s[0]===r.type)||['normale','🌿','Normale'];
+      const sensLine = (r.sens>=1 && r.type!=='sensible') ? '<p style="color:var(--ink-soft);font-size:13px;margin-top:8px;line-height:1.5;">Ta peau a aussi l\'air réactive — pense à privilégier des produits doux 🌸</p>' : '';
+      body.innerHTML =
+        '<div style="text-align:center;padding:6px 0 2px;">'+
+          '<div style="font-size:52px;">'+meta[1]+'</div>'+
+          '<div class="eyebrow" style="margin-top:6px;">Ton résultat</div>'+
+          '<h2 class="display" style="font-size:30px;margin:6px 0;">Peau <em class="italic" style="color:var(--accent);">'+meta[2].toLowerCase()+'</em></h2>'+
+          sensLine+
+        '</div>'+
+        '<button class="btn btn-accent" style="margin-top:16px;" onclick="quizApply()">Garder ce résultat</button>'+
+        '<button class="btn btn-ghost" style="margin-top:8px;" onclick="openQuiz(quizCtx)">Refaire le test</button>';
+    }
+  }
+  function quizApply(){
+    const r=quizResult();
+    if(quizCtx==='onboarding'){
+      state.skinType=r.type;
+      const page=document.querySelector('.onb-page[data-page="1"]');
+      if(page){ page.querySelectorAll('.onb-opt').forEach(o=>o.classList.toggle('selected', o.dataset.value===r.type)); }
+      const btn=document.getElementById('btn-step1'); if(btn) btn.disabled=false;
+      closeQuiz();
+      showToast('Type de peau : '+ (SKIN_TYPES.find(s=>s[0]===r.type)||['','','peau'])[2].toLowerCase() +' 🌸');
+    } else {
+      if(document.getElementById('skin-type-opts')){ pickSkin(r.type); }
+      closeQuiz();
+      showToast('Résultat appliqué — pense à enregistrer 🌸');
+    }
+  }
   async function saveSkinProfile(){
     if(!tmpSkin){ showToast('Choisis un type de peau'); return; }
     state.skinType = tmpSkin;
@@ -1612,6 +1806,7 @@
   // ===== Streak (selon le type de rituel choisi) =====
   function dayComplete(e){
     if(!e) return false;
+    if(e.repos) return true;
     const t = state.rituelType || 'both';
     if(t==='matin') return !!e.routine_matin;
     if(t==='soir') return !!e.routine_soir;
@@ -1653,10 +1848,11 @@
   function plantStage(n){ if(n<=0) return 0; if(n<3) return 1; if(n<7) return 2; if(n<14) return 3; if(n<21) return 4; return 5; }
 
   const PLANT_TYPES = {
-    fleur:     { name:'Fleur',     emoji:'🌸' },
-    tournesol: { name:'Tournesol', emoji:'🌻' },
-    lavande:   { name:'Lavande',   emoji:'🪻' },
-    cactus:    { name:'Cactus',    emoji:'🌵' }
+    fleur:     { name:'Fleur',     emoji:'🌸', unlock:0 },
+    lavande:   { name:'Lavande',   emoji:'🪻', unlock:3 },
+    tournesol: { name:'Tournesol', emoji:'🌻', unlock:7 },
+    cactus:    { name:'Cactus',    emoji:'🌵', unlock:14 },
+    rose:      { name:'Rose',      emoji:'🌹', unlock:30 }
   };
   function currentPlant(){ try{ return localStorage.getItem('rituel_plant') || 'fleur'; }catch(e){ return 'fleur'; } }
 
@@ -1674,8 +1870,18 @@
       }
       return P.join('');
     }
+    if(type==='rose'){
+      if(stage>=5){
+        for(let k=0;k<8;k++){ const a=k*(Math.PI/4); const px=Math.round(100+Math.cos(a)*14); const py=Math.round(topY+Math.sin(a)*14); P.push('<circle cx="'+px+'" cy="'+py+'" r="8" fill="#D6457B"/>'); }
+        for(let k=0;k<5;k++){ const a=k*(2*Math.PI/5)+0.4; const px=Math.round(100+Math.cos(a)*7); const py=Math.round(topY+Math.sin(a)*7); P.push('<circle cx="'+px+'" cy="'+py+'" r="6" fill="#B83266"/>'); }
+        P.push('<circle cx="100" cy="'+topY+'" r="4" fill="#8E2150"/>');
+      } else if(stage>=4){
+        P.push('<circle cx="100" cy="'+topY+'" r="9" fill="#E59ABA"/>');
+        P.push('<path d="M100 '+(topY-9)+' Q109 '+topY+' 100 '+(topY+9)+' Q91 '+topY+' 100 '+(topY-9)+' Z" fill="#C85084"/>');
+      }
+      return P.join('');
+    }
     if(stage>=5){
-      const petals = type==='tournesol' ? 10 : 6;
       const r  = type==='tournesol' ? 14 : 13;
       const pr = type==='tournesol' ? 6 : 9;
       const petalColor  = type==='tournesol' ? '#F4C026' : 'var(--blush)';
@@ -1746,16 +1952,51 @@
       }
       if(st!==prev) localStorage.setItem(key, String(st));
     }catch(e){}
+    // Déblocage de nouvelles plantes selon la série
+    try{
+      const uid = currentUser ? currentUser.id : 'anon';
+      const ukey='rituel_unlocked_'+uid;
+      if(localStorage.getItem(ukey)===null){
+        const achieved=Object.values(PLANT_TYPES).reduce((mx,v)=>(v.unlock<=n?Math.max(mx,v.unlock):mx),0);
+        localStorage.setItem(ukey, String(achieved));
+      } else {
+        const prevU=parseInt(localStorage.getItem(ukey),10);
+        const newly=Object.values(PLANT_TYPES).filter(v=>v.unlock>prevU && v.unlock<=n).sort((a,b)=>a.unlock-b.unlock);
+        if(newly.length){ const last=newly[newly.length-1]; showToast(last.emoji+' Nouvelle plante débloquée : '+last.name+' !'); localStorage.setItem(ukey, String(last.unlock)); }
+      }
+    }catch(e){}
   }
 
-  function openPlantSheet(){
+  async function bestStreak(){
+    if(!currentUser) return 0;
+    const { data } = await sb.from('entries').select('date,routine_matin,routine_soir,repos').eq('user_id',currentUser.id).order('date',{ascending:true});
+    const es=data||[];
+    const done=new Set(); es.forEach(e=>{ if(dayComplete(e)) done.add(e.date); });
+    if(!done.size) return 0;
+    const dates=[...done].sort();
+    let best=0, run=0, prev=null;
+    for(const d of dates){
+      if(prev){ const diff=Math.round((new Date(d)-new Date(prev))/86400000); run = (diff===1)? run+1 : 1; } else run=1;
+      if(run>best) best=run; prev=d;
+    }
+    return best;
+  }
+  function plantLockedToast(d){ showToast('🔒 Plante à débloquer dès '+d+' jours de série 🌱'); }
+  async function openPlantSheet(){
     const cur=currentPlant();
-    document.getElementById('plant-list').innerHTML = Object.keys(PLANT_TYPES).map(k=>(
-      '<button onclick="pickPlant(\''+k+'\')" style="display:flex;align-items:center;gap:14px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid '+(k===cur?'var(--accent)':'var(--line)')+';background:'+(k===cur?'var(--blush-soft)':'var(--surface)')+';cursor:pointer;text-align:left;">'+
+    const best=await bestStreak();
+    document.getElementById('plant-list').innerHTML = Object.keys(PLANT_TYPES).map(k=>{
+      const v=PLANT_TYPES[k];
+      const locked = best < (v.unlock||0);
+      const onclick = locked ? ('plantLockedToast('+v.unlock+')') : ("pickPlant('"+k+"')");
+      const border = (k===cur && !locked) ? 'var(--accent)' : 'var(--line)';
+      const bg = (k===cur && !locked) ? 'var(--blush-soft)' : 'var(--surface)';
+      const right = locked ? '<div style="font-size:11px;color:var(--muted);text-align:right;line-height:1.3;flex-shrink:0;">🔒<br>dès '+v.unlock+'j</div>' : '';
+      return '<button onclick="'+onclick+'" style="display:flex;align-items:center;gap:14px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid '+border+';background:'+bg+';cursor:pointer;text-align:left;'+(locked?'opacity:0.55;':'')+'">'+
         '<div style="width:54px;height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--surface-warm);border-radius:12px;"><div style="transform:scale(0.36);transform-origin:center;">'+plantSVG(5,k)+'</div></div>'+
-        '<div style="flex:1;font-family:var(--serif);font-size:16px;">'+PLANT_TYPES[k].emoji+' '+PLANT_TYPES[k].name+'</div>'+
-      '</button>'
-    )).join('');
+        '<div style="flex:1;font-family:var(--serif);font-size:16px;">'+v.emoji+' '+v.name+'</div>'+ right +
+      '</button>';
+    }).join('');
     document.getElementById('plant-sheet').classList.add('open');
   }
   function pickPlant(k){ try{ localStorage.setItem('rituel_plant', k); }catch(e){} renderPlant(); openPlantSheet(); showToast(PLANT_TYPES[k].emoji+' Jolie plante !'); }
@@ -1859,6 +2100,33 @@
     const noteEl=document.getElementById('day-note'); if(noteEl) noteEl.value = (e && e.note) ? e.note : '';
     loadHabits();
     loadLeaTip();
+    updateRestBtn(e);
+  }
+
+  // ===== Jour de repos (joker hebdo qui protège la série) =====
+  function updateRestBtn(e){
+    const btn=document.getElementById('rest-btn'); if(!btn) return;
+    const isRepos = e && e.repos;
+    btn.textContent = isRepos ? '🧊 Jour de repos actif — annuler' : '🧊 Prendre un jour de repos';
+  }
+  async function takeRestDay(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    const today=todayStr();
+    const { data } = await sb.from('entries').select('repos').eq('user_id',currentUser.id).eq('date',today).order('created_at',{ascending:true}).limit(1);
+    const isRepos = data && data.length && data[0].repos;
+    if(isRepos){
+      await updateTodayEntry({ repos:false });
+      showToast('Jour de repos annulé');
+    } else {
+      const since=new Date(); since.setDate(since.getDate()-6); const sinceStr=since.toISOString().slice(0,10);
+      const { data: wk } = await sb.from('entries').select('date').eq('user_id',currentUser.id).eq('repos',true).gte('date',sinceStr).neq('date',today);
+      if(wk && wk.length>=1){ showToast('Tu as déjà pris ton jour de repos cette semaine 🌸'); return; }
+      await updateTodayEntry({ repos:true });
+      showToast('Jour de repos pris — ta série est protégée 🧊');
+    }
+    const { data: d2 } = await sb.from('entries').select('repos').eq('user_id',currentUser.id).eq('date',today).limit(1);
+    updateRestBtn((d2&&d2.length)?d2[0]:null);
+    renderStreak();
   }
 
   // Affiche les bons moments sur l'accueil selon le type de rituel choisi
@@ -1872,14 +2140,20 @@
   // Construit la checklist de l'accueil à partir des vrais produits du Rituel
   async function loadHomeRoutine(){
     if(!currentUser) return;
+    await maybeMigrateRituels();
+    const { data: rits } = await sb.from('rituels').select('moment,produits,position').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+    const rituels = rits || [];
+    const { data: prods } = await sb.from('products').select('id,nom,effets,emoji').eq('user_id', currentUser.id);
+    const pmap={}; (prods||[]).forEach(p=>{ pmap[p.id]=p; });
     for(const moment of ['matin','soir']){
       const list = document.getElementById('routine-'+moment);
-      const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).eq('moment', moment).order('position',{ascending:true});
-      const products = data || [];
-      if(!products.length){
-        list.innerHTML = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;">Pas encore de soins du ${moment==='soir'?'soir':'matin'}.<br><span style="color:var(--accent-deep);text-decoration:underline;cursor:pointer;" onclick="navTo('routine')">Ajoute-les dans ton rituel →</span></div>`;
+      const ids=[]; const seen=new Set();
+      rituels.filter(r=> r.moment===moment || r.moment==='both').forEach(r=>{ (Array.isArray(r.produits)?r.produits:[]).forEach(id=>{ if(!seen.has(id)){ seen.add(id); ids.push(id); } }); });
+      const items = ids.map(id=>pmap[id]).filter(Boolean);
+      if(!items.length){
+        list.innerHTML = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;">Pas encore de rituel pour le ${moment==='soir'?'soir':'matin'}.<br><span style="color:var(--accent-deep);text-decoration:underline;cursor:pointer;" onclick="navTo('ritual')">Crée-le dans l'onglet Rituel →</span></div>`;
       } else {
-        list.innerHTML = products.map(p=>`<div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">${escapeHtml(p.nom||'')}</div>${(p.etape||p.effets)?`<div class="routine-product">${escapeHtml(p.etape||p.effets)}</div>`:''}</div><div class="routine-time">—</div></div>`).join('');
+        list.innerHTML = items.map(p=>`<div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">${escapeHtml(p.nom||'')}</div>${p.effets?`<div class="routine-product">${escapeHtml(p.effets)}</div>`:''}</div><div class="routine-time">—</div></div>`).join('');
       }
     }
   }
@@ -2012,22 +2286,20 @@
   async function loadProducts(){
     if(!currentUser) return;
     const list = document.getElementById('products-list');
-    const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).eq('moment', currentRoutineView).order('position',{ascending:true});
+    const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const products = data || [];
     if(!products.length){
-      list.innerHTML = `<div style="text-align:center;padding:30px 16px;color:var(--muted);font-size:14px;line-height:1.6;">Aucun produit pour le ${currentRoutineView==='soir'?'soir':'matin'} pour l'instant.<br>Ajoute ton premier soin 🌸</div>`;
+      list.innerHTML = `<div style="text-align:center;padding:30px 16px;color:var(--muted);font-size:14px;line-height:1.6;">Aucun produit pour l'instant.<br>Ajoute ton premier soin 🌸</div>`;
     } else {
       let html='';
       for(let i=0;i<products.length;i++){
         const p=products[i];
         let thumb = p.emoji || '🧴';
         if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) thumb=`<img src="${url}" alt="">`; }
-        const step = `ÉTAPE ${i+1}${p.etape?(' · '+escapeHtml(p.etape).toUpperCase()):''}`;
         const meta = [p.effets?escapeHtml(p.effets):'', (p.prix!=null&&p.prix!=='')?(p.prix+'€'):''].filter(Boolean).join(' · ');
-        html += `<div class="product-card" onclick="openProductForm('${currentRoutineView}','${p.id}')">
+        html += `<div class="product-card" onclick="openProductForm('${p.id}')">
           <div class="product-thumb">${thumb}</div>
           <div class="product-info" style="flex:1;">
-            <div class="product-step">${step}</div>
             <div class="product-name">${escapeHtml(p.nom||'')}</div>
             ${meta?`<div class="product-meta">${meta}</div>`:''}
             ${productDateInfo(p)}
@@ -2042,13 +2314,11 @@
 
   async function renderRoutineFooter(){
     if(!currentUser) return;
-    document.getElementById('duree-period').textContent = currentRoutineView.toUpperCase();
     const { data: all } = await sb.from('products').select('prix').eq('user_id', currentUser.id);
-    let cout=0; (all||[]).forEach(p=>{ const v=parseFloat(p.prix); if(!isNaN(v)) cout+=v; });
-    document.getElementById('cout-val').textContent = cout>0 ? ('~'+Math.round(cout)+'€') : '0€';
-    const prof = await loadProfile();
-    const d = currentRoutineView==='soir' ? (prof&&prof.duree_soir) : (prof&&prof.duree_matin);
-    document.getElementById('duree-val').innerHTML = d ? (d+' min <span style="font-size:12px;color:var(--muted);">modifier ›</span>') : '— <span style="font-size:12px;color:var(--muted);">ajouter ›</span>';
+    const arr = all || [];
+    let cout=0; arr.forEach(p=>{ const v=parseFloat(p.prix); if(!isNaN(v)) cout+=v; });
+    const cv=document.getElementById('cout-val'); if(cv) cv.textContent = cout>0 ? ('~'+Math.round(cout)+'€') : '0€';
+    const pc=document.getElementById('prod-count'); if(pc) pc.textContent = arr.length;
   }
 
   async function editDuree(){
@@ -2072,13 +2342,11 @@
   }
   function closeProductSheet(){ document.getElementById('product-sheet').classList.remove('open'); }
 
-  async function openProductForm(moment, id){
-    currentRoutineView = moment;
+  async function openProductForm(id){
     editingProductId = id || null;
     pfPhotoFile = null; pfPhotoPath = null; pfEmoji = '🧴';
     document.getElementById('pf-error').textContent='';
     document.getElementById('pf-nom').value='';
-    document.getElementById('pf-etape').value='';
     document.getElementById('pf-effets').value='';
     document.getElementById('pf-prix').value='';
     document.getElementById('pf-ouverture').value='';
@@ -2094,7 +2362,6 @@
       const { data: p } = await sb.from('products').select('*').eq('id', id).maybeSingle();
       if(p){
         document.getElementById('pf-nom').value = p.nom||'';
-        document.getElementById('pf-etape').value = p.etape||'';
         document.getElementById('pf-effets').value = p.effets||'';
         document.getElementById('pf-prix').value = (p.prix!=null?p.prix:'');
         document.getElementById('pf-ouverture').value = p.date_ouverture || '';
@@ -2112,7 +2379,6 @@
     const nom = document.getElementById('pf-nom').value.trim();
     const err = document.getElementById('pf-error');
     if(!nom){ err.textContent='Donne au moins un nom au produit.'; return; }
-    const etape = document.getElementById('pf-etape').value.trim();
     const effets = document.getElementById('pf-effets').value.trim();
     const prixRaw = document.getElementById('pf-prix').value.trim();
     const prix = prixRaw==='' ? null : parseFloat(prixRaw.replace(',','.'));
@@ -2129,11 +2395,11 @@
       if(!upErr) photo_path = path;
     }
     if(editingProductId){
-      await sb.from('products').update({ nom, etape, effets, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per }).eq('id', editingProductId);
+      await sb.from('products').update({ nom, effets, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per }).eq('id', editingProductId);
     } else {
-      const { data: existing } = await sb.from('products').select('id').eq('user_id', currentUser.id).eq('moment', currentRoutineView);
+      const { data: existing } = await sb.from('products').select('id').eq('user_id', currentUser.id);
       const position = existing ? existing.length : 0;
-      await sb.from('products').insert({ user_id: currentUser.id, moment: currentRoutineView, position, nom, etape, effets, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per });
+      await sb.from('products').insert({ user_id: currentUser.id, moment:'matin', position, nom, effets, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per, in_matin:true, in_soir:true });
     }
     closeProductSheet();
     showToast('Produit enregistré ✓');
@@ -2152,41 +2418,191 @@
   // ===== Écran Rituel (choix matin/soir/les deux + aperçu) =====
   async function loadRitual(){
     if(!currentUser) return;
-    const t = state.rituelType || 'both';
-    ['matin','soir','both'].forEach(x=>{ const el=document.getElementById('rt-type-'+x); if(el) el.classList.toggle('selected', x===t); });
     const n = await computeStreak();
     document.getElementById('rit-streak').textContent = n;
     document.getElementById('rit-unit').textContent = n>1 ? "jours d'affilée" : "jour";
     document.getElementById('rit-flame').textContent = n===0 ? '🌱' : (n>=7 ? '🔥' : '🌸');
+    const t = state.rituelType || 'both';
     const typeLabel = t==='matin' ? 'le matin' : (t==='soir' ? 'le soir' : 'matin et soir');
-    document.getElementById('rit-label').textContent = n===0 ? `Fais ton rituel (${typeLabel}) pour démarrer ta série ✨` : `Ta série de rituel — ${typeLabel} 🌸`;
-    const moments = t==='both' ? ['matin','soir'] : [t];
-    const host=document.getElementById('ritual-preview');
-    let html='';
-    for(const m of moments){
-      const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).eq('moment', m).order('position',{ascending:true});
-      const prods = data || [];
-      html += `<div class="eyebrow" style="margin:6px 0 10px;">${m==='soir'?'🌙 SOIR':'☀️ MATIN'}</div>`;
-      if(!prods.length){
-        html += `<div style="padding:14px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px;">Aucun produit pour ce moment. <span style="color:var(--accent-deep);text-decoration:underline;cursor:pointer;" onclick="navTo('routine')">Ajoute-les →</span></div>`;
-      } else {
-        html += '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">';
-        for(let i=0;i<prods.length;i++){
-          const p=prods[i];
-          let thumb=p.emoji||'🧴';
-          if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) thumb=`<img src="${url}" alt="">`; }
-          html += `<div class="product-card" style="cursor:default;"><div class="product-thumb">${thumb}</div><div class="product-info" style="flex:1;"><div class="product-step">ÉTAPE ${i+1}${p.etape?(' · '+escapeHtml(p.etape).toUpperCase()):''}</div><div class="product-name">${escapeHtml(p.nom||'')}</div></div></div>`;
-        }
-        html += '</div>';
-      }
-    }
-    host.innerHTML = html;
+    document.getElementById('rit-label').textContent = n===0 ? `Crée ton rituel pour démarrer ta série ✨` : `Ta série de rituel — ${typeLabel} 🌸`;
+    loadRituels();
   }
-  async function setRituelType(t){
+
+  // ===== Rituels nommés =====
+  let rituelDraft = null;       // { id, nom, moment, produits:[ids] }
+  let rdProductMap = {};        // id -> produit
+  let rdPickerSel = new Set();
+
+  async function maybeMigrateRituels(){
+    if(!currentUser) return;
+    const { data: existing } = await sb.from('rituels').select('id').eq('user_id', currentUser.id).limit(1);
+    if(existing && existing.length) return;
+    const { data: prods } = await sb.from('products').select('id,in_matin,in_soir,position').eq('user_id', currentUser.id).order('position',{ascending:true});
+    const list = prods || [];
+    if(!list.length) return;
+    const matinIds = list.filter(p=>p.in_matin!==false).map(p=>p.id);
+    const soirIds  = list.filter(p=>p.in_soir!==false).map(p=>p.id);
+    const rows=[];
+    if(matinIds.length) rows.push({ user_id:currentUser.id, nom:'Routine du matin', moment:'matin', produits:matinIds, position:0 });
+    if(soirIds.length)  rows.push({ user_id:currentUser.id, nom:'Routine du soir',  moment:'soir',  produits:soirIds,  position:1 });
+    if(rows.length){ try{ await sb.from('rituels').insert(rows); await recomputeRituelType(); }catch(e){} }
+  }
+
+  async function recomputeRituelType(){
+    if(!currentUser) return;
+    const { data } = await sb.from('rituels').select('moment').eq('user_id', currentUser.id);
+    const rits = data || [];
+    const hasM = rits.some(r=>r.moment==='matin'||r.moment==='both');
+    const hasS = rits.some(r=>r.moment==='soir'||r.moment==='both');
+    const t = (hasM&&hasS)?'both':(hasM?'matin':(hasS?'soir':'both'));
     state.rituelType = t;
-    if(currentUser){ await sb.from('profiles').update({ rituel_type: t }).eq('id', currentUser.id); }
-    loadRitual();
-    showToast('Rituel mis à jour 🌸');
+    try{ await sb.from('profiles').update({ rituel_type:t }).eq('id', currentUser.id); }catch(e){}
+  }
+
+  async function loadRituels(){
+    const host=document.getElementById('rituels-list'); if(!host) return;
+    await maybeMigrateRituels();
+    const { data } = await sb.from('rituels').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+    const rits = data || [];
+    if(!rits.length){ host.innerHTML=''; return; }
+    host.innerHTML = '<div class="eyebrow" style="margin:20px 0 12px;">MES RITUELS</div>' + rits.map(r=>{
+      const moji = r.moment==='matin'?'☀️ MATIN':(r.moment==='soir'?'🌙 SOIR':'☀️🌙 MATIN & SOIR');
+      const cnt = Array.isArray(r.produits)?r.produits.length:0;
+      return `<div class="product-card" onclick="openRituelEditor('${r.id}')" style="margin-bottom:10px;"><div class="product-thumb">🧖‍♀️</div><div class="product-info" style="flex:1;"><div class="product-step">${moji}</div><div class="product-name">${escapeHtml(r.nom||'Mon rituel')}</div><div class="product-meta">${cnt} étape${cnt>1?'s':''}</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+    }).join('');
+  }
+
+  async function openRituelEditor(id){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    const { data: prods } = await sb.from('products').select('id,nom,emoji,effets').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+    rdProductMap = {}; (prods||[]).forEach(p=>{ rdProductMap[p.id]=p; });
+    if(id){
+      const { data: r } = await sb.from('rituels').select('*').eq('id', id).maybeSingle();
+      rituelDraft = r ? { id:r.id, nom:r.nom||'', moment:r.moment||'both', produits:(Array.isArray(r.produits)?r.produits.slice():[]) } : { id:null, nom:'', moment:'both', produits:[] };
+    } else {
+      rituelDraft = { id:null, nom:'', moment:'both', produits:[] };
+    }
+    document.getElementById('rd-title').textContent = id ? 'Modifier le rituel' : 'Créer un rituel';
+    document.getElementById('rd-nom').value = rituelDraft.nom;
+    document.getElementById('rd-delete').style.display = id ? 'block' : 'none';
+    rdSetMoment(rituelDraft.moment);
+    renderRdProducts();
+    document.getElementById('rituel-sheet').classList.add('open');
+  }
+  function closeRituelSheet(){ document.getElementById('rituel-sheet').classList.remove('open'); }
+  function rdSetMoment(m){
+    rituelDraft.moment = m;
+    ['matin','soir','both'].forEach(x=>{ const el=document.getElementById('rd-m-'+x); if(el) el.classList.toggle('selected', x===m); });
+  }
+  function rdRemove(id){ rituelDraft.produits = rituelDraft.produits.filter(x=>x!==id); renderRdProducts(); }
+  function renderRdProducts(){
+    const list=document.getElementById('rd-products'); if(!list) return;
+    if(!rituelDraft.produits.length){ list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:6px 2px;">Aucun produit pour l\'instant. Ajoute-en juste en dessous 👇</div>'; return; }
+    list.innerHTML = rituelDraft.produits.map((id,i)=>{
+      const p=rdProductMap[id]; if(!p) return '';
+      return `<div class="rd-card" data-id="${id}"><div class="rd-handle">⠿</div><div class="rd-emoji">${p.emoji||'🧴'}</div><div style="flex:1;min-width:0;"><div class="rd-step" style="font-size:10px;color:var(--accent-deep);letter-spacing:.08em;">ÉTAPE ${i+1}</div><div class="product-name" style="font-size:15px;">${escapeHtml(p.nom||'')}</div></div><button class="rd-remove" onclick="rdRemove('${id}')">×</button></div>`;
+    }).join('');
+    initRituelDnd();
+    renderRdConflicts();
+  }
+  function rdActives(p){
+    const s=((p&&p.nom||'')+' '+(p&&p.effets||'')).toLowerCase();
+    const set=new Set();
+    if(/r[ée]tin|tr[ée]tin|adapal/.test(s)) set.add('retinoid');
+    if(/vitamine c|vitamin c|ascorb/.test(s)) set.add('vitc');
+    if(/\baha\b|\bbha\b|\bpha\b|glycoliqu|salicyliqu|lactiqu|mand[ée]liqu|peeling|exfoli/.test(s)) set.add('acids');
+    if(/benzoyl|peroxyde de benzoyle|\bbpo\b/.test(s)) set.add('bpo');
+    return set;
+  }
+  function detectConflicts(prods){
+    const all=new Set(); prods.forEach(p=>rdActives(p).forEach(a=>all.add(a)));
+    const m=[];
+    if(all.has('retinoid')&&all.has('acids')) m.push('Rétinoïde + acides exfoliants : souvent trop irritant dans le même rituel. Beaucoup préfèrent les espacer (un soir sur deux).');
+    if(all.has('retinoid')&&all.has('vitc')) m.push('Rétinoïde + vitamine C : on les sépare souvent — vitamine C le matin, rétinoïde le soir.');
+    if(all.has('retinoid')&&all.has('bpo')) m.push('Rétinoïde + peroxyde de benzoyle : peuvent s\'irriter ou se neutraliser selon la formule — souvent mieux d\'alterner.');
+    if(all.has('acids')&&all.has('vitc')) m.push('Acides exfoliants + vitamine C : combo parfois irritant — beaucoup préfèrent les espacer.');
+    return m;
+  }
+  function renderRdConflicts(){
+    const box=document.getElementById('rd-conflicts'); if(!box) return;
+    const prods=(rituelDraft&&rituelDraft.produits||[]).map(id=>rdProductMap[id]).filter(Boolean);
+    const msgs=detectConflicts(prods);
+    if(!msgs.length){ box.innerHTML=''; return; }
+    box.innerHTML='<div style="background:#FBF1E6;border:1px solid #EBD9BE;border-radius:14px;padding:12px 14px;font-size:12.5px;color:#7A5A2E;line-height:1.55;margin-bottom:4px;">💡 <b>Petit conseil</b><br>'+msgs.map(escapeHtml).join('<br>')+'<br><span style="text-decoration:underline;cursor:pointer;" onclick="closeRituelSheet();navTo(\'chat\')">En parler à Léa →</span><div style="margin-top:6px;color:#A98A5E;font-size:11px;">Ça dépend de ta peau et des formules — ce n\'est pas un avis médical.</div></div>';
+  }
+  function renumberRd(){
+    const list=document.getElementById('rd-products'); if(!list) return;
+    [...list.querySelectorAll('.rd-card')].forEach((c,i)=>{ const s=c.querySelector('.rd-step'); if(s) s.textContent='ÉTAPE '+(i+1); });
+  }
+  function initRituelDnd(){
+    const list=document.getElementById('rd-products'); if(!list) return;
+    list.querySelectorAll('.rd-handle').forEach(h=>{
+      h.onpointerdown=(e)=>{
+        e.preventDefault();
+        const dragEl=h.closest('.rd-card'); if(!dragEl) return;
+        dragEl.classList.add('dragging');
+        const move=(ev)=>{
+          const others=[...list.querySelectorAll('.rd-card:not(.dragging)')];
+          let after=null;
+          for(const c of others){ const r=c.getBoundingClientRect(); if(ev.clientY < r.top + r.height/2){ after=c; break; } }
+          if(after) list.insertBefore(dragEl, after); else list.appendChild(dragEl);
+          renumberRd();
+        };
+        const up=()=>{
+          document.removeEventListener('pointermove',move);
+          document.removeEventListener('pointerup',up);
+          dragEl.classList.remove('dragging');
+          rituelDraft.produits = [...list.querySelectorAll('.rd-card')].map(c=>c.dataset.id);
+        };
+        document.addEventListener('pointermove',move);
+        document.addEventListener('pointerup',up);
+      };
+    });
+  }
+  async function openRdPicker(){
+    rdPickerSel = new Set();
+    const list=document.getElementById('rd-picker-list');
+    const ids = Object.keys(rdProductMap).filter(id=>!rituelDraft.produits.includes(id));
+    if(!ids.length){ list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px;line-height:1.5;">Tous tes produits sont déjà dans ce rituel, ou tu n\'as pas encore de produit. <span style="color:var(--accent-deep);text-decoration:underline;cursor:pointer;" onclick="closeRdPicker();navTo(\'routine\')">Ajouter un produit →</span></div>'; }
+    else {
+      list.innerHTML = ids.map(id=>{ const p=rdProductMap[id]; return `<button class="rd-pick" data-id="${id}" onclick="rdTogglePick('${id}',this)" style="display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;text-align:left;"><div class="rd-emoji">${p.emoji||'🧴'}</div><div style="flex:1;font-family:var(--serif);font-size:15px;">${escapeHtml(p.nom||'')}</div><div class="rd-check" style="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);flex-shrink:0;"></div></button>`; }).join('');
+    }
+    document.getElementById('rd-picker').classList.add('open');
+  }
+  function rdTogglePick(id, btn){
+    if(rdPickerSel.has(id)){ rdPickerSel.delete(id); btn.style.borderColor='var(--line)'; btn.style.background='var(--surface)'; btn.querySelector('.rd-check').style.background='transparent'; btn.querySelector('.rd-check').style.borderColor='var(--line)'; }
+    else { rdPickerSel.add(id); btn.style.borderColor='var(--accent)'; btn.style.background='var(--blush-soft)'; btn.querySelector('.rd-check').style.background='var(--accent)'; btn.querySelector('.rd-check').style.borderColor='var(--accent)'; }
+  }
+  function closeRdPicker(){ document.getElementById('rd-picker').classList.remove('open'); }
+  function confirmRdPicker(){
+    rdPickerSel.forEach(id=>{ if(!rituelDraft.produits.includes(id)) rituelDraft.produits.push(id); });
+    closeRdPicker();
+    renderRdProducts();
+  }
+  async function saveRituel(){
+    if(!currentUser) return;
+    const nom = (document.getElementById('rd-nom').value.trim()) || 'Mon rituel';
+    showToast('Enregistrement…');
+    if(rituelDraft.id){
+      await sb.from('rituels').update({ nom, moment:rituelDraft.moment, produits:rituelDraft.produits }).eq('id', rituelDraft.id);
+    } else {
+      const { data: existing } = await sb.from('rituels').select('id').eq('user_id', currentUser.id);
+      const position = existing ? existing.length : 0;
+      await sb.from('rituels').insert({ user_id:currentUser.id, nom, moment:rituelDraft.moment, produits:rituelDraft.produits, position });
+    }
+    await recomputeRituelType();
+    closeRituelSheet();
+    showToast('Rituel enregistré ✓');
+    loadRituels();
+  }
+  async function deleteRituel(){
+    if(!rituelDraft || !rituelDraft.id) return;
+    if(!confirm('Supprimer ce rituel ?')) return;
+    await sb.from('rituels').delete().eq('id', rituelDraft.id);
+    await recomputeRituelType();
+    closeRituelSheet();
+    showToast('Rituel supprimé');
+    loadRituels();
   }
 
   // ===== Bulle Léa flottante (déplaçable, se colle aux bords) =====
@@ -2515,6 +2931,105 @@
   function openEntry(day){ showToast(`Entrée du ${day} — vue détaillée bientôt`); }
 
   // Charge les vraies entrées du journal depuis Supabase
+  // ===== Récap de la semaine (7 derniers jours) =====
+  async function loadWeekRecap(){
+    const sec=document.getElementById('week-recap'); if(!sec) return;
+    if(!currentUser){ sec.style.display='none'; return; }
+    try{
+      const since=new Date(); since.setDate(since.getDate()-6); const sinceStr=since.toISOString().slice(0,10);
+      const { data } = await sb.from('entries').select('*').eq('user_id',currentUser.id).gte('date',sinceStr);
+      const es=data||[];
+      const byDate={}; es.forEach(e=>{ byDate[e.date] = byDate[e.date] ? {...byDate[e.date], ...e} : e; });
+      const days=Object.values(byDate);
+      let rituelDays=0, sleepSum=0,sleepN=0, hydSum=0,hydN=0, eclatSum=0,eclatN=0; const moodCount={};
+      days.forEach(e=>{
+        if(dayComplete(e)) rituelDays++;
+        if(e.sommeil!=null){ sleepSum+=Number(e.sommeil); sleepN++; }
+        if(e.hydratation!=null){ hydSum+=Number(e.hydratation); hydN++; }
+        if(e.score_peau!=null){ eclatSum+=Number(e.score_peau); eclatN++; }
+        if(e.humeur){ moodCount[e.humeur]=(moodCount[e.humeur]||0)+1; }
+      });
+      const MOJI=['','😣','😕','😌','😊','✨'];
+      let domMood=null,domN=0; Object.keys(moodCount).forEach(k=>{ if(moodCount[k]>domN){domN=moodCount[k];domMood=k;} });
+      const tiles=[];
+      tiles.push(['🔥', rituelDays+'/7', 'jours de rituel']);
+      if(eclatN) tiles.push(['✨', Math.round(eclatSum/eclatN), 'éclat moyen']);
+      if(sleepN) tiles.push(['😴', fmtSleep(sleepSum/sleepN), 'sommeil moyen']);
+      if(hydN) tiles.push(['💧', Math.round(hydSum/hydN), 'verres / jour']);
+      if(domMood) tiles.push([MOJI[domMood]||'🌸', '', 'humeur dominante']);
+      document.getElementById('wr-tiles').innerHTML = tiles.map(t=>`<div style="background:var(--surface-warm);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:22px;">${t[0]}</div>${t[1]!==''?`<div style="font-family:var(--serif);font-size:18px;margin-top:2px;">${t[1]}</div>`:'<div style="height:6px;"></div>'}<div style="font-size:11px;color:var(--muted);margin-top:2px;">${t[2]}</div></div>`).join('');
+      let sum;
+      if(!days.length) sum='Commence à noter tes journées pour voir ton récap 🌸';
+      else if(rituelDays>=6) sum='Quelle régularité — '+rituelDays+' jours de rituel cette semaine ! Ta peau te dit merci 🌸';
+      else if(rituelDays>=3) sum='Belle semaine : '+rituelDays+' jours de rituel. On continue en douceur 🌿';
+      else if(rituelDays>=1) sum='Un début, c\'est déjà ça ('+rituelDays+' jour'+(rituelDays>1?'s':'')+'). Cette semaine est une nouvelle chance ✨';
+      else sum='Rien de noté côté rituel cette semaine — sans culpabilité, on repart tout doucement 🌸';
+      document.getElementById('wr-summary').textContent=sum;
+      sec.style.display='block';
+    }catch(e){ sec.style.display='none'; }
+  }
+
+  // ===== Avis de Léa sur la photo (vision IA, non médical) =====
+  async function getTodayPhotoB64(){
+    const { data } = await sb.from('entries').select('photo_path').eq('user_id',currentUser.id).eq('date',todayStr()).not('photo_path','is',null).order('created_at',{ascending:false}).limit(1);
+    if(!data || !data.length || !data[0].photo_path) return null;
+    const url = await signedPhoto(data[0].photo_path);
+    if(!url) return null;
+    try{
+      const resp = await fetch(url); const blob = await resp.blob();
+      const b64 = await new Promise(r=>{ const fr=new FileReader(); fr.onloadend=()=>r(String(fr.result).split(',')[1]); fr.readAsDataURL(blob); });
+      return { b64, type: blob.type || 'image/jpeg' };
+    }catch(e){ return null; }
+  }
+  async function askLeaPhoto(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    const box=document.getElementById('lea-photo-result'); if(!box) return;
+    box.style.display='block';
+    box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">'+coachName()+' regarde ta photo… 🌸</div>';
+    const photo=await getTodayPhotoB64();
+    if(!photo){ box.style.display='none'; box.innerHTML=''; showToast('Prends d\'abord ta photo du jour 🌸'); return; }
+    try{
+      const ctx=await buildLeaContext();
+      const r=await fetch('/api/analyze-photo',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ image:photo.b64, media_type:photo.type, profile:ctx }) });
+      const d=await r.json();
+      if(!r.ok || d.error){ box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Oups, réessaie un peu plus tard 🌿</div>'; return; }
+      const eclat = (typeof d.eclat==='number') ? d.eclat : null;
+      let html='<div class="msg-card" style="margin:0;max-width:100%;">';
+      html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-family:var(--serif);font-style:italic;font-size:13px;">'+coachName()[0]+'</div><div class="eyebrow">'+coachName()+' regarde ta peau</div></div>';
+      if(eclat!=null) html+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;"><div style="font-family:var(--serif);font-style:italic;font-size:32px;color:var(--accent);line-height:1;">'+eclat+'</div><div><div style="font-family:var(--serif);font-size:14px;">Éclat du jour</div><div style="font-size:11px;color:var(--muted);">un petit repère, pas une note 🌸</div></div></div>';
+      html+='<div class="msg-card-body">'+escapeHtml(d.observation||'')+'</div>';
+      if(d.conseil) html+='<div style="margin-top:8px;font-size:13px;color:var(--ink-soft);line-height:1.5;">💡 '+escapeHtml(d.conseil)+'</div>';
+      html+='<div style="margin-top:10px;font-size:11px;color:var(--muted);">Ce n\'est pas un avis médical.</div>';
+      html+='</div>';
+      box.innerHTML=html;
+      if(eclat!=null){ try{ await updateTodayEntry({ score_peau: eclat }); }catch(e){} }
+    }catch(e){ box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Oups, réessaie 🌿</div>'; }
+  }
+
+  // ===== Graphe d'évolution de l'éclat (Journal) =====
+  async function loadEclatGraph(){
+    const sec=document.getElementById('eclat-section'); if(!sec) return;
+    sec.style.display='none';
+    if(!currentUser) return;
+    try{
+      const { data } = await sb.from('entries').select('date,score_peau').eq('user_id',currentUser.id).not('score_peau','is',null).order('date',{ascending:true});
+      const pts=(data||[]).filter(e=>e.score_peau!=null);
+      if(pts.length<2) return;
+      const recent=pts.slice(-14);
+      const W=300,H=92,pad=12;
+      const vals=recent.map(p=>p.score_peau);
+      const min=Math.min(...vals), max=Math.max(...vals); const range=(max-min)||1;
+      const stepX=(W-pad*2)/(recent.length-1);
+      const coords=recent.map((p,i)=>{ const x=pad+i*stepX; const y=H-pad-((p.score_peau-min)/range)*(H-pad*2); return [x,y]; });
+      const line=coords.map((c,i)=>(i?'L':'M')+c[0].toFixed(1)+' '+c[1].toFixed(1)).join(' ');
+      const area=line+' L '+coords[coords.length-1][0].toFixed(1)+' '+(H-pad)+' L '+coords[0][0].toFixed(1)+' '+(H-pad)+' Z';
+      const dots=coords.map(c=>'<circle cx="'+c[0].toFixed(1)+'" cy="'+c[1].toFixed(1)+'" r="3" fill="var(--accent)"/>').join('');
+      document.getElementById('eclat-graph').innerHTML='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;"><path d="'+area+'" fill="var(--blush-soft)" opacity="0.6"/><path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+dots+'</svg>';
+      document.getElementById('eclat-last').textContent=vals[vals.length-1];
+      sec.style.display='block';
+    }catch(e){}
+  }
+
   // ===== Avant / Après (première photo vs dernière) =====
   async function loadBeforeAfter(){
     const sec=document.getElementById('ba-section'); if(!sec) return;
@@ -2543,7 +3058,9 @@
 
   async function loadJournalFromDB(){
     const grid=document.getElementById('journal-grid'); if(!grid) return;
+    loadWeekRecap();
     loadBeforeAfter();
+    loadEclatGraph();
     if(!currentUser){ renderJournal(); return; }
     const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(30);
     if(!data || !data.length){ renderJournal(); return; }
@@ -2575,7 +3092,7 @@
     const lastDay=new Date(year, month+1, 0).getDate();
     const startStr=year+'-'+pad2(month+1)+'-01';
     const endStr=year+'-'+pad2(month+1)+'-'+pad2(lastDay);
-    const { data } = await sb.from('entries').select('date,photo_path,humeur,routine_matin,routine_soir,sommeil,hydratation,alimentation,note').eq('user_id', currentUser.id).gte('date', startStr).lte('date', endStr);
+    const { data } = await sb.from('entries').select('date,photo_path,humeur,routine_matin,routine_soir,sommeil,hydratation,alimentation,note,repos').eq('user_id', currentUser.id).gte('date', startStr).lte('date', endStr);
     const map={}; (data||[]).forEach(e=>{ map[e.date]=e; });
     const { data: hlogs } = await sb.from('habit_logs').select('date').eq('user_id', currentUser.id).gte('date', startStr).lte('date', endStr);
     const habitDays=new Set((hlogs||[]).map(l=>l.date));
@@ -2596,9 +3113,10 @@
       const tappable = !isFuture;
       if(tappable) cls+=' has';
       const cam = (e && e.photo_path) ? '<span class="cal-cam">📷</span>' : '';
+      const rest = (e && e.repos) ? '<span class="cal-rest">🧊</span>' : '';
       const dot = (hasEntry && !complete) ? '<span class="cal-dot"></span>' : '';
       const oc = tappable ? ` onclick="openDayDetail('${ds}')"` : '';
-      html += `<div class="${cls}"${oc}>${cam}<span>${d}</span>${dot}</div>`;
+      html += `<div class="${cls}"${oc}>${cam}${rest}<span>${d}</span>${dot}</div>`;
     }
     grid.innerHTML=html;
   }
