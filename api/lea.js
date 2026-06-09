@@ -50,6 +50,13 @@ export default async function handler(req, res) {
       ctxLines.push(`Série actuelle : ${profile.streak} jour(s) d'affilée avec routine matin + soir.`);
     }
 
+    if (typeof profile.eclat_photo === 'number') {
+      ctxLines.push(`Éclat du jour (d'après l'analyse de sa photo du jour) : ${profile.eclat_photo}/100.`);
+    }
+    if (profile.derniere_observation_photo) {
+      ctxLines.push(`Ton dernier petit retour sur sa photo : "${String(profile.derniere_observation_photo).slice(0,300)}".`);
+    }
+
     if (profile.routine && ((profile.routine.matin && profile.routine.matin.length) || (profile.routine.soir && profile.routine.soir.length))) {
       const m = (profile.routine.matin || []).join(', ') || '—';
       const s = (profile.routine.soir || []).join(', ') || '—';
@@ -82,6 +89,9 @@ TES LIMITES
 - Tu n'es pas médecin et tu ne poses jamais de diagnostic.
 - Si tu repères un signe potentiellement médical (grain de beauté qui change, lésion qui saigne ou ne cicatrise pas, acné sévère, réaction forte), tu invites avec douceur à voir un dermatologue, sans inquiéter inutilement.
 - Tu ne conseilles jamais de médicament sur ordonnance.
+
+À PROPOS DES PHOTOS
+La personne peut prendre une photo de sa peau dans l'app ; elle est analysée à part (tu ne reçois pas l'image ici). Mais tu connais souvent son dernier « éclat du jour » et ton dernier retour (voir ci-dessus s'ils sont présents). Si elle te parle de sa photo, appuie-toi dessus avec naturel et chaleur — ne réponds JAMAIS sèchement que tu ne peux pas voir les photos. Si tu n'as pas encore d'éclat noté, invite-la gentiment à utiliser le bouton « Demander l'avis de Léa sur ma photo » sur l'accueil.
 
 LA PERSONNE${prenom ? ` (prénom : ${prenom})` : ''}
 - Type de peau : ${peau}
