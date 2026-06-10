@@ -269,18 +269,14 @@
   .topbar-name em { font-style: italic; color: var(--accent); font-variation-settings: "SOFT" 100, "WONK" 1; }
   .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--blush), var(--accent)); display: flex; align-items: center; justify-content: center; color: white; font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 18px; cursor: pointer; }
 
-  .photo-card { margin: 0 20px 24px; background: var(--surface); border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); position: relative; }
   .photo-empty { aspect-ratio: 4/5; background: linear-gradient(170deg, #F8EBE2 0%, var(--blush-soft) 55%, #EBD3C8 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; cursor: pointer; position: relative; }
   .photo-empty::before { content:''; position:absolute; inset:0; background-image: radial-gradient(circle at 20% 25%, rgba(255,255,255,0.5) 0%, transparent 45%), radial-gradient(circle at 82% 72%, rgba(232,166,160,0.3) 0%, transparent 55%); pointer-events:none;}
-  .photo-petals { position: absolute; top: 16px; right: 16px; width: 64px; opacity: 0.6; }
   .photo-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.65); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; z-index: 1; }
   .photo-icon svg { width: 28px; height: 28px; color: var(--accent-deep); }
   .photo-empty-title { font-family: var(--serif); font-size: 24px; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 8px; position: relative; z-index: 1; color: var(--ink); }
   .photo-empty-title em { font-style: italic; color: var(--accent-deep); font-variation-settings: "SOFT" 100, "WONK" 1; }
-  .photo-empty-sub { font-size: 13px; color: var(--ink-soft); max-width: 240px; position: relative; z-index: 1; }
   .photo-display { position: relative; background: var(--bg-soft); }
   .photo-display img { width:100%; height:auto; display:block; }
-  .photo-overlay { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; gap: 8px; }
   .photo-chip { background: rgba(46,33,28,0.7); backdrop-filter: blur(10px); color: white; padding: 8px 14px; border-radius: 100px; font-size: 12px; font-weight: 500; }
 
   .streak { display: flex; align-items: center; gap: 16px; margin: 0 20px 28px; padding: 18px 20px; background: var(--surface-warm); border-radius: 18px; border: 1px solid var(--line); }
@@ -423,14 +419,10 @@
   .stat-tile-trend { font-size: 11px; color: var(--sage); margin-top: 8px; display: flex; align-items: center; gap: 4px; font-weight: 500; }
   .stat-tile-trend.down { color: var(--accent); }
 
-  .journal-month { font-family: var(--serif); font-size: 14px; letter-spacing: 0.05em; color: var(--muted); padding: 0 24px 12px; text-transform: uppercase; }
   .journal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 0 20px; }
   .ba-card { margin: 0 20px; background: var(--surface); border-radius: 20px; box-shadow: var(--shadow); padding: 14px; display: flex; align-items: center; gap: 10px; }
-  .ba-side { flex: 1; text-align: center; min-width: 0; }
   .ba-img { width: 100%; aspect-ratio: 3/4; border-radius: 14px; overflow: hidden; background: var(--surface-warm); }
   .ba-img img { width: 100%; height: 100%; object-fit: cover; }
-  .ba-label { font-size: 12px; color: var(--muted); margin-top: 6px; font-family: var(--serif); }
-  .ba-arrow { color: var(--accent); font-size: 20px; flex-shrink: 0; }
   .ba-caption { text-align: center; font-size: 13px; color: var(--ink-soft); margin-top: 12px; font-family: var(--serif); font-style: italic; }
 
   /* ===== Calendrier ===== */
@@ -798,7 +790,7 @@
     </div>
     <div style="text-align:center;margin:-16px 20px 26px;"><button id="rest-btn" onclick="takeRestDay()" style="background:none;border:none;color:var(--accent-deep);font-size:12px;cursor:pointer;text-decoration:underline;opacity:0.85;">🧊 Prendre un jour de repos</button></div>
 
-    <div class="section">
+    <div class="section" id="home-rituel-section">
       <div class="section-head">
         <h3 class="section-title" onclick="navTo('ritual')" style="cursor:pointer;"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Ton <em>rituel</em> <span style="color:var(--muted);font-weight:300;">›</span></h3>
         <div class="section-more" id="routine-count">0/0</div>
@@ -844,6 +836,7 @@
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div id="uv-card"></div>
         <div id="cycle-section" style="display:none;"><div id="cycle-card"></div></div>
+        <div id="eclat-card" style="display:none;"></div>
       </div>
     </div>
 
@@ -967,7 +960,7 @@
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
     </div>
-    <div class="streak">
+    <div class="streak" id="rit-streak-card">
       <div class="streak-flame" id="rit-flame">🌱</div>
       <div class="streak-text">
         <div class="streak-num"><em id="rit-streak">0</em> <span id="rit-unit">jour</span></div>
@@ -1049,6 +1042,7 @@
         <div class="menu-item" onclick="openCoachSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mon coach</div><div class="menu-meta" id="menu-coach-meta">Léa</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="openCycleSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 019 9" stroke-linecap="round"/></svg></div><div class="menu-label">Suivi de cycle</div><div class="menu-meta" id="menu-cycle-meta">—</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="openBadgesSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0V4z" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 5H4v2a3 3 0 003 3M17 5h3v2a3 3 0 01-3 3" stroke-linecap="round"/></svg></div><div class="menu-label">Mes badges</div><div class="menu-meta">souvenirs</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openEclatSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" stroke-linecap="round"/></svg></div><div class="menu-label">Programme Éclat 30 jours</div><div class="menu-meta" id="menu-eclat-meta">—</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="showToast('Bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="menu-label">Rappels & notifications</div><div class="menu-meta">bientôt</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
       </div>
     </div>
@@ -1064,7 +1058,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 5.2<br><span class="italic serif">— ton carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 5.6<br><span class="italic serif">— ton carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1140,6 +1134,15 @@
     </div>
     <button class="btn btn-accent" id="gd-next" onclick="guidedNext()">Étape suivante</button>
     <button class="btn btn-ghost" style="margin-top:8px;" onclick="guidedPrev()" id="gd-prev">Précédent</button>
+  </div>
+
+  <div class="sheet-overlay" id="eclat-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Programme <em style="font-style:italic;color:var(--accent);">Éclat</em> 30 jours</div>
+      <div id="eclat-body"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeEclatSheet()">Fermer</button>
+    </div>
   </div>
 
   <div class="sheet-overlay" id="plus-sheet">
@@ -1249,6 +1252,12 @@
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">Mes rappels</div>
+      <div style="background:var(--surface-warm);border-radius:14px;padding:14px;margin:4px 0 16px;">
+        <div style="font-weight:600;font-size:13px;">🔔 Rappels même app fermée</div>
+        <p style="font-size:12px;color:var(--muted);margin:6px 0 10px;line-height:1.5;">Reçois ta notification du matin et du soir directement sur ton téléphone. Sur iPhone : ajoute d\'abord Rituel à l\'écran d\'accueil.</p>
+        <button class="btn btn-accent" id="push-btn" style="padding:11px;" onclick="togglePush()">Activer les notifications</button>
+        <div id="push-status" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.4;"></div>
+      </div>
       <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">De petits rappels en douceur pour ne rien oublier 🌸 (Ils s'affichent quand l'app est ouverte ; les notifications même app fermée arriveront dans une prochaine version.)</p>
 
       <div class="rem-row">
@@ -2285,6 +2294,7 @@
     loadLeaProactive(e);
     loadUV();
     loadCycleCard();
+    loadEclatProgram();
   }
 
   // ===== Jour de repos (joker hebdo qui protège la série) =====
@@ -2325,9 +2335,11 @@
   // Construit la checklist de l'accueil à partir des vrais produits du Rituel
   async function loadHomeRoutine(){
     if(!currentUser) return;
-    await maybeMigrateRituels();
     const { data: rits } = await sb.from('rituels').select('moment,produits,position').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rituels = rits || [];
+    const homeSec=document.getElementById('home-rituel-section');
+    if(homeSec) homeSec.style.display = rituels.length ? 'block' : 'none';
+    if(!rituels.length) return;
     const { data: prods } = await sb.from('products').select('id,nom,effets,emoji').eq('user_id', currentUser.id);
     const pmap={}; (prods||[]).forEach(p=>{ pmap[p.id]=p; });
     for(const moment of ['matin','soir']){
@@ -2337,7 +2349,7 @@
       const items = ids.map(id=>pmap[id]).filter(Boolean);
       window.__homeRoutine = window.__homeRoutine || {}; window.__homeRoutine[moment] = items;
       if(!items.length){
-        list.innerHTML = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;">Pas encore de rituel pour le ${moment==='soir'?'soir':'matin'}.<br><span style="color:var(--accent-deep);text-decoration:underline;cursor:pointer;" onclick="navTo('ritual')">Crée-le dans l'onglet Rituel →</span></div>`;
+        list.innerHTML = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;">Rien pour le ${moment==='soir'?'soir':'matin'} pour l'instant.<br><span style="color:var(--accent-deep);text-decoration:underline;cursor:pointer;" onclick="navTo('ritual')">Complète-le dans l'onglet Rituel →</span></div>`;
       } else {
         list.innerHTML = items.map(p=>`<div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">${escapeHtml(p.nom||'')}</div>${p.effets?`<div class="routine-product">${escapeHtml(p.effets)}</div>`:''}</div><div class="routine-time">—</div></div>`).join('');
       }
@@ -2439,12 +2451,6 @@
   let pfEmoji = '🧴';
   const PRODUCT_EMOJIS = ['🧴','🧼','🫧','💧','💎','✨','☀️','🌙','🌸','🌿','💛','🧪','👁️','💋'];
 
-  function switchRoutineView(m){
-    currentRoutineView = m;
-    document.getElementById('rt-matin').classList.toggle('active', m==='matin');
-    document.getElementById('rt-soir').classList.toggle('active', m==='soir');
-    loadProducts();
-  }
 
   function productDateInfo(p){
     const fmt=(d)=>{ const x=d.split('-'); return x[2]+'/'+x[1]+'/'+x[0].slice(2); };
@@ -2499,15 +2505,6 @@
     const pc=document.getElementById('prod-count'); if(pc) pc.textContent = arr.length;
   }
 
-  async function editDuree(){
-    const v = prompt(`Durée de ta routine du ${currentRoutineView==='soir'?'soir':'matin'} (en minutes) :`, '');
-    if(v===null) return;
-    const n = parseInt(v,10);
-    if(isNaN(n)||n<0){ showToast('Entre un nombre de minutes'); return; }
-    const field = currentRoutineView==='soir' ? { duree_soir:n } : { duree_matin:n };
-    await sb.from('profiles').update(field).eq('id', currentUser.id);
-    renderRoutineFooter();
-  }
 
   function renderEmojiPicker(){
     document.getElementById('emoji-picker').innerHTML = PRODUCT_EMOJIS.map(e=>`<button type="button" class="emoji-opt${e===pfEmoji?' selected':''}" onclick="pickEmoji('${e}')">${e}</button>`).join('');
@@ -2611,20 +2608,6 @@
   let rdProductMap = {};        // id -> produit
   let rdPickerSel = new Set();
 
-  async function maybeMigrateRituels(){
-    if(!currentUser) return;
-    const { data: existing } = await sb.from('rituels').select('id').eq('user_id', currentUser.id).limit(1);
-    if(existing && existing.length) return;
-    const { data: prods } = await sb.from('products').select('id,in_matin,in_soir,position').eq('user_id', currentUser.id).order('position',{ascending:true});
-    const list = prods || [];
-    if(!list.length) return;
-    const matinIds = list.filter(p=>p.in_matin!==false).map(p=>p.id);
-    const soirIds  = list.filter(p=>p.in_soir!==false).map(p=>p.id);
-    const rows=[];
-    if(matinIds.length) rows.push({ user_id:currentUser.id, nom:'Routine du matin', moment:'matin', produits:matinIds, position:0 });
-    if(soirIds.length)  rows.push({ user_id:currentUser.id, nom:'Routine du soir',  moment:'soir',  produits:soirIds,  position:1 });
-    if(rows.length){ try{ await sb.from('rituels').insert(rows); await recomputeRituelType(); }catch(e){} }
-  }
 
   async function recomputeRituelType(){
     if(!currentUser) return;
@@ -2639,10 +2622,11 @@
 
   async function loadRituels(){
     const host=document.getElementById('rituels-list'); if(!host) return;
-    await maybeMigrateRituels();
     const { data } = await sb.from('rituels').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rits = data || [];
-    if(!rits.length){ host.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;line-height:1.6;margin-top:24px;">Tu n\'as pas encore de rituel 🌱<br>Crée ton premier rituel ci-dessus pour démarrer ta série.</div>'; return; }
+    const rcard=document.getElementById('rit-streak-card');
+    if(rcard) rcard.style.display = rits.length ? '' : 'none';
+    if(!rits.length){ host.innerHTML=''; return; }
     host.innerHTML = '<div class="eyebrow" style="margin:20px 0 12px;">MES RITUELS</div>' + rits.map(r=>{
       const moji = r.moment==='matin'?'☀️ MATIN':(r.moment==='soir'?'🌙 SOIR':'☀️🌙 MATIN & SOIR');
       const cnt = Array.isArray(r.produits)?r.produits.length:0;
@@ -3086,11 +3070,6 @@
   document.getElementById('chat-input').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendUserMsg(); } });
 
   // ===== Routine tabs =====
-  function switchRouteTab(el,tab){
-    el.parentElement.querySelectorAll('.route-tab').forEach(t=>{ t.classList.remove('active'); t.style.background='transparent'; t.style.color='var(--muted)'; t.style.boxShadow='none'; });
-    el.classList.add('active'); el.style.background='var(--surface)'; el.style.color='var(--ink)'; el.style.boxShadow='var(--shadow)';
-    if(tab==='evening') showToast('Routine du soir — bientôt'); else if(tab==='weekly') showToast('Soins hebdomadaires — bientôt');
-  }
 
   // ===== Journal =====
   function renderJournal(){
@@ -3276,6 +3255,40 @@
     }catch(e){ showToast('Oups, export PDF impossible'); }
   }
 
+  // ===== Programme Éclat 30 jours (localStorage, gratuit) =====
+  const ECLAT=["Masse ton visage 1 min en appliquant ta crème 🤲","Bois un grand verre d\'eau au réveil 💧","Applique ton SPF même s\'il fait gris ☀️","Couche-toi 30 min plus tôt ce soir 😴","Nettoie tes pinceaux ou éponges 🧼","Prends ta photo du jour 📷","Masse ton cou en remontant, il fait partie du visage 🦢","Change ta taie d\'oreiller 🛏️","Lis l\'étiquette d\'un de tes produits 🔍","Tapote ton contour des yeux à l\'annulaire 👁️","Zéro nouveau produit aujourd\'hui — la constance d\'abord 🌿","Bois une tisane à la place d\'un café ☕","Fais ton rituel en pleine conscience, sans téléphone 🧘","Hydrate tes lèvres 3 fois aujourd\'hui 💋","Mange un fruit riche en vitamine C 🍊","Dors sur le dos si tu peux cette nuit 🌙","Nettoie ton écran de téléphone 📱","Massage lymphatique : du centre vers les oreilles ✋","Crème sur les mains après chaque lavage 🤲","Pas de touche-visage aujourd\'hui ✋","Ajoute une étape plaisir à ton rituel du soir 🌸","Aère ta chambre 10 minutes 🪟","Compare ta photo d\'aujourd\'hui au jour 1 ↔️","Étire-toi 2 minutes au réveil 🌅","Double nettoyage ce soir si tu portes du SPF/maquillage 🫧","Note 1 chose que tu aimes chez ta peau 💛","Un jour sans sucre ajouté, ta peau te dira merci 🍬","Masse ton cuir chevelu 1 minute 💆","Prépare ton rituel de demain ce soir 🌙","Célèbre : 30 jours de douceur. Regarde ton avant/après ✨"];
+  function eclatKey(){ return 'rituel_eclat_'+(currentUser?currentUser.id:'x'); }
+  function eclatState(){ try{ const s=localStorage.getItem(eclatKey()); return s?JSON.parse(s):null; }catch(e){ return null; } }
+  function eclatDay(st){ return Math.floor((new Date(todayStr())-new Date(st.start))/86400000)+1; }
+  function openEclatSheet(){ renderEclatSheet(); document.getElementById('eclat-sheet').classList.add('open'); }
+  function closeEclatSheet(){ document.getElementById('eclat-sheet').classList.remove('open'); }
+  function startEclat(){ try{ localStorage.setItem(eclatKey(), JSON.stringify({ start: todayStr(), done: [] })); }catch(e){} renderEclatSheet(); loadEclatProgram(); showToast('C\'est parti pour 30 jours ✨'); }
+  function eclatRestart(){ if(confirm('Recommencer le programme depuis le jour 1 ?')) startEclat(); }
+  function eclatDone(){ const st=eclatState(); if(!st) return; const d=eclatDay(st); if(!st.done.includes(d)) st.done.push(d); try{ localStorage.setItem(eclatKey(), JSON.stringify(st)); }catch(e){} renderEclatSheet(); loadEclatProgram(); showToast('Bravo 🌸'); }
+  function renderEclatSheet(){
+    const b=document.getElementById('eclat-body'); if(!b) return;
+    const st=eclatState();
+    if(!st){ b.innerHTML='<p style="color:var(--ink-soft);font-size:13.5px;line-height:1.6;margin:0 0 16px;">30 jours, un micro-geste par jour, 2 minutes max. Pas de pression : juste de petites attentions qui s\'additionnent 🌿</p><button class="btn btn-accent" onclick="startEclat()">Commencer le programme ✨</button>'; return; }
+    const d=eclatDay(st);
+    if(d>30){ b.innerHTML='<div style="text-align:center;padding:8px 0 4px;"><div style="font-size:42px;">🎉</div><div class="serif" style="font-size:20px;margin:8px 0;">Programme terminé !</div><div style="color:var(--muted);font-size:13px;line-height:1.5;">'+st.done.length+'/30 gestes accomplis. Va voir ton avant/après dans le Journal ↔️</div></div><button class="btn btn-accent" style="margin-top:14px;" onclick="eclatRestart()">Refaire 30 jours</button>'; return; }
+    const did=st.done.includes(d);
+    b.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline;"><span class="eyebrow">JOUR '+d+'/30</span><span style="font-size:11px;color:var(--muted);">'+st.done.length+' geste'+(st.done.length>1?'s':'')+' fait'+(st.done.length>1?'s':'')+'</span></div>'
+      +'<div style="height:6px;background:var(--surface-warm);border-radius:100px;margin:10px 0 16px;overflow:hidden;"><div style="height:100%;width:'+Math.round(d/30*100)+'%;background:linear-gradient(90deg,var(--blush),var(--accent));border-radius:100px;"></div></div>'
+      +'<div class="ba-card" style="gap:12px;"><div style="font-size:26px;flex-shrink:0;">🗓️</div><div style="font-size:14px;color:var(--ink-soft);line-height:1.55;">'+ECLAT[d-1]+'</div></div>'
+      +'<button class="btn '+(did?'':'btn-accent')+'" style="margin-top:14px;'+(did?'background:var(--surface-warm);color:var(--ink);':'')+'" onclick="eclatDone()" '+(did?'disabled':'')+'>'+(did?'✓ Fait pour aujourd\'hui':'✓ C\'est fait')+'</button>'
+      +'<button onclick="eclatRestart()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;display:block;margin:10px auto 0;text-decoration:underline;">Recommencer</button>';
+  }
+  function loadEclatProgram(){
+    const card=document.getElementById('eclat-card'); const meta=document.getElementById('menu-eclat-meta');
+    const st=eclatState();
+    if(meta) meta.textContent = st ? (eclatDay(st)>30?'terminé 🎉':'jour '+Math.min(eclatDay(st),30)) : '—';
+    if(!card) return;
+    if(!st || eclatDay(st)>30){ card.style.display='none'; return; }
+    const d=eclatDay(st); const did=st.done.includes(d);
+    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);cursor:pointer;" onclick="openEclatSheet()"><div style="font-size:24px;flex-shrink:0;">'+(did?'✅':'🗓️')+'</div><div style="flex:1;min-width:0;"><span class="eyebrow">ÉCLAT · JOUR '+d+'/30</span><div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">'+ECLAT[d-1]+'</div></div></div>';
+    card.style.display='block';
+  }
+
   function openPlusSheet(){ document.getElementById('plus-sheet').classList.add('open'); }
   function closePlusSheet(){ document.getElementById('plus-sheet').classList.remove('open'); }
 
@@ -3390,6 +3403,40 @@
     showToast('Photo du jour enregistrée 🌸');
     loadTodayPhoto();
     loadJournalFromDB();
+  }
+
+  // ===== Notifications push (service worker + abonnement) =====
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(function(){}); }
+  function urlB64ToU8(s){ const pad='='.repeat((4-s.length%4)%4); const b=(s+pad).replace(/-/g,'+').replace(/_/g,'/'); const raw=atob(b); const a=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++) a[i]=raw.charCodeAt(i); return a; }
+  async function refreshPushBtn(){
+    const b=document.getElementById('push-btn'), st=document.getElementById('push-status'); if(!b) return;
+    if(!('serviceWorker' in navigator) || !('PushManager' in window)){ b.style.display='none'; if(st) st.textContent='Non supporté sur ce navigateur (sur iPhone : installe d\'abord l\'app sur l\'écran d\'accueil).'; return; }
+    try{
+      const reg=await navigator.serviceWorker.ready;
+      const s=await reg.pushManager.getSubscription();
+      b.textContent = s ? 'Désactiver les notifications' : 'Activer les notifications';
+      if(st) st.textContent = s ? 'Activées ✓ — rappels vers 8h30 et 20h30 🌸' : '';
+    }catch(e){}
+  }
+  async function togglePush(){
+    try{
+      if(!('serviceWorker' in navigator) || !('PushManager' in window)){ showToast('Non supporté ici 🌿'); return; }
+      const reg=await navigator.serviceWorker.ready;
+      let sub=await reg.pushManager.getSubscription();
+      if(sub){
+        try{ await fetch('/api/push',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'unsubscribe', endpoint:sub.endpoint }) }); }catch(e){}
+        await sub.unsubscribe();
+        showToast('Notifications désactivées'); refreshPushBtn(); return;
+      }
+      const perm=await Notification.requestPermission();
+      if(perm!=='granted'){ showToast('Autorise les notifications pour continuer 🌸'); return; }
+      const r=await fetch('/api/push'); const d=await r.json();
+      if(!d || !d.publicKey){ showToast('Push pas encore configuré côté serveur 🔧'); return; }
+      sub=await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlB64ToU8(d.publicKey) });
+      const j=sub.toJSON();
+      await fetch('/api/push',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'subscribe', endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, user_id: currentUser?currentUser.id:null }) });
+      showToast('Notifications activées 🔔'); refreshPushBtn();
+    }catch(e){ showToast('Oups : '+(e.message||'réessaie')); }
   }
 
   // ===== Tap en dehors d'une fenêtre = fermeture (smooth) =====
@@ -3921,6 +3968,7 @@
     });
     refreshPermLabel();
     document.getElementById('reminder-sheet').classList.add('open');
+    refreshPushBtn();
   }
   async function onReminderMaster(el){
     if(el.checked && ('Notification' in window) && Notification.permission==='default'){
@@ -3971,12 +4019,6 @@
   function showToast(msg){ if(!msg) return; const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2400); }
 
   // ===== Reset (déconnexion + nettoyage local) =====
-  async function resetApp(){
-    if(confirm('Se déconnecter et réinitialiser cet appareil ?')){
-      await sb.auth.signOut();
-      location.reload();
-    }
-  }
 
   // ===== Init : on regarde si une session existe déjà =====
   renderJournal(); // rendu de secours par défaut
