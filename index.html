@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="Rituel"/>
 <meta name="mobile-web-app-capable" content="yes"/>
-<title>Rituel — Votre carnet de peau</title>
+<title>Rituel — Ton carnet de peau</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,7 @@
   }
   const manifest = {
     name:"Rituel",short_name:"Rituel",
-    description:"Votre carnet de peau quotidien",
+    description:"Ton carnet de peau quotidien",
     start_url:".",display:"standalone",orientation:"portrait",
     background_color:"#F7F1EA",theme_color:"#F7F1EA",
     icons:[{src:"data:image/svg+xml;base64,"+btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#C95A3F" rx="110"/><text x="256" y="350" font-family="serif" font-size="300" fill="#F7F1EA" text-anchor="middle" font-style="italic">R</text></svg>'),sizes:"512x512",type:"image/svg+xml",purpose:"any"}]
@@ -182,7 +182,7 @@
   .auth-form.hidden { display: none; }
   .field { display: flex; flex-direction: column; gap: 6px; }
   .field label { font-size: 12px; font-weight: 500; color: var(--ink-soft); letter-spacing: 0.02em; padding-left: 4px; }
-  .field input { padding: 15px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; font-family: var(--sans); font-size: 15px; color: var(--ink); transition: border-color .2s; }
+  .field input { padding: 15px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; font-family: var(--sans); font-size: 16px; color: var(--ink); transition: border-color .2s; }
   .field input:focus { outline: none; border-color: var(--accent); }
   .field input::placeholder { color: #C3B5A6; }
   .auth-error { font-size: 12px; color: var(--accent); padding-left: 4px; min-height: 16px; }
@@ -228,6 +228,9 @@
   .onb-floral-top { position: absolute; top: 18px; right: 24px; width: 56px; opacity: 0.55; }
 
   .onb-progress { display: flex; gap: 6px; margin-bottom: 48px; margin-top: 8px; }
+  .onb-back { position: absolute; top: 14px; left: 20px; width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--surface-warm); color: var(--accent-deep); font-size: 22px; line-height: 1; cursor: pointer; z-index: 5; transition: transform .13s ease, background .2s ease; }
+  .onb-back:active { transform: scale(0.9); background: var(--blush-soft); }
+  .onb-dot.active { background: var(--accent); opacity: 0.45; }
   .onb-dot { flex: 1; height: 2px; background: var(--line); border-radius: 2px; transition: background .4s; }
   .onb-dot.done { background: var(--accent); }
 
@@ -369,7 +372,7 @@
   .rem-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .rem-time { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-family: var(--sans); font-size: 14px; background: var(--surface); color: var(--ink); }
   .rem-time:disabled { opacity: .4; }
-  .day-note { width: 100%; min-height: 90px; border: 1px solid var(--line); border-radius: 14px; padding: 14px; font-family: var(--sans); font-size: 14px; color: var(--ink); background: var(--surface); resize: vertical; line-height: 1.5; box-sizing: border-box; }
+  .day-note { width: 100%; min-height: 90px; border: 1px solid var(--line); border-radius: 14px; padding: 14px; font-family: var(--sans); font-size: 16px; color: var(--ink); background: var(--surface); resize: vertical; line-height: 1.5; box-sizing: border-box; }
   .day-note:focus { outline: none; border-color: var(--accent-soft); }
 
   /* ===== Écran Rituel ===== */
@@ -491,7 +494,7 @@
   .typing span:nth-child(2){ animation-delay: .2s; } .typing span:nth-child(3){ animation-delay: .4s; }
   @keyframes bounce { 0%,60%,100%{ transform: translateY(0); opacity:.5;} 30%{ transform: translateY(-5px); opacity:1;} }
   .chat-input-bar { position: fixed; bottom: 64px; left: 0; right: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: flex-end; max-width: 480px; margin: 0 auto; }
-  .chat-input { flex: 1; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; font-family: var(--sans); font-size: 14px; color: var(--ink); resize: none; max-height: 100px; min-height: 44px; line-height: 1.4; }
+  .chat-input { flex: 1; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; font-family: var(--sans); font-size: 16px; color: var(--ink); resize: none; max-height: 100px; min-height: 44px; line-height: 1.4; }
   .chat-input:focus { outline: none; border-color: var(--accent); }
   .chat-send { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
   .chat-send:disabled { background: var(--line); }
@@ -562,6 +565,8 @@
   .mood-btn.selected { box-shadow: 0 5px 16px rgba(46,33,28,0.10); }
   .product-thumb { transition: transform .2s ease; }
   .product-card:active .product-thumb { transform: scale(0.94); }
+  button, .nav-item, .menu-item, .product-card, .routine-item, .mood-btn, .rit-opt, .onb-opt, .cal-cell, .sugg, .moment-chip, .stat-tile { touch-action: manipulation; }
+  .plus-pill { font-size: 9px; background: linear-gradient(135deg, var(--accent), var(--blush)); color: #fff; padding: 2px 7px; border-radius: 100px; letter-spacing: 0.06em; vertical-align: middle; margin-left: 6px; font-weight: 600; }
 </style>
 </head>
 <body class="no-select">
@@ -577,7 +582,7 @@
     <div class="auth-inner">
       <div class="auth-brand">
         <div class="auth-mark">Rituel</div>
-        <div class="auth-tagline">le carnet de votre peau</div>
+        <div class="auth-tagline">le carnet de ta peau</div>
         <svg class="auth-floral" viewBox="0 0 120 30" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M2 15 H44"/><path d="M118 15 H76"/><circle cx="60" cy="15" r="5"/><circle cx="52" cy="15" r="3.5"/><circle cx="68" cy="15" r="3.5"/><circle cx="60" cy="9" r="3.5"/><circle cx="60" cy="21" r="3.5"/></g></svg>
       </div>
 
@@ -590,7 +595,7 @@
       <div class="auth-form" id="form-login">
         <div class="field">
           <label>Adresse e-mail</label>
-          <input type="email" id="login-email" placeholder="vous@exemple.com" autocomplete="email">
+          <input type="email" id="login-email" placeholder="toi@exemple.com" autocomplete="email">
         </div>
         <div class="field">
           <label>Mot de passe</label>
@@ -605,11 +610,11 @@
       <div class="auth-form hidden" id="form-signup">
         <div class="field">
           <label>Prénom</label>
-          <input type="text" id="signup-name" placeholder="Votre prénom" autocomplete="given-name">
+          <input type="text" id="signup-name" placeholder="Ton prénom" autocomplete="given-name">
         </div>
         <div class="field">
           <label>Adresse e-mail</label>
-          <input type="email" id="signup-email" placeholder="vous@exemple.com" autocomplete="email">
+          <input type="email" id="signup-email" placeholder="toi@exemple.com" autocomplete="email">
         </div>
         <div class="field">
           <label>Mot de passe</label>
@@ -633,7 +638,7 @@
       </div>
 
       <div class="auth-legal">
-        En continuant, vous acceptez notre <a onclick="openPolicy()">Politique de confidentialité</a>.
+        En continuant, tu acceptes notre <a onclick="openPolicy()">Politique de confidentialité</a>.
       </div>
     </div>
   </div>
@@ -643,10 +648,10 @@
     <div class="onb-page active" data-page="0">
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
         <div class="welcome-mark" style="font-size:50px;">Rituel</div>
-        <div class="welcome-tagline italic serif">bienvenue dans votre rituel</div>
+        <div class="welcome-tagline italic serif">bienvenue dans ton rituel</div>
         <svg style="width:90px;margin-bottom:32px;opacity:0.7;" viewBox="0 0 120 40" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M4 20 H40"/><path d="M116 20 H80"/><circle cx="60" cy="20" r="6"/><circle cx="50" cy="20" r="4"/><circle cx="70" cy="20" r="4"/><circle cx="60" cy="12" r="4"/><circle cx="60" cy="28" r="4"/><circle cx="60" cy="20" r="2.5" fill="#C95A3F"/></g></svg>
-        <h1 class="display" style="font-size:34px;margin-bottom:16px;max-width:300px;">Un instant par jour,<br><em class="italic" style="color:var(--accent);">rien que pour vous</em></h1>
-        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Une photo, une intention, un regard bienveillant sur soi. Voyez votre peau s'épanouir, jour après jour.</p>
+        <h1 class="display" style="font-size:34px;margin-bottom:16px;max-width:300px;">Un instant par jour,<br><em class="italic" style="color:var(--accent);">rien que pour toi</em></h1>
+        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Une photo, une intention, un regard bienveillant sur soi. Vois ta peau s'épanouir, jour après jour.</p>
       </div>
       <div class="onb-actions">
         <button class="btn btn-accent" onclick="onbNext()">Commencer mon rituel</button>
@@ -654,10 +659,11 @@
     </div>
 
     <div class="onb-page" data-page="1">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
       <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.6"><circle cx="30" cy="20" r="9"/><circle cx="21" cy="26" r="7"/><circle cx="39" cy="26" r="7"/><circle cx="30" cy="22" r="4" fill="#E8A6A0"/><path d="M30 38 C30 48 28 53 24 58"/></g></svg>
-      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
-      <h2 class="onb-title">Comment décririez-vous <em>votre peau</em> ?</h2>
-      <p class="onb-sub">Pas d'inquiétude — votre peau évolue, vos réponses aussi.</p>
+      <div class="onb-progress"><div class="onb-dot active"></div><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Comment décrirais-tu <em>ta peau</em> ?</h2>
+      <p class="onb-sub">Pas d'inquiétude — ta peau évolue, tes réponses aussi.</p>
       <div class="onb-options">
         <button class="onb-opt" data-value="seche" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌾</span><div class="onb-opt-text"><div class="onb-opt-title">Sèche</div><div class="onb-opt-desc">Tiraille, manque d'éclat</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="mixte" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🍯</span><div class="onb-opt-text"><div class="onb-opt-title">Mixte</div><div class="onb-opt-desc">Zone T grasse, joues sèches</div></div><div class="onb-opt-check"></div></button>
@@ -670,10 +676,11 @@
     </div>
 
     <div class="onb-page" data-page="2">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
       <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.55"><circle cx="30" cy="22" r="10"/><circle cx="30" cy="22" r="4" fill="#C95A3F"/><path d="M30 40 C30 50 28 54 23 58"/><path d="M30 46 C20 44 15 36 17 28 C27 31 30 38 30 46"/></g></svg>
-      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
-      <h2 class="onb-title">Sur quoi voulez-vous <em>rayonner</em> ?</h2>
-      <p class="onb-sub">Choisissez tout ce qui vous parle. On affinera ensemble, en douceur.</p>
+      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot active"></div><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Sur quoi veux-tu <em>rayonner</em> ?</h2>
+      <p class="onb-sub">Choisis tout ce qui te parle. On affinera ensemble, en douceur.</p>
       <div class="onb-options">
         <button class="onb-opt" data-value="acne" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🌷</span><div class="onb-opt-text"><div class="onb-opt-title">Acné, imperfections</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="taches" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🍃</span><div class="onb-opt-text"><div class="onb-opt-title">Taches, hyperpigmentation</div></div><div class="onb-opt-check"></div></button>
@@ -681,15 +688,17 @@
         <button class="onb-opt" data-value="eclat" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">💫</span><div class="onb-opt-text"><div class="onb-opt-title">Éclat, teint terne</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="pores" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🌼</span><div class="onb-opt-text"><div class="onb-opt-title">Pores dilatés</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="cernes" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">👁️</span><div class="onb-opt-text"><div class="onb-opt-title">Cernes, contour des yeux</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="rasage" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🪒</span><div class="onb-opt-text"><div class="onb-opt-title">Rasage, poils incarnés</div></div><div class="onb-opt-check"></div></button>
       </div>
       <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step2">Continuer</button></div>
     </div>
 
     <div class="onb-page" data-page="3">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
       <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.6"><circle cx="30" cy="20" r="9"/><circle cx="22" cy="25" r="6"/><circle cx="38" cy="25" r="6"/><circle cx="30" cy="22" r="4" fill="#E8A6A0"/><path d="M30 36 C30 48 28 52 25 58"/></g></svg>
-      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot"></div></div>
-      <h2 class="onb-title">Quel est votre <em>objectif</em> du moment ?</h2>
-      <p class="onb-sub">Léa, votre coach, gardera le cap avec vous.</p>
+      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot active"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Quel est ton <em>objectif</em> du moment ?</h2>
+      <p class="onb-sub">Léa, ta coach, gardera le cap avec toi.</p>
       <div class="onb-options">
         <button class="onb-opt" data-value="constance" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🪞</span><div class="onb-opt-text"><div class="onb-opt-title">Tenir une routine</div><div class="onb-opt-desc">La régularité avant tout</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="comprendre" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🔍</span><div class="onb-opt-text"><div class="onb-opt-title">Comprendre ma peau</div><div class="onb-opt-desc">Identifier ce qui marche</div></div><div class="onb-opt-check"></div></button>
@@ -699,10 +708,11 @@
     </div>
 
     <div class="onb-page" data-page="4">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
       <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.6"><circle cx="30" cy="20" r="9"/><circle cx="22" cy="25" r="6"/><circle cx="38" cy="25" r="6"/><circle cx="30" cy="22" r="4" fill="#E8A6A0"/><path d="M30 36 C30 48 28 52 25 58"/></g></svg>
-      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div></div>
-      <h2 class="onb-title">Une dernière chose <em>sur vous</em></h2>
-      <p class="onb-sub">Pour personnaliser un peu plus vos conseils. (Vous pourrez le changer.)</p>
+      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot active"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Une dernière chose <em>sur toi</em></h2>
+      <p class="onb-sub">Pour personnaliser un peu plus tes conseils. (Tu pourras le changer.)</p>
       <div class="onb-options">
         <button class="onb-opt" data-value="femme" onclick="toggleOpt(this,'genre')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Femme</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="homme" onclick="toggleOpt(this,'genre')"><span class="onb-opt-emoji">🌿</span><div class="onb-opt-text"><div class="onb-opt-title">Homme</div></div><div class="onb-opt-check"></div></button>
@@ -712,7 +722,9 @@
     </div>
 
     <div class="onb-page" data-page="5">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
       <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.55"><circle cx="30" cy="22" r="10"/><circle cx="30" cy="22" r="4" fill="#C95A3F"/><path d="M30 40 C30 50 28 54 23 58"/><path d="M30 46 C20 44 15 36 17 28 C27 31 30 38 30 46"/></g></svg>
+            <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot active"></div></div>
       <h2 class="onb-title">Tes <em>produits</em> du moment</h2>
       <p class="onb-sub">Ajoute ceux que tu utilises déjà, ou passe — tu pourras le faire à tout moment.</p>
       <div style="display:flex;gap:8px;align-items:stretch;">
@@ -727,12 +739,13 @@
     </div>
 
     <div class="onb-page" data-page="6">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
         <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;margin-bottom:28px;box-shadow:var(--shadow);">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <h2 class="display" style="font-size:34px;margin-bottom:16px;">Tout est <em class="italic" style="color:var(--accent);">prêt</em>, <span id="onb-name">vous</span>.</h2>
-        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Léa vous attend dans l'app. Prenez votre première photo dès aujourd'hui — c'est le point de départ de votre transformation 🌸</p>
+        <h2 class="display" style="font-size:34px;margin-bottom:16px;">Tout est <em class="italic" style="color:var(--accent);">prêt</em>, <span id="onb-name">toi</span>.</h2>
+        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Léa t'attend dans l'app. Prends ta première photo dès aujourd'hui — c'est le point de départ de ta transformation 🌸</p>
       </div>
       <div class="onb-actions"><button class="btn btn-accent" onclick="finishOnboarding()">Entrer dans Rituel</button></div>
     </div>
@@ -743,7 +756,7 @@
     <div class="topbar">
       <div class="topbar-greet">
         <div class="topbar-date" id="topbar-date">MERCREDI 27 MAI</div>
-        <div class="topbar-name"><span id="greet-hello">Bonjour</span>, <em id="topbar-name">vous</em></div>
+        <div class="topbar-name"><span id="greet-hello">Bonjour</span>, <em id="topbar-name">toi</em></div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <button class="bell-btn" onclick="openReminderSheet()" aria-label="Rappels">
@@ -754,7 +767,17 @@
       </div>
     </div>
 
-    <div id="lea-proactive" style="display:none;margin:0 20px 20px;"></div>
+    <div class="section">
+      <div class="msg-card" id="lea-tip-card" style="margin:0;max-width:100%;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div id="lea-card-avatar" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-family:var(--serif);font-style:italic;font-size:13px;">L</div>
+          <div class="eyebrow" id="lea-tip-eyebrow">Léa, ta coach</div>
+        </div>
+        <div class="msg-card-title" id="lea-proactive-line"></div>
+        <div class="msg-card-body" id="lea-tip-body">Ton conseil du jour arrive… 🌸</div>
+        <button class="sugg" id="lea-talk-btn" style="margin-top:12px;background:var(--accent);color:white;border-color:var(--accent);" onclick="navTo('chat')">Parler à Léa</button>
+      </div>
+    </div>
 
     <div class="plant-card">
       <div id="plant-host"></div>
@@ -777,13 +800,14 @@
 
     <div class="section">
       <div class="section-head">
-        <h3 class="section-title" onclick="navTo('ritual')" style="cursor:pointer;"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Votre <em>rituel</em> <span style="color:var(--muted);font-weight:300;">›</span></h3>
+        <h3 class="section-title" onclick="navTo('ritual')" style="cursor:pointer;"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Ton <em>rituel</em> <span style="color:var(--muted);font-weight:300;">›</span></h3>
         <div class="section-more" id="routine-count">0/0</div>
       </div>
       <div class="period-switch">
         <button class="period-btn active" id="pb-matin" onclick="switchPeriod('matin')">☀️ Matin</button>
         <button class="period-btn" id="pb-soir" onclick="switchPeriod('soir')">🌙 Soir</button>
       </div>
+      <button class="btn-outline-sm" id="guided-btn" onclick="openGuided()" style="display:block;margin:0 auto 14px;">🧖 Lancer le rituel guidé <span class="plus-pill">PLUS</span></button>
       <div class="routine-list" id="routine-matin">
         <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Nettoyant doux</div><div class="routine-product">Avène Cleanance Gel</div></div><div class="routine-time">—</div></div>
         <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Sérum vitamine C</div><div class="routine-product">The Ordinary 15%</div></div><div class="routine-time">—</div></div>
@@ -798,7 +822,7 @@
       </div>
     </div>
 
-    <div class="photo-mini" onclick="document.getElementById('photo-input').click()">
+    <div class="photo-mini" onclick="openPhotoChoice()">
       <div class="photo-mini-thumb">
         <div id="photo-empty" class="pm-empty"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5"/></svg></div>
         <div id="photo-display" class="pm-display hidden"><img id="photo-img" alt=""></div>
@@ -807,24 +831,24 @@
         <div class="photo-mini-title">Photo du <em class="italic">jour</em></div>
         <div class="photo-mini-sub">Suis l'évolution de ta peau, jour après jour 🌸</div>
       </div>
-      <input type="file" id="photo-input" accept="image/*" capture="user" style="display:none;" onchange="handlePhoto(this)">
+      <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="handlePhoto(this)">
     </div>
 
-    <div class="section" id="lea-photo-section">
-      <button class="add-product-card" style="margin-top:0;" onclick="askLeaPhoto()">✨ Demander l'avis de Léa sur ma photo</button>
+    <div class="section" id="lea-photo-section" style="display:none;">
+      <button class="add-product-card" id="lea-photo-btn" style="margin-top:0;" onclick="askLeaPhoto()">✨ Demander l'avis de Léa sur ma photo</button>
       <div id="lea-photo-result" style="display:none;margin-top:12px;"></div>
     </div>
 
-    <div class="section" id="uv-section">
-      <div id="uv-card"></div>
-    </div>
-
-    <div class="section" id="cycle-section" style="display:none;">
-      <div id="cycle-card"></div>
+    <div class="section">
+      <div class="section-head"><h3 class="section-title">Pour <em>toi</em> aujourd'hui</h3></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div id="uv-card"></div>
+        <div id="cycle-section" style="display:none;"><div id="cycle-card"></div></div>
+      </div>
     </div>
 
     <div class="section" id="mood-section">
-      <div class="section-head"><h3 class="section-title">Comment va votre <em>peau</em> ?</h3></div>
+      <div class="section-head"><h3 class="section-title">Comment va ta <em>peau</em> ?</h3></div>
       <div class="mood-row">
         <button class="mood-btn" onclick="selectMood(this,1)"><div class="mood-emoji">😣</div><div class="mood-label">Difficile</div></button>
         <button class="mood-btn" onclick="selectMood(this,2)"><div class="mood-emoji">😕</div><div class="mood-label">Moyenne</div></button>
@@ -848,30 +872,13 @@
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-head"><h3 class="section-title">Ma <em>note</em> du jour</h3></div>
-      <textarea id="day-note" class="day-note" placeholder="Un mot sur ta peau, ton ressenti, ce que tu as testé aujourd'hui…"></textarea>
-      <button class="btn-outline-sm" onclick="saveDayNote()" style="margin-top:10px;">Enregistrer ma note</button>
-    </div>
-
-    <div class="section">
+        <div class="section">
       <div class="section-head"><h3 class="section-title">Mes <em>habitudes</em></h3></div>
       <div id="habits-list" style="display:flex;flex-direction:column;gap:10px;"></div>
       <button class="add-product-card" onclick="openHabitForm()">＋ Nouvelle habitude</button>
     </div>
 
-    <div class="section">
-      <div class="msg-card" id="lea-tip-card" style="margin:0;max-width:100%;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-family:var(--serif);font-style:italic;font-size:13px;">L</div>
-          <div class="eyebrow" id="lea-tip-eyebrow">Léa, votre coach</div>
-        </div>
-        <div class="msg-card-title" id="lea-tip-title">Ton conseil du jour</div>
-        <div class="msg-card-body" id="lea-tip-body">Léa prépare ton conseil… 🌸</div>
-        <button class="sugg" style="margin-top:12px;background:var(--accent);color:white;border-color:var(--accent);" onclick="navTo('chat')">Parler à Léa</button>
       </div>
-    </div>
-  </div>
 
   <!-- ====================== JOURNAL ====================== -->
   <div id="journal" class="screen">
@@ -885,6 +892,20 @@
         <div id="wr-summary" style="font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink-soft);line-height:1.5;">—</div>
         <div class="stats-grid" id="wr-tiles" style="grid-template-columns:1fr 1fr;gap:10px;"></div>
       </div>
+    </div>
+
+    <div class="section" id="bilan-section">
+      <div class="section-head"><h3 class="section-title">La <em>lettre du mois</em> <span class="plus-pill">PLUS</span></h3></div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;gap:10px;">
+        <div id="bilan-body" style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;display:none;"></div>
+        <button class="btn-outline-sm" id="bilan-btn" onclick="genBilan()" style="align-self:center;">💌 Lire la lettre de ce mois</button>
+      </div>
+    </div>
+
+    <div class="section" id="insights-section" style="display:none;">
+      <div class="section-head"><h3 class="section-title">Tes <em>découvertes</em> <span class="plus-pill">PLUS</span></h3></div>
+      <div id="insights-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;">De petites observations sur tes données — des pistes, pas des vérités 🌿</div>
     </div>
 
     <div class="section">
@@ -902,15 +923,29 @@
       </div>
     </div>
 
+    <div class="section" id="memory-section" style="display:none;">
+      <div class="section-head"><h3 class="section-title">Il y a <em>quelque temps</em></h3></div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;padding:10px;gap:10px;">
+        <img id="memory-img" alt="" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;">
+        <div id="memory-caption" style="font-size:13px;color:var(--ink-soft);text-align:center;line-height:1.5;"></div>
+      </div>
+    </div>
+
     <div class="section" id="ba-section" style="display:none;">
       <div class="section-head"><h3 class="section-title">Avant <em>/ après</em></h3></div>
-      <div class="ba-card">
-        <div class="ba-side"><div class="ba-img" id="ba-before"></div><div class="ba-label" id="ba-before-label">Jour 1</div></div>
-        <div class="ba-arrow">→</div>
-        <div class="ba-side"><div class="ba-img" id="ba-after"></div><div class="ba-label" id="ba-after-label">Aujourd'hui</div></div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;padding:10px;">
+        <div style="position:relative;width:100%;aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:var(--surface-warm);">
+          <img id="ba-after-img" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+          <img id="ba-before-img" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;clip-path:inset(0 50% 0 0);">
+          <div id="ba-line" style="position:absolute;top:0;bottom:0;left:50%;width:2px;background:rgba(255,255,255,0.9);box-shadow:0 0 6px rgba(0,0,0,0.25);"></div>
+          <div id="ba-knob" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--accent-deep);pointer-events:none;">⇄</div>
+          <div class="photo-chip" id="ba-before-label" style="position:absolute;top:10px;left:10px;">Jour 1</div>
+          <div class="photo-chip" id="ba-after-label" style="position:absolute;top:10px;right:10px;">Aujourd'hui</div>
+          <input type="range" min="0" max="100" value="50" id="ba-range" oninput="baSlide(this.value)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;touch-action:pan-y;margin:0;">
+        </div>
       </div>
       <div class="ba-caption" id="ba-caption"></div>
-      <button class="add-product-card" style="margin-top:14px;" onclick="openTimelapse()">▶ Voir l'évolution en accéléré</button>
+      <button class="add-product-card" style="margin-top:14px;" onclick="openTimelapse()">▶ Voir l'évolution en accéléré <span class="plus-pill">PLUS</span></button>
     </div>
 
     <div class="section" id="eclat-section" style="display:none;">
@@ -964,7 +999,7 @@
       </div>
     </div>
     <div class="chat-input-bar">
-      <textarea class="chat-input" id="chat-input" placeholder="Posez votre question…" rows="1" oninput="resizeChat(this)"></textarea>
+      <textarea class="chat-input" id="chat-input" placeholder="Pose ta question…" rows="1" oninput="resizeChat(this)"></textarea>
       <button class="chat-send" onclick="sendUserMsg()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
   </div>
@@ -995,7 +1030,7 @@
     <div class="profile-hero">
       <svg class="profile-floral" viewBox="0 0 120 40" fill="none"><g stroke="#E8A6A0" stroke-width="1" opacity="0.6"><path d="M8 20 H44"/><path d="M112 20 H76"/><circle cx="60" cy="20" r="6"/><circle cx="50" cy="20" r="4"/><circle cx="70" cy="20" r="4"/><circle cx="60" cy="12" r="4"/><circle cx="60" cy="28" r="4"/></g></svg>
       <div class="profile-avatar-xl" id="profile-avatar">V</div>
-      <div class="profile-name" id="profile-name">vous</div>
+      <div class="profile-name" id="profile-name">toi</div>
       <div class="profile-meta" id="profile-email">membre depuis aujourd'hui</div>
       <div class="profile-badges" id="profile-badges"></div>
     </div>
@@ -1004,7 +1039,7 @@
       <div class="premium-eyebrow">RITUEL+</div>
       <div class="premium-title">Une coach <em>illimitée</em>, des analyses profondes</div>
       <div class="premium-desc">Photos haute résolution, comparaisons avant/après, conseils approfondis.</div>
-      <button class="premium-btn">Découvrir · 7j offerts →</button>
+      <button class="premium-btn" onclick="openPlusSheet()">Découvrir · 7j offerts →</button>
     </div>
 
     <div class="profile-section">
@@ -1013,6 +1048,7 @@
         <div class="menu-item" onclick="openSkinSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Ma peau</div><div class="menu-meta" id="menu-skin-meta">type & préoccupations</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="openCoachSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mon coach</div><div class="menu-meta" id="menu-coach-meta">Léa</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="openCycleSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 019 9" stroke-linecap="round"/></svg></div><div class="menu-label">Suivi de cycle</div><div class="menu-meta" id="menu-cycle-meta">—</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openBadgesSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0V4z" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 5H4v2a3 3 0 003 3M17 5h3v2a3 3 0 01-3 3" stroke-linecap="round"/></svg></div><div class="menu-label">Mes badges</div><div class="menu-meta">souvenirs</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="showToast('Bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="menu-label">Rappels & notifications</div><div class="menu-meta">bientôt</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
       </div>
     </div>
@@ -1021,14 +1057,14 @@
       <div class="eyebrow" style="margin-bottom:12px;padding-left:8px;">COMPTE</div>
       <div class="menu-list">
         <div class="menu-item" onclick="exportData()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Exporter mes données</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
-        <div class="menu-item" onclick="exportCarnetPDF()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M9 13h6M9 17h4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mon carnet (PDF)</div><div class="menu-meta">joli résumé</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="exportCarnetPDF()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M9 13h6M9 17h4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mon carnet (PDF) <span class="plus-pill">PLUS</span></div><div class="menu-meta">joli résumé</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="openPolicy()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-4z" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Politique de confidentialité</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="doLogout()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Se déconnecter</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="deleteAccount()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label" style="color:var(--accent);">Supprimer mon compte et mes données</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 4.4<br><span class="italic serif">— votre carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 5.2<br><span class="italic serif">— ton carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1041,7 +1077,7 @@
     <div class="nav-item" data-screen="profile" onclick="navTo('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Moi</div></div>
   </nav>
 
-  <button class="fab" onclick="document.getElementById('photo-input').click()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button class="fab" onclick="openPhotoChoice()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
   <!-- ====================== FICHE HABITUDE ====================== -->
   <div class="sheet-overlay" id="habit-sheet">
@@ -1091,6 +1127,69 @@
       <input type="range" id="tl-range" min="0" max="0" value="0" style="width:100%;margin:16px 0 8px;accent-color:var(--accent);">
       <div style="display:flex;justify-content:center;"><button id="tl-play" class="btn btn-accent" style="width:auto;padding:11px 26px;" onclick="tlToggle()">⏸ Pause</button></div>
       <button class="btn btn-ghost" style="margin-top:12px;" onclick="closeTimelapse()">Fermer</button>
+    </div>
+  </div>
+
+  <div id="guided-sheet" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:380;flex-direction:column;padding:max(20px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));">
+    <div style="display:flex;justify-content:space-between;align-items:center;"><div class="eyebrow" id="gd-count">ÉTAPE 1/5</div><button onclick="closeGuided()" style="background:none;border:none;font-size:22px;color:var(--muted);">✕</button></div>
+    <div class="onb-progress" id="gd-progress" style="margin:14px 0 0;"></div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+      <div id="gd-emoji" style="font-size:64px;margin-bottom:18px;">🧴</div>
+      <div id="gd-name" class="serif" style="font-size:30px;line-height:1.15;max-width:300px;">—</div>
+      <div id="gd-effets" style="color:var(--muted);font-size:14px;margin-top:10px;max-width:280px;line-height:1.5;"></div>
+    </div>
+    <button class="btn btn-accent" id="gd-next" onclick="guidedNext()">Étape suivante</button>
+    <button class="btn btn-ghost" style="margin-top:8px;" onclick="guidedPrev()" id="gd-prev">Précédent</button>
+  </div>
+
+  <div class="sheet-overlay" id="plus-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Rituel<span style="color:var(--accent);">+</span></div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Pour aller plus loin avec ton coach, sans limite 🌸</p>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;color:var(--ink-soft);line-height:1.5;">
+        <div>💬 Léa <b>illimitée</b> (chat sans limite quotidienne)</div>
+        <div>📸 Analyses photo IA <b>illimitées</b> + courbe d'éclat</div>
+        <div>💌 La lettre du mois &nbsp;·&nbsp; 🧖 Rituel guidé</div>
+        <div>🎞️ Timelapse &nbsp;·&nbsp; 📊 Tes découvertes &nbsp;·&nbsp; 📄 Carnet PDF</div>
+        <div>🏷️ Scanner code-barres &nbsp;·&nbsp; 🎨 Thèmes & plantes exclusifs</div>
+      </div>
+      <div style="text-align:center;margin:18px 0 4px;"><span class="serif" style="font-size:26px;">4,99 €</span><span style="color:var(--muted);font-size:13px;"> /mois</span> &nbsp;<span style="color:var(--muted);font-size:12px;">ou 39 €/an</span></div>
+      <div style="text-align:center;font-size:12px;color:var(--accent-deep);font-weight:600;margin-bottom:14px;">✨ 1er mois offert</div>
+      <button class="btn btn-accent" onclick="showToast('Arrive très bientôt avec la version Play Store ✨')">Essayer 1 mois gratuit</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closePlusSheet()">Plus tard</button>
+      <p style="color:var(--muted);font-size:10.5px;text-align:center;margin-top:12px;line-height:1.4;">Pendant la bêta, tout est encore débloqué pour tout le monde 💛</p>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="badges-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Mes badges</div>
+      <p id="badges-count" style="color:var(--muted);font-size:13px;margin:-10px 0 16px;">—</p>
+      <div id="badges-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeBadgesSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="photo-choice">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ta photo du jour</div>
+      <button class="btn btn-accent" onclick="closePhotoChoice();camOpen()">📷 Caméra HD</button>
+      <button class="btn" style="margin-top:10px;background:var(--surface-warm);color:var(--ink);" onclick="closePhotoChoice();document.getElementById('photo-input').click()">🖼️ Choisir dans la galerie</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closePhotoChoice()">Annuler</button>
+    </div>
+  </div>
+
+  <div id="cam-sheet" style="display:none;position:fixed;inset:0;background:#0E0A08;z-index:400;">
+    <video id="cam-video" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;"><div style="width:62vw;max-width:300px;aspect-ratio:3/4;border:2px solid rgba(255,255,255,0.55);border-radius:50%;"></div></div>
+    <div id="cam-hint" style="position:absolute;top:max(18px,env(safe-area-inset-top));left:0;right:0;text-align:center;color:rgba(255,255,255,0.85);font-size:13px;">Place ton visage dans l'ovale, lumière face à toi ✨</div>
+    <div style="position:absolute;bottom:max(26px,env(safe-area-inset-bottom));left:0;right:0;display:flex;align-items:center;justify-content:center;gap:44px;">
+      <button onclick="camFlip()" style="width:48px;height:48px;border-radius:50%;border:none;background:rgba(255,255,255,0.18);color:#fff;font-size:20px;">↺</button>
+      <button onclick="camCapture()" style="width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,0.25);"></button>
+      <button onclick="camClose()" style="width:48px;height:48px;border-radius:50%;border:none;background:rgba(255,255,255,0.18);color:#fff;font-size:20px;">✕</button>
     </div>
   </div>
 
@@ -1311,7 +1410,7 @@
       <div class="emoji-picker" id="emoji-picker" style="margin:8px 0 16px;"></div>
 
       <div class="field"><label>Nom du produit *</label><input id="pf-nom" placeholder="Ex. Sérum vitamine C"></div>
-      <button class="add-product-card" style="margin-top:10px;" onclick="openBarcodeSheet()">🏷️ Scanner le code-barres</button>
+      <button class="add-product-card" style="margin-top:10px;" onclick="openBarcodeSheet()">🏷️ Scanner le code-barres <span class="plus-pill">PLUS</span></button>
       <div class="field" style="margin-top:12px;"><label>Effets / bienfaits (optionnel)</label><input id="pf-effets" placeholder="Ex. éclaircit les taches"></div>
       <div class="field" style="margin-top:12px;"><label>Prix en € (optionnel)</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="Ex. 15"></div>
       <div class="field" style="margin-top:12px;"><label>Date d'ouverture (optionnel)</label><input id="pf-ouverture" type="date"></div>
@@ -1391,7 +1490,7 @@
   const SUPABASE_URL = 'https://cozidiruigjtfzgzvjhe.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvemlkaXJ1aWdqdGZ6Z3p2amhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzMwNjQsImV4cCI6MjA5NjMwOTA2NH0.BmVSbWAt9HAXlntY9TdgCcxlLoUNFt9zKe6QQ0VV_eg';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-  let currentUser = null; // l'utilisatrice connectée
+  let currentUser = null; // la personne connectée
 
   // ===== State (cache local de l'écran courant) =====
   let state = { skinType:null, concerns:[], goal:null, name:'', email:'', genre:null, coachGenre:'femme', onbStep:0 };
@@ -1439,7 +1538,7 @@
     // Si la confirmation par e-mail est activée, pas de session immédiate
     if(!data.session){
       err.style.color='var(--sage)';
-      err.textContent="Compte créé ! Vérifiez votre e-mail pour confirmer, puis connectez-vous.";
+      err.textContent="Compte créé ! Vérifie ton e-mail pour confirmer, puis connecte-toi.";
       switchAuth('login');
       err.style.color='';
       return;
@@ -1461,7 +1560,7 @@
     setBtnLoading(btn, false, 'Se connecter');
     if(error){
       if(/Invalid login/i.test(error.message)) err.textContent='E-mail ou mot de passe incorrect.';
-      else if(/not confirmed/i.test(error.message)) err.textContent="E-mail pas encore confirmé. Vérifiez votre boîte mail.";
+      else if(/not confirmed/i.test(error.message)) err.textContent="E-mail pas encore confirmé. Vérifie ta boîte mail.";
       else err.textContent = error.message;
       return;
     }
@@ -1523,7 +1622,7 @@
 
   // ===== RGPD : export et suppression =====
   async function exportData(){
-    if(!currentUser){ showToast('Connectez-vous d\'abord'); return; }
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
     showToast('Préparation de l\'export…');
     const profile = await loadProfile();
     const { data: entries } = await sb.from('entries').select('*').eq('user_id', currentUser.id);
@@ -1537,8 +1636,8 @@
   }
 
   async function deleteAccount(){
-    if(!currentUser){ showToast('Connectez-vous d\'abord'); return; }
-    if(!confirm('Supprimer votre compte ?\n\nVos photos, votre journal, votre profil ET votre compte seront définitivement effacés. Cette action est irréversible.')) return;
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    if(!confirm('Supprimer ton compte ?\n\nTes photos, ton journal, ton profil ET ton compte seront définitivement effacés. Cette action est irréversible.')) return;
     showToast('Suppression en cours…');
     try{
       const { data:{ session } } = await sb.auth.getSession();
@@ -1551,7 +1650,7 @@
       if(data && data.success){
         try{ localStorage.removeItem('rituel_profile_'+currentUser.id); }catch(e){}
         await sb.auth.signOut();
-        alert('Votre compte et toutes vos données ont été définitivement supprimés.');
+        alert('Ton compte et toutes tes données ont été définitivement supprimés.');
         location.reload();
       } else {
         showToast('Erreur : '+((data && data.error) || 'suppression impossible'));
@@ -1562,19 +1661,22 @@
   }
 
   // ===== Onboarding =====
-  function onbNext(){
-    state.onbStep++;
-    if(state.onbStep===6){ document.getElementById('onb-name').textContent = state.name || 'vous'; }
+  function onbShow(n){
+    state.onbStep=n;
+    if(n===6){ document.getElementById('onb-name').textContent = state.name || 'toi'; }
     document.querySelectorAll('.onb-page').forEach(p=>p.classList.remove('active'));
-    const pg=document.querySelector(`.onb-page[data-page="${state.onbStep}"]`);
+    const pg=document.querySelector(`.onb-page[data-page="${n}"]`);
     if(pg) pg.classList.add('active');
+    window.scrollTo(0,0);
   }
+  function onbNext(){ onbShow(state.onbStep+1); }
+  function onbBack(){ if(state.onbStep>0) onbShow(state.onbStep-1); }
   function toggleOpt(el,key){
     el.parentElement.querySelectorAll('.onb-opt').forEach(o=>o.classList.remove('selected'));
     el.classList.add('selected'); state[key]=el.dataset.value;
     if(key==='skinType') document.getElementById('btn-step1').disabled=false;
     if(key==='goal') document.getElementById('btn-step3').disabled=false;
-    if(key==='genre') document.getElementById('btn-step4').disabled=false;
+    if(key==='genre'){ document.getElementById('btn-step4').disabled=false; state.coachGenre = (state[key]==='homme') ? 'homme' : 'femme'; }
   }
   function toggleOptMulti(el,key){
     el.classList.toggle('selected'); const v=el.dataset.value;
@@ -1620,7 +1722,7 @@
   }
 
   function updateUserUI(){
-    const name = state.name || 'vous';
+    const name = state.name || 'toi';
     const first = name.charAt(0).toUpperCase();
     document.getElementById('topbar-name').textContent = name;
     document.getElementById('topbar-avatar').textContent = first;
@@ -1639,9 +1741,9 @@
 
   // ===== Profil : badges + édition de la peau =====
   const SKIN_LABELS = { seche:'Peau sèche', mixte:'Peau mixte', grasse:'Peau grasse', sensible:'Peau sensible', normale:'Peau normale' };
-  const CONCERN_LABELS = { acne:'Acné', taches:'Taches', rides:'Rides', eclat:'Éclat', pores:'Pores', cernes:'Cernes' };
+  const CONCERN_LABELS = { acne:'Acné', taches:'Taches', rides:'Rides', eclat:'Éclat', pores:'Pores', cernes:'Cernes', rasage:'Rasage' };
   const SKIN_TYPES = [['seche','🌾','Sèche'],['mixte','🍯','Mixte'],['grasse','✨','Grasse'],['sensible','🌸','Sensible'],['normale','🌿','Normale']];
-  const CONCERNS = [['acne','🌷','Acné, imperfections'],['taches','🍃','Taches, pigmentation'],['rides','🌹','Rides, fermeté'],['eclat','💫','Éclat, teint terne'],['pores','🌼','Pores dilatés'],['cernes','👁️','Cernes']];
+  const CONCERNS = [['acne','🌷','Acné, imperfections'],['taches','🍃','Taches, pigmentation'],['rides','🌹','Rides, fermeté'],['eclat','💫','Éclat, teint terne'],['pores','🌼','Pores dilatés'],['cernes','👁️','Cernes'],['rasage','🪒','Rasage, poils incarnés']];
 
   async function renderProfileBadges(){
     const el = document.getElementById('profile-badges'); if(!el) return;
@@ -1790,9 +1892,12 @@
   function applyCoachIdentity(){
     const nm=coachName();
     const h=document.getElementById('chat-coach-name-text'); if(h) h.textContent=nm;
-    const ey=document.getElementById('lea-tip-eyebrow'); if(ey) ey.textContent=nm+', votre coach';
+    const ey=document.getElementById('lea-tip-eyebrow'); if(ey) ey.textContent=nm+', '+(state.coachGenre==='homme'?'ton coach':'ta coach');
     const bub=document.getElementById('lea-bubble'); if(bub) bub.setAttribute('aria-label','Parler à '+nm);
     const cm=document.getElementById('menu-coach-meta'); if(cm) cm.textContent=nm;
+    const pb=document.getElementById('lea-photo-btn'); if(pb) pb.textContent='✨ Demander l\'avis de '+nm+' sur ma photo';
+    const av=document.getElementById('lea-card-avatar'); if(av) av.textContent=nm[0];
+    const tb=document.getElementById('lea-talk-btn'); if(tb) tb.textContent='Parler à '+nm;
     updateChatIntro();
   }
 
@@ -1862,6 +1967,7 @@
     updateRoutineCount();
     const complete = listStats(period).complete;
     await updateTodayEntry(period==='soir' ? { routine_soir: complete } : { routine_matin: complete });
+    bustStreak();
     renderStreak();
   }
   function applyRoutineState(period, complete){
@@ -1881,9 +1987,12 @@
     if(t==='soir') return !!e.routine_soir;
     return !!(e.routine_matin && e.routine_soir);
   }
+  let _stkCache=null;
+  function bustStreak(){ _stkCache=null; }
   async function computeStreak(){
     if(!currentUser) return 0;
-    const { data } = await sb.from('entries').select('date,routine_matin,routine_soir').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(90);
+    if(_stkCache && _stkCache.d===todayStr()) return _stkCache.v;
+    const { data } = await sb.from('entries').select('date,routine_matin,routine_soir,repos').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(90);
     if(!data || !data.length) return 0;
     const done={}; data.forEach(e=>{ done[e.date] = dayComplete(e); });
     let streak=0; const d=new Date();
@@ -1892,6 +2001,7 @@
       const ds=d.toISOString().slice(0,10);
       if(done[ds]){ streak++; d.setDate(d.getDate()-1); } else break;
     }
+    _stkCache={ d: todayStr(), v: streak };
     return streak;
   }
   async function renderStreak(){
@@ -2169,11 +2279,10 @@
     applyRituelTypeToHome();
     renderStreak();
     renderDayTiles(e);
-    const noteEl=document.getElementById('day-note'); if(noteEl) noteEl.value = (e && e.note) ? e.note : '';
     loadHabits();
     loadLeaTip();
     updateRestBtn(e);
-    loadLeaProactive();
+    loadLeaProactive(e);
     loadUV();
     loadCycleCard();
   }
@@ -2201,6 +2310,7 @@
     }
     const { data: d2 } = await sb.from('entries').select('repos').eq('user_id',currentUser.id).eq('date',today).limit(1);
     updateRestBtn((d2&&d2.length)?d2[0]:null);
+    bustStreak();
     renderStreak();
   }
 
@@ -2225,6 +2335,7 @@
       const ids=[]; const seen=new Set();
       rituels.filter(r=> r.moment===moment || r.moment==='both').forEach(r=>{ (Array.isArray(r.produits)?r.produits:[]).forEach(id=>{ if(!seen.has(id)){ seen.add(id); ids.push(id); } }); });
       const items = ids.map(id=>pmap[id]).filter(Boolean);
+      window.__homeRoutine = window.__homeRoutine || {}; window.__homeRoutine[moment] = items;
       if(!items.length){
         list.innerHTML = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;">Pas encore de rituel pour le ${moment==='soir'?'soir':'matin'}.<br><span style="color:var(--accent-deep);text-decoration:underline;cursor:pointer;" onclick="navTo('ritual')">Crée-le dans l'onglet Rituel →</span></div>`;
       } else {
@@ -2270,13 +2381,6 @@
     const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
     renderDayTiles((data && data.length) ? data[0] : null);
   }
-  async function saveDayNote(){
-    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
-    const note = document.getElementById('day-note').value.trim();
-    showToast('Enregistrement…');
-    await updateTodayEntry({ note });
-    showToast('Note enregistrée 🌸');
-  }
   function renderDayTiles(e){
     const MOOD_EMOJI = ['','😣','😕','😌','😊','✨'];
     const set=(id, val, sub)=>{ const el=document.getElementById(id); if(el) el.innerHTML='<em>'+val+'</em>'; const s=document.getElementById(id+'-sub'); if(s&&sub!=null) s.textContent=sub; };
@@ -2297,29 +2401,28 @@
       document.getElementById('photo-display').classList.remove('hidden');
     };
     r.readAsDataURL(f);
-    if(!currentUser){ showToast('Connectez-vous pour sauvegarder'); return; }
-    showToast('Envoi de la photo… 🌸');
     const ext = (f.name.split('.').pop()||'jpg').toLowerCase();
-    const path = `${currentUser.id}/${Date.now()}.${ext}`;
-    const { error: upErr } = await sb.storage.from('photos').upload(path, f, { upsert:true });
-    if(upErr){ showToast('Erreur upload : '+upErr.message); return; }
-    await updateTodayEntry({ photo_path: path });
-    showToast('Photo du jour enregistrée 🌸');
-    loadJournalFromDB();
+    await uploadDayPhoto(f, ext);
+    input.value='';
   }
 
   // Recharge la photo du jour si elle existe déjà
   async function loadTodayPhoto(){
     if(!currentUser) return;
     const today = new Date().toISOString().slice(0,10);
-    const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', today).order('created_at',{ascending:false}).limit(1);
-    if(data && data.length){
-      const url = await signedPhoto(data[0].photo_path);
-      if(url){
-        document.getElementById('photo-img').src = url;
-        document.getElementById('photo-empty').classList.add('hidden');
-        document.getElementById('photo-display').classList.remove('hidden');
-      }
+    const { data } = await sb.from('entries').select('photo_path').eq('user_id', currentUser.id).eq('date', today).order('created_at',{ascending:false}).limit(1);
+    const path = (data && data.length) ? data[0].photo_path : null;
+    const url = path ? await signedPhoto(path) : null;
+    const sec=document.getElementById('lea-photo-section');
+    if(url){
+      document.getElementById('photo-img').src = url;
+      document.getElementById('photo-empty').classList.add('hidden');
+      document.getElementById('photo-display').classList.remove('hidden');
+      if(sec) sec.style.display='block';
+    } else {
+      document.getElementById('photo-display').classList.add('hidden');
+      document.getElementById('photo-empty').classList.remove('hidden');
+      if(sec) sec.style.display='none';
     }
   }
   async function signedPhoto(path){
@@ -2914,23 +3017,20 @@
   // Conseil du jour de Léa sur l'accueil — vrai conseil personnalisé, mis en cache 1×/jour
   async function loadLeaTip(){
     const body=document.getElementById('lea-tip-body');
-    const title=document.getElementById('lea-tip-title');
-    if(!body || !title) return;
-    if(!currentUser){ title.textContent='Ton coach beauté'; body.textContent="Ajoute tes infos et je te donnerai des conseils rien que pour toi 🌸"; return; }
+    if(!body) return;
+    if(!currentUser){ body.textContent="Ajoute tes infos et je te donnerai des conseils rien que pour toi 🌸"; return; }
     const key='rituel_tip_'+currentUser.id+'_'+todayStr();
-    try{ const cached=localStorage.getItem(key); if(cached){ title.textContent='Ton conseil du jour'; body.innerHTML=formatMessage(cached); return; } }catch(e){}
+    try{ const cached=localStorage.getItem(key); if(cached){ body.innerHTML=formatMessage(cached); return; } }catch(e){}
     const ctx=await buildLeaContext();
     const hasData = (ctx.skin && ctx.skin!=='non précisé') || (ctx.concern && ctx.concern!=='aucune en particulier') || ctx.today || ctx.routine || (ctx.streak>0);
     if(!hasData){
-      title.textContent='Ton coach beauté';
       body.textContent="Ajoute tes infos du jour (peau, sommeil, routine) et je te donnerai des conseils rien que pour toi 🌸";
       return;
     }
-    title.textContent='Ton conseil du jour';
-    body.textContent='Léa prépare ton conseil… 🌸';
+    body.textContent='Ton conseil du jour arrive… 🌸';
     try{
       const res=await fetch('/api/lea',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
-        messages:[{ role:'user', content:"(Message automatique de l'app, ce n'est pas une vraie question de l'utilisatrice.) Donne UN seul conseil du jour : court (1 à 2 phrases maximum), chaleureux et personnalisé d'après mes données. Commence directement par le conseil, sans salutation et sans poser de question à la fin." }],
+        messages:[{ role:'user', content:"(Message automatique de l'app, ce n'est pas une vraie question de la personne.) Donne UN seul conseil du jour : court (1 à 2 phrases maximum), chaleureux et personnalisé d'après mes données. Commence directement par le conseil, sans salutation et sans poser de question à la fin." }],
         profile: ctx
       }) });
       const data=await res.json();
@@ -3170,42 +3270,185 @@
         y+=ih+12;
       }
       const pages=doc.getNumberOfPages();
-      for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFontSize(9); doc.text('monrituel.app', M, 289); doc.text('— votre carnet de peau —', W-M, 289, {align:'right'}); }
+      for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFontSize(9); doc.text('monrituel.app', M, 289); doc.text('— ton carnet de peau —', W-M, 289, {align:'right'}); }
       doc.save('mon-carnet-rituel.pdf');
       showToast('Carnet PDF prêt ✨');
     }catch(e){ showToast('Oups, export PDF impossible'); }
   }
 
-  // ===== Scan code-barres (caméra si dispo + saisie manuelle, Open Beauty Facts) =====
-  let bcStream=null, bcTimer=null, bcBusy=false;
+  function openPlusSheet(){ document.getElementById('plus-sheet').classList.add('open'); }
+  function closePlusSheet(){ document.getElementById('plus-sheet').classList.remove('open'); }
+
+  // ===== Badges & souvenirs (calculés depuis l'historique) =====
+  const BADGES=[
+    { e:'📷', n:'Première photo',   c:'Prends ta photo du jour',        t:s=>s.photos>=1 },
+    { e:'🎞️', n:'Album vivant',     c:'10 photos au journal',           t:s=>s.photos>=10 },
+    { e:'🪻', n:'Premier élan',     c:'3 jours de série',               t:s=>s.best>=3 },
+    { e:'🔥', n:'Une semaine',      c:'7 jours de série',               t:s=>s.best>=7 },
+    { e:'🌹', n:'Trente jours',     c:'30 jours de série',              t:s=>s.best>=30 },
+    { e:'🧊', n:"L'art du repos",   c:'Prends un jour de repos',        t:s=>s.repos },
+    { e:'🧴', n:'Vanity rempli',    c:'5 produits ajoutés',             t:s=>s.prod>=5 },
+    { e:'🌸', n:'Architecte',       c:'Crée ton premier rituel',        t:s=>s.rit>=1 },
+    { e:'📔', n:'Fidèle au carnet', c:'7 jours notés',                  t:s=>s.days>=7 },
+  ];
+  async function openBadgesSheet(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    document.getElementById('badges-grid').innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:13px;text-align:center;padding:10px;">Un instant… 🌸</div>';
+    document.getElementById('badges-sheet').classList.add('open');
+    const [ent, prods, rits, best] = await Promise.all([
+      sb.from('entries').select('date,photo_path,repos').eq('user_id',currentUser.id),
+      sb.from('products').select('id').eq('user_id',currentUser.id),
+      sb.from('rituels').select('id').eq('user_id',currentUser.id),
+      bestStreak()
+    ]);
+    const es=(ent&&ent.data)||[];
+    const s={ photos:es.filter(x=>x.photo_path).length, days:new Set(es.map(x=>x.date)).size, repos:es.some(x=>x.repos), prod:((prods&&prods.data)||[]).length, rit:((rits&&rits.data)||[]).length, best };
+    let got=0;
+    document.getElementById('badges-grid').innerHTML = BADGES.map(b=>{
+      const on=b.t(s); if(on) got++;
+      return '<div style="background:'+(on?'var(--blush-soft)':'var(--surface)')+';border:1.5px solid '+(on?'var(--accent)':'var(--line)')+';border-radius:16px;padding:12px 6px;text-align:center;'+(on?'':'opacity:0.55;')+'">'
+        + '<div style="font-size:26px;'+(on?'':'filter:grayscale(1);')+'">'+(on?b.e:'🔒')+'</div>'
+        + '<div style="font-size:11.5px;font-weight:600;margin-top:5px;line-height:1.25;">'+b.n+'</div>'
+        + '<div style="font-size:10px;color:var(--muted);margin-top:3px;line-height:1.3;">'+b.c+'</div>'
+        + '</div>';
+    }).join('');
+    document.getElementById('badges-count').textContent = got+'/'+BADGES.length+' débloqués — ils se gagnent en vivant ton rituel 🌿';
+  }
+  function closeBadgesSheet(){ document.getElementById('badges-sheet').classList.remove('open'); }
+
+  // ===== Rituel guidé (plein écran, pas à pas) =====
+  let gdItems=[], gdIdx=0, gdPeriod='matin';
+  function openGuided(){
+    const soirVisible = document.getElementById('routine-soir') && getComputedStyle(document.getElementById('routine-soir')).display!=='none';
+    gdPeriod = soirVisible ? 'soir' : 'matin';
+    const items = (window.__homeRoutine && window.__homeRoutine[gdPeriod]) || [];
+    if(!items.length){ showToast('Ajoute d\'abord des produits à ton rituel 🌸'); return; }
+    gdItems=items; gdIdx=0;
+    document.getElementById('guided-sheet').style.display='flex';
+    gdShow();
+  }
+  function gdShow(){
+    const p=gdItems[gdIdx]; if(!p) return;
+    document.getElementById('gd-count').textContent='ÉTAPE '+(gdIdx+1)+'/'+gdItems.length+' · '+(gdPeriod==='soir'?'SOIR 🌙':'MATIN ☀️');
+    document.getElementById('gd-emoji').textContent=p.emoji||'🧴';
+    document.getElementById('gd-name').textContent=p.nom||'';
+    document.getElementById('gd-effets').textContent=p.effets||'';
+    document.getElementById('gd-progress').innerHTML=gdItems.map((_,k)=>'<div class="onb-dot'+(k<gdIdx?' done':(k===gdIdx?' active':''))+'"></div>').join('');
+    document.getElementById('gd-prev').style.visibility = gdIdx===0 ? 'hidden' : 'visible';
+    document.getElementById('gd-next').textContent = gdIdx===gdItems.length-1 ? '✨ Terminer mon rituel' : 'Étape suivante';
+  }
+  function guidedPrev(){ if(gdIdx>0){ gdIdx--; gdShow(); } }
+  async function guidedNext(){
+    if(gdIdx < gdItems.length-1){ gdIdx++; gdShow(); return; }
+    closeGuided();
+    await updateTodayEntry(gdPeriod==='soir' ? { routine_soir:true } : { routine_matin:true });
+    applyRoutineState(gdPeriod, true);
+    bustStreak(); renderStreak();
+    showToast('Rituel terminé, ta peau te dit merci ✨');
+  }
+  function closeGuided(){ document.getElementById('guided-sheet').style.display='none'; }
+
+  // ===== Caméra HD intégrée (photo du jour) =====
+  let camStream=null, camFacing='user';
+  function openPhotoChoice(){ document.getElementById('photo-choice').classList.add('open'); }
+  function closePhotoChoice(){ document.getElementById('photo-choice').classList.remove('open'); }
+  async function camOpen(){
+    const sheet=document.getElementById('cam-sheet');
+    try{
+      camStream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:camFacing, width:{ideal:1920}, height:{ideal:1440} }, audio:false });
+      const v=document.getElementById('cam-video'); v.srcObject=camStream;
+      v.style.transform = camFacing==='user' ? 'scaleX(-1)' : 'none';
+      sheet.style.display='block';
+    }catch(e){ showToast('Caméra indisponible — essaie la galerie 🖼️'); }
+  }
+  function camStop(){ if(camStream){ try{ camStream.getTracks().forEach(t=>t.stop()); }catch(e){} camStream=null; } }
+  function camClose(){ camStop(); document.getElementById('cam-sheet').style.display='none'; }
+  async function camFlip(){ camFacing = camFacing==='user' ? 'environment' : 'user'; camStop(); await camOpen(); }
+  function camCapture(){
+    const v=document.getElementById('cam-video');
+    if(!v || !v.videoWidth){ showToast('Un instant…'); return; }
+    const cv=document.createElement('canvas'); cv.width=v.videoWidth; cv.height=v.videoHeight;
+    const ctx=cv.getContext('2d');
+    if(camFacing==='user'){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
+    ctx.drawImage(v,0,0);
+    cv.toBlob(async (blob)=>{
+      camClose();
+      if(!blob){ showToast('Oups, réessaie'); return; }
+      const img=document.getElementById('photo-img');
+      if(img){ img.src=URL.createObjectURL(blob); document.getElementById('photo-empty').classList.add('hidden'); document.getElementById('photo-display').classList.remove('hidden'); }
+      await uploadDayPhoto(blob,'jpg');
+    },'image/jpeg',0.92);
+  }
+  async function uploadDayPhoto(fileOrBlob, ext){
+    if(!currentUser){ showToast('Connecte-toi pour sauvegarder'); return; }
+    showToast('Envoi de la photo… 🌸');
+    const path = `${currentUser.id}/${Date.now()}.${ext}`;
+    const opts = (fileOrBlob instanceof File) ? { upsert:true } : { upsert:true, contentType:'image/jpeg' };
+    const { error: upErr } = await sb.storage.from('photos').upload(path, fileOrBlob, opts);
+    if(upErr){ showToast('Erreur upload : '+upErr.message); return; }
+    await updateTodayEntry({ photo_path: path });
+    showToast('Photo du jour enregistrée 🌸');
+    loadTodayPhoto();
+    loadJournalFromDB();
+  }
+
+  // ===== Tap en dehors d'une fenêtre = fermeture (smooth) =====
+  document.addEventListener('click', (e)=>{
+    const t=e.target;
+    if(t && t.classList && t.classList.contains('sheet-overlay') && t.classList.contains('open')){
+      t.classList.remove('open');
+      try{ stopBcCamera(); }catch(_e){}
+      try{ tlStop(); }catch(_e){}
+      try{ camStop(); }catch(_e){}
+    }
+  });
+
+  // ===== Scan code-barres (détection sur images canvas + 3 bases) =====
+  let bcStream=null, bcTimer=null, bcBusy=false, bcT0=0;
   async function openBarcodeSheet(){
     document.getElementById('barcode-sheet').classList.add('open');
     const wrap=document.getElementById('bc-video-wrap');
     const status=document.getElementById('bc-status');
     const manual=document.getElementById('bc-manual'); if(manual) manual.value='';
-    if('BarcodeDetector' in window && navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
-      try{
-        bcStream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } });
-        const v=document.getElementById('bc-video'); v.srcObject=bcStream;
-        wrap.style.display='block';
-        status.textContent='Vise le code-barres du produit 📷';
-        const det=new BarcodeDetector({ formats:['ean_13','ean_8','upc_a','upc_e','code_128'] });
-        bcTimer=setInterval(async ()=>{
-          if(bcBusy) return; bcBusy=true;
-          try{ const codes=await det.detect(v); if(codes && codes.length && codes[0].rawValue){ const code=codes[0].rawValue; stopBcCamera(); bcLookup(code); } }catch(e){}
-          bcBusy=false;
-        }, 350);
-      }catch(e){ wrap.style.display='none'; status.textContent='Caméra indisponible — tape le code à la main 👇'; }
-    } else {
+    if(!('BarcodeDetector' in window) || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
       wrap.style.display='none';
-      status.textContent='Le scan caméra n\'est pas supporté ici — tape le code à la main 👇';
+      status.textContent='Le scan caméra n\'est pas supporté sur ce navigateur — tape le code à la main 👇';
+      return;
+    }
+    try{
+      bcStream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} }, audio:false });
+      try{ const tr=bcStream.getVideoTracks()[0]; if(tr && tr.applyConstraints) await tr.applyConstraints({ advanced:[{ focusMode:'continuous' }] }); }catch(e){}
+      const v=document.getElementById('bc-video'); v.srcObject=bcStream;
+      wrap.style.display='block';
+      status.textContent='Vise le code-barres, bien à plat et éclairé 📷';
+      bcT0=Date.now();
+      const det=new BarcodeDetector({ formats:['ean_13','ean_8','upc_a','upc_e','code_128'] });
+      const cv=document.createElement('canvas'); const cx=cv.getContext('2d',{ willReadFrequently:true });
+      bcTimer=setInterval(async ()=>{
+        if(bcBusy || !v.videoWidth) return; bcBusy=true;
+        try{
+          cv.width=v.videoWidth; cv.height=v.videoHeight;
+          cx.drawImage(v,0,0);
+          const codes=await det.detect(cv);
+          if(codes && codes.length && codes[0].rawValue){ const code=codes[0].rawValue; stopBcCamera(); status.textContent='Code détecté ✓'; bcLookup(code); }
+          else if(Date.now()-bcT0>7000){ status.textContent='Rapproche-toi du code et stabilise 🤳 (ou tape-le en dessous)'; }
+        }catch(err){}
+        bcBusy=false;
+      }, 300);
+    }catch(e){
+      wrap.style.display='none';
+      status.textContent='Caméra refusée ou indisponible — tape le code à la main 👇';
     }
   }
   function stopBcCamera(){ if(bcTimer){ clearInterval(bcTimer); bcTimer=null; } if(bcStream){ try{ bcStream.getTracks().forEach(t=>t.stop()); }catch(e){} bcStream=null; } }
   function closeBarcodeSheet(){ stopBcCamera(); document.getElementById('barcode-sheet').classList.remove('open'); }
   function bcLookupManual(){ const v=(document.getElementById('bc-manual').value||'').trim(); if(v) bcLookup(v); }
   async function bcFetchProduct(base, code){
-    try{ const r=await fetch(base+encodeURIComponent(code)+'.json'); const d=await r.json(); if(d && d.status===1 && d.product) return d.product; }catch(e){}
+    try{
+      const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(), 6000);
+      const r=await fetch(base+encodeURIComponent(code)+'.json',{ signal:ctl.signal }); clearTimeout(t);
+      const d=await r.json(); if(d && d.status===1 && d.product) return d.product;
+    }catch(e){}
     return null;
   }
   async function bcLookup(code){
@@ -3213,7 +3456,8 @@
     status.textContent='Recherche du produit…';
     let p=await bcFetchProduct('https://world.openbeautyfacts.org/api/v2/product/', code);
     if(!p) p=await bcFetchProduct('https://world.openfoodfacts.org/api/v2/product/', code);
-    if(!p){ status.textContent='Produit introuvable dans la base 😕 Tu peux taper son nom à la main.'; return; }
+    if(!p) p=await bcFetchProduct('https://world.openproductsfacts.org/api/v2/product/', code);
+    if(!p){ status.textContent='Produit absent des bases publiques 😕 (fréquent en cosmétique) — tape son nom à la main, c\'est tout aussi bien.'; return; }
     const brand=(p.brands||'').split(',')[0].trim();
     const name=(p.product_name_fr || p.product_name || '').trim();
     const full=[brand, name].filter(Boolean).join(' — ');
@@ -3232,6 +3476,7 @@
     const today=new Date(todayStr()+'T00:00:00');
     const diff=Math.floor((today-start)/86400000);
     if(isNaN(diff) || diff<0) return null;
+    if(diff >= len*2) return { stale:true };
     const day=(diff % len)+1;
     const ovu=len-14;
     let phase, emoji, tip;
@@ -3246,6 +3491,10 @@
     if(!sec || !card) return;
     const i=cyclePhaseInfo();
     if(!i){ sec.style.display='none'; return; }
+    if(i.stale){
+      card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);cursor:pointer;" onclick="openCycleSheet()"><div style="font-size:24px;flex-shrink:0;">🌸</div><div style="flex:1;min-width:0;"><span class="eyebrow">SUIVI DE CYCLE</span><div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">Ça fait un moment — mets à jour la date de tes dernières règles pour des repères justes.</div></div></div>';
+      sec.style.display='block'; return;
+    }
     card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);" onclick="openCycleSheet()">'
       + '<div style="font-size:24px;flex-shrink:0;">'+i.emoji+'</div>'
       + '<div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:8px;"><span class="eyebrow">CYCLE · JOUR '+i.day+'</span><span style="font-size:11px;font-weight:600;color:var(--accent-deep);text-transform:capitalize;">'+i.phase+'</span></div>'
@@ -3293,9 +3542,15 @@
     if(uv<11) return {label:'Très élevé', color:'#D6453F', advice:'UV très élevé — SPF 50, et évite le soleil entre 12h et 16h.'};
     return {label:'Extrême', color:'#9B3B6E', advice:'UV extrême — protection maximale, reste à l\'ombre au maximum.'};
   }
-  function renderUV(uv){
+  function renderUV(uv, t, h){
     const card=document.getElementById('uv-card'); if(!card) return;
     const info=uvInfo(uv);
+    let extra='';
+    if(h!=null && h<35) extra='Air sec ('+h+'%) — couche d\'hydratant généreuse aujourd\'hui 💧';
+    else if(h!=null && h>80) extra='Air très humide ('+h+'%) — textures légères, ta peau respirera mieux 🌫️';
+    if(t!=null && t<=3) extra=(extra?extra+' · ':'')+'Froid dehors — protège bien les joues et les lèvres 🧣';
+    const meteo = (t!=null||h!=null) ? '<div style="font-size:11px;color:var(--muted);margin-top:5px;">'+(t!=null?t+'°':'')+(t!=null&&h!=null?' · ':'')+(h!=null?h+'% d\'humidité':'')+'</div>' : '';
+    const extraHtml = extra ? '<div style="font-size:12.5px;color:var(--ink-soft);line-height:1.45;margin-top:5px;">'+extra+'</div>' : '';
     card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);">'
       + '<div style="width:52px;height:52px;border-radius:50%;background:'+info.color+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="font-family:var(--serif);font-size:23px;color:'+info.color+';line-height:1;">'+Math.round(uv)+'</div></div>'
       + '<div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:8px;"><span class="eyebrow">INDICE UV</span><span style="font-size:11px;font-weight:600;color:'+info.color+';">'+info.label+'</span></div><div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">'+info.advice+'</div></div>'
@@ -3308,12 +3563,14 @@
     navigator.geolocation.getCurrentPosition(async (pos)=>{
       const lat=pos.coords.latitude.toFixed(2), lon=pos.coords.longitude.toFixed(2);
       try{
-        const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&daily=uv_index_max&timezone=auto');
+        const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&daily=uv_index_max&current=temperature_2m,relative_humidity_2m&timezone=auto');
         const d=await r.json();
         const uv = (d && d.daily && Array.isArray(d.daily.uv_index_max)) ? d.daily.uv_index_max[0] : null;
+        const t = (d && d.current && typeof d.current.temperature_2m==='number') ? Math.round(d.current.temperature_2m) : null;
+        const h = (d && d.current && typeof d.current.relative_humidity_2m==='number') ? Math.round(d.current.relative_humidity_2m) : null;
         if(uv==null){ card.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Indice UV indisponible pour le moment 🌿</div>'; return; }
-        try{ localStorage.setItem('rituel_uv_'+todayStr(), JSON.stringify({uv})); }catch(e){}
-        renderUV(uv);
+        try{ localStorage.setItem('rituel_uv', JSON.stringify({ d: todayStr(), uv, t, h })); }catch(e){}
+        renderUV(uv, t, h);
       }catch(e){ card.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Indice UV indisponible 🌿</div>'; }
     }, ()=>{
       card.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;line-height:1.5;">Localisation refusée. <span style="color:var(--accent-deep);text-decoration:underline;cursor:pointer;" onclick="activateUV()">Réessayer</span></div>';
@@ -3321,7 +3578,7 @@
   }
   function loadUV(){
     const card=document.getElementById('uv-card'); if(!card) return;
-    try{ const c=localStorage.getItem('rituel_uv_'+todayStr()); if(c){ const o=JSON.parse(c); if(o && typeof o.uv==='number'){ renderUV(o.uv); return; } } }catch(e){}
+    try{ const c=localStorage.getItem('rituel_uv'); if(c){ const o=JSON.parse(c); if(o && o.d===todayStr() && typeof o.uv==='number'){ renderUV(o.uv, o.t, o.h); return; } } }catch(e){}
     card.innerHTML='<button class="add-product-card" style="margin-top:0;" onclick="activateUV()">☀️ Voir l\'indice UV du jour</button>';
   }
 
@@ -3349,36 +3606,101 @@
   function closeTimelapse(){ tlStop(); document.getElementById('timelapse-sheet').classList.remove('open'); }
 
   // ===== Petit mot proactif de Léa (1×/jour, doux, jamais culpabilisant) =====
-  async function loadLeaProactive(){
-    const box=document.getElementById('lea-proactive'); if(!box) return;
-    if(!currentUser){ box.style.display='none'; return; }
-    const today=todayStr();
-    try{ if(localStorage.getItem('rituel_proa_dismiss')===today){ box.style.display='none'; return; } }catch(e){}
-    let streak=0, e=null;
-    try{
-      streak=await computeStreak();
-      const { data }=await sb.from('entries').select('routine_matin,routine_soir,photo_path,repos').eq('user_id',currentUser.id).eq('date',today).order('created_at',{ascending:true}).limit(1);
-      e=(data&&data.length)?data[0]:null;
-    }catch(err){}
+  async function loadLeaProactive(e){
+    const line=document.getElementById('lea-proactive-line'); if(!line) return;
+    if(!currentUser){ line.textContent=''; return; }
+    let streak=0; try{ streak=await computeStreak(); }catch(err){}
     const h=new Date().getHours();
     const done = e && dayComplete(e);
     const hasPhoto = e && e.photo_path;
-    const nm = coachName();
+    const fier = state.coachGenre==='homme' ? 'fier' : 'fière';
     let msg;
-    if(streak>0 && streak%7===0){ msg='Waouh, '+streak+' jours de rituel ! Je suis si fière de toi 🌟 Ta peau adore cette régularité.'; }
-    else if(done && !hasPhoto){ msg='Rituel fait, bravo ✨ Tu veux garder une trace de ta peau du jour avec une petite photo ? 📷'; }
-    else if(done){ msg='Joli, ton rituel est fait pour aujourd\'hui 💛 Prends soin de toi le reste de la journée.'; }
-    else if(h<12){ msg='Coucou 🌸 Un petit rituel du matin pour bien démarrer ? Même version express, ça compte.'; }
-    else if(h<18){ msg='Petit rappel tout doux : ta peau attend son moment rituel aujourd\'hui 🌿'; }
-    else { msg='Bonsoir 🌙 Avant de filer dormir, un rituel du soir ? Ta peau se répare la nuit.'; }
-    box.innerHTML = '<div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow);">'
-      + '<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--serif);font-style:italic;font-size:16px;flex-shrink:0;">'+nm[0]+'</div>'
-      + '<div style="flex:1;min-width:0;"><div class="eyebrow" style="margin-bottom:4px;">'+nm.toUpperCase()+'</div><div style="font-size:13.5px;line-height:1.5;color:var(--ink-soft);">'+escapeHtml(msg)+'</div></div>'
-      + '<button onclick="dismissLeaProactive()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;flex-shrink:0;padding:0 2px;">×</button>'
-      + '</div>';
-    box.style.display='block';
+    if(streak>0 && streak%7===0){ msg='Waouh, '+streak+' jours de rituel — je suis si '+fier+' de toi 🌟'; }
+    else if(done && !hasPhoto){ msg='Rituel fait, bravo ✨ Une petite photo pour garder une trace ?'; }
+    else if(done){ msg='Ton rituel est fait pour aujourd\'hui, bravo 💛'; }
+    else if(h<12){ msg='Coucou 🌸 Un petit rituel pour bien démarrer la journée ?'; }
+    else if(h<18){ msg='Ta peau attend son petit moment rituel aujourd\'hui 🌿'; }
+    else { msg='Bonsoir 🌙 Un rituel du soir avant de dormir ?'; }
+    line.textContent=msg;
   }
-  function dismissLeaProactive(){ try{ localStorage.setItem('rituel_proa_dismiss', todayStr()); }catch(e){} const b=document.getElementById('lea-proactive'); if(b) b.style.display='none'; }
+
+  function baSlide(v){
+    v=Number(v);
+    const b=document.getElementById('ba-before-img'); if(b) b.style.clipPath='inset(0 '+(100-v)+'% 0 0)';
+    const l=document.getElementById('ba-line'); if(l) l.style.left=v+'%';
+    const k=document.getElementById('ba-knob'); if(k) k.style.left=v+'%';
+  }
+  // ===== La lettre du mois (1 appel IA/mois, en cache) =====
+  function bilanKey(){ const d=new Date(); return 'rituel_bilan_'+(currentUser?currentUser.id:'x')+'_'+d.getFullYear()+'-'+(d.getMonth()+1); }
+  function loadBilan(){
+    const body=document.getElementById('bilan-body'), btn=document.getElementById('bilan-btn');
+    if(!body||!btn) return;
+    if(!currentUser){ btn.style.display='none'; body.style.display='none'; return; }
+    const M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    btn.textContent='💌 Lire la lettre de '+M[new Date().getMonth()];
+    try{ const cached=localStorage.getItem(bilanKey()); if(cached){ body.innerHTML=formatMessage(cached); body.style.display='block'; btn.style.display='none'; return; } }catch(e){}
+    body.style.display='none'; btn.style.display='inline-block';
+  }
+  async function genBilan(){
+    const body=document.getElementById('bilan-body'), btn=document.getElementById('bilan-btn');
+    btn.disabled=true; btn.textContent='✍️ '+coachName()+' écrit…';
+    try{
+      const ctx=await buildLeaContext();
+      const res=await fetch('/api/lea',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+        messages:[{ role:'user', content:"(Message automatique de l'app, ce n'est pas une vraie question de la personne.) Écris ta petite lettre du mois : un bilan chaleureux en 4 à 6 phrases d'après mes données (série, éclat, habitudes, peau), avec un encouragement doux pour le mois qui commence. Pas de question à la fin. Termine par une signature courte avec ton prénom." }],
+        profile: ctx
+      })});
+      const d=await res.json();
+      const txt=(d && d.reply) ? d.reply : null;
+      if(!txt){ btn.disabled=false; loadBilan(); showToast('Oups, réessaie un peu plus tard 🌿'); return; }
+      try{ localStorage.setItem(bilanKey(), txt); }catch(e){}
+      body.innerHTML=formatMessage(txt); body.style.display='block'; btn.style.display='none'; btn.disabled=false;
+    }catch(e){ btn.disabled=false; loadBilan(); showToast('Oups, réessaie un peu plus tard 🌿'); }
+  }
+
+  // ===== Souvenir : une photo d'il y a un moment =====
+  async function loadMemory(){
+    const sec=document.getElementById('memory-section'); if(!sec) return;
+    sec.style.display='none';
+    if(!currentUser) return;
+    try{
+      const lim=new Date(); lim.setDate(lim.getDate()-30);
+      const { data } = await sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).lte('date',lim.toISOString().slice(0,10)).order('date',{ascending:false}).limit(1);
+      const row=(data&&data[0])||null; if(!row) return;
+      const url=await signedPhoto(row.photo_path); if(!url) return;
+      const days=Math.round((new Date(todayStr())-new Date(row.date))/86400000);
+      document.getElementById('memory-img').src=url;
+      document.getElementById('memory-caption').textContent='Cette photo date d\'il y a '+days+' jours — regarde le chemin parcouru 🌸';
+      sec.style.display='block';
+    }catch(e){}
+  }
+
+  // ===== Tes découvertes (corrélations douces, jamais culpabilisantes) =====
+  async function loadInsights(){
+    const sec=document.getElementById('insights-section'); if(!sec) return;
+    sec.style.display='none';
+    if(!currentUser) return;
+    try{
+      const since=new Date(); since.setDate(since.getDate()-60);
+      const { data } = await sb.from('entries').select('date,sommeil,hydratation,score_peau,humeur,routine_matin,routine_soir,repos').eq('user_id',currentUser.id).gte('date',since.toISOString().slice(0,10));
+      const byDate={}; (data||[]).forEach(e=>{ byDate[e.date]=byDate[e.date]?{...byDate[e.date],...e}:e; });
+      const days=Object.values(byDate);
+      const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+      const out=[];
+      const sHi=days.filter(d=>d.sommeil!=null&&d.score_peau!=null&&Number(d.sommeil)>=7).map(d=>Number(d.score_peau));
+      const sLo=days.filter(d=>d.sommeil!=null&&d.score_peau!=null&&Number(d.sommeil)<7).map(d=>Number(d.score_peau));
+      if(sHi.length>=3&&sLo.length>=3){ const diff=Math.round(avg(sHi)-avg(sLo)); if(diff>=4) out.push(['😴','Les jours où tu dors 7 h ou plus, ton éclat est en moyenne '+diff+' points plus haut. Ton sommeil te va bien ✨']); }
+      const hHi=days.filter(d=>d.hydratation!=null&&d.score_peau!=null&&Number(d.hydratation)>=6).map(d=>Number(d.score_peau));
+      const hLo=days.filter(d=>d.hydratation!=null&&d.score_peau!=null&&Number(d.hydratation)<6).map(d=>Number(d.score_peau));
+      if(hHi.length>=3&&hLo.length>=3){ const diff=Math.round(avg(hHi)-avg(hLo)); if(diff>=4) out.push(['💧','Quand tu bois 6 verres ou plus, ton éclat gagne souvent '+diff+' points. Ta peau aime l\'eau 🌊']); }
+      const mOn=days.filter(d=>dayComplete(d)&&d.humeur).map(d=>Number(d.humeur));
+      const mOff=days.filter(d=>!dayComplete(d)&&d.humeur).map(d=>Number(d.humeur));
+      if(mOn.length>=3&&mOff.length>=3){ const diff=avg(mOn)-avg(mOff); if(diff>=0.5) out.push(['🌸','Les jours de rituel, ton humeur est souvent plus douce. Prendre soin de soi, ça se sent 💛']); }
+      if(!out.length) return;
+      document.getElementById('insights-list').innerHTML=out.slice(0,2).map(i=>'<div class="ba-card" style="gap:12px;"><div style="font-size:24px;flex-shrink:0;">'+i[0]+'</div><div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5;">'+i[1]+'</div></div>').join('');
+      sec.style.display='block';
+    }catch(e){}
+  }
 
   // ===== Avant / Après (première photo vs dernière) =====
   async function loadBeforeAfter(){
@@ -3395,8 +3717,10 @@
       if(!first || !last || first.date===last.date) return; // besoin de 2 jours différents
       const [u1,u2]=await Promise.all([signedPhoto(first.photo_path), signedPhoto(last.photo_path)]);
       if(!u1 || !u2) return;
-      document.getElementById('ba-before').innerHTML='<img src="'+u1+'" alt="">';
-      document.getElementById('ba-after').innerHTML='<img src="'+u2+'" alt="">';
+      document.getElementById('ba-before-img').src=u1;
+      document.getElementById('ba-after-img').src=u2;
+      const rg=document.getElementById('ba-range'); if(rg) rg.value=50;
+      baSlide(50);
       const fmt=(d)=>{ const p=d.split('-'); return p[2]+'/'+p[1]; };
       const days=Math.round((new Date(last.date)-new Date(first.date))/86400000);
       document.getElementById('ba-before-label').textContent='Jour 1 · '+fmt(first.date);
@@ -3409,6 +3733,9 @@
   async function loadJournalFromDB(){
     const grid=document.getElementById('journal-grid'); if(!grid) return;
     loadWeekRecap();
+    loadBilan();
+    loadMemory();
+    loadInsights();
     loadBeforeAfter();
     loadEclatGraph();
     if(!currentUser){ renderJournal(); return; }
@@ -3557,6 +3884,7 @@
     if(id) await sb.from('entries').update(fields).eq('id', id);
     closeDayDetail();
     showToast('Jour enregistré 🌸');
+    bustStreak();
     renderCalendar();
     if(ddState.date===todayStr()){ loadHomeData(); loadJournalFromDB(); }
   }
