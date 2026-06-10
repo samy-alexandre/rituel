@@ -1058,7 +1058,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 5.6<br><span class="italic serif">— ton carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 5.7<br><span class="italic serif">— ton carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3138,10 +3138,15 @@
       return { b64, type: blob.type || 'image/jpeg' };
     }catch(e){ return null; }
   }
+  function acceptPhotoConsent(){ try{ localStorage.setItem('rituel_photo_consent_'+currentUser.id,'oui'); }catch(e){} askLeaPhoto(); }
   async function askLeaPhoto(){
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
     const box=document.getElementById('lea-photo-result'); if(!box) return;
     box.style.display='block';
+    if(localStorage.getItem('rituel_photo_consent_'+currentUser.id)!=='oui'){
+      box.innerHTML='<div style="background:var(--surface-warm);border-radius:14px;padding:14px;font-size:12.5px;color:var(--ink-soft);line-height:1.55;">Pour te donner son avis, '+coachName()+' envoie ta photo de manière sécurisée à notre partenaire d\'analyse (Anthropic). Elle n\'est ni publiée, ni utilisée pour entraîner des modèles, et tu peux supprimer tes données à tout moment.<div style="display:flex;gap:8px;margin-top:12px;"><button class="btn btn-accent" style="padding:10px;font-size:13px;" onclick="acceptPhotoConsent()">D\'accord ✨</button><button class="btn" style="padding:10px;font-size:13px;background:var(--surface);color:var(--muted);" onclick="this.closest(\'#lea-photo-result\').style.display=\'none\'">Pas maintenant</button></div></div>';
+      return;
+    }
     box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">'+coachName()+' regarde ta photo… 🌸</div>';
     const photo=await getTodayPhotoB64();
     if(!photo){ box.style.display='none'; box.innerHTML=''; showToast('Prends d\'abord ta photo du jour 🌸'); return; }
