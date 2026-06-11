@@ -231,6 +231,17 @@
   .onb-back { position: absolute; top: 14px; left: 20px; width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--surface-warm); color: var(--accent-deep); font-size: 22px; line-height: 1; cursor: pointer; z-index: 5; transition: transform .13s ease, background .2s ease; }
   .onb-back:active { transform: scale(0.9); background: var(--blush-soft); }
   .onb-dot.active { background: var(--accent); opacity: 0.45; }
+  .land-card { display: flex; align-items: flex-start; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 13px 14px; margin-top: 10px; box-shadow: var(--shadow); text-align: left; }
+  .land-card span { font-size: 22px; flex-shrink: 0; }
+  .land-card b { display: block; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .land-card small { display: block; font-size: 12px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+  .plant-card .streak { margin: 14px 0 0; box-shadow: none; border: 1px solid var(--line); background: var(--surface-warm); padding: 12px 14px; }
+  .rj-chip { padding: 10px 14px; border-radius: 100px; border: 1.5px solid var(--line); background: var(--surface); font-size: 13px; color: var(--ink-soft); cursor: pointer; transition: all .15s ease; }
+  .rj-chip.selected { border-color: var(--accent); background: var(--blush-soft); color: var(--accent-deep); font-weight: 600; }
+  .rj-item { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; }
+  .rj-item .rj-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent; transition: all .15s ease; }
+  .rj-item.done .rj-check { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .rj-item.done { opacity: 0.75; }
   .onb-dot { flex: 1; height: 2px; background: var(--line); border-radius: 2px; transition: background .4s; }
   .onb-dot.done { background: var(--accent); }
 
@@ -567,7 +578,7 @@
  <div class="scroll-host" id="scroll-host">
 
   <!-- ====================== AUTH ====================== -->
-  <div id="auth">
+  <div id="auth" style="visibility:hidden;">
     <svg class="auth-deco" viewBox="0 0 200 200" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.55"><circle cx="140" cy="60" r="16"/><circle cx="124" cy="68" r="13"/><circle cx="156" cy="68" r="13"/><circle cx="132" cy="82" r="13"/><circle cx="148" cy="82" r="13"/><circle cx="140" cy="72" r="7" fill="#E8A6A0"/><path d="M140 95 C140 130 138 150 130 175"/><path d="M138 120 C120 116 110 100 113 86 C130 92 138 104 138 120"/></g></svg>
     <svg class="auth-deco-2" viewBox="0 0 200 200" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.5"><path d="M60 180 C60 130 62 100 70 60"/><path d="M66 110 C40 104 28 80 33 58 C62 66 66 86 66 110"/><path d="M66 90 C92 82 104 58 100 36 C72 44 66 66 66 90"/><circle cx="70" cy="44" r="11"/><circle cx="70" cy="44" r="4" fill="#C95A3F"/></g></svg>
 
@@ -578,13 +589,23 @@
         <svg class="auth-floral" viewBox="0 0 120 30" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M2 15 H44"/><path d="M118 15 H76"/><circle cx="60" cy="15" r="5"/><circle cx="52" cy="15" r="3.5"/><circle cx="68" cy="15" r="3.5"/><circle cx="60" cy="9" r="3.5"/><circle cx="60" cy="21" r="3.5"/></g></svg>
       </div>
 
-      <div class="auth-toggle">
+      <div id="landing">
+        <p style="font-family:var(--serif);font-style:italic;font-size:16px;color:var(--ink-soft);line-height:1.6;text-align:center;margin:6px 0 22px;">Une photo par jour, ta routine, ton ressenti — et Léa, ta coach douce, pour t\'aider à comprendre ce qui change vraiment.</p>
+        <div class="land-card"><span>📷</span><div><b>Suis ta peau jour après jour</b><small>Photos, humeur, sommeil, hydratation, routine.</small></div></div>
+        <div class="land-card"><span>🌿</span><div><b>Comprends ce qui marche</b><small>Produits, habitudes, cycle : tout au même endroit.</small></div></div>
+        <div class="land-card"><span>💬</span><div><b>Avance avec Léa</b><small>Une coach beauté douce, sans jugement, pour garder le cap.</small></div></div>
+        <button class="btn btn-accent" onclick="startAuth('signup')" style="margin-top:20px;">Commencer mon rituel gratuitement</button>
+        <button onclick="startAuth('login')" style="background:none;border:none;color:var(--accent-deep);font-size:13px;cursor:pointer;display:block;margin:14px auto 0;text-decoration:underline;">J\'ai déjà un compte</button>
+      </div>
+
+      <button id="auth-back" class="hidden" onclick="backToLanding()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;display:block;margin:0 auto 10px;">‹ Retour</button>
+      <div class="auth-toggle hidden">
         <button class="auth-tab active" id="tab-login" onclick="switchAuth('login')">Connexion</button>
         <button class="auth-tab" id="tab-signup" onclick="switchAuth('signup')">Inscription</button>
       </div>
 
       <!-- Login -->
-      <div class="auth-form" id="form-login">
+      <div class="auth-form hidden" id="form-login">
         <div class="field">
           <label>Adresse e-mail</label>
           <input type="email" id="login-email" placeholder="toi@exemple.com" autocomplete="email">
@@ -736,7 +757,7 @@
         <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;margin-bottom:28px;box-shadow:var(--shadow);">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <h2 class="display" style="font-size:34px;margin-bottom:16px;">Tout est <em class="italic" style="color:var(--accent);">prêt</em>, <span id="onb-name">toi</span>.</h2>
+        <h2 class="display" style="font-size:34px;margin-bottom:16px;">Tout est <em class="italic" style="color:var(--accent);">prêt</em><span id="onb-name"></span> ✨</h2>
         <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Léa t'attend dans l'app. Prends ta première photo dès aujourd'hui — c'est le point de départ de ta transformation 🌸</p>
       </div>
       <div class="onb-actions"><button class="btn btn-accent" onclick="finishOnboarding()">Entrer dans Rituel</button></div>
@@ -760,6 +781,10 @@
     </div>
 
     <div class="section">
+      <button id="rj-cta" class="btn btn-accent" style="width:100%;padding:16px;font-size:15px;border-radius:18px;box-shadow:var(--shadow);" onclick="openRituelJour()">☀️ Commencer mon rituel du jour</button>
+    </div>
+
+    <div class="section">
       <div class="msg-card" id="lea-tip-card" style="margin:0;max-width:100%;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <div id="lea-card-avatar" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-family:var(--serif);font-style:italic;font-size:13px;">L</div>
@@ -774,21 +799,20 @@
     <div class="plant-card">
       <div id="plant-host"></div>
       <div class="plant-caption" id="plant-caption">Ta plante pousse avec ta série 🌱</div>
+      <div class="streak">
+        <div class="streak-flame" id="streak-flame">🌱</div>
+        <div class="streak-text">
+          <div class="streak-num"><em id="streak-num">0</em> <span id="streak-unit">jour</span></div>
+          <div class="streak-label" id="streak-label">Fais ton rituel pour démarrer ta série ✨</div>
+        </div>
+        <div class="streak-mini" id="streak-mini"></div>
+      </div>
+      <div style="text-align:center;margin:2px 0 12px;"><button id="rest-btn" onclick="takeRestDay()" style="background:none;border:none;color:var(--accent-deep);font-size:12px;cursor:pointer;text-decoration:underline;opacity:0.85;">🧊 Prendre un jour de repos</button></div>
       <div class="plant-actions">
         <button class="plant-change" onclick="openPlantSheet()">🌱 Changer de plante</button>
         <button class="plant-change" onclick="shareStreakImage()">📤 Partager</button>
       </div>
     </div>
-
-    <div class="streak">
-      <div class="streak-flame" id="streak-flame">🌱</div>
-      <div class="streak-text">
-        <div class="streak-num"><em id="streak-num">0</em> <span id="streak-unit">jour</span></div>
-        <div class="streak-label" id="streak-label">Fais ton rituel pour démarrer ta série ✨</div>
-      </div>
-      <div class="streak-mini" id="streak-mini"></div>
-    </div>
-    <div style="text-align:center;margin:-16px 20px 26px;"><button id="rest-btn" onclick="takeRestDay()" style="background:none;border:none;color:var(--accent-deep);font-size:12px;cursor:pointer;text-decoration:underline;opacity:0.85;">🧊 Prendre un jour de repos</button></div>
 
     <div class="section" id="home-rituel-section">
       <div class="section-head">
@@ -840,19 +864,7 @@
       </div>
     </div>
 
-    <div class="section" id="mood-section">
-      <div class="section-head"><h3 class="section-title">Comment va ta <em>peau</em> ?</h3></div>
-      <div class="mood-row">
-        <button class="mood-btn" onclick="selectMood(this,1)"><div class="mood-emoji">😣</div><div class="mood-label">Difficile</div></button>
-        <button class="mood-btn" onclick="selectMood(this,2)"><div class="mood-emoji">😕</div><div class="mood-label">Moyenne</div></button>
-        <button class="mood-btn" onclick="selectMood(this,3)"><div class="mood-emoji">😌</div><div class="mood-label">Bien</div></button>
-        <button class="mood-btn" onclick="selectMood(this,4)"><div class="mood-emoji">😊</div><div class="mood-label">Top</div></button>
-        <button class="mood-btn" onclick="selectMood(this,5)"><div class="mood-emoji">✨</div><div class="mood-label">Sublime</div></button>
-      </div>
-      <div class="intensity hidden" id="intensity-box">
-        <div class="intensity-head"><span>Intensité du ressenti</span><span id="intensity-val">50%</span></div>
-        <input type="range" min="0" max="100" value="50" step="5" class="intensity-slider" id="intensity-slider" oninput="onIntensity(this.value)" onchange="saveMood()">
-      </div>
+    
     </div>
 
     <div class="section">
@@ -1058,15 +1070,15 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 5.7<br><span class="italic serif">— ton carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 6.2<br><span class="italic serif">— ton carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
 
   <nav class="nav hidden" id="nav">
     <div class="nav-item active" data-screen="home" onclick="navTo('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9M5 10v10a2 2 0 002 2h3v-6h4v6h3a2 2 0 002-2V10" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Aujourd'hui</div></div>
-    <div class="nav-item" data-screen="journal" onclick="navTo('journal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Journal</div></div>
-    <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2h4v3l1.2 2A3 3 0 0116 8.7V19a2 2 0 01-2 2h-4a2 2 0 01-2-2V8.7a3 3 0 01.8-1.7L10 5V2z" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 12h7" stroke-linecap="round"/></svg><div class="nav-label">Produits</div></div>
+    <div class="nav-item" data-screen="journal" onclick="navTo('journal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Évolution</div></div>
+    <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2h4v3l1.2 2A3 3 0 0116 8.7V19a2 2 0 01-2 2h-4a2 2 0 01-2-2V8.7a3 3 0 01.8-1.7L10 5V2z" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 12h7" stroke-linecap="round"/></svg><div class="nav-label">Soins</div></div>
     <div class="nav-item" data-screen="ritual" onclick="navTo('ritual')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Rituel</div></div>
     <div class="nav-item" data-screen="profile" onclick="navTo('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Moi</div></div>
   </nav>
@@ -1121,6 +1133,16 @@
       <input type="range" id="tl-range" min="0" max="0" value="0" style="width:100%;margin:16px 0 8px;accent-color:var(--accent);">
       <div style="display:flex;justify-content:center;"><button id="tl-play" class="btn btn-accent" style="width:auto;padding:11px 26px;" onclick="tlToggle()">⏸ Pause</button></div>
       <button class="btn btn-ghost" style="margin-top:12px;" onclick="closeTimelapse()">Fermer</button>
+    </div>
+  </div>
+
+  <div id="rj-sheet" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:385;flex-direction:column;padding:max(20px,env(safe-area-inset-top)) 22px max(24px,env(safe-area-inset-bottom));overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0;"><div class="eyebrow" id="rj-count">ÉTAPE 1/4</div><button onclick="closeRituelJour()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;">✕</button></div>
+    <div class="onb-progress" id="rj-progress" style="margin:14px 0 18px;flex-shrink:0;"></div>
+    <div id="rj-body" style="flex:1;display:flex;flex-direction:column;"></div>
+    <div style="flex-shrink:0;margin-top:14px;" id="rj-footer">
+      <button class="btn btn-accent" id="rj-next" onclick="rjNext()">Continuer</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" id="rj-skip" onclick="rjNext(true)">Passer cette étape</button>
     </div>
   </div>
 
@@ -1332,6 +1354,20 @@
       <div class="sheet-handle"></div>
       <div class="sheet-title">Ma journée</div>
       <p style="color:var(--muted);font-size:13px;margin:-10px 0 20px;line-height:1.5;">Note ton sommeil, ton hydratation et ton alimentation. Léa s'en servira pour des conseils plus justes 🌸</p>
+
+      <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;display:block;margin-bottom:10px;">Comment va ta peau ?</label>
+
+      <div class="mood-row" id="ds-mood">
+        <button class="mood-btn" onclick="selectMood(this,1)"><div class="mood-emoji">😣</div><div class="mood-label">Difficile</div></button>
+        <button class="mood-btn" onclick="selectMood(this,2)"><div class="mood-emoji">😕</div><div class="mood-label">Moyenne</div></button>
+        <button class="mood-btn" onclick="selectMood(this,3)"><div class="mood-emoji">😌</div><div class="mood-label">Bien</div></button>
+        <button class="mood-btn" onclick="selectMood(this,4)"><div class="mood-emoji">😊</div><div class="mood-label">Top</div></button>
+        <button class="mood-btn" onclick="selectMood(this,5)"><div class="mood-emoji">✨</div><div class="mood-label">Sublime</div></button>
+      </div>
+      <div class="intensity hidden" id="intensity-box">
+        <div class="intensity-head"><span>Intensité du ressenti</span><span id="intensity-val">50%</span></div>
+        <input type="range" min="0" max="100" value="50" step="5" class="intensity-slider" id="intensity-slider" oninput="onIntensity(this.value)" onchange="saveMood()">
+      <div style="height:14px;"></div>
 
       <div class="intensity" style="margin-bottom:14px;">
         <div class="intensity-head"><span>💤 Sommeil</span><span id="ds-sommeil-val">7h</span></div>
@@ -1672,7 +1708,7 @@
   // ===== Onboarding =====
   function onbShow(n){
     state.onbStep=n;
-    if(n===6){ document.getElementById('onb-name').textContent = state.name || 'toi'; }
+    if(n===6){ document.getElementById('onb-name').textContent = state.name ? ', '+state.name : ''; }
     document.querySelectorAll('.onb-page').forEach(p=>p.classList.remove('active'));
     const pg=document.querySelector(`.onb-page[data-page="${n}"]`);
     if(pg) pg.classList.add('active');
@@ -1715,6 +1751,7 @@
     try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: state.concerns||[] })); }catch(e){}
     document.getElementById('onboarding').classList.remove('active');
     enterApp();
+    setTimeout(function(){ try{ openRituelJour(); }catch(e){} }, 700);
   }
 
   // ===== Enter app =====
@@ -2292,6 +2329,7 @@
     loadLeaTip();
     updateRestBtn(e);
     loadLeaProactive(e);
+    renderRjCta(e);
     loadUV();
     loadCycleCard();
     loadEclatProgram();
@@ -2377,6 +2415,7 @@
       if(e.alimentation!=null) ali=e.alimentation;
     }
     const s=document.getElementById('ds-sommeil'); s.value=som; onDaySommeil(som);
+    try{ sb.from('entries').select('humeur').eq('user_id',currentUser.id).eq('date',todayStr()).limit(1).then(({data})=>{ const hv=(data&&data[0])?data[0].humeur:null; document.querySelectorAll('#ds-mood .mood-btn').forEach((bt,i)=>bt.classList.toggle('selected', hv===i+1)); }); }catch(_e){}
     const h=document.getElementById('ds-hydra'); h.value=hyd; onDayHydra(hyd);
     const a=document.getElementById('ds-alim'); a.value=ali; onDayAlim(ali);
     document.getElementById('day-sheet').classList.add('open');
@@ -3290,7 +3329,7 @@
     if(!card) return;
     if(!st || eclatDay(st)>30){ card.style.display='none'; return; }
     const d=eclatDay(st); const did=st.done.includes(d);
-    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);cursor:pointer;" onclick="openEclatSheet()"><div style="font-size:24px;flex-shrink:0;">'+(did?'✅':'🗓️')+'</div><div style="flex:1;min-width:0;"><span class="eyebrow">ÉCLAT · JOUR '+d+'/30</span><div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">'+ECLAT[d-1]+'</div></div></div>';
+    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:11px 14px;box-shadow:var(--shadow);cursor:pointer;" onclick="openEclatSheet()"><div style="font-size:24px;flex-shrink:0;">'+(did?'✅':'🗓️')+'</div><div style="flex:1;min-width:0;"><span class="eyebrow">ÉCLAT · JOUR '+d+'/30</span><div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">'+ECLAT[d-1]+'</div></div></div>';
     card.style.display='block';
   }
 
@@ -3333,6 +3372,123 @@
     document.getElementById('badges-count').textContent = got+'/'+BADGES.length+' débloqués — ils se gagnent en vivant ton rituel 🌿';
   }
   function closeBadgesSheet(){ document.getElementById('badges-sheet').classList.remove('open'); }
+
+  // ===== Rituel du jour (parcours 4 étapes + récompense) =====
+  let rjStep=0, rjEntry=null, rjPeriod='matin';
+  const rjData={ tags:new Set(), mood:null, sommeil:null, eau:null, checked:new Set() };
+  const RJ_TAGS=[['nette','✨ Nette'],['boutons','🫧 Boutons'],['rougeurs','🌹 Rougeurs'],['seche','🏜️ Sèche'],['grasse','💧 Grasse'],['terne','🌫️ Terne'],['sensible','🪶 Sensible']];
+  async function openRituelJour(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord 🌸'); return; }
+    const h=new Date().getHours(); rjPeriod = h<17 ? 'matin' : 'soir';
+    rjStep=0; rjData.tags.clear(); rjData.checked.clear(); rjData.mood=null; rjData.sommeil=null; rjData.eau=null;
+    rjEntry=null;
+    try{ const { data } = await sb.from('entries').select('*').eq('user_id',currentUser.id).eq('date',todayStr()).limit(1); rjEntry=(data&&data[0])||null; }catch(e){}
+    document.getElementById('rj-sheet').style.display='flex';
+    rjRender();
+  }
+  function closeRituelJour(){ document.getElementById('rj-sheet').style.display='none'; }
+  function rjProgress(){
+    document.getElementById('rj-count').textContent='ÉTAPE '+(rjStep+1)+'/4 · '+(rjPeriod==='soir'?'SOIR 🌙':'MATIN ☀️');
+    document.getElementById('rj-progress').innerHTML=[0,1,2,3].map(i=>'<div class="onb-dot'+(i<rjStep?' done':(i===rjStep?' active':''))+'"></div>').join('');
+  }
+  function rjRefreshPhoto(){ if(document.getElementById('rj-sheet').style.display!=='none' && rjStep===0){ if(!rjEntry) rjEntry={}; rjEntry.photo_path='ok'; rjRender(); } }
+  function rjToggleTag(el,t){ if(rjData.tags.has(t)){ rjData.tags.delete(t); el.classList.remove('selected'); } else { rjData.tags.add(t); el.classList.add('selected'); } }
+  function rjPick(el,key,val){ rjData[key]=val; el.parentElement.querySelectorAll('.rj-chip').forEach(b=>b.classList.remove('selected')); el.classList.add('selected'); }
+  function rjToggleItem(el,i){ if(rjData.checked.has(i)){ rjData.checked.delete(i); el.classList.remove('done'); } else { rjData.checked.add(i); el.classList.add('done'); } }
+  function rjCheckAll(){ document.querySelectorAll('#rj-body .rj-item').forEach((el,i)=>{ rjData.checked.add(i); el.classList.add('done'); }); }
+  function rjRender(){
+    rjProgress();
+    const b=document.getElementById('rj-body');
+    const next=document.getElementById('rj-next'), skip=document.getElementById('rj-skip');
+    document.getElementById('rj-footer').style.display='block';
+    if(rjStep===0){
+      const has=rjEntry && rjEntry.photo_path;
+      b.innerHTML='<div style="text-align:center;margin-top:8px;"><div class="serif" style="font-size:26px;">Ta photo du <em style="font-style:italic;color:var(--accent);">jour</em></div><p style="color:var(--muted);font-size:13px;line-height:1.5;margin:8px 0 20px;">Lumière naturelle, même angle chaque jour si tu peux 🌤️</p>'
+        +(has?'<div style="font-size:54px;margin:6px 0;">📷✓</div><p style="color:var(--accent-deep);font-size:13.5px;font-weight:600;">Photo du jour déjà prise ✨</p><button class="btn-outline-sm" style="margin-top:10px;" onclick="camOpen()">Reprendre</button>'
+             :'<button class="btn btn-accent" style="margin-bottom:10px;" onclick="camOpen()">📷 Prendre ma photo</button><button class="btn" style="background:var(--surface-warm);color:var(--ink);" onclick="document.getElementById(\'photo-input\').click()">🖼️ Choisir dans la galerie</button>')
+        +'</div>';
+      next.textContent='Continuer'; skip.style.display = has ? 'none' : 'block';
+    }
+    if(rjStep===1){
+      b.innerHTML='<div class="serif" style="font-size:24px;text-align:center;margin-top:8px;">Comment est ta <em style="font-style:italic;color:var(--accent);">peau</em> aujourd\'hui ?</div><p style="color:var(--muted);font-size:12.5px;text-align:center;margin:6px 0 18px;">Choisis tout ce qui te parle</p><div style="display:flex;flex-wrap:wrap;gap:9px;justify-content:center;">'
+        +RJ_TAGS.map(t=>'<button class="rj-chip'+(rjData.tags.has(t[0])?' selected':'')+'" onclick="rjToggleTag(this,\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div>';
+      next.textContent='Continuer'; skip.style.display='block';
+    }
+    if(rjStep===2){
+      const moods=['😣','😕','😐','🙂','✨'];
+      b.innerHTML='<div class="serif" style="font-size:24px;text-align:center;margin-top:8px;">Ton <em style="font-style:italic;color:var(--accent);">contexte</em></div><p style="color:var(--muted);font-size:12.5px;text-align:center;margin:6px 0 16px;">30 secondes — c\'est ce qui rend '+coachName()+' vraiment utile</p>'
+        +'<div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin:6px 0 8px;">Humeur</div><div style="display:flex;gap:8px;justify-content:center;">'+moods.map((m,i)=>'<button class="rj-chip'+(rjData.mood===i+1?' selected':'')+'" style="font-size:19px;padding:9px 12px;" onclick="rjPick(this,\'mood\','+(i+1)+')">'+m+'</button>').join('')+'</div>'
+        +'<div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin:16px 0 8px;">Sommeil</div><div style="display:flex;gap:8px;justify-content:center;"><button class="rj-chip" onclick="rjPick(this,\'sommeil\',5)">😴 Mauvais</button><button class="rj-chip" onclick="rjPick(this,\'sommeil\',7)">Moyen</button><button class="rj-chip" onclick="rjPick(this,\'sommeil\',8)">Bon ✨</button></div>'
+        +'<div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin:16px 0 8px;">Eau aujourd\'hui</div><div style="display:flex;gap:8px;justify-content:center;"><button class="rj-chip" onclick="rjPick(this,\'eau\',2)">Peu</button><button class="rj-chip" onclick="rjPick(this,\'eau\',5)">Normal</button><button class="rj-chip" onclick="rjPick(this,\'eau\',8)">Beaucoup 💧</button></div>';
+      next.textContent='Continuer'; skip.style.display='block';
+    }
+    if(rjStep===3){
+      const items=(window.__homeRoutine && window.__homeRoutine[rjPeriod])||[];
+      b.innerHTML='<div class="serif" style="font-size:24px;text-align:center;margin-top:8px;">Ta routine du <em style="font-style:italic;color:var(--accent);">'+rjPeriod+'</em></div>'
+        +(items.length
+          ? '<p style="color:var(--muted);font-size:12.5px;text-align:center;margin:6px 0 14px;">Coche ce que tu as utilisé · <span style="text-decoration:underline;cursor:pointer;color:var(--accent-deep);" onclick="rjCheckAll()">tout cocher</span></p>'+items.map((p,i)=>'<div class="rj-item'+(rjData.checked.has(i)?' done':'')+'" onclick="rjToggleItem(this,'+i+')"><div class="rj-check">✓</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">'+(p.emoji||'🧴')+' '+(p.nom||'')+'</div>'+(p.effets?'<div style="font-size:11.5px;color:var(--muted);">'+p.effets+'</div>':'')+'</div></div>').join('')
+          : '<p style="color:var(--muted);font-size:13px;text-align:center;line-height:1.6;margin:24px 0;">Tu n\'as pas encore de rituel créé 🌱<br>Tu pourras le faire dans l\'onglet Rituel — valide quand même ta journée, elle compte ✨</p>')
+        +'';
+      next.textContent='Valider mon rituel ✨'; skip.style.display='none';
+    }
+  }
+  async function rjNext(skipped){
+    if(rjStep<3){ rjStep++; rjRender(); window.scrollTo(0,0); return; }
+    await rjFinish();
+  }
+  async function rjFinish(){
+    document.getElementById('rj-footer').style.display='none';
+    const b=document.getElementById('rj-body');
+    b.innerHTML='<div style="text-align:center;margin-top:30px;color:var(--muted);font-size:13px;">Un instant… 🌸</div>';
+    const fields={}; fields[rjPeriod==='soir'?'routine_soir':'routine_matin']=true;
+    if(rjData.tags.size) fields.peau_jour=[...rjData.tags];
+    if(rjData.mood!=null) fields.humeur=rjData.mood;
+    if(rjData.sommeil!=null) fields.sommeil=rjData.sommeil;
+    if(rjData.eau!=null) fields.hydratation=rjData.eau;
+    try{
+      const id=await getTodayEntryId();
+      if(id){
+        let { error } = await sb.from('entries').update(fields).eq('id', id);
+        if(error && fields.peau_jour){ delete fields.peau_jour; await sb.from('entries').update(fields).eq('id', id); }
+      }
+    }catch(e){}
+    applyRoutineState(rjPeriod, true);
+    bustStreak(); renderStreak(); loadHomeData();
+    document.getElementById('rj-count').textContent='RITUEL TERMINÉ';
+    document.getElementById('rj-progress').innerHTML=[0,1,2,3].map(()=>'<div class="onb-dot done"></div>').join('');
+    b.innerHTML='<div style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;">'
+      +'<div style="font-size:64px;">🌱</div>'
+      +'<div class="serif" style="font-size:28px;margin:10px 0 4px;">Rituel <em style="font-style:italic;color:var(--accent);">terminé</em></div>'
+      +'<p style="color:var(--accent-deep);font-size:13.5px;font-weight:600;">Ta plante a grandi 🌿</p>'
+      +'<div class="msg-card" style="margin:18px 0 0;max-width:100%;text-align:left;"><div class="eyebrow">'+coachName().toUpperCase()+'</div><div style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin-top:6px;">'+rjSummary()+'</div></div>'
+      +'<button class="btn btn-accent" style="margin-top:20px;" onclick="closeRituelJour();navTo(\'journal\')">Voir mon évolution</button>'
+      +'<button class="btn btn-ghost" style="margin-top:6px;" onclick="closeRituelJour()">À demain 🌙</button>'
+      +'</div>';
+  }
+  function rjSummary(){
+    const t=rjData.tags; const out=[];
+    if(t.has('rougeurs')||t.has('sensible')) out.push('Ta peau semble un peu sensible aujourd\'hui — garde une routine toute douce, sans nouvel actif.');
+    else if(t.has('seche')||t.has('terne')) out.push('Ta peau réclame de l\'hydratation — une couche généreuse ce soir lui fera du bien 💧');
+    else if(t.has('grasse')||t.has('boutons')) out.push('Côté brillance ou petits boutons : nettoyage doux et constance, jamais d\'agressivité.');
+    else if(t.has('nette')) out.push('Ta peau a l\'air en forme — continue exactement comme ça ✨');
+    if(rjData.sommeil!=null && rjData.sommeil<=5) out.push('Avec une nuit courte, mise sur la simplicité aujourd\'hui.');
+    if(rjData.eau!=null && rjData.eau<=3) out.push('Et pense à boire un peu plus d\'eau au fil de la journée.');
+    if(!out.length) out.push('Jour après jour, c\'est ta régularité qui fait toute la différence.');
+    out.push('Le plus important, c\'est la régularité, pas la perfection 🌸');
+    return out.slice(0,3).join(' ');
+  }
+  function renderRjCta(e){
+    const btn=document.getElementById('rj-cta'); if(!btn) return;
+    const h=new Date().getHours(); const period = h<17 ? 'matin' : 'soir';
+    const done = e && (period==='matin' ? e.routine_matin : e.routine_soir);
+    if(done){
+      btn.style.background='var(--surface)'; btn.style.color='var(--ink-soft)'; btn.style.border='1px solid var(--line)'; btn.style.boxShadow='none';
+      btn.textContent = period==='matin' ? 'Rituel du matin fait ✓ — à ce soir 🌙' : 'Rituel du jour terminé ✨ À demain';
+    } else {
+      btn.style.background=''; btn.style.color=''; btn.style.border=''; btn.style.boxShadow='var(--shadow)';
+      btn.textContent = (period==='matin'?'☀️':'🌙')+' Commencer mon rituel du '+period;
+    }
+  }
 
   // ===== Rituel guidé (plein écran, pas à pas) =====
   let gdItems=[], gdIdx=0, gdPeriod='matin';
@@ -3408,6 +3564,22 @@
     showToast('Photo du jour enregistrée 🌸');
     loadTodayPhoto();
     loadJournalFromDB();
+    try{ rjRefreshPhoto(); }catch(e){}
+  }
+
+  // ===== Landing publique =====
+  function startAuth(m){
+    const l=document.getElementById('landing'); if(l) l.classList.add('hidden');
+    const b=document.getElementById('auth-back'); if(b) b.classList.remove('hidden');
+    document.querySelector('.auth-toggle').classList.remove('hidden');
+    switchAuth(m);
+  }
+  function backToLanding(){
+    const l=document.getElementById('landing'); if(l) l.classList.remove('hidden');
+    const b=document.getElementById('auth-back'); if(b) b.classList.add('hidden');
+    document.querySelector('.auth-toggle').classList.add('hidden');
+    document.getElementById('form-login').classList.add('hidden');
+    document.getElementById('form-signup').classList.add('hidden');
   }
 
   // ===== Notifications push (service worker + abonnement) =====
@@ -3547,7 +3719,7 @@
       card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);cursor:pointer;" onclick="openCycleSheet()"><div style="font-size:24px;flex-shrink:0;">🌸</div><div style="flex:1;min-width:0;"><span class="eyebrow">SUIVI DE CYCLE</span><div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">Ça fait un moment — mets à jour la date de tes dernières règles pour des repères justes.</div></div></div>';
       sec.style.display='block'; return;
     }
-    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);" onclick="openCycleSheet()">'
+    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:11px 14px;box-shadow:var(--shadow);" onclick="openCycleSheet()">'
       + '<div style="font-size:24px;flex-shrink:0;">'+i.emoji+'</div>'
       + '<div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:8px;"><span class="eyebrow">CYCLE · JOUR '+i.day+'</span><span style="font-size:11px;font-weight:600;color:var(--accent-deep);text-transform:capitalize;">'+i.phase+'</span></div>'
       + '<div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">'+i.tip+'</div></div>'
@@ -3603,7 +3775,7 @@
     if(t!=null && t<=3) extra=(extra?extra+' · ':'')+'Froid dehors — protège bien les joues et les lèvres 🧣';
     const meteo = (t!=null||h!=null) ? '<div style="font-size:11px;color:var(--muted);margin-top:5px;">'+(t!=null?t+'°':'')+(t!=null&&h!=null?' · ':'')+(h!=null?h+'% d\'humidité':'')+'</div>' : '';
     const extraHtml = extra ? '<div style="font-size:12.5px;color:var(--ink-soft);line-height:1.45;margin-top:5px;">'+extra+'</div>' : '';
-    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);">'
+    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);">'
       + '<div style="width:52px;height:52px;border-radius:50%;background:'+info.color+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="font-family:var(--serif);font-size:23px;color:'+info.color+';line-height:1;">'+Math.round(uv)+'</div></div>'
       + '<div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:8px;"><span class="eyebrow">INDICE UV</span><span style="font-size:11px;font-weight:600;color:'+info.color+';">'+info.label+'</span></div><div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">'+info.advice+'</div></div>'
       + '</div>';
@@ -4027,8 +4199,10 @@
 
   // ===== Init : on regarde si une session existe déjà =====
   renderJournal(); // rendu de secours par défaut
+  setTimeout(function(){ var a=document.getElementById('auth'); if(a && !a.classList.contains('hidden')) a.style.visibility='visible'; }, 2500);
   (async function init(){
-    const { data:{ session } } = await sb.auth.getSession();
+    let session=null;
+    try{ const r=await sb.auth.getSession(); session=r.data.session; }catch(e){}
     if(session && session.user){
       currentUser = session.user;
       let profile = await loadProfile();
@@ -4056,7 +4230,8 @@
         document.getElementById('onboarding').classList.add('active');
       }
     }
-    // sinon : écran de connexion (déjà visible par défaut)
+    // sinon : écran de connexion — révélé seulement maintenant (anti-flash au démarrage)
+    document.getElementById('auth').style.visibility='visible';
   })();
   document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
 </script>
