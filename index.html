@@ -590,12 +590,12 @@
       </div>
 
       <div id="landing">
-        <p style="font-family:var(--serif);font-style:italic;font-size:16px;color:var(--ink-soft);line-height:1.6;text-align:center;margin:6px 0 22px;">Une photo par jour, ta routine, ton ressenti — et Léa, ta coach douce, pour t\'aider à comprendre ce qui change vraiment.</p>
+        <p style="font-family:var(--serif);font-style:italic;font-size:16px;color:var(--ink-soft);line-height:1.6;text-align:center;margin:6px 0 22px;">Une photo par jour, ta routine, ton ressenti — et Léa, ta coach douce, pour t'aider à comprendre ce qui change vraiment.</p>
         <div class="land-card"><span>📷</span><div><b>Suis ta peau jour après jour</b><small>Photos, humeur, sommeil, hydratation, routine.</small></div></div>
         <div class="land-card"><span>🌿</span><div><b>Comprends ce qui marche</b><small>Produits, habitudes, cycle : tout au même endroit.</small></div></div>
         <div class="land-card"><span>💬</span><div><b>Avance avec Léa</b><small>Une coach beauté douce, sans jugement, pour garder le cap.</small></div></div>
         <button class="btn btn-accent" onclick="startAuth('signup')" style="margin-top:20px;">Commencer mon rituel gratuitement</button>
-        <button onclick="startAuth('login')" style="background:none;border:none;color:var(--accent-deep);font-size:13px;cursor:pointer;display:block;margin:14px auto 0;text-decoration:underline;">J\'ai déjà un compte</button>
+        <button onclick="startAuth('login')" style="background:none;border:none;color:var(--accent-deep);font-size:13px;cursor:pointer;display:block;margin:14px auto 0;text-decoration:underline;">J'ai déjà un compte</button>
       </div>
 
       <button id="auth-back" class="hidden" onclick="backToLanding()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;display:block;margin:0 auto 10px;">‹ Retour</button>
@@ -883,7 +883,6 @@
       <button class="add-product-card" onclick="openHabitForm()">＋ Nouvelle habitude</button>
     </div>
 
-      </div>
 
   <!-- ====================== JOURNAL ====================== -->
   <div id="journal" class="screen">
@@ -1070,7 +1069,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 6.2<br><span class="italic serif">— ton carnet de peau —</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 6.4<br><span class="italic serif">— ton carnet de peau —</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1276,7 +1275,7 @@
       <div class="sheet-title">Mes rappels</div>
       <div style="background:var(--surface-warm);border-radius:14px;padding:14px;margin:4px 0 16px;">
         <div style="font-weight:600;font-size:13px;">🔔 Rappels même app fermée</div>
-        <p style="font-size:12px;color:var(--muted);margin:6px 0 10px;line-height:1.5;">Reçois ta notification du matin et du soir directement sur ton téléphone. Sur iPhone : ajoute d\'abord Rituel à l\'écran d\'accueil.</p>
+        <p style="font-size:12px;color:var(--muted);margin:6px 0 10px;line-height:1.5;">Reçois ta notification du matin et du soir directement sur ton téléphone. Sur iPhone : ajoute d'abord Rituel à l'écran d'accueil.</p>
         <button class="btn btn-accent" id="push-btn" style="padding:11px;" onclick="togglePush()">Activer les notifications</button>
         <div id="push-status" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.4;"></div>
       </div>
@@ -1369,7 +1368,8 @@
         <input type="range" min="0" max="100" value="50" step="5" class="intensity-slider" id="intensity-slider" oninput="onIntensity(this.value)" onchange="saveMood()">
       <div style="height:14px;"></div>
 
-      <div class="intensity" style="margin-bottom:14px;">
+            </div>
+<div class="intensity" style="margin-bottom:14px;">
         <div class="intensity-head"><span>💤 Sommeil</span><span id="ds-sommeil-val">7h</span></div>
         <input type="range" min="0" max="12" value="7" step="0.5" class="intensity-slider" id="ds-sommeil" oninput="onDaySommeil(this.value)">
       </div>
