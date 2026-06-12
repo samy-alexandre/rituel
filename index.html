@@ -793,13 +793,13 @@
         <div class="topbar-name"><span id="greet-hello">Bonjour</span>, <em id="topbar-name">toi</em></div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        <button class="bell-btn" onclick="openReminderSheet()" aria-label="Rappels">
+        <button class="bell-btn" onclick="bellTap()" style="position:relative;" aria-label="Rappels">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 01-3.4 0" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span class="bell-dot" id="bell-dot" style="display:none;"></span>
-        </button>
+        <span id="chat-badge" style="display:none;position:absolute;top:1px;right:1px;min-width:15px;height:15px;border-radius:100px;background:var(--accent);color:#fff;font-size:9.5px;font-weight:700;line-height:15px;padding:0 3px;">1</span></button>
         <div class="avatar" onclick="navTo('profile')" id="topbar-avatar">V</div>
       </div>
-    <button id="chat-entry" onclick="navTo('chat')" aria-label="Messagerie" style="position:relative;background:var(--surface);border:1px solid var(--line);border-radius:50%;width:40px;height:40px;font-size:17px;cursor:pointer;box-shadow:var(--shadow);">💬<span id="chat-badge" style="display:none;position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:100px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;line-height:16px;padding:0 3px;">1</span></button></div>
+    </div>
 
     <div class="section" id="lettre-cta" style="display:none;">
       <div class="msg-card" style="margin:0;max-width:100%;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="openLettre()">
@@ -833,11 +833,10 @@
     <div class="section" id="home-rituel-section">
       <div class="section-head">
         <h3 class="section-title" onclick="navTo('ritual')" style="cursor:pointer;"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Ton <em>rituel</em> <span style="color:var(--muted);font-weight:300;">›</span></h3>
-        <div class="section-more" id="routine-count">0/0</div>
+      </div>
       <div id="home-rituel-empty" style="display:none;text-align:center;padding:14px 6px 4px;">
         <p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 12px;">Tu n'as pas encore de rituel 🌱</p>
         <button class="btn-soft" onclick="navTo('ritual')">Créer mon rituel dans l'onglet Rituel</button>
-      </div>
       </div>
       <div class="period-switch">
         <button class="period-btn active" id="pb-matin" onclick="switchPeriod('matin')">☀️ Matin</button>
@@ -872,10 +871,10 @@
     <div class="section">
       <div class="section-head"><h3 class="section-title" onclick="openDaySheet()" style="cursor:pointer;">Ma <em>journée</em> <span style="color:var(--muted);font-weight:300;">›</span></h3></div>
       <div class="stats-grid">
-        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Sommeil</div><div class="stat-tile-value" id="tile-sommeil">＋</div><div class="stat-tile-trend" id="tile-sommeil-sub">à noter</div></div>
-        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Hydratation</div><div class="stat-tile-value" id="tile-hydra">＋</div><div class="stat-tile-trend" id="tile-hydra-sub">à noter</div></div>
-        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Alimentation</div><div class="stat-tile-value" id="tile-alim">＋</div><div class="stat-tile-trend" id="tile-alim-sub">à noter</div></div>
-        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Humeur du jour</div><div class="stat-tile-value" id="tile-humeur" style="font-size:30px;">＋</div><div class="stat-tile-trend" id="tile-humeur-sub">à noter</div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Sommeil</div><div class="stat-tile-value" id="tile-sommeil">＋</div><div class="stat-tile-trend" id="tile-sommeil-sub"></div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Hydratation</div><div class="stat-tile-value" id="tile-hydra">＋</div><div class="stat-tile-trend" id="tile-hydra-sub"></div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Alimentation</div><div class="stat-tile-value" id="tile-alim">＋</div><div class="stat-tile-trend" id="tile-alim-sub"></div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Humeur du jour</div><div class="stat-tile-value" id="tile-humeur" style="font-size:30px;">＋</div><div class="stat-tile-trend" id="tile-humeur-sub"></div></div>
       </div>
     </div>
 
@@ -1073,7 +1072,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2027,7 +2026,6 @@
   }
   function updateRoutineCount(){
     const s=listStats(currentPeriod);
-    document.getElementById('routine-count').textContent = (function(t){return t&&t.split('/')[1]!=='0'?t:'';})(`${s.done}/${s.total}`);
   }
   async function toggleRoutine(el){
     el.classList.toggle('done');
@@ -2389,12 +2387,7 @@
   }
 
   // Affiche les bons moments sur l'accueil selon le type de rituel choisi
-  function applyRituelTypeToHome(){
-    const t = state.rituelType || 'both';
-    const sw = document.querySelector('#home .period-switch');
-    if(t==='both'){ if(sw) sw.style.display='flex'; switchPeriod('matin'); }
-    else { if(sw) sw.style.display='none'; switchPeriod(t); }
-  }
+  function applyRituelTypeToHome(){ /* géré dynamiquement par loadHomeRoutine selon les rituels existants */ }
 
   // Construit la checklist de l'accueil à partir des vrais produits du Rituel
   async function loadHomeRoutine(){
@@ -2413,7 +2406,18 @@
     }
     if(emptyEl) emptyEl.style.display='none';
     partEls.forEach(el=>{ if(el) el.style.display=''; });
-    const { data: prods } = await sb.from('products').select('id,nom,effets,emoji').eq('user_id', currentUser.id);
+    const hasM = rituels.some(r=>r.moment==='matin'||r.moment==='both');
+    const hasS = rituels.some(r=>r.moment==='soir'||r.moment==='both');
+    const swEl = homeSec ? homeSec.querySelector('.period-switch') : null;
+    if(swEl){
+      swEl.style.display='flex';
+      swEl.querySelectorAll('.period-btn').forEach(b=>{
+        const isM=(b.getAttribute('onclick')||'').includes("'matin'");
+        b.style.display = (isM ? hasM : hasS) ? '' : 'none';
+      });
+    }
+    switchPeriod(hasM ? 'matin' : 'soir');
+    const { data: prods } = await sb.from('products').select('id,nom,effets,emoji,categorie').eq('user_id', currentUser.id);
     const pmap={}; (prods||[]).forEach(p=>{ pmap[p.id]=p; });
     for(const moment of ['matin','soir']){
       const list = document.getElementById('routine-'+moment);
@@ -2714,7 +2718,7 @@
 
   async function openRituelEditor(id){
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
-    const { data: prods } = await sb.from('products').select('id,nom,emoji,effets').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+    const { data: prods } = await sb.from('products').select('id,nom,emoji,effets,categorie').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     rdProductMap = {}; (prods||[]).forEach(p=>{ rdProductMap[p.id]=p; });
     if(id){
       const { data: r } = await sb.from('rituels').select('*').eq('id', id).maybeSingle();
@@ -2740,7 +2744,7 @@
     if(!rituelDraft.produits.length){ list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:6px 2px;">Aucun produit pour l\'instant. Ajoute-en juste en dessous 👇</div>'; return; }
     list.innerHTML = rituelDraft.produits.map((id,i)=>{
       const p=rdProductMap[id]; if(!p) return '';
-      return `<div class="rd-card" data-id="${id}"><div class="rd-handle">⠿</div><div class="rd-emoji">${p.emoji||'🧴'}</div><div style="flex:1;min-width:0;"><div class="rd-step" style="font-size:10px;color:var(--accent-deep);letter-spacing:.08em;">ÉTAPE ${i+1}</div><div class="product-name" style="font-size:15px;">${escapeHtml(p.nom||'')}</div></div><button class="rd-remove" onclick="rdRemove('${id}')">×</button></div>`;
+      return `<div class="rd-card" data-id="${id}"><div class="rd-handle">⠿</div><div class="rd-emoji">${p.emoji||'🧴'}</div><div style="flex:1;min-width:0;"><div class="rd-step" style="font-size:10px;color:var(--accent-deep);letter-spacing:.08em;">ÉTAPE ${i+1}</div><div class="product-name" style="font-size:15px;">${escapeHtml(p.nom||'')}${p.categorie? ' <span style="font-size:10px;color:var(--muted);font-weight:500;">· '+catLabel(p.categorie)+'</span>' : ''}</div></div><button class="rd-remove" onclick="rdRemove('${id}')">×</button></div>`;
     }).join('');
     initRituelDnd();
     renderRdConflicts();
@@ -3421,6 +3425,10 @@
 
   // ===== Léa dans la messagerie (badge + message du jour) =====
   function leaSeenKey(){ return 'rituel_leaseen_'+(currentUser?currentUser.id:'x')+'_'+todayStr(); }
+  function bellTap(){
+    let seen=false; try{ seen=!!localStorage.getItem(leaSeenKey()); }catch(e){}
+    if(currentUser && !seen){ navTo('chat'); } else { openReminderSheet(); }
+  }
   function updateChatBadge(){
     const b=document.getElementById('chat-badge'); if(!b) return;
     let seen=false; try{ seen=!!localStorage.getItem(leaSeenKey()); }catch(e){}
@@ -3508,7 +3516,7 @@
       const mine=all.filter(r=>r.moment===period||r.moment==='both');
       const ids=[]; mine.forEach(r=>(r.produits||[]).forEach(id=>ids.push(id)));
       if(!ids.length) return [];
-      const { data: prods } = await sb.from('products').select('id,nom,emoji,effets').in('id', ids);
+      const { data: prods } = await sb.from('products').select('id,nom,emoji,effets,categorie').in('id', ids);
       const pmap={}; (prods||[]).forEach(p=>pmap[p.id]=p);
       return ids.map(id=>pmap[id]).filter(Boolean);
     }catch(e){ return (window.__homeRoutine&&window.__homeRoutine[period])||[]; }
