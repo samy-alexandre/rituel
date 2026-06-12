@@ -250,6 +250,15 @@
   #day-sheet .mood-row { gap: 6px; }
   #day-sheet .mood-btn { padding: 12px 2px; }
   #day-sheet .mood-label { font-size: 10px; }
+  .lea-ava { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--blush), var(--accent)); display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--serif); font-style: italic; font-size: 19px; flex-shrink: 0; position: relative; }
+  .lea-ava::after { content: ''; position: absolute; bottom: 0; right: 0; width: 11px; height: 11px; background: var(--sage); border: 2px solid var(--surface); border-radius: 50%; }
+  #home .section, #journal .section { margin-bottom: 22px; }
+  #home .routine-item { padding: 11px 12px; }
+  .cal-card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px 14px 14px; box-shadow: var(--shadow); }
+  .cal-card .cal-grid, .cal-card .cal-weekdays { gap: 6px; }
+  .cal-card .cal-title { font-size: 22px; }
+  .cal-cell.complete { border: 1px solid var(--accent-soft); }
+  .cal-legend { margin-top: 14px; }
   .onb-dot { flex: 1; height: 2px; background: var(--line); border-radius: 2px; transition: background .4s; }
   .onb-dot.done { background: var(--accent); }
 
@@ -793,14 +802,17 @@
     </div>
 
     <div class="section">
-      <div class="msg-card" id="lea-tip-card" style="margin:0;max-width:100%;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <div id="lea-card-avatar" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-family:var(--serif);font-style:italic;font-size:13px;">L</div>
-          <div class="eyebrow" id="lea-tip-eyebrow">Léa, ta coach</div>
+      <div class="msg-card" id="lea-tip-card" onclick="navTo('chat')" style="margin:0;max-width:100%;cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
+        <div id="lea-card-avatar" class="lea-ava">L</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+            <div id="lea-tip-eyebrow" style="font-family:var(--serif);font-size:15.5px;color:var(--ink);">Léa</div>
+            <span style="font-size:11px;color:var(--sage);white-space:nowrap;">● en ligne</span>
+          </div>
+          <div class="msg-card-title" id="lea-proactive-line" style="font-size:13.5px;margin:3px 0 4px;"></div>
+          <div class="msg-card-body" id="lea-tip-body" style="line-height:1.5;">Ton conseil du jour arrive… 🌸</div>
         </div>
-        <div class="msg-card-title" id="lea-proactive-line"></div>
-        <div class="msg-card-body" id="lea-tip-body">Ton conseil du jour arrive… 🌸</div>
-        <button class="sugg" id="lea-talk-btn" style="margin-top:12px;background:var(--accent);color:white;border-color:var(--accent);" onclick="navTo('chat')">Parler à Léa</button>
+        <div style="color:var(--muted);font-size:18px;align-self:center;">›</div>
       </div>
     </div>
 
@@ -831,7 +843,6 @@
         <button class="period-btn active" id="pb-matin" onclick="switchPeriod('matin')">☀️ Matin</button>
         <button class="period-btn" id="pb-soir" onclick="switchPeriod('soir')">🌙 Soir</button>
       </div>
-      <button class="btn-outline-sm" id="guided-btn" onclick="openGuided()" style="display:block;margin:0 auto 14px;">🧖 Lancer le rituel guidé <span class="plus-pill">PLUS</span></button>
       <div class="routine-list" id="routine-matin">
         <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Nettoyant doux</div><div class="routine-product">Avène Cleanance Gel</div></div><div class="routine-time">…</div></div>
         <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Sérum vitamine C</div><div class="routine-product">The Ordinary 15%</div></div><div class="routine-time">…</div></div>
@@ -899,6 +910,7 @@
       <div class="topbar-greet"><div class="topbar-name">Mon <span style="color:var(--accent);">journal</span></div></div>
 
     <div class="section">
+      <div class="cal-card">
       <div class="cal-head">
         <button class="cal-nav" onclick="calMonth(-1)">‹</button>
         <div class="cal-title" id="cal-title">…</div>
@@ -911,6 +923,7 @@
         <span><i class="dot-entry"></i> Noté</span>
         <span>📷 Photo</span>
       </div>
+    </div>
     </div>
     </div>
 
@@ -1080,7 +1093,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 6.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 6.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1949,7 +1962,7 @@
   function applyCoachIdentity(){
     const nm=coachName();
     const h=document.getElementById('chat-coach-name-text'); if(h) h.textContent=nm;
-    const ey=document.getElementById('lea-tip-eyebrow'); if(ey) ey.textContent=nm+', '+(state.coachGenre==='homme'?'ton coach':'ta coach');
+    const ey=document.getElementById('lea-tip-eyebrow'); if(ey) ey.textContent=nm;
     const bub=document.getElementById('lea-bubble'); if(bub) bub.setAttribute('aria-label','Parler à '+nm);
     const cm=document.getElementById('menu-coach-meta'); if(cm) cm.textContent=nm;
     const pb=document.getElementById('lea-photo-btn'); if(pb) pb.textContent='✨ Demander l\'avis de '+nm+' sur ma photo';
@@ -2013,7 +2026,7 @@
   }
   function updateRoutineCount(){
     const s=listStats(currentPeriod);
-    document.getElementById('routine-count').textContent = `${s.done}/${s.total}`;
+    document.getElementById('routine-count').textContent = (function(t){return t&&t.split('/')[1]!=='0'?t:'';})(`${s.done}/${s.total}`);
   }
   async function toggleRoutine(el){
     el.classList.toggle('done');
