@@ -1072,7 +1072,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1192,7 +1192,7 @@
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">Mon rituel actif</div>
-      <p style="color:var(--muted);font-size:12px;margin:0 0 12px;line-height:1.5;">Choisis le rituel affiché sur Aujourd'hui. Un seul par moment · un « matin & soir » remplace tout le reste.</p>
+      <p style="color:var(--muted);font-size:12px;margin:0 0 12px;line-height:1.5;">Un seul rituel actif à la fois : c'est lui (et lui seul) qui s'affiche sur Aujourd'hui.</p>
       <div id="rituel-select-list"></div>
       <button class="btn btn-ghost" style="margin-top:10px;" onclick="closeRituelSelect()">Fermer</button>
     </div>
@@ -2722,27 +2722,29 @@
 
   // ===== Rituel actif (sélection + exclusivité par moment) =====
   function pickActive(rituels){
-    const act=rituels.filter(r=>r.actif);
-    const both=act.find(r=>r.moment==='both');
-    if(both) return { matin:both, soir:both };
-    return { matin: act.find(r=>r.moment==='matin')||null, soir: act.find(r=>r.moment==='soir')||null };
+    const acts=rituels.filter(r=>r.actif);
+    const r=acts.length ? acts[acts.length-1] : null;
+    if(!r) return { matin:null, soir:null };
+    return {
+      matin:(r.moment==='matin'||r.moment==='both') ? r : null,
+      soir:(r.moment==='soir'||r.moment==='both') ? r : null
+    };
   }
   function ensureActiveRituels(rituels){
-    const a=pickActive(rituels); const on=[];
-    if(!a.matin && !a.soir){
-      const both=[...rituels].reverse().find(r=>r.moment==='both');
-      if(both){ both.actif=true; on.push(both.id); }
-      else{
-        const m=[...rituels].reverse().find(r=>r.moment==='matin');
-        const s=[...rituels].reverse().find(r=>r.moment==='soir');
-        if(m){ m.actif=true; on.push(m.id); }
-        if(s){ s.actif=true; on.push(s.id); }
-      }
-    } else {
-      if(!a.matin){ const m=[...rituels].reverse().find(r=>r.moment==='matin'); if(m){ m.actif=true; on.push(m.id); } }
-      if(!a.soir){ const s=[...rituels].reverse().find(r=>r.moment==='soir'); if(s){ s.actif=true; on.push(s.id); } }
+    const acts=rituels.filter(r=>r.actif);
+    if(acts.length===1) return rituels;
+    if(acts.length>1){
+      const keep=acts[acts.length-1];
+      const off=acts.filter(r=>r.id!==keep.id).map(r=>r.id);
+      acts.forEach(r=>{ if(r.id!==keep.id) r.actif=false; });
+      try{ sb.from('rituels').update({actif:false}).in('id', off).then(function(){}); }catch(e){}
+      return rituels;
     }
-    if(on.length){ try{ sb.from('rituels').update({actif:true}).in('id', on).then(function(){}); }catch(e){} }
+    const pick=[...rituels].reverse()[0];
+    if(pick){
+      pick.actif=true;
+      try{ sb.from('rituels').update({actif:true}).eq('id', pick.id).then(function(){}); }catch(e){}
+    }
     return rituels;
   }
   function momentBadge(m){ return m==='matin'?'☀️ Matin':(m==='soir'?'🌙 Soir':'☀️🌙 Matin & soir'); }
@@ -2759,15 +2761,8 @@
   function closeRituelSelect(){ document.getElementById('rituel-select-sheet').classList.remove('open'); }
   async function selectRituel(id){
     const all=window.__allRituels||[]; const t=all.find(r=>String(r.id)===String(id)); if(!t) return;
-    let on=[t.id], off=[];
-    if(t.moment==='both'){
-      off=all.filter(r=>r.actif&&r.id!==t.id).map(r=>r.id);
-    } else {
-      const other=t.moment==='matin'?'soir':'matin';
-      const hadBoth=all.some(r=>r.actif&&r.moment==='both');
-      off=all.filter(r=>r.actif&&r.id!==t.id&&(r.moment===t.moment||r.moment==='both')).map(r=>r.id);
-      if(hadBoth){ const cand=[...all].reverse().find(r=>r.moment===other); if(cand&&!on.includes(cand.id)) on.push(cand.id); }
-    }
+    const on=[t.id];
+    const off=all.filter(r=>r.actif && r.id!==t.id).map(r=>r.id);
     try{
       if(off.length) await sb.from('rituels').update({actif:false}).in('id', off);
       await sb.from('rituels').update({actif:true}).in('id', on);
@@ -2911,7 +2906,7 @@
     }catch(e){}
     try{
       const { data: oth } = await sb.from('rituels').select('id,moment,actif').eq('user_id', currentUser.id);
-      const offIds=(oth||[]).filter(r=>r.actif && r.id!==rituelDraft.id && (rituelDraft.moment==='both' || r.moment===rituelDraft.moment || r.moment==='both')).map(r=>r.id);
+      const offIds=(oth||[]).filter(r=>r.actif && r.id!==rituelDraft.id).map(r=>r.id);
       if(offIds.length) await sb.from('rituels').update({actif:false}).in('id', offIds);
     }catch(e){}
     if(rituelDraft.id){
