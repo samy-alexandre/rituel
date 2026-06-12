@@ -833,7 +833,7 @@
     <div class="section" id="home-rituel-section">
       <div class="section-head">
         <h3 class="section-title" onclick="navTo('ritual')" style="cursor:pointer;"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Ton <em>rituel</em> <span style="color:var(--muted);font-weight:300;">›</span></h3>
-      </div>
+      <button class="btn-soft" id="rituel-choose-btn" style="display:none;padding:6px 12px;font-size:11px;" onclick="openRituelSelect()">Choisir ✓</button></div>
       <div id="home-rituel-empty" style="display:none;text-align:center;padding:12px 6px 4px;">
         <button class="btn-soft" onclick="navTo('ritual')">Créer mon rituel 🌱</button>
       </div>
@@ -980,6 +980,7 @@
     
     <div class="section">
       <button class="add-product-card" style="margin-top:0;" onclick="openRituelEditor()">＋ Créer un rituel</button>
+      <button class="btn-soft" id="rituel-choose-btn-tab" style="display:none;margin:12px auto 0;" onclick="openRituelSelect()">Choisir mon rituel actif</button>
       <button onclick="(function(){var h=document.getElementById('rituel-help');h.style.display=h.style.display==='none'?'block':'none';})()" class="btn-soft" style="display:block;margin:12px auto 0;">Comment créer un rituel ?</button>
       <div id="rituel-help" style="display:none;background:var(--surface-warm);border-radius:14px;padding:14px;margin-top:12px;font-size:13px;color:var(--ink-soft);line-height:1.6;">1. Crée un rituel et donne-lui un nom (ex. « Routine du matin »).<br>2. Choisis quand tu le fais · matin, soir ou les deux.<br>3. Ajoute tes produits, puis <b>glisse les cartes</b> pour les ordonner : les étapes 1, 2, 3… se numérotent toutes seules 🌸</div>
       <div id="rituels-list"></div>
@@ -1071,7 +1072,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1184,6 +1185,16 @@
       <div class="sheet-title">Mes lettres</div>
       <div id="lettres-list"></div>
       <button class="btn btn-ghost" style="margin-top:10px;" onclick="closeLettresList()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="rituel-select-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Mon rituel actif</div>
+      <p style="color:var(--muted);font-size:12px;margin:0 0 12px;line-height:1.5;">Choisis le rituel affiché sur Aujourd'hui. Un seul par moment · un « matin & soir » remplace tout le reste.</p>
+      <div id="rituel-select-list"></div>
+      <button class="btn btn-ghost" style="margin-top:10px;" onclick="closeRituelSelect()">Fermer</button>
     </div>
   </div>
 
@@ -2391,7 +2402,7 @@
   // Construit la checklist de l'accueil à partir des vrais produits du Rituel
   async function loadHomeRoutine(){
     if(!currentUser) return;
-    const { data: rits } = await sb.from('rituels').select('moment,produits,position').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+    const { data: rits } = await sb.from('rituels').select('id,nom,moment,produits,position,actif').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rituels = rits || [];
     const homeSec=document.getElementById('home-rituel-section');
     if(homeSec) homeSec.style.display='block';
@@ -2401,12 +2412,18 @@
       if(emptyEl) emptyEl.style.display='block';
       partEls.forEach(el=>{ if(el) el.style.display='none'; });
       const rc=document.getElementById('routine-count'); if(rc) rc.textContent='';
+      const cb=document.getElementById('rituel-choose-btn'); if(cb) cb.style.display='none';
       return;
     }
     if(emptyEl) emptyEl.style.display='none';
     partEls.forEach(el=>{ if(el) el.style.display=''; });
-    const hasM = rituels.some(r=>r.moment==='matin'||r.moment==='both');
-    const hasS = rituels.some(r=>r.moment==='soir'||r.moment==='both');
+    ensureActiveRituels(rituels);
+    window.__allRituels = rituels;
+    const act = pickActive(rituels);
+    const hasM = !!act.matin;
+    const hasS = !!act.soir;
+    const chooseBtn=document.getElementById('rituel-choose-btn');
+    if(chooseBtn) chooseBtn.style.display = rituels.length>1 ? 'inline-block' : 'none';
     const swEl = homeSec ? homeSec.querySelector('.period-switch') : null;
     if(swEl){
       swEl.style.display='flex';
@@ -2420,8 +2437,8 @@
     const pmap={}; (prods||[]).forEach(p=>{ pmap[p.id]=p; });
     for(const moment of ['matin','soir']){
       const list = document.getElementById('routine-'+moment);
-      const ids=[]; const seen=new Set();
-      rituels.filter(r=> r.moment===moment || r.moment==='both').forEach(r=>{ (Array.isArray(r.produits)?r.produits:[]).forEach(id=>{ if(!seen.has(id)){ seen.add(id); ids.push(id); } }); });
+      const src = act[moment];
+      const ids = (src && Array.isArray(src.produits)) ? src.produits : [];
       const items = ids.map(id=>pmap[id]).filter(Boolean);
       window.__homeRoutine = window.__homeRoutine || {}; window.__homeRoutine[moment] = items;
       if(!items.length){
@@ -2703,16 +2720,75 @@
     try{ await sb.from('profiles').update({ rituel_type:t }).eq('id', currentUser.id); }catch(e){}
   }
 
+  // ===== Rituel actif (sélection + exclusivité par moment) =====
+  function pickActive(rituels){
+    const act=rituels.filter(r=>r.actif);
+    const both=act.find(r=>r.moment==='both');
+    if(both) return { matin:both, soir:both };
+    return { matin: act.find(r=>r.moment==='matin')||null, soir: act.find(r=>r.moment==='soir')||null };
+  }
+  function ensureActiveRituels(rituels){
+    const a=pickActive(rituels); const on=[];
+    if(!a.matin && !a.soir){
+      const both=[...rituels].reverse().find(r=>r.moment==='both');
+      if(both){ both.actif=true; on.push(both.id); }
+      else{
+        const m=[...rituels].reverse().find(r=>r.moment==='matin');
+        const s=[...rituels].reverse().find(r=>r.moment==='soir');
+        if(m){ m.actif=true; on.push(m.id); }
+        if(s){ s.actif=true; on.push(s.id); }
+      }
+    } else {
+      if(!a.matin){ const m=[...rituels].reverse().find(r=>r.moment==='matin'); if(m){ m.actif=true; on.push(m.id); } }
+      if(!a.soir){ const s=[...rituels].reverse().find(r=>r.moment==='soir'); if(s){ s.actif=true; on.push(s.id); } }
+    }
+    if(on.length){ try{ sb.from('rituels').update({actif:true}).in('id', on).then(function(){}); }catch(e){} }
+    return rituels;
+  }
+  function momentBadge(m){ return m==='matin'?'☀️ Matin':(m==='soir'?'🌙 Soir':'☀️🌙 Matin & soir'); }
+  async function openRituelSelect(){
+    let rits=window.__allRituels;
+    if(!rits){
+      const { data } = await sb.from('rituels').select('id,nom,moment,actif').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+      rits=data||[]; window.__allRituels=rits;
+    }
+    const host=document.getElementById('rituel-select-list');
+    host.innerHTML = rits.map(r=>`<button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:8px;padding:12px 14px;border-radius:14px;${r.actif?'border-color:var(--accent);':''}" onclick="selectRituel('${r.id}')"><span style="flex:1;min-width:0;"><span style="display:block;font-size:11px;color:var(--muted);">${momentBadge(r.moment)}</span>${escapeHtml(r.nom||'Mon rituel')}</span>${r.actif?'<span style="color:var(--accent);font-weight:700;">✓</span>':''}</button>`).join('');
+    document.getElementById('rituel-select-sheet').classList.add('open');
+  }
+  function closeRituelSelect(){ document.getElementById('rituel-select-sheet').classList.remove('open'); }
+  async function selectRituel(id){
+    const all=window.__allRituels||[]; const t=all.find(r=>String(r.id)===String(id)); if(!t) return;
+    let on=[t.id], off=[];
+    if(t.moment==='both'){
+      off=all.filter(r=>r.actif&&r.id!==t.id).map(r=>r.id);
+    } else {
+      const other=t.moment==='matin'?'soir':'matin';
+      const hadBoth=all.some(r=>r.actif&&r.moment==='both');
+      off=all.filter(r=>r.actif&&r.id!==t.id&&(r.moment===t.moment||r.moment==='both')).map(r=>r.id);
+      if(hadBoth){ const cand=[...all].reverse().find(r=>r.moment===other); if(cand&&!on.includes(cand.id)) on.push(cand.id); }
+    }
+    try{
+      if(off.length) await sb.from('rituels').update({actif:false}).in('id', off);
+      await sb.from('rituels').update({actif:true}).in('id', on);
+    }catch(e){ showToast('Oups, réessaie 🌿'); return; }
+    window.__allRituels=null;
+    closeRituelSelect(); showToast('Rituel sélectionné ✨');
+    loadHomeRoutine(); loadRituels();
+  }
+
   async function loadRituels(){
     const host=document.getElementById('rituels-list'); if(!host) return;
     const { data } = await sb.from('rituels').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rits = data || [];
-    if(!rits.length){ host.innerHTML=''; return; }
+    if(!rits.length){ host.innerHTML=''; const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display='none'; return; }
+    window.__allRituels = rits;
     host.innerHTML = '<div class="eyebrow" style="margin:20px 0 12px;">MES RITUELS</div>' + rits.map(r=>{
       const moji = r.moment==='matin'?'☀️ MATIN':(r.moment==='soir'?'🌙 SOIR':'☀️🌙 MATIN & SOIR');
       const cnt = Array.isArray(r.produits)?r.produits.length:0;
-      return `<div class="product-card" onclick="openRituelEditor('${r.id}')" style="margin-bottom:10px;"><div class="product-thumb">🧖‍♀️</div><div class="product-info" style="flex:1;"><div class="product-step">${moji}</div><div class="product-name">${escapeHtml(r.nom||'Mon rituel')}</div><div class="product-meta">${cnt} étape${cnt>1?'s':''}</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+      return `<div class="product-card" onclick="openRituelEditor('${r.id}')" style="margin-bottom:10px;"><div class="product-thumb">🧖‍♀️</div><div class="product-info" style="flex:1;"><div class="product-step">${moji}${r.actif?' <span style="color:var(--accent);">· ACTIF ✓</span>':''}</div><div class="product-name">${escapeHtml(r.nom||'Mon rituel')}</div><div class="product-meta">${cnt} étape${cnt>1?'s':''}</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
     }).join('');
+    const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display = rits.length>1 ? 'block' : 'none';
   }
 
   async function openRituelEditor(id){
@@ -2833,17 +2909,24 @@
       rituelDraft.produits=[...rituelDraft.produits].map((id,i)=>({id,i})).sort((x,y)=>((rk[x.id]??99)-(rk[y.id]??99))||(x.i-y.i)).map(x=>x.id);
       if(rituelDraft.produits.join(',')!==before) showToast('Ordre ajusté selon les catégories ✨');
     }catch(e){}
+    try{
+      const { data: oth } = await sb.from('rituels').select('id,moment,actif').eq('user_id', currentUser.id);
+      const offIds=(oth||[]).filter(r=>r.actif && r.id!==rituelDraft.id && (rituelDraft.moment==='both' || r.moment===rituelDraft.moment || r.moment==='both')).map(r=>r.id);
+      if(offIds.length) await sb.from('rituels').update({actif:false}).in('id', offIds);
+    }catch(e){}
     if(rituelDraft.id){
-      await sb.from('rituels').update({ nom, moment:rituelDraft.moment, produits:rituelDraft.produits }).eq('id', rituelDraft.id);
+      await sb.from('rituels').update({ nom, moment:rituelDraft.moment, produits:rituelDraft.produits, actif:true }).eq('id', rituelDraft.id);
     } else {
       const { data: existing } = await sb.from('rituels').select('id').eq('user_id', currentUser.id);
       const position = existing ? existing.length : 0;
-      await sb.from('rituels').insert({ user_id:currentUser.id, nom, moment:rituelDraft.moment, produits:rituelDraft.produits, position });
+      await sb.from('rituels').insert({ user_id:currentUser.id, nom, moment:rituelDraft.moment, produits:rituelDraft.produits, position, actif:true });
     }
     await recomputeRituelType();
     closeRituelSheet();
     showToast('Rituel enregistré ✓');
+    window.__allRituels=null;
     loadRituels();
+    loadHomeRoutine();
   }
   async function deleteRituel(){
     if(!rituelDraft || !rituelDraft.id) return;
