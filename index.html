@@ -259,6 +259,10 @@
   .cal-card .cal-title { font-size: 22px; }
   .cal-cell.complete { border: 1px solid var(--accent-soft); }
   .cal-legend { margin-top: 14px; }
+  .section-cal { padding: 0 12px; }
+  .section-cal .cal-card { margin: 0 auto; width: 100%; padding: 16px 10px 12px; }
+  .section-cal .cal-title { text-align: center; flex: 1; }
+  .section-cal .cal-cell { font-size: 14px; }
   .onb-dot { flex: 1; height: 2px; background: var(--line); border-radius: 2px; transition: background .4s; }
   .onb-dot.done { background: var(--accent); }
 
@@ -909,7 +913,7 @@
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mon <span style="color:var(--accent);">journal</span></div></div>
 
-    <div class="section">
+    <div class="section section-cal">
       <div class="cal-card">
       <div class="cal-head">
         <button class="cal-nav" onclick="calMonth(-1)">‹</button>
@@ -995,13 +999,7 @@
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
     </div>
-    <div class="streak" id="rit-streak-card">
-      <div class="streak-flame" id="rit-flame">🌱</div>
-      <div class="streak-text">
-        <div class="streak-num"><em id="rit-streak">0</em> <span id="rit-unit">jour</span></div>
-        <div class="streak-label" id="rit-label">Crée ton rituel pour démarrer ta série ✨</div>
-      </div>
-    </div>
+    
     <div class="section">
       <button class="add-product-card" style="margin-top:0;" onclick="openRituelEditor()">＋ Créer un rituel</button>
       <button onclick="(function(){var h=document.getElementById('rituel-help');h.style.display=h.style.display==='none'?'block':'none';})()" class="btn-soft" style="display:block;margin:12px auto 0;">Comment créer un rituel ?</button>
@@ -1093,7 +1091,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 6.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 6.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2657,12 +2655,8 @@
   async function loadRitual(){
     if(!currentUser) return;
     const n = await computeStreak();
-    document.getElementById('rit-streak').textContent = n;
-    document.getElementById('rit-unit').textContent = n>1 ? "jours d'affilée" : "jour";
-    document.getElementById('rit-flame').textContent = n===0 ? '🌱' : (n>=7 ? '🔥' : '🌸');
     const t = state.rituelType || 'both';
     const typeLabel = t==='matin' ? 'le matin' : (t==='soir' ? 'le soir' : 'matin et soir');
-    document.getElementById('rit-label').textContent = n===0 ? `Crée ton rituel pour démarrer ta série ✨` : `Ta série de rituel · ${typeLabel} 🌸`;
     loadRituels();
   }
 
@@ -2687,8 +2681,6 @@
     const host=document.getElementById('rituels-list'); if(!host) return;
     const { data } = await sb.from('rituels').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rits = data || [];
-    const rcard=document.getElementById('rit-streak-card');
-    if(rcard) rcard.style.display = rits.length ? '' : 'none';
     if(!rits.length){ host.innerHTML=''; return; }
     host.innerHTML = '<div class="eyebrow" style="margin:20px 0 12px;">MES RITUELS</div>' + rits.map(r=>{
       const moji = r.moment==='matin'?'☀️ MATIN':(r.moment==='soir'?'🌙 SOIR':'☀️🌙 MATIN & SOIR');
