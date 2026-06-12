@@ -799,24 +799,16 @@
         </button>
         <div class="avatar" onclick="navTo('profile')" id="topbar-avatar">V</div>
       </div>
-    </div>
+    <button id="chat-entry" onclick="navTo('chat')" aria-label="Messagerie" style="position:relative;background:var(--surface);border:1px solid var(--line);border-radius:50%;width:40px;height:40px;font-size:17px;cursor:pointer;box-shadow:var(--shadow);">💬<span id="chat-badge" style="display:none;position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:100px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;line-height:16px;padding:0 3px;">1</span></button></div>
 
-    <div class="section">
-      <button id="rj-cta" class="btn btn-accent" style="width:100%;padding:16px;font-size:15px;border-radius:18px;box-shadow:var(--shadow);" onclick="openRituelJour()">☀️ Commencer mon rituel du jour</button>
-    </div>
-
-    <div class="section">
-      <div class="msg-card" id="lea-tip-card" onclick="navTo('chat')" style="margin:0;max-width:100%;cursor:pointer;display:flex;gap:12px;align-items:flex-start;">
-        <div id="lea-card-avatar" class="lea-ava">L</div>
+    <div class="section" id="lettre-cta" style="display:none;">
+      <div class="msg-card" style="margin:0;max-width:100%;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="openLettre()">
+        <div style="font-size:26px;">💌</div>
         <div style="flex:1;min-width:0;">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
-            <div id="lea-tip-eyebrow" style="font-family:var(--serif);font-size:15.5px;color:var(--ink);">Léa</div>
-            <span style="font-size:11px;color:var(--sage);white-space:nowrap;">● en ligne</span>
-          </div>
-          <div class="msg-card-title" id="lea-proactive-line" style="font-size:13.5px;margin:3px 0 4px;"></div>
-          <div class="msg-card-body" id="lea-tip-body" style="line-height:1.5;">Ton conseil du jour arrive… 🌸</div>
+          <div style="font-family:var(--serif);font-size:15px;" id="lettre-cta-title">Ta lettre du mois est prête</div>
+          <div style="font-size:12px;color:var(--muted);">Le petit bilan doux de ton coach</div>
         </div>
-        <div style="color:var(--muted);font-size:18px;align-self:center;">›</div>
+        <div style="color:var(--muted);font-size:18px;">›</div>
       </div>
     </div>
 
@@ -842,6 +834,10 @@
       <div class="section-head">
         <h3 class="section-title" onclick="navTo('ritual')" style="cursor:pointer;"><svg class="sprig" viewBox="0 0 20 20" fill="none"><g stroke="#C95A3F" stroke-width="1.3" opacity="0.8"><path d="M10 18 V6"/><path d="M10 11 C5 10 4 6 5 3 C9 4 10 8 10 11"/><circle cx="10" cy="4" r="3"/></g></svg> Ton <em>rituel</em> <span style="color:var(--muted);font-weight:300;">›</span></h3>
         <div class="section-more" id="routine-count">0/0</div>
+      <div id="home-rituel-empty" style="display:none;text-align:center;padding:14px 6px 4px;">
+        <p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 12px;">Tu n'as pas encore de rituel 🌱</p>
+        <button class="btn-soft" onclick="navTo('ritual')">Créer mon rituel dans l'onglet Rituel</button>
+      </div>
       </div>
       <div class="period-switch">
         <button class="period-btn active" id="pb-matin" onclick="switchPeriod('matin')">☀️ Matin</button>
@@ -873,9 +869,14 @@
       <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="handlePhoto(this)">
     </div>
 
-    <div class="section" id="lea-photo-section" style="display:none;">
-      <button class="add-product-card" id="lea-photo-btn" style="margin-top:0;" onclick="askLeaPhoto()">✨ Demander l'avis de Léa sur ma photo</button>
-      <div id="lea-photo-result" style="display:none;margin-top:12px;"></div>
+    <div class="section">
+      <div class="section-head"><h3 class="section-title" onclick="openDaySheet()" style="cursor:pointer;">Ma <em>journée</em> <span style="color:var(--muted);font-weight:300;">›</span></h3></div>
+      <div class="stats-grid">
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Sommeil</div><div class="stat-tile-value" id="tile-sommeil">＋</div><div class="stat-tile-trend" id="tile-sommeil-sub">à noter</div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Hydratation</div><div class="stat-tile-value" id="tile-hydra">＋</div><div class="stat-tile-trend" id="tile-hydra-sub">à noter</div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Alimentation</div><div class="stat-tile-value" id="tile-alim">＋</div><div class="stat-tile-trend" id="tile-alim-sub">à noter</div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Humeur du jour</div><div class="stat-tile-value" id="tile-humeur" style="font-size:30px;">＋</div><div class="stat-tile-trend" id="tile-humeur-sub">à noter</div></div>
+      </div>
     </div>
 
     <div class="section">
@@ -887,31 +888,16 @@
       </div>
     </div>
 
-    
-
     <div class="section">
-      <div class="section-head"><h3 class="section-title" onclick="openDaySheet()" style="cursor:pointer;">Ma <em>journée</em> <span style="color:var(--muted);font-weight:300;">›</span></h3></div>
-      <div class="stats-grid">
-        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Sommeil</div><div class="stat-tile-value" id="tile-sommeil">＋</div><div class="stat-tile-trend" id="tile-sommeil-sub">à noter</div></div>
-        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Hydratation</div><div class="stat-tile-value" id="tile-hydra">＋</div><div class="stat-tile-trend" id="tile-hydra-sub">à noter</div></div>
-        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Alimentation</div><div class="stat-tile-value" id="tile-alim">＋</div><div class="stat-tile-trend" id="tile-alim-sub">à noter</div></div>
-        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Humeur du jour</div><div class="stat-tile-value" id="tile-humeur" style="font-size:30px;">＋</div><div class="stat-tile-trend" id="tile-humeur-sub">à noter</div></div>
-      </div>
-    </div>
-
-        <div class="section">
       <div class="section-head"><h3 class="section-title">Mes <em>habitudes</em></h3></div>
       <div id="habits-list" style="display:flex;flex-direction:column;gap:10px;"></div>
       <button class="add-product-card" onclick="openHabitForm()">＋ Nouvelle habitude</button>
     </div>
-
-
-  <!-- ====================== JOURNAL ====================== -->
   </div>
 
   <div id="journal" class="screen">
     <div class="topbar">
-      <div class="topbar-greet"><div class="topbar-name">Mon <span style="color:var(--accent);">journal</span></div></div>
+      <div class="topbar-greet"><div class="topbar-name">Mon journal</div></div>
 
     </div>
 
@@ -940,13 +926,6 @@
       </div>
     </div>
 
-    <div class="section" id="bilan-section">
-      <div class="section-head"><h3 class="section-title">La <em>lettre du mois</em> <span class="plus-pill">PLUS</span></h3></div>
-      <div class="ba-card" style="flex-direction:column;align-items:stretch;gap:10px;">
-        <div id="bilan-body" style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;display:none;"></div>
-        <button class="btn-outline-sm" id="bilan-btn" onclick="genBilan()" style="align-self:center;">💌 Lire la lettre de ce mois</button>
-      </div>
-    </div>
 
     <div class="section" id="insights-section" style="display:none;">
       <div class="section-head"><h3 class="section-title">Tes <em>découvertes</em> <span class="plus-pill">PLUS</span></h3></div>
@@ -1016,6 +995,7 @@
       <div style="flex:1;"><div class="chat-coach-name"><span id="chat-coach-name-text">Léa</span> <span style="font-size:11px;color:var(--muted);letter-spacing:0.1em;">· COACH BEAUTÉ</span></div><div class="chat-coach-status">● En ligne</div></div>
       <button style="background:none;border:none;cursor:pointer;color:var(--muted);" onclick="openThemeSheet()" aria-label="Thème"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
     </div>
+    <div id="lea-proactive-line" style="display:none;"></div><div id="lea-tip-body" style="display:none;"></div>
     <div class="chat-feed" id="chat-feed">
       <div class="chat-day">VOTRE COACH BEAUTÉ</div>
       <div class="msg msg-ai" id="chat-intro">Coucou 🌸 Moi c'est Léa, ta coach beauté. Je suis là pour t'aider avec ta peau, tes produits, ta routine… ou juste pour répondre à tes questions, sans jugement. Dis-moi tout, qu'est-ce qui t'amène aujourd'hui ?</div>
@@ -1077,6 +1057,7 @@
         <div class="menu-item" onclick="openCycleSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 019 9" stroke-linecap="round"/></svg></div><div class="menu-label">Suivi de cycle</div><div class="menu-meta" id="menu-cycle-meta">…</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="openBadgesSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0V4z" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 5H4v2a3 3 0 003 3M17 5h3v2a3 3 0 01-3 3" stroke-linecap="round"/></svg></div><div class="menu-label">Mes badges</div><div class="menu-meta">souvenirs</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="openEclatSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" stroke-linecap="round"/></svg></div><div class="menu-label">Programme Éclat 30 jours</div><div class="menu-meta" id="menu-eclat-meta">…</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openLettresList()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mes lettres</div><div class="menu-meta">💌</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
         <div class="menu-item" onclick="showToast('Bientôt disponible')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="menu-label">Rappels & notifications</div><div class="menu-meta">bientôt</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
       </div>
     </div>
@@ -1092,7 +1073,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 6.8<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1186,6 +1167,25 @@
       <div class="sheet-title">Programme <em style="font-style:italic;color:var(--accent);">Éclat</em> 30 jours</div>
       <div id="eclat-body"></div>
       <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeEclatSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="lettre-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">💌 La lettre du mois</div>
+      <div id="lettre-body" style="font-size:13.5px;color:var(--ink-soft);line-height:1.65;"></div>
+      <p style="color:var(--muted);font-size:11px;text-align:center;margin-top:14px;">Tu retrouveras toutes tes lettres dans ton profil 🌸</p>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeLettre()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="lettres-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Mes lettres</div>
+      <div id="lettres-list"></div>
+      <button class="btn btn-ghost" style="margin-top:10px;" onclick="closeLettresList()">Fermer</button>
     </div>
   </div>
 
@@ -1479,6 +1479,7 @@
 
       <div class="field"><label>Nom du produit *</label><input id="pf-nom" placeholder="Ex. Sérum vitamine C"></div>
       <button class="add-product-card" style="margin-top:10px;" onclick="openBarcodeSheet()">🏷️ Scanner le code-barres <span class="plus-pill">PLUS</span></button>
+      <div class="field" style="margin-top:12px;"><label>Catégorie</label><div id="pf-cats" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;"><button type="button" class="rj-chip" data-cat="demaquillant" onclick="pfSetCat(this,'demaquillant')">🧼 Démaquillant</button><button type="button" class="rj-chip" data-cat="nettoyant" onclick="pfSetCat(this,'nettoyant')">🫧 Nettoyant</button><button type="button" class="rj-chip" data-cat="toner" onclick="pfSetCat(this,'toner')">💦 Lotion / toner</button><button type="button" class="rj-chip" data-cat="serum" onclick="pfSetCat(this,'serum')">✨ Sérum</button><button type="button" class="rj-chip" data-cat="yeux" onclick="pfSetCat(this,'yeux')">👁️ Yeux</button><button type="button" class="rj-chip" data-cat="creme" onclick="pfSetCat(this,'creme')">🧴 Crème</button><button type="button" class="rj-chip" data-cat="spf" onclick="pfSetCat(this,'spf')">☀️ SPF</button><button type="button" class="rj-chip" data-cat="masque" onclick="pfSetCat(this,'masque')">🎭 Masque / exfo</button><button type="button" class="rj-chip" data-cat="cible" onclick="pfSetCat(this,'cible')">🩹 Soin ciblé</button><button type="button" class="rj-chip" data-cat="autre" onclick="pfSetCat(this,'autre')">🌿 Autre</button></div></div>
       <div class="field" style="margin-top:12px;"><label>Effets / bienfaits (optionnel)</label><input id="pf-effets" placeholder="Ex. éclaircit les taches"></div>
       <div class="field" style="margin-top:12px;"><label>Prix en € (optionnel)</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="Ex. 15"></div>
       <div class="field" style="margin-top:12px;"><label>Date d'ouverture (optionnel)</label><input id="pf-ouverture" type="date"></div>
@@ -1938,6 +1939,7 @@
     if(prev && prev!=='chat') window._lastScreen = prev;
     document.querySelectorAll('.screen, .chat-screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(screen).classList.add('active');
+    if(screen==='chat'){ try{ leaInjectDaily(); }catch(e){} }
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.screen===screen));
     document.getElementById('app').setAttribute('data-screen', screen);
     const host=document.getElementById('scroll-host'); if(host) host.scrollTo(0,0);
@@ -2352,7 +2354,8 @@
     loadLeaTip();
     updateRestBtn(e);
     loadLeaProactive(e);
-    renderRjCta(e);
+    updateChatBadge();
+    maybeShowLettreCta();
     loadUV();
     loadCycleCard();
     loadEclatProgram();
@@ -2399,8 +2402,17 @@
     const { data: rits } = await sb.from('rituels').select('moment,produits,position').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rituels = rits || [];
     const homeSec=document.getElementById('home-rituel-section');
-    if(homeSec) homeSec.style.display = rituels.length ? 'block' : 'none';
-    if(!rituels.length) return;
+    if(homeSec) homeSec.style.display='block';
+    const emptyEl=document.getElementById('home-rituel-empty');
+    const partEls=[homeSec?homeSec.querySelector('.period-switch'):null, document.getElementById('routine-matin'), document.getElementById('routine-soir')];
+    if(!rituels.length){
+      if(emptyEl) emptyEl.style.display='block';
+      partEls.forEach(el=>{ if(el) el.style.display='none'; });
+      const rc=document.getElementById('routine-count'); if(rc) rc.textContent='';
+      return;
+    }
+    if(emptyEl) emptyEl.style.display='none';
+    partEls.forEach(el=>{ if(el) el.style.display=''; });
     const { data: prods } = await sb.from('products').select('id,nom,effets,emoji').eq('user_id', currentUser.id);
     const pmap={}; (prods||[]).forEach(p=>{ pmap[p.id]=p; });
     for(const moment of ['matin','soir']){
@@ -2571,7 +2583,8 @@
   function renderEmojiPicker(){
     document.getElementById('emoji-picker').innerHTML = PRODUCT_EMOJIS.map(e=>`<button type="button" class="emoji-opt${e===pfEmoji?' selected':''}" onclick="pickEmoji('${e}')">${e}</button>`).join('');
   }
-  function pickEmoji(e){ pfEmoji=e; renderEmojiPicker(); }
+  function pickEmoji(e){ pfEmoji=e; renderEmojiPicker();
+    document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.toggle('selected', b.dataset.cat===pfCat)); }
   function pfPhotoPreview(input){
     const f=input.files[0]; if(!f) return;
     pfPhotoFile=f;
@@ -2581,7 +2594,7 @@
 
   async function openProductForm(id){
     editingProductId = id || null;
-    pfPhotoFile = null; pfPhotoPath = null; pfEmoji = '🧴';
+    pfPhotoFile = null; pfPhotoPath = null; pfEmoji = '🧴'; pfCat='autre';
     document.getElementById('pf-error').textContent='';
     document.getElementById('pf-nom').value='';
     document.getElementById('pf-effets').value='';
@@ -2600,6 +2613,8 @@
       if(p){
         document.getElementById('pf-nom').value = p.nom||'';
         document.getElementById('pf-effets').value = p.effets||'';
+        pfCat = p.categorie || 'autre';
+        document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.toggle('selected', b.dataset.cat===pfCat));
         document.getElementById('pf-prix').value = (p.prix!=null?p.prix:'');
         document.getElementById('pf-ouverture').value = p.date_ouverture || '';
         document.getElementById('pf-debut').value = p.date_debut || '';
@@ -2610,6 +2625,13 @@
       }
     }
   }
+
+  // ===== Catégories de soins (ordre canonique d'une routine) =====
+  const CATS=[['demaquillant','🧼','Démaquillant / baume'],['nettoyant','🫧','Nettoyant'],['toner','💦','Lotion / toner'],['serum','✨','Sérum'],['yeux','👁️','Contour des yeux'],['creme','🧴','Crème hydratante'],['spf','☀️','Protection SPF'],['masque','🎭','Masque / exfoliant'],['cible','🩹','Soin ciblé'],['autre','🌿','Autre']];
+  const CAT_RANK={}; CATS.forEach((x,i)=>CAT_RANK[x[0]]=i);
+  function catLabel(k){ const f=CATS.find(x=>x[0]===k); return f ? f[1]+' '+f[2] : ''; }
+  let pfCat='autre';
+  function pfSetCat(el,k){ pfCat=k; document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.remove('selected')); el.classList.add('selected'); }
 
   async function saveProduct(){
     if(!currentUser) return;
@@ -2632,11 +2654,11 @@
       if(!upErr) photo_path = path;
     }
     if(editingProductId){
-      await sb.from('products').update({ nom, effets, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per }).eq('id', editingProductId);
+      await sb.from('products').update({ nom, effets, categorie: pfCat, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per }).eq('id', editingProductId);
     } else {
       const { data: existing } = await sb.from('products').select('id').eq('user_id', currentUser.id);
       const position = existing ? existing.length : 0;
-      await sb.from('products').insert({ user_id: currentUser.id, moment:'matin', position, nom, effets, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per, in_matin:true, in_soir:true });
+      await sb.from('products').insert({ user_id: currentUser.id, moment:'matin', position, nom, effets, categorie: pfCat, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per, in_matin:true, in_soir:true });
     }
     closeProductSheet();
     showToast('Produit enregistré ✓');
@@ -2801,6 +2823,13 @@
     if(!currentUser) return;
     const nom = (document.getElementById('rd-nom').value.trim()) || 'Mon rituel';
     showToast('Enregistrement…');
+    try{
+      const { data: cp } = await sb.from('products').select('id,categorie').in('id', rituelDraft.produits);
+      const rk={}; (cp||[]).forEach(p=>rk[p.id]=(p.categorie in CAT_RANK)?CAT_RANK[p.categorie]:99);
+      const before=rituelDraft.produits.join(',');
+      rituelDraft.produits=[...rituelDraft.produits].map((id,i)=>({id,i})).sort((x,y)=>((rk[x.id]??99)-(rk[y.id]??99))||(x.i-y.i)).map(x=>x.id);
+      if(rituelDraft.produits.join(',')!==before) showToast('Ordre ajusté selon les catégories ✨');
+    }catch(e){}
     if(rituelDraft.id){
       await sb.from('rituels').update({ nom, moment:rituelDraft.moment, produits:rituelDraft.produits }).eq('id', rituelDraft.id);
     } else {
@@ -3390,6 +3419,84 @@
   }
   function closeBadgesSheet(){ document.getElementById('badges-sheet').classList.remove('open'); }
 
+  // ===== Léa dans la messagerie (badge + message du jour) =====
+  function leaSeenKey(){ return 'rituel_leaseen_'+(currentUser?currentUser.id:'x')+'_'+todayStr(); }
+  function updateChatBadge(){
+    const b=document.getElementById('chat-badge'); if(!b) return;
+    let seen=false; try{ seen=!!localStorage.getItem(leaSeenKey()); }catch(e){}
+    b.style.display = (currentUser && !seen) ? 'inline-block' : 'none';
+  }
+  function leaInjectDaily(){
+    if(!currentUser) return;
+    let seen=false; try{ seen=!!localStorage.getItem(leaSeenKey()); }catch(e){}
+    if(seen) return;
+    const pro=(document.getElementById('lea-proactive-line')||{}).textContent||'';
+    let tip=''; try{ tip=localStorage.getItem('rituel_tip_'+currentUser.id+'_'+todayStr())||''; }catch(e){}
+    if(!tip){ const tb=document.getElementById('lea-tip-body'); tip=tb?tb.textContent:''; if(tip==='Ton conseil du jour arrive… 🌸') tip=''; }
+    const full=[pro, tip].filter(Boolean).join('\n\n');
+    if(!full) return;
+    const feed=document.getElementById('chat-feed'); if(!feed) return;
+    const st=document.getElementById('chat-starter'); if(st) st.remove();
+    const dv=document.createElement('div'); dv.className='msg msg-ai'; dv.innerHTML=formatMessage(full);
+    feed.appendChild(dv); feed.scrollTop=feed.scrollHeight;
+    try{ localStorage.setItem(leaSeenKey(),'1'); }catch(e){}
+    updateChatBadge();
+  }
+
+  // ===== Lettre du mois (fin de mois, popup, archive dans Moi) =====
+  function lettreYM(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1); }
+  function lettreSeen(){ try{ return !!localStorage.getItem('rituel_lettreseen_'+(currentUser?currentUser.id:'x')+'_'+lettreYM()); }catch(e){ return false; } }
+  function lettreArchive(){ try{ return JSON.parse(localStorage.getItem('rituel_lettres_'+currentUser.id)||'[]'); }catch(e){ return []; } }
+  function maybeShowLettreCta(){
+    const el=document.getElementById('lettre-cta'); if(!el) return;
+    if(!currentUser){ el.style.display='none'; return; }
+    const now=new Date(); const last=new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    const fin = now.getDate() >= last-2;
+    const M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const t=document.getElementById('lettre-cta-title'); if(t) t.textContent='Ta lettre de '+M[now.getMonth()]+' est prête 💌';
+    el.style.display = (fin && !lettreSeen()) ? 'block' : 'none';
+  }
+  async function fetchLettre(){
+    try{ const cached=localStorage.getItem(bilanKey()); if(cached) return cached; }catch(e){}
+    const ctx=await buildLeaContext();
+    const res=await fetch('/api/lea',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+      messages:[{ role:'user', content:"(Message automatique de l'app, ce n'est pas une vraie question de la personne.) Écris ta petite lettre du mois : un bilan chaleureux en 4 à 6 phrases d'après mes données (série, éclat, habitudes, peau), avec un encouragement doux pour le mois qui commence. Pas de question à la fin. Termine par une signature courte avec ton prénom." }],
+      profile: ctx
+    })});
+    const d=await res.json();
+    const txt=(d && d.reply) ? d.reply : null;
+    if(txt){ try{ localStorage.setItem(bilanKey(), txt); }catch(e){} }
+    return txt;
+  }
+  async function openLettre(arch){
+    const body=document.getElementById('lettre-body');
+    document.getElementById('lettre-sheet').classList.add('open');
+    if(typeof arch==='string'){ body.innerHTML=formatMessage(arch); return; }
+    body.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:14px 0;">'+coachName()+' écrit ta lettre… ✍️</div>';
+    const txt=await fetchLettre();
+    if(!txt){ body.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:14px 0;">Oups, réessaie dans un instant 🌿</div>'; return; }
+    body.innerHTML=formatMessage(txt);
+    try{
+      const a=lettreArchive();
+      if(!a.some(x=>x.k===lettreYM())){ a.unshift({ k:lettreYM(), t:txt }); localStorage.setItem('rituel_lettres_'+currentUser.id, JSON.stringify(a)); }
+    }catch(e){}
+  }
+  function closeLettre(){
+    document.getElementById('lettre-sheet').classList.remove('open');
+    try{ localStorage.setItem('rituel_lettreseen_'+currentUser.id+'_'+lettreYM(),'1'); }catch(e){}
+    maybeShowLettreCta();
+  }
+  function openLettreAt(i){ const a=lettreArchive(); if(a[i]) openLettre(a[i].t); }
+  function openLettresList(){
+    const host=document.getElementById('lettres-list');
+    const a=lettreArchive();
+    const M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    host.innerHTML = a.length ? a.map(function(x,i){ const p=x.k.split('-'); return '<button class="btn-soft" style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:12px 14px;border-radius:14px;" onclick="openLettreAt('+i+')">💌 Lettre de '+M[parseInt(p[1],10)-1]+' '+p[0]+'</button>'; }).join('')
+      : '<p style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0;">Ta première lettre arrivera à la fin du mois 🌸</p>';
+    document.getElementById('lettres-sheet').classList.add('open');
+  }
+  function closeLettresList(){ document.getElementById('lettres-sheet').classList.remove('open'); }
+
   // ===== Rituel du jour (parcours 4 étapes + récompense) =====
   let rjStep=0, rjEntry=null, rjPeriod='matin';
   const rjData={ tags:new Set(), mood:null, sommeil:null, eau:null, checked:new Set() };
@@ -3456,7 +3563,7 @@
       const items=(window.__rjItems)||[];
       b.innerHTML='<div class="serif" style="font-size:24px;text-align:center;margin-top:8px;">Ta routine du <em style="font-style:italic;color:var(--accent);">'+rjPeriod+'</em></div>'
         +(items.length
-          ? '<p style="color:var(--muted);font-size:12.5px;text-align:center;margin:6px 0 14px;">Coche ce que tu as utilisé · <button class="btn-soft" style="padding:7px 14px;font-size:11.5px;margin-top:8px;" onclick="rjCheckAll()">tout cocher</button></p>'+items.map((p,i)=>'<div class="rj-item'+(rjData.checked.has(i)?' done':'')+'" onclick="rjToggleItem(this,'+i+')"><div class="rj-check">✓</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">'+(p.emoji||'🧴')+' '+(p.nom||'')+'</div>'+(p.effets?'<div style="font-size:11.5px;color:var(--muted);">'+p.effets+'</div>':'')+'</div></div>').join('')
+          ? '<p style="color:var(--muted);font-size:12.5px;text-align:center;margin:6px 0 14px;">Coche ce que tu as utilisé · <button class="btn-soft" style="padding:7px 14px;font-size:11.5px;margin-top:8px;" onclick="rjCheckAll()">tout cocher</button></p>'+items.map((p,i)=>'<div class="rj-item'+(rjData.checked.has(i)?' done':'')+'" onclick="rjToggleItem(this,'+i+')"><div class="rj-check">✓</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">'+(p.emoji||'🧴')+' '+(p.nom||'')+'</div>'+(p.categorie?'<div style="font-size:10.5px;color:var(--muted);margin-top:2px;">'+catLabel(p.categorie)+'</div>':'')+(p.effets?'<div style="font-size:11.5px;color:var(--muted);">'+p.effets+'</div>':'')+'</div></div>').join('')
           : '<p style="color:var(--muted);font-size:13px;text-align:center;line-height:1.6;margin:24px 0;">'+(window.__rjHasAny?'Pas de rituel pour le '+rjPeriod+' pour le moment 🌱':'Tu n\'as pas encore créé de rituel 🌱<br>Tu pourras le faire dans l\'onglet Rituel')+'<br>Valide quand même ta journée, elle compte ✨</p>')
         +'';
       next.textContent='Valider mon rituel ✨'; skip.style.display='none';
@@ -3886,31 +3993,6 @@
   }
   // ===== La lettre du mois (1 appel IA/mois, en cache) =====
   function bilanKey(){ const d=new Date(); return 'rituel_bilan_'+(currentUser?currentUser.id:'x')+'_'+d.getFullYear()+'-'+(d.getMonth()+1); }
-  function loadBilan(){
-    const body=document.getElementById('bilan-body'), btn=document.getElementById('bilan-btn');
-    if(!body||!btn) return;
-    if(!currentUser){ btn.style.display='none'; body.style.display='none'; return; }
-    const M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-    btn.textContent='💌 Lire la lettre de '+M[new Date().getMonth()];
-    try{ const cached=localStorage.getItem(bilanKey()); if(cached){ body.innerHTML=formatMessage(cached); body.style.display='block'; btn.style.display='none'; return; } }catch(e){}
-    body.style.display='none'; btn.style.display='inline-block';
-  }
-  async function genBilan(){
-    const body=document.getElementById('bilan-body'), btn=document.getElementById('bilan-btn');
-    btn.disabled=true; btn.textContent='✍️ '+coachName()+' écrit…';
-    try{
-      const ctx=await buildLeaContext();
-      const res=await fetch('/api/lea',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
-        messages:[{ role:'user', content:"(Message automatique de l'app, ce n'est pas une vraie question de la personne.) Écris ta petite lettre du mois : un bilan chaleureux en 4 à 6 phrases d'après mes données (série, éclat, habitudes, peau), avec un encouragement doux pour le mois qui commence. Pas de question à la fin. Termine par une signature courte avec ton prénom." }],
-        profile: ctx
-      })});
-      const d=await res.json();
-      const txt=(d && d.reply) ? d.reply : null;
-      if(!txt){ btn.disabled=false; loadBilan(); showToast('Oups, réessaie un peu plus tard 🌿'); return; }
-      try{ localStorage.setItem(bilanKey(), txt); }catch(e){}
-      body.innerHTML=formatMessage(txt); body.style.display='block'; btn.style.display='none'; btn.disabled=false;
-    }catch(e){ btn.disabled=false; loadBilan(); showToast('Oups, réessaie un peu plus tard 🌿'); }
-  }
 
   // ===== Souvenir : une photo d'il y a un moment =====
   async function loadMemory(){
@@ -3987,7 +4069,6 @@
   async function loadJournalFromDB(){
     const grid=document.getElementById('journal-grid'); if(!grid) return;
     loadWeekRecap();
-    loadBilan();
     loadMemory();
     loadInsights();
     loadBeforeAfter();
