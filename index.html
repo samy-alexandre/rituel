@@ -1071,7 +1071,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1247,6 +1247,7 @@
         <div style="position:absolute;inset:0;margin:22% 12%;border:2px solid rgba(255,255,255,0.65);border-radius:14px;pointer-events:none;"></div>
       </div>
       <div id="bc-status" style="color:var(--muted);font-size:13px;line-height:1.5;margin:12px 2px;text-align:center;"></div>
+        <a id="bc-google" class="btn-soft" target="_blank" rel="noopener" style="display:none;margin-top:10px;">🔎 Chercher en ligne</a>
       <div class="field"><label>Ou tape le code-barres</label><input id="bc-manual" inputmode="numeric" placeholder="Ex. 3600523351441"></div>
       <button class="btn btn-accent" style="margin-top:12px;" onclick="bcLookupManual()">Chercher</button>
       <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeBarcodeSheet()">Fermer</button>
@@ -1773,7 +1774,6 @@
     try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: state.concerns||[] })); }catch(e){}
     document.getElementById('onboarding').classList.remove('active');
     enterApp();
-    setTimeout(function(){ try{ openRituelJour(); }catch(e){} }, 700);
   }
 
   // ===== Enter app =====
@@ -3826,15 +3826,21 @@
   }
   async function bcLookup(code){
     const status=document.getElementById('bc-status');
+    const g=document.getElementById('bc-google'); if(g) g.style.display='none';
     status.textContent='Recherche du produit…';
-    let p=await bcFetchProduct('https://world.openbeautyfacts.org/api/v2/product/', code);
-    if(!p) p=await bcFetchProduct('https://world.openfoodfacts.org/api/v2/product/', code);
-    if(!p) p=await bcFetchProduct('https://world.openproductsfacts.org/api/v2/product/', code);
-    if(!p){ status.textContent='Produit absent des bases publiques 😕 (fréquent en cosmétique) · tape son nom à la main, c\'est tout aussi bien.'; return; }
-    const brand=(p.brands||'').split(',')[0].trim();
-    const name=(p.product_name_fr || p.product_name || '').trim();
-    const full=[brand, name].filter(Boolean).join(' · ');
-    if(!full){ status.textContent='Produit trouvé mais sans nom dans la base 😅 Tape-le à la main.'; return; }
+    let d=null;
+    try{
+      const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(), 9000);
+      const r=await fetch('/api/barcode?code='+encodeURIComponent(code), { signal: ctl.signal });
+      clearTimeout(t);
+      d=await r.json();
+    }catch(e){}
+    if(!d || !d.found){
+      status.textContent='Produit introuvable dans les bases 😕 (fréquent en cosmétique). Tape son nom à la main, ou jette un œil en ligne :';
+      if(g){ g.href='https://www.google.com/search?q='+encodeURIComponent(code); g.style.display='inline-block'; }
+      return;
+    }
+    const full=[d.marque, d.nom].filter(Boolean).join(' · ');
     const nomEl=document.getElementById('pf-nom'); if(nomEl) nomEl.value=full;
     closeBarcodeSheet();
     showToast('Produit trouvé ✨');
