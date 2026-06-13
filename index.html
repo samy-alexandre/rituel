@@ -857,7 +857,7 @@
 
     <div class="photo-mini" onclick="openPhotoChoice()">
       <div class="photo-mini-thumb">
-        <div id="photo-empty" class="pm-empty"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+        <div id="photo-empty" class="pm-empty" style="font-size:22px;color:var(--muted);">＋</div>
         <div id="photo-display" class="pm-display hidden"><img id="photo-img" alt=""></div>
       </div>
       <div class="photo-mini-text">
@@ -865,6 +865,11 @@
         <div class="photo-mini-sub">Suis l'évolution de ta peau, jour après jour 🌸</div>
       </div>
       <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="handlePhoto(this)">
+    </div>
+
+    <div class="section" id="lea-photo-section" style="display:none;">
+      <button class="add-product-card" id="lea-photo-btn" style="margin-top:0;" onclick="askLeaPhoto()">✨ Demander l'avis de Léa sur ma photo</button>
+      <div id="lea-photo-result" style="display:none;margin-top:12px;"></div>
     </div>
 
     <div class="section">
@@ -1072,7 +1077,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1972,12 +1977,9 @@
   function applyCoachIdentity(){
     const nm=coachName();
     const h=document.getElementById('chat-coach-name-text'); if(h) h.textContent=nm;
-    const ey=document.getElementById('lea-tip-eyebrow'); if(ey) ey.textContent=nm;
     const bub=document.getElementById('lea-bubble'); if(bub) bub.setAttribute('aria-label','Parler à '+nm);
     const cm=document.getElementById('menu-coach-meta'); if(cm) cm.textContent=nm;
     const pb=document.getElementById('lea-photo-btn'); if(pb) pb.textContent='✨ Demander l\'avis de '+nm+' sur ma photo';
-    const av=document.getElementById('lea-card-avatar'); if(av) av.textContent=nm[0];
-    const tb=document.getElementById('lea-talk-btn'); if(tb) tb.textContent='Parler à '+nm;
     updateChatIntro();
   }
 
@@ -2411,7 +2413,6 @@
     if(!rituels.length){
       if(emptyEl) emptyEl.style.display='block';
       partEls.forEach(el=>{ if(el) el.style.display='none'; });
-      const rc=document.getElementById('routine-count'); if(rc) rc.textContent='';
       const cb=document.getElementById('rituel-choose-btn'); if(cb) cb.style.display='none';
       return;
     }
@@ -3703,18 +3704,6 @@
     if(!out.length) out.push('Jour après jour, c\'est ta régularité qui fait toute la différence.');
     out.push('Le plus important, c\'est la régularité, pas la perfection 🌸');
     return out.slice(0,3).join(' ');
-  }
-  function renderRjCta(e){
-    const btn=document.getElementById('rj-cta'); if(!btn) return;
-    const h=new Date().getHours(); const period = h<17 ? 'matin' : 'soir';
-    const done = e && (period==='matin' ? e.routine_matin : e.routine_soir);
-    if(done){
-      btn.style.background='var(--surface)'; btn.style.color='var(--ink-soft)'; btn.style.border='1px solid var(--line)'; btn.style.boxShadow='none';
-      btn.textContent = period==='matin' ? 'Rituel du matin fait ✓ · à ce soir 🌙' : 'Rituel du jour terminé ✨ À demain';
-    } else {
-      btn.style.background=''; btn.style.color=''; btn.style.border=''; btn.style.boxShadow='var(--shadow)';
-      btn.textContent = (period==='matin'?'☀️':'🌙')+' Commencer mon rituel du '+period;
-    }
   }
 
   // ===== Rituel guidé (plein écran, pas à pas) =====
