@@ -980,6 +980,19 @@
     </div>
     
     <div class="section">
+      <div style="margin:18px 0 14px;">
+        <div class="section-head" style="margin-bottom:6px;"><h3 class="section-title" style="font-size:16px;">Pars d'une routine <em>toute faite</em> ✨</h3></div>
+        <p style="color:var(--muted);font-size:12px;margin:0 0 10px;line-height:1.5;">Choisis ton profil : on crée les produits et le rituel pour toi, dans le bon ordre. Tu personnalises ensuite.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('grasse')"><span style="font-size:20px;">🫧</span><span style="flex:1;min-width:0;"><span style="display:block;">Peau grasse · débutant</span><span style="font-size:11px;color:var(--muted);">5 étapes · prêt en 10 secondes</span></span><span style="color:var(--muted);">›</span></button>
+        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('acne')"><span style="font-size:20px;">🌋</span><span style="flex:1;min-width:0;"><span style="display:block;">Acné légère</span><span style="font-size:11px;color:var(--muted);">4 étapes · prêt en 10 secondes</span></span><span style="color:var(--muted);">›</span></button>
+        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('seche')"><span style="font-size:20px;">🏜️</span><span style="flex:1;min-width:0;"><span style="display:block;">Peau sèche</span><span style="font-size:11px;color:var(--muted);">4 étapes · prêt en 10 secondes</span></span><span style="color:var(--muted);">›</span></button>
+        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('rougeurs')"><span style="font-size:20px;">🍓</span><span style="flex:1;min-width:0;"><span style="display:block;">Rougeurs</span><span style="font-size:11px;color:var(--muted);">4 étapes · prêt en 10 secondes</span></span><span style="color:var(--muted);">›</span></button>
+        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('sensible')"><span style="font-size:20px;">🌸</span><span style="flex:1;min-width:0;"><span style="display:block;">Peau sensible</span><span style="font-size:11px;color:var(--muted);">3 étapes · prêt en 10 secondes</span></span><span style="color:var(--muted);">›</span></button>
+        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('homme')"><span style="font-size:20px;">🪒</span><span style="flex:1;min-width:0;"><span style="display:block;">Homme · rasage</span><span style="font-size:11px;color:var(--muted);">4 étapes · prêt en 10 secondes</span></span><span style="color:var(--muted);">›</span></button>
+        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('simple')"><span style="font-size:20px;">🌿</span><span style="flex:1;min-width:0;"><span style="display:block;">Ultra-simple · 3 étapes</span><span style="font-size:11px;color:var(--muted);">3 étapes · prêt en 10 secondes</span></span><span style="color:var(--muted);">›</span></button>
+        </div>
+      </div>
       <button class="add-product-card" style="margin-top:0;" onclick="openRituelEditor()">＋ Créer un rituel</button>
       <button class="btn-soft" id="rituel-choose-btn-tab" style="display:none;margin:12px auto 0;" onclick="openRituelSelect()">Choisir mon rituel actif</button>
       <button onclick="(function(){var h=document.getElementById('rituel-help');h.style.display=h.style.display==='none'?'block':'none';})()" class="btn-soft" style="display:block;margin:12px auto 0;">Comment créer un rituel ?</button>
@@ -1073,7 +1086,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.8<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1209,7 +1222,7 @@
         <div>🎞️ Timelapse &nbsp;·&nbsp; 📊 Tes découvertes &nbsp;·&nbsp; 📄 Carnet PDF</div>
         <div>🏷️ Scanner code-barres &nbsp;·&nbsp; 🎨 Thèmes & plantes exclusifs</div>
       </div>
-      <div style="text-align:center;margin:18px 0 4px;"><span class="serif" style="font-size:26px;">4,99 €</span><span style="color:var(--muted);font-size:13px;"> /mois</span> &nbsp;<span style="color:var(--muted);font-size:12px;">ou 39 €/an</span></div>
+      <div style="text-align:center;margin:18px 0 4px;"><span class="serif" style="font-size:26px;">2,99 €</span><span style="color:var(--muted);font-size:13px;"> /mois</span> &nbsp;<span style="color:var(--muted);font-size:12px;">ou 19,99 €/an · offre de lancement 🌱</span></div>
       <div style="text-align:center;font-size:12px;color:var(--accent-deep);font-weight:600;margin-bottom:14px;">✨ 1er mois offert</div>
       <button class="btn btn-accent" onclick="showToast('Arrive très bientôt avec la version Play Store ✨')">Essayer 1 mois gratuit</button>
       <button class="btn btn-ghost" style="margin-top:6px;" onclick="closePlusSheet()">Plus tard</button>
@@ -2713,6 +2726,45 @@
     const t = (hasM&&hasS)?'both':(hasM?'matin':(hasS?'soir':'both'));
     state.rituelType = t;
     try{ await sb.from('profiles').update({ rituel_type:t }).eq('id', currentUser.id); }catch(e){}
+  }
+
+  // ===== Routines préfaites =====
+  const PRESETS={
+    grasse:{ nom:'Peau grasse · débutant', steps:[['Nettoyant gel doux','nettoyant','🫧'],['Lotion purifiante','toner','💦'],['Sérum niacinamide','serum','✨'],['Crème hydratante légère','creme','🧴'],['Protection SPF (le matin)','spf','☀️']] },
+    acne:{ nom:'Acné légère', steps:[['Nettoyant doux','nettoyant','🫧'],['Soin ciblé imperfections','cible','🩹'],['Crème non comédogène','creme','🧴'],['Protection SPF (le matin)','spf','☀️']] },
+    seche:{ nom:'Peau sèche', steps:[['Nettoyant crème','nettoyant','🫧'],['Sérum hydratant','serum','✨'],['Crème riche','creme','🧴'],['Protection SPF (le matin)','spf','☀️']] },
+    rougeurs:{ nom:'Rougeurs', steps:[['Nettoyant très doux','nettoyant','🫧'],['Sérum apaisant','serum','✨'],['Crème apaisante','creme','🧴'],['SPF minérale (le matin)','spf','☀️']] },
+    sensible:{ nom:'Peau sensible', steps:[['Nettoyant sans parfum','nettoyant','🫧'],['Crème barrière réparatrice','creme','🧴'],['Protection SPF douce (le matin)','spf','☀️']] },
+    homme:{ nom:'Homme · rasage', steps:[['Nettoyant visage','nettoyant','🫧'],['Soin apaisant après-rasage','cible','🩹'],['Crème hydratante','creme','🧴'],['Protection SPF (le matin)','spf','☀️']] },
+    simple:{ nom:'Ultra-simple · 3 étapes', steps:[['Nettoyant doux','nettoyant','🫧'],['Crème hydratante','creme','🧴'],['Protection SPF (le matin)','spf','☀️']] },
+  };
+  let __presetBusy=false;
+  async function applyPreset(key){
+    const P=PRESETS[key]; if(!P || !currentUser || __presetBusy) return;
+    __presetBusy=true; showToast('Création de ta routine… 🌱');
+    try{
+      const { data: mine } = await sb.from('products').select('id,nom').eq('user_id', currentUser.id);
+      const byNom={}; (mine||[]).forEach(p=>byNom[(p.nom||'').toLowerCase()]=p.id);
+      const ids=[];
+      for(const [nom,cat,emo] of P.steps){
+        const lk=nom.toLowerCase();
+        if(byNom[lk]){ ids.push(byNom[lk]); continue; }
+        const { data: ins, error } = await sb.from('products').insert({ user_id:currentUser.id, nom, categorie:cat, emoji:emo, in_matin:true, in_soir:true }).select('id');
+        if(error || !ins || !ins[0]) throw (error||new Error('insert'));
+        ids.push(ins[0].id); byNom[lk]=ins[0].id;
+      }
+      const { data: oth } = await sb.from('rituels').select('id').eq('user_id', currentUser.id).eq('actif', true);
+      const off=(oth||[]).map(r=>r.id);
+      if(off.length) await sb.from('rituels').update({actif:false}).in('id', off);
+      const { count } = await sb.from('rituels').select('id',{count:'exact',head:true}).eq('user_id', currentUser.id);
+      await sb.from('rituels').insert({ user_id:currentUser.id, nom:P.nom, moment:'both', produits:ids, position:(count||0), actif:true });
+      window.__allRituels=null;
+      showToast('Routine créée et activée ✨');
+      loadRituels(); if(typeof loadProducts==='function') loadProducts();
+      loadHomeRoutine();
+      navTo('home');
+    }catch(e){ showToast('Oups, réessaie dans un instant 🌿'); }
+    __presetBusy=false;
   }
 
   // ===== Rituel actif (sélection + exclusivité par moment) =====
