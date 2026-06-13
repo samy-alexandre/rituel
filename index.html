@@ -114,7 +114,6 @@
     .scroll-host { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     /* Sur desktop, les éléments fixes se calent dans le cadre */
     #app .nav, #app .chat-input-bar { position: absolute; }
-    #app .fab { position: absolute; }
     #app .toast { position: absolute; }
     #app .modal { position: absolute; }
   }
@@ -560,9 +559,6 @@
   .nav-item svg { width: 22px; height: 22px; }
   .nav-label { font-size: 10px; letter-spacing: 0.03em; font-weight: 500; }
 
-  .fab { position: fixed; bottom: 88px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; border: none; box-shadow: 0 8px 24px rgba(201,90,63,0.4); cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 50; transition: all .2s; }
-  .fab:active { transform: scale(0.9); }
-  #app[data-screen="home"] .fab { display: flex; }
 
   .skin-render { position: relative; overflow: hidden; }
   .skin-render::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.5), transparent 50%); }
@@ -1077,7 +1073,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 7.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1089,8 +1085,6 @@
     <div class="nav-item" data-screen="ritual" onclick="navTo('ritual')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Rituel</div></div>
     <div class="nav-item" data-screen="profile" onclick="navTo('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Moi</div></div>
   </nav>
-
-  <button class="fab" onclick="openPhotoChoice()" aria-label="Prendre une photo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h2.5l1.5-2h6l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
   <!-- ====================== FICHE HABITUDE ====================== -->
   <div class="sheet-overlay" id="habit-sheet">
