@@ -65,6 +65,14 @@ export default async function handler(req, res) {
       }
     } catch (e) { /* non bloquant */ }
 
+    // 2bis. Supprimer le compteur d'usage IA (pas de cascade auth dessus)
+    try {
+      await fetch(`${URL}/rest/v1/ai_usage?user_id=eq.${encodeURIComponent(userId)}`, {
+        method: 'DELETE',
+        headers: adminHeaders
+      });
+    } catch (e) { /* non bloquant */ }
+
     // 3. Supprimer le compte. Les lignes profiles/entries s'effacent automatiquement
     //    grâce au "on delete cascade" défini sur les tables.
     const del = await fetch(`${URL}/auth/v1/admin/users/${userId}`, {
