@@ -17,3 +17,11 @@ self.addEventListener('notificationclick', function(e){
     return self.clients.openWindow(e.notification.data && e.notification.data.url || '/');
   }));
 });
+
+// ----- Cache léger (offline minimal, requis pour l'installabilité Play Store) -----
+self.addEventListener('fetch', function(e){
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    fetch(e.request).catch(function(){ return caches.match(e.request); })
+  );
+});
