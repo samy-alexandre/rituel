@@ -1087,7 +1087,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 8.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 8.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3191,6 +3191,12 @@
     else { await sb.from('habit_logs').insert({ user_id: currentUser.id, habit_id: id, date: ds }); btn.classList.add('done'); btn.textContent='✓'; }
   }
 
+  // ===== Limite IA bêta : message doux + bandeau =====
+  function leaLimitMsg(){
+    return "Je dois faire une petite pause pour aujourd'hui 🌸\n\nRituel est en bêta et gratuit pour le moment. Pour garder l'app accessible, l'IA est limitée à 15 échanges par jour le temps du lancement. On se retrouve demain ! (Plus tard, une version Rituel+ lèvera cette limite.)";
+  }
+  function showLimitToast(){ showToast("Limite du jour atteinte · l'IA revient demain 🌸"); }
+
   // ===== Chat · vraie Léa via le backend sécurisé (/api/lea) =====
   function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function formatMessage(text){
@@ -3281,9 +3287,10 @@
     try{
       const res=await fetch('/api/lea',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
         messages:[{ role:'user', content:"(Message automatique de l'app, ce n'est pas une vraie question de la personne.) Donne UN seul conseil du jour : court (1 à 2 phrases maximum), chaleureux et personnalisé d'après mes données. Commence directement par le conseil, sans salutation et sans poser de question à la fin." }],
-        profile: ctx
+        profile: ctx, user_id: currentUser?currentUser.id:null
       }) });
       const data=await res.json();
+      if(data && data.limited){ body.textContent="Léa fait une pause aujourd'hui 🌸 (limite bêta atteinte)"; return; }
       if(data && data.reply){
         const tip=data.reply.trim();
         try{ localStorage.setItem(key, tip); }catch(e){}
@@ -3311,11 +3318,12 @@
         headers:{ 'Content-Type':'application/json' },
         body:JSON.stringify({
           messages: leaHistory,
-          profile: ctx
+          profile: ctx, user_id: currentUser?currentUser.id:null
         })
       });
       const data=await res.json();
       const tp=document.getElementById('typing'); if(tp) tp.remove();
+      if(data && data.limited){ const lim=document.createElement('div'); lim.className='msg msg-ai'; lim.innerHTML=formatMessage(leaLimitMsg()); feed.appendChild(lim); feed.scrollTop=feed.scrollHeight; leaBusy=false; return; }
       if(data && data.reply){
         leaHistory.push({ role:'assistant', content:data.reply });
         const a=document.createElement('div'); a.className='msg msg-ai'; a.innerHTML=formatMessage(data.reply); feed.appendChild(a);
@@ -3418,7 +3426,7 @@
     if(!photo){ box.style.display='none'; box.innerHTML=''; showToast('Prends d\'abord ta photo du jour 🌸'); return; }
     try{
       const ctx=await buildLeaContext();
-      const r=await fetch('/api/analyze-photo',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ image:photo.b64, media_type:photo.type, profile:ctx }) });
+      const r=await fetch('/api/analyze-photo',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ image:photo.b64, media_type:photo.type, profile:ctx, user_id: currentUser?currentUser.id:null }) });
       if(!r.ok){
         const msg = r.status===404
           ? "L'analyse photo n'est pas encore activée sur le serveur 🌿 (fichier api/analyze-photo.js à déployer)"
@@ -3426,6 +3434,7 @@
         box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;line-height:1.5;">'+msg+'</div>'; return;
       }
       const d=await r.json();
+      if(d && d.limited){ showLimitToast(); const b=document.getElementById('lea-photo-result'); if(b){ b.style.display='block'; b.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0;">'+leaLimitMsg().split('\n')[0]+'</div>'; } return; }
       if(d.error){ box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Oups, réessaie un peu plus tard 🌿</div>'; return; }
       const eclat = (typeof d.eclat==='number') ? d.eclat : null;
       let html='<div class="msg-card" style="margin:0;max-width:100%;">';
@@ -3715,7 +3724,7 @@
     const ctx=await buildLeaContext();
     const res=await fetch('/api/lea',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
       messages:[{ role:'user', content:"(Message automatique de l'app, ce n'est pas une vraie question de la personne.) Écris ta petite lettre du mois : un bilan chaleureux en 4 à 6 phrases d'après mes données (série, éclat, habitudes, peau), avec un encouragement doux pour le mois qui commence. Pas de question à la fin. Termine par une signature courte avec ton prénom." }],
-      profile: ctx
+      profile: ctx, user_id: currentUser?currentUser.id:null
     })});
     const d=await res.json();
     const txt=(d && d.reply) ? d.reply : null;
