@@ -11,8 +11,34 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Clé API manquante (ANTHROPIC_API_KEY)." });
   }
   try {
-    const { image, media_type = 'image/jpeg', profile = {} } = req.body || {};
+    const { image, media_type = 'image/jpeg', profile = {}, user_id = null } = req.body || {};
     if (!image) return res.status(400).json({ error: "Aucune image reçue." });
+
+  // ----- Garde-fou anti-abus (bêta gratuite) : 15 actions IA / jour / personne -----
+  const DAILY_AI_LIMIT = 15;
+  if (user_id) {
+    try {
+      const SB_URL = process.env.SUPABASE_URL;
+      const SB_KEY = process.env.SUPABASE_SERVICE_ROLE;
+      if (SB_URL && SB_KEY) {
+        const today = new Date().toISOString().slice(0, 10);
+        const headers = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+        const getUrl = SB_URL + '/rest/v1/ai_usage?user_id=eq.' + encodeURIComponent(user_id) + '&jour=eq.' + today + '&select=count';
+        const cur = await fetch(getUrl, { headers });
+        const rows = await cur.json();
+        const used = (rows && rows[0] && rows[0].count) || 0;
+        if (used >= DAILY_AI_LIMIT) {
+          return res.status(200).json({ limited: true, observation: null });
+        }
+        // incrément atomique via upsert + merge-duplicates
+        await fetch(SB_URL + '/rest/v1/ai_usage', {
+          method: 'POST',
+          headers: { ...headers, Prefer: 'resolution=merge-duplicates' },
+          body: JSON.stringify({ user_id, jour: today, count: used + 1 })
+        });
+      }
+    } catch (e) { /* en cas de souci compteur, on laisse passer pour ne pas casser l'app */ }
+  }
 
     const estH = profile.coach === 'homme';
     const coachNom = estH ? 'Léo' : 'Léa';
