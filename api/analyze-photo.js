@@ -3,6 +3,7 @@
 // La clé API reste cachée côté serveur. Renvoie { observation, eclat, conseil }.
 
 export default async function handler(req, res) {
+  const { image, media_type = 'image/jpeg', profile = {}, user_id = null } = req.body || {};
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
@@ -11,7 +12,6 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Clé API manquante (ANTHROPIC_API_KEY)." });
   }
   try {
-    const { image, media_type = 'image/jpeg', profile = {}, user_id = null } = req.body || {};
     if (!image) return res.status(400).json({ error: "Aucune image reçue." });
 
   // ----- Garde-fou anti-abus (bêta gratuite) : 15 actions IA / jour / personne -----
@@ -95,6 +95,10 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans aucun texte autour, sans bac
       }
     } catch (e) { /* on garde le texte brut en observation */ }
 
+    // Filet anti-tiret long sur les textes renvoyés
+    ['observation','conseil'].forEach(function(k){
+      if (typeof out[k] === 'string') out[k] = out[k].replace(/\s*[—–]\s*/g, ', ').replace(/\s+,/g, ',');
+    });
     return res.status(200).json(out);
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Erreur serveur' });
