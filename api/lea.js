@@ -3,6 +3,7 @@
 // Reçoit le contexte perso (profil + données du jour/semaine + produits) pour des conseils personnalisés.
 
 export default async function handler(req, res) {
+  const { messages = [], profile = {}, user_id = null } = req.body || {};
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
@@ -39,7 +40,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages = [], profile = {}, user_id = null } = req.body || {};
 
     const prenom  = profile.name    || '';
     const peau    = profile.skin    || 'non précisé';
@@ -152,12 +152,17 @@ Réponds toujours en français, avec le cœur. Sois cette présence rassurante e
       return res.status(500).json({ error: data.error.message || 'Erreur côté IA' });
     }
 
-    const reply = (data.content || [])
+    let reply = (data.content || [])
       .filter(b => b.type === 'text')
       .map(b => b.text)
       .join('\n')
       .trim();
 
+
+    // Filet anti-tiret long (au cas où le modèle en glisse un malgré la consigne)
+    if (typeof reply === 'string') {
+      reply = reply.replace(/\s*[—–]\s*/g, ', ').replace(/\s+,/g, ',');
+    }
     return res.status(200).json({ reply });
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Erreur serveur' });
