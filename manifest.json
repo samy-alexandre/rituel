@@ -41,5 +41,28 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/accueil.png",
+      "sizes": "1080x2239",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Ton accueil du jour avec ta plante et ton rituel"
+    },
+    {
+      "src": "/screenshots/journal.png",
+      "sizes": "1080x2239",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Ton journal et ton calendrier de suivi"
+    },
+    {
+      "src": "/screenshots/lea.png",
+      "sizes": "1080x2239",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Ta coach beauté Léa, disponible à tout moment"
+    }
   ]
 }
