@@ -790,6 +790,7 @@
       <div class="topbar-greet">
         <div class="topbar-date" id="topbar-date">MERCREDI 27 MAI</div>
         <div class="topbar-name"><span id="greet-hello">Bonjour</span>, <em id="topbar-name">toi</em></div>
+        <div id="greet-invite" style="font-size:12.5px;color:var(--muted);margin-top:3px;"></div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <button class="bell-btn" onclick="bellTap()" style="position:relative;" aria-label="Rappels">
@@ -1101,7 +1102,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 8.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 8.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1894,6 +1895,12 @@
     document.getElementById('topbar-date').textContent = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
     const h=d.getHours();
     const gh=document.getElementById('greet-hello'); if(gh) gh.textContent = (h>=5 && h<18) ? 'Bonjour' : 'Bonsoir';
+    const gi=document.getElementById('greet-invite');
+    if(gi){
+      const prenom=(document.getElementById('topbar-name')||{}).textContent||'';
+      const soir = !(h>=5 && h<18);
+      gi.textContent = soir ? 'Prêt' + (prenom && prenom!=='toi' ? '' : '') + ' pour ton rituel du soir ?' : 'Prêt pour ton rituel du jour ?';
+    }
   }
 
   // ===== Profil : badges + édition de la peau =====
@@ -2508,6 +2515,18 @@
       });
     }
     switchPeriod(hasM ? 'matin' : 'soir');
+    try{
+      const gi2=document.getElementById('greet-invite');
+      if(gi2){
+        const allDone = (function(){
+          const mEl=document.getElementById('routine-matin'); const sEl=document.getElementById('routine-soir');
+          const items=[].concat([...(mEl?mEl.querySelectorAll('.routine-item'):[])],[...(sEl?sEl.querySelectorAll('.routine-item'):[])]);
+          if(!items.length) return false;
+          return items.every(it=>it.classList.contains('done'));
+        })();
+        if(allDone) gi2.textContent='Ton rituel du jour est fait, bravo 🌸';
+      }
+    }catch(e){}
     const { data: prods } = await sb.from('products').select('id,nom,effets,emoji,categorie').eq('user_id', currentUser.id);
     const pmap={}; (prods||[]).forEach(p=>{ pmap[p.id]=p; });
     for(const moment of ['matin','soir']){
