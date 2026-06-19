@@ -680,6 +680,7 @@
         <svg style="width:90px;margin-bottom:32px;opacity:0.7;" viewBox="0 0 120 40" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M4 20 H40"/><path d="M116 20 H80"/><circle cx="60" cy="20" r="6"/><circle cx="50" cy="20" r="4"/><circle cx="70" cy="20" r="4"/><circle cx="60" cy="12" r="4"/><circle cx="60" cy="28" r="4"/><circle cx="60" cy="20" r="2.5" fill="#C95A3F"/></g></svg>
         <h1 class="display" style="font-size:34px;margin-bottom:16px;max-width:300px;">Un instant par jour,<br><em class="italic" style="color:var(--accent);">rien que pour toi</em></h1>
         <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Une photo, une intention, un regard bienveillant sur soi. On commence doucement, jour après jour.</p>
+        <p style="color:var(--muted);max-width:290px;font-size:12.5px;line-height:1.55;margin-top:16px;">Prends le temps de bien répondre aux questions qui suivent : tout sera transmis à <b style="color:var(--accent-deep);">Léa</b>, celle qui t'accompagnera au quotidien. 🌸</p>
       </div>
       <div class="onb-actions">
         <button class="btn btn-accent" onclick="onbNext()">Créer mon profil de peau</button>
@@ -1102,7 +1103,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 9.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 9.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1754,7 +1755,7 @@
     if(!p) return;
     if(p.prenom) state.name = p.prenom;
     if(p.type_peau) state.skinType = p.type_peau;
-    if(p.objectifs){ try{ state.concerns = JSON.parse(p.objectifs); }catch(e){ state.concerns = []; } }
+    if(p.objectifs){ try{ const o=JSON.parse(p.objectifs); if(Array.isArray(o)){ state.concerns=o; } else { state.concerns=o.concerns||[]; state.goal=o.goal||null; } }catch(e){ state.concerns=[]; } }
     state.rituelType = p.rituel_type || state.rituelType || 'both';
     if(p.genre) state.genre = p.genre;
     state.coachGenre = p.coach_genre || 'femme';
@@ -1771,7 +1772,7 @@
       id: currentUser.id,
       prenom: state.name,
       type_peau: state.skinType,
-      objectifs: JSON.stringify(state.concerns||[]),
+      objectifs: JSON.stringify({ concerns: state.concerns||[], goal: state.goal||null }),
       genre: state.genre,
       coach_genre: state.coachGenre || 'femme'
     });
@@ -1861,7 +1862,7 @@
       try{ await sb.from('products').insert(rows); }catch(e){}
     }
     // filet de sécurité : on mémorise localement que l'onboarding est fait
-    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: state.concerns||[] })); }catch(e){}
+    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: { concerns: state.concerns||[], goal: state.goal||null } })); }catch(e){}
     document.getElementById('onboarding').classList.remove('active');
     enterApp();
   }
@@ -2021,7 +2022,7 @@
     state.skinType = tmpSkin;
     state.concerns = tmpConcerns;
     await saveProfile();
-    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: state.concerns })); }catch(e){}
+    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: { concerns: state.concerns||[], goal: state.goal||null } })); }catch(e){}
     closeSkinSheet();
     renderProfileBadges();
     showToast('Profil peau mis à jour 🌸');
@@ -3247,8 +3248,10 @@
 
   // Rassemble le contexte (données perso) envoyé à Léa pour des conseils personnalisés
   async function buildLeaContext(){
+    const GOAL_GUIDE={ constance:"L'utilisateur veut surtout TENIR SA ROUTINE. Encourage la régularité, les petites victoires quotidiennes, et aide à ancrer l'habitude. Valorise la constance plus que la performance.", comprendre:"L'utilisateur veut surtout COMPRENDRE SA PEAU. Aide à identifier ce qui marche et ce qui aggrave, fais des liens entre ses habitudes (sommeil, produits, contexte) et l'état de sa peau.", resultats:"L'utilisateur veut surtout VOIR DES RÉSULTATS. Aide à repérer l'évolution dans le temps, encourage le suivi photo, et donne un retour honnête sur ce qui semble fonctionner ou non au fil des jours." };
     const ctx = {
       name: state.name || '',
+      goal: (state.goal && GOAL_GUIDE[state.goal]) ? GOAL_GUIDE[state.goal] : null,
       skin: SKIN_LABELS[state.skinType] || 'non précisé',
       concern: (state.concerns||[]).map(c=>CONCERN_LABELS[c]||c).join(', ') || 'aucune en particulier',
       coach: (state.coachGenre==='homme') ? 'homme' : 'femme',
