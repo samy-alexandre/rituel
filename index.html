@@ -623,7 +623,6 @@
         <button onclick="startAuth('login')" class="btn-soft" style="display:block;margin:12px auto 0;">J'ai déjà un compte</button>
       </div>
 
-      <button id="auth-back" class="hidden" onclick="backToLanding()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;display:block;margin:0 auto 10px;">‹ Retour</button>
       <div class="auth-toggle hidden">
         <button class="auth-tab active" id="tab-login" onclick="switchAuth('login')">Connexion</button>
         <button class="auth-tab" id="tab-signup" onclick="switchAuth('signup')">Inscription</button>
@@ -646,6 +645,8 @@
 
       <!-- Signup -->
       <div class="auth-form hidden" id="form-signup">
+        <div style="text-align:center;margin-bottom:4px;"><div style="font-family:var(--serif);font-size:21px;color:var(--ink);">Crée ton carnet Rituel</div></div>
+        
         <div class="field">
           <label>Prénom</label>
           <input type="text" id="signup-name" placeholder="Ton prénom" autocomplete="given-name">
@@ -658,9 +659,10 @@
           <label>Mot de passe</label>
           <input type="password" id="signup-pass" placeholder="6 caractères minimum" autocomplete="new-password">
         </div>
-        <label class="consent"><input type="checkbox" id="signup-consent"><span>J'autorise Rituel à stocker mes photos et mes données pour me proposer un suivi beauté personnalisé. <a onclick="openPolicy()">Politique de confidentialité</a></span></label>
+        <p style="font-size:11.5px;color:var(--muted);margin:-6px 2px 0;line-height:1.45;">🔒 Tes photos restent privées. Tu peux supprimer ton compte à tout moment.</p>
+        <label class="consent"><input type="checkbox" id="signup-consent"><span>J'accepte que Rituel utilise mes photos et données pour personnaliser mon suivi beauté. <a onclick="openPolicy()">Voir la politique de confidentialité</a></span></label>
         <div class="auth-error" id="signup-error"></div>
-        <button class="btn btn-accent" onclick="doSignup()">Créer mon compte</button>
+        <button class="btn btn-accent" onclick="doSignup()">Créer mon carnet Rituel</button>
       </div>
 
       
@@ -1102,7 +1104,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 8.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 8.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1116,6 +1118,17 @@
   </nav>
 
   <!-- ====================== FICHE HABITUDE ====================== -->
+
+  <div id="welcome-screen" class="screen" style="display:none;align-items:center;justify-content:center;text-align:center;padding:32px 26px;">
+    <div style="max-width:320px;">
+      <div style="font-size:46px;margin-bottom:6px;">🌸</div>
+      <h1 style="font-family:var(--serif);font-size:27px;color:var(--ink);margin:0 0 10px;">Bienvenue dans Rituel</h1>
+      <p style="color:var(--ink-soft);font-size:15px;line-height:1.6;margin:0 0 6px;">Ton carnet de peau est prêt.</p>
+      <p style="color:var(--muted);font-size:13.5px;line-height:1.6;margin:0 0 28px;">On commence doucement : quelques questions pour créer un suivi qui te ressemble.</p>
+      <button class="btn btn-accent" onclick="startProfileFromWelcome()">Créer mon profil de peau</button>
+    </div>
+  </div>
+
   <div class="sheet-overlay" id="habit-sheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -1666,7 +1679,7 @@
       email, password: pass,
       options:{ data:{ prenom: name } }
     });
-    setBtnLoading(btn, false, 'Créer mon compte');
+    setBtnLoading(btn, false, 'Créer mon carnet Rituel');
     if(error){
       if(/already/i.test(error.message)) err.textContent='Un compte existe déjà avec cet e-mail.';
       else err.textContent = error.message;
@@ -1683,6 +1696,12 @@
     currentUser = data.user;
     state.name = name;
     document.getElementById('auth').classList.add('hidden');
+    const wel=document.getElementById('welcome-screen');
+    if(wel){ wel.style.display='flex'; }
+    else { document.getElementById('onboarding').classList.add('active'); }
+  }
+  function startProfileFromWelcome(){
+    const wel=document.getElementById('welcome-screen'); if(wel) wel.style.display='none';
     document.getElementById('onboarding').classList.add('active');
   }
 
