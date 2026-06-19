@@ -676,13 +676,13 @@
     <div class="onb-page active" data-page="0">
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
         <div class="welcome-mark" style="font-size:50px;">Rituel</div>
-        <div class="welcome-tagline italic serif">bienvenue dans ton rituel</div>
+        <div class="welcome-tagline italic serif">ton carnet de peau est prêt 🌸</div>
         <svg style="width:90px;margin-bottom:32px;opacity:0.7;" viewBox="0 0 120 40" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M4 20 H40"/><path d="M116 20 H80"/><circle cx="60" cy="20" r="6"/><circle cx="50" cy="20" r="4"/><circle cx="70" cy="20" r="4"/><circle cx="60" cy="12" r="4"/><circle cx="60" cy="28" r="4"/><circle cx="60" cy="20" r="2.5" fill="#C95A3F"/></g></svg>
         <h1 class="display" style="font-size:34px;margin-bottom:16px;max-width:300px;">Un instant par jour,<br><em class="italic" style="color:var(--accent);">rien que pour toi</em></h1>
-        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Une photo, une intention, un regard bienveillant sur soi. Vois ta peau s'épanouir, jour après jour.</p>
+        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Une photo, une intention, un regard bienveillant sur soi. On commence doucement, jour après jour.</p>
       </div>
       <div class="onb-actions">
-        <button class="btn btn-accent" onclick="onbNext()">Commencer mon rituel</button>
+        <button class="btn btn-accent" onclick="onbNext()">Créer mon profil de peau</button>
       </div>
     </div>
 
@@ -1102,7 +1102,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 9.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 9.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1116,18 +1116,7 @@
   </nav>
 
   <!-- ====================== FICHE HABITUDE ====================== -->
-
-  <div id="welcome-screen" style="display:none;position:fixed;inset:0;z-index:60;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 26px;">
-    <div style="max-width:320px;">
-      <div style="font-size:46px;margin-bottom:6px;">🌸</div>
-      <h1 style="font-family:var(--serif);font-size:27px;color:var(--ink);margin:0 0 10px;">Bienvenue dans Rituel</h1>
-      <p style="color:var(--ink-soft);font-size:15px;line-height:1.6;margin:0 0 6px;">Ton carnet de peau est prêt.</p>
-      <p style="color:var(--muted);font-size:13.5px;line-height:1.6;margin:0 0 28px;">On commence doucement : quelques questions pour créer un suivi qui te ressemble.</p>
-      <button class="btn btn-accent" onclick="startProfileFromWelcome()">Créer mon profil de peau</button>
-    </div>
-  </div>
-
-  <div class="sheet-overlay" id="habit-sheet">
+<div class="sheet-overlay" id="habit-sheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title" id="habit-sheet-title">Nouvelle habitude</div>
@@ -1694,12 +1683,6 @@
     currentUser = data.user;
     state.name = name;
     document.getElementById('auth').classList.add('hidden');
-    const wel=document.getElementById('welcome-screen');
-    if(wel){ wel.style.display='flex'; }
-    else { document.getElementById('onboarding').classList.add('active'); }
-  }
-  function startProfileFromWelcome(){
-    const wel=document.getElementById('welcome-screen'); if(wel) wel.style.display='none';
     document.getElementById('onboarding').classList.add('active');
   }
 
