@@ -1097,7 +1097,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 10.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 10.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1844,7 +1844,7 @@
     if(btn){ btn.disabled=true; btn.textContent='Un instant…'; }
     await saveProfile();
     if(onbProducts.length && currentUser){
-      const rows = onbProducts.map((nom,idx)=>({ user_id: currentUser.id, moment:'matin', position: idx, nom, emoji:'🧴', in_matin:true, in_soir:true }));
+      const rows = onbProducts.map((p,idx)=>({ user_id: currentUser.id, moment:'matin', position: idx, nom: p.marque ? (p.nom+' · '+p.marque) : p.nom, emoji:'🧴', in_matin:true, in_soir:true }));
       try{ await sb.from('products').insert(rows); }catch(e){}
     }
     // filet de sécurité : on mémorise localement que l'onboarding est fait
