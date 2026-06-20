@@ -599,7 +599,7 @@
 </head>
 <body class="no-select">
 
-<div id="app">
+<div id="app" style="visibility:hidden;">
  <div class="scroll-host" id="scroll-host">
 
   <!-- ====================== AUTH ====================== -->
@@ -670,7 +670,7 @@
   </div>
 
   <!-- ====================== ONBOARDING ====================== -->
-  <div id="onboarding">
+  <div id="onboarding" class="onb-page" style="visibility:hidden;">
     <div class="onb-page active" data-page="0">
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
         <div class="welcome-mark" style="font-size:50px;">Rituel</div>
@@ -1100,7 +1100,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 10.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 10.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1673,7 +1673,7 @@
     currentUser = data.user;
     state.name = name;
     document.getElementById('auth').classList.add('hidden');
-    document.getElementById('onboarding').classList.add('active');
+    const ob=document.getElementById('onboarding'); ob.classList.add('active'); ob.style.visibility='visible';
   }
 
   async function doLogin(){
@@ -1863,6 +1863,7 @@
 
   // ===== Enter app =====
   function enterApp(){
+    document.getElementById('app').style.visibility='visible';
     document.getElementById('auth').classList.add('hidden');
     document.getElementById('onboarding').classList.remove('active');
     document.getElementById('nav').classList.remove('hidden');
@@ -4614,7 +4615,8 @@
       } else {
         // connectée mais onboarding pas terminé
         document.getElementById('auth').classList.add('hidden');
-        document.getElementById('onboarding').classList.add('active');
+        const onbEl=document.getElementById('onboarding');
+        onbEl.classList.add('active'); onbEl.style.visibility='visible';
       }
     }
     // sinon : écran de connexion · révélé seulement maintenant (anti-flash au démarrage)
