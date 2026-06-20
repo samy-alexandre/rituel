@@ -753,9 +753,12 @@
             <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot active"></div></div>
       <h2 class="onb-title">Tes <em>produits</em> du moment</h2>
       <p class="onb-sub">Ajoute ceux que tu utilises déjà, ou passe · tu pourras le faire à tout moment.</p>
-      <div style="display:flex;gap:8px;align-items:stretch;">
-        <div class="field" style="flex:1;margin:0;"><input id="onb-prod-input" placeholder="Ex. Sérum vitamine C" onkeydown="if(event.key==='Enter'){event.preventDefault();onbAddProduct();}"></div>
-        <button class="btn btn-accent" style="width:auto;padding:0 20px;margin:0;flex-shrink:0;" onclick="onbAddProduct()">＋</button>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="field" style="margin:0;"><input id="onb-prod-input" placeholder="Nom du produit (ex. Sérum vitamine C)" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('onb-brand-input').focus();}"></div>
+        <div style="display:flex;gap:8px;align-items:stretch;">
+          <div class="field" style="flex:1;margin:0;"><input id="onb-brand-input" placeholder="Marque (optionnel)" onkeydown="if(event.key==='Enter'){event.preventDefault();onbAddProduct();}"></div>
+          <button class="btn btn-accent" style="width:auto;padding:0 20px;margin:0;flex-shrink:0;" onclick="onbAddProduct()">＋</button>
+        </div>
       </div>
       <div id="onb-prod-list" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
       <div class="onb-actions" style="gap:10px;">
@@ -1097,7 +1100,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 10.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 10.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1830,14 +1833,19 @@
   }
   let onbProducts=[];
   function onbAddProduct(){
-    const inp=document.getElementById('onb-prod-input'); if(!inp) return;
-    const v=inp.value.trim(); if(!v) return;
-    onbProducts.push(v); inp.value=''; renderOnbProducts(); inp.focus();
+    const inp=document.getElementById('onb-prod-input');
+    const br=document.getElementById('onb-brand-input');
+    if(!inp) return;
+    const nom=inp.value.trim(); if(!nom) return;
+    const marque=br ? br.value.trim() : '';
+    onbProducts.push({ nom, marque });
+    inp.value=''; if(br) br.value='';
+    renderOnbProducts(); inp.focus();
   }
   function onbRemoveProduct(i){ onbProducts.splice(i,1); renderOnbProducts(); }
   function renderOnbProducts(){
     const el=document.getElementById('onb-prod-list'); if(!el) return;
-    el.innerHTML = onbProducts.map((n,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-warm);border-radius:12px;padding:10px 14px;font-size:14px;"><span>🧴 '+escapeHtml(n)+'</span><button onclick="onbRemoveProduct('+i+')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;">×</button></div>').join('');
+    el.innerHTML = onbProducts.map((p,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-warm);border-radius:12px;padding:10px 14px;font-size:14px;"><span>🧴 '+escapeHtml(p.nom)+(p.marque?' <span style="color:var(--muted);font-size:12px;">· '+escapeHtml(p.marque)+'</span>':'')+'</span><button onclick="onbRemoveProduct('+i+')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;">×</button></div>').join('');
   }
   async function finishOnboarding(){
     const btn=document.querySelector('.onb-page[data-page="6"] .btn');
