@@ -22,7 +22,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Manrope:wght@300;400;500;600;700&display=optional" rel="stylesheet">
 
 <script>
   if('serviceWorker' in navigator){
@@ -595,6 +595,9 @@
   .product-card:active .product-thumb { transform: scale(0.94); }
   button, .nav-item, .menu-item, .product-card, .routine-item, .mood-btn, .rit-opt, .onb-opt, .cal-cell, .sugg, .moment-chip, .stat-tile { touch-action: manipulation; }
   .plus-pill { font-size: 9px; background: linear-gradient(135deg, var(--accent), var(--blush)); color: #fff; padding: 2px 7px; border-radius: 100px; letter-spacing: 0.06em; vertical-align: middle; margin-left: 6px; font-weight: 600; }
+  /* Anti-saut : tailles de fallback proches des vraies polices */
+  @font-face { font-family: 'Newsreader-fallback'; src: local('Georgia'); size-adjust: 100%; ascent-override: 92%; }
+  body { font-synthesis: none; }
 </style>
 </head>
 <body class="no-select">
@@ -1100,7 +1103,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 10.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 11.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
