@@ -1104,7 +1104,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 11.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 11.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1702,7 +1702,8 @@
     else {
       // connecté mais onboarding pas terminé
       document.getElementById('auth').classList.add('hidden');
-      document.getElementById('onboarding').classList.add('active');
+      const ob=document.getElementById('onboarding');
+      ob.classList.add('active'); ob.style.visibility='visible';
     }
   }
 
@@ -3092,6 +3093,11 @@
   function applyTheme(key){
     const t = THEMES[key] || THEMES.terracotta;
     Object.entries(t.vars).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
+    // Synchroniser la barre système (theme-color) avec le thème choisi
+    try{
+      let meta=document.querySelector('meta[name="theme-color"]');
+      if(meta) meta.setAttribute('content', t.vars['--blush-soft'] || '#F7F1EA');
+    }catch(e){}
     try{ localStorage.setItem('rituel_theme', key); }catch(e){}
   }
   function openThemeSheet(){
@@ -4591,7 +4597,11 @@
 
   // ===== Init : on regarde si une session existe déjà =====
   renderJournal(); // rendu de secours par défaut
-  setTimeout(function(){ var a=document.getElementById('auth'); if(a && !a.classList.contains('hidden')) a.style.visibility='visible'; }, 2500);
+  setTimeout(function(){
+    var a=document.getElementById('auth'), ap=document.getElementById('app'), ob=document.getElementById('onboarding');
+    var anyVisible=[a,ap,ob].some(function(el){ return el && getComputedStyle(el).visibility==='visible' && !el.classList.contains('hidden'); });
+    if(!anyVisible && a){ a.style.visibility='visible'; }
+  }, 2000);
   (async function init(){
     let session=null;
     try{ const r=await sb.auth.getSession(); session=r.data.session; }catch(e){}
@@ -4622,9 +4632,10 @@
         const onbEl=document.getElementById('onboarding');
         onbEl.classList.add('active'); onbEl.style.visibility='visible';
       }
+    } else {
+      // PAS de session : on révèle l'écran de connexion (et lui seul)
+      document.getElementById('auth').style.visibility='visible';
     }
-    // sinon : écran de connexion · révélé seulement maintenant (anti-flash au démarrage)
-    document.getElementById('auth').style.visibility='visible';
   })();
   document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
 </script>
