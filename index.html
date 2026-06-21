@@ -603,11 +603,11 @@
 </head>
 <body class="no-select">
 
-<div id="app" style="visibility:hidden;">
+<div id="app">
  <div class="scroll-host" id="scroll-host">
 
   <!-- ====================== AUTH ====================== -->
-  <div id="auth" style="visibility:hidden;">
+  <div id="auth">
     <svg class="auth-deco" viewBox="0 0 200 200" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.55"><circle cx="140" cy="60" r="16"/><circle cx="124" cy="68" r="13"/><circle cx="156" cy="68" r="13"/><circle cx="132" cy="82" r="13"/><circle cx="148" cy="82" r="13"/><circle cx="140" cy="72" r="7" fill="#E8A6A0"/><path d="M140 95 C140 130 138 150 130 175"/><path d="M138 120 C120 116 110 100 113 86 C130 92 138 104 138 120"/></g></svg>
     <svg class="auth-deco-2" viewBox="0 0 200 200" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.5"><path d="M60 180 C60 130 62 100 70 60"/><path d="M66 110 C40 104 28 80 33 58 C62 66 66 86 66 110"/><path d="M66 90 C92 82 104 58 100 36 C72 44 66 66 66 90"/><circle cx="70" cy="44" r="11"/><circle cx="70" cy="44" r="4" fill="#C95A3F"/></g></svg>
 
@@ -674,7 +674,7 @@
   </div>
 
   <!-- ====================== ONBOARDING ====================== -->
-  <div id="onboarding" class="onb-page" style="visibility:hidden;">
+  <div id="onboarding" class="onb-page">
     <div class="onb-page active" data-page="0">
       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
         <div class="welcome-mark" style="font-size:50px;">Rituel</div>
@@ -1104,7 +1104,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 11.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 11.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1677,7 +1677,7 @@
     currentUser = data.user;
     state.name = name;
     document.getElementById('auth').classList.add('hidden');
-    const ob=document.getElementById('onboarding'); ob.classList.add('active'); ob.style.visibility='visible';
+    const ob=document.getElementById('onboarding'); ob.classList.add('active'); 
   }
 
   async function doLogin(){
@@ -1703,7 +1703,7 @@
       // connecté mais onboarding pas terminé
       document.getElementById('auth').classList.add('hidden');
       const ob=document.getElementById('onboarding');
-      ob.classList.add('active'); ob.style.visibility='visible';
+      ob.classList.add('active'); 
     }
   }
 
@@ -1868,7 +1868,6 @@
 
   // ===== Enter app =====
   function enterApp(){
-    document.getElementById('app').style.visibility='visible';
     document.getElementById('auth').classList.add('hidden');
     document.getElementById('onboarding').classList.remove('active');
     document.getElementById('nav').classList.remove('hidden');
@@ -4630,12 +4629,11 @@
         // connectée mais onboarding pas terminé
         document.getElementById('auth').classList.add('hidden');
         const onbEl=document.getElementById('onboarding');
-        onbEl.classList.add('active'); onbEl.style.visibility='visible';
+        onbEl.classList.add('active'); 
       }
     } else {
       // PAS de session : on révèle l'écran de connexion (et lui seul)
-      document.getElementById('auth').style.visibility='visible';
-    }
+      }
   })();
   document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
 </script>
