@@ -599,6 +599,8 @@
   /* Anti-saut : tailles de fallback proches des vraies polices */
   @font-face { font-family: 'Newsreader-fallback'; src: local('Georgia'); size-adjust: 100%; ascent-override: 92%; }
   body { font-synthesis: none; }
+  .gender-pill { flex:1; padding:11px 8px; border:1px solid var(--line); border-radius:12px; background:var(--surface); font-size:13px; font-family:inherit; color:var(--ink-soft); cursor:pointer; transition:all .15s; }
+  .gender-pill.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
 </style>
 </head>
 <body class="no-select">
@@ -620,7 +622,7 @@
 
       <div id="landing">
         <p style="font-family:var(--serif);font-style:italic;font-size:16px;color:var(--ink-soft);line-height:1.6;text-align:center;margin:6px 0 22px;">Suis ta peau jour après jour et comprends enfin ce qui la fait changer.</p>
-        <div class="land-card"><span>📷</span><div><b>Suis ta peau jour après jour</b><small>Photos, humeur, sommeil, hydratation, routine.</small></div></div>
+        <div class="land-card"><span>📷</span><div><b>Suis ta peau jour après jour</b><small>Photos, humeur, sommeil, hydratation.</small></div></div>
         <div class="land-card"><span>🌿</span><div><b>Comprends ce qui marche</b><small>Produits, habitudes, cycle : tout au même endroit.</small></div></div>
         <div class="land-card"><span>💬</span><div><b>Garde le cap avec Léa</b><small>Des conseils simples pour t'aider à ajuster ta routine.</small></div></div>
         <button class="btn btn-accent" onclick="startAuth('signup')" style="margin-top:20px;">Commencer mon rituel</button>
@@ -654,6 +656,19 @@
           <label>Prénom</label>
           <input type="text" id="signup-name" placeholder="Ton prénom" autocomplete="given-name">
         </div>
+        <div style="display:flex;gap:10px;">
+          <div class="field" style="flex:1;">
+            <label>Âge</label>
+            <input type="number" id="signup-age" placeholder="Ton âge" min="13" max="120" inputmode="numeric">
+          </div>
+          <div class="field" style="flex:1.4;">
+            <label>Je suis</label>
+            <div style="display:flex;gap:6px;">
+              <button type="button" class="gender-pill" id="gp-femme" onclick="pickSignupGenre('femme')">Femme</button>
+              <button type="button" class="gender-pill" id="gp-homme" onclick="pickSignupGenre('homme')">Homme</button>
+            </div>
+          </div>
+        </div>
         <div class="field">
           <label>Adresse e-mail</label>
           <input type="email" id="signup-email" placeholder="toi@exemple.com" autocomplete="email">
@@ -681,7 +696,7 @@
         <svg style="width:90px;margin-bottom:32px;opacity:0.7;" viewBox="0 0 120 40" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M4 20 H40"/><path d="M116 20 H80"/><circle cx="60" cy="20" r="6"/><circle cx="50" cy="20" r="4"/><circle cx="70" cy="20" r="4"/><circle cx="60" cy="12" r="4"/><circle cx="60" cy="28" r="4"/><circle cx="60" cy="20" r="2.5" fill="#C95A3F"/></g></svg>
         <h1 class="display" style="font-size:34px;margin-bottom:16px;max-width:300px;">Un instant par jour,<br><em class="italic" style="color:var(--accent);">rien que pour toi</em></h1>
         <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">En quelques questions, on personnalise ton suivi : ton type de peau, tes objectifs et tes produits. On commence en douceur.</p>
-        <p style="color:var(--muted);max-width:290px;font-size:12.5px;line-height:1.55;margin-top:16px;">Prends le temps de bien répondre aux questions qui suivent : tout sera transmis à <b style="color:var(--accent-deep);">Léa</b>, celle qui t'accompagnera au quotidien. 🌸</p>
+        <p style="color:var(--muted);max-width:290px;font-size:12.5px;line-height:1.55;margin-top:16px;">Prends le temps de bien répondre aux questions qui suivent : tout sera transmis à <b style="color:var(--accent-deep);">Léa</b>, ton aide bienveillante basée sur l'IA, qui t'accompagnera au quotidien.</p>
       </div>
       <div class="onb-actions">
         <button class="btn btn-accent" onclick="onbNext()">Créer mon profil de peau</button>
@@ -693,15 +708,15 @@
       <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.6"><circle cx="30" cy="20" r="9"/><circle cx="21" cy="26" r="7"/><circle cx="39" cy="26" r="7"/><circle cx="30" cy="22" r="4" fill="#E8A6A0"/><path d="M30 38 C30 48 28 53 24 58"/></g></svg>
       <div class="onb-progress"><div class="onb-dot active"></div><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
       <h2 class="onb-title">Comment décrirais-tu <em>ta peau</em> ?</h2>
-      <p class="onb-sub">Pas d'inquiétude · ta peau évolue, tes réponses aussi.</p>
+      <p class="onb-sub">Pas d'inquiétude : ta peau évolue, tes réponses aussi.</p>
       <div class="onb-options">
         <button class="onb-opt" data-value="seche" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌾</span><div class="onb-opt-text"><div class="onb-opt-title">Sèche</div><div class="onb-opt-desc">Tiraille, manque d'éclat</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="mixte" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🍯</span><div class="onb-opt-text"><div class="onb-opt-title">Mixte</div><div class="onb-opt-desc">Zone T grasse, joues sèches</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="grasse" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">✨</span><div class="onb-opt-text"><div class="onb-opt-title">Grasse</div><div class="onb-opt-desc">Brillance, pores visibles</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="sensible" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Sensible</div><div class="onb-opt-desc">Rougeurs, réactivité</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="normale" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌿</span><div class="onb-opt-text"><div class="onb-opt-title">Normale</div><div class="onb-opt-desc">Équilibrée, peu de soucis</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" onclick="openQuiz('onboarding')"><span class="onb-opt-emoji">✨</span><div class="onb-opt-text"><div class="onb-opt-title">Je ne sais pas</div><div class="onb-opt-desc">Faire le test pour découvrir</div></div><div class="onb-opt-check" style="visibility:hidden;"></div></button>
       </div>
-      <button onclick="openQuiz('onboarding')" style="background:transparent;border:none;color:var(--accent-deep);font-size:13px;cursor:pointer;display:block;margin:14px auto 0;font-weight:600;">Je ne connais pas mon type · faire le test ✨</button>
       <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step1" disabled>Continuer</button></div>
     </div>
 
@@ -731,8 +746,8 @@
       <p class="onb-sub">Ton suivi avec Léa sera adapté à cet objectif. 🌸</p>
       <div class="onb-options">
         <button class="onb-opt" data-value="constance" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🪞</span><div class="onb-opt-text"><div class="onb-opt-title">Tenir une routine</div><div class="onb-opt-desc">La régularité avant tout</div></div><div class="onb-opt-check"></div></button>
-        <button class="onb-opt" data-value="comprendre" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🔍</span><div class="onb-opt-text"><div class="onb-opt-title">Comprendre ma peau</div><div class="onb-opt-desc">Identifier ce qui marche</div></div><div class="onb-opt-check"></div></button>
-        <button class="onb-opt" data-value="resultats" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🌟</span><div class="onb-opt-text"><div class="onb-opt-title">Des résultats visibles</div><div class="onb-opt-desc">Voir ma peau se transformer</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="comprendre" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🔍</span><div class="onb-opt-text"><div class="onb-opt-title">Comprendre ma peau</div><div class="onb-opt-desc">Voir ce qui marche et l'évolution</div></div><div class="onb-opt-check"></div></button>
+        
       </div>
       <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step3" disabled>Continuer</button></div>
     </div>
@@ -756,11 +771,11 @@
       <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.55"><circle cx="30" cy="22" r="10"/><circle cx="30" cy="22" r="4" fill="#C95A3F"/><path d="M30 40 C30 50 28 54 23 58"/><path d="M30 46 C20 44 15 36 17 28 C27 31 30 38 30 46"/></g></svg>
             <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot active"></div></div>
       <h2 class="onb-title">Tes <em>produits</em> du moment</h2>
-      <p class="onb-sub">Ajoute ceux que tu utilises déjà, ou passe · tu pourras le faire à tout moment.</p>
+      <p class="onb-sub">Ajoute ceux que tu utilises déjà, ou passe : tu pourras le faire à tout moment.</p>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div class="field" style="margin:0;"><input id="onb-prod-input" placeholder="Nom du produit (ex. Sérum vitamine C)" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('onb-brand-input').focus();}"></div>
         <div style="display:flex;gap:8px;align-items:stretch;">
-          <div class="field" style="flex:1;margin:0;"><input id="onb-brand-input" placeholder="Marque (optionnel)" onkeydown="if(event.key==='Enter'){event.preventDefault();onbAddProduct();}"></div>
+          <div class="field" style="flex:1;margin:0;"><input id="onb-brand-input" placeholder="Marque" onkeydown="if(event.key==='Enter'){event.preventDefault();onbAddProduct();}"></div>
           <button class="btn btn-accent" style="width:auto;padding:0 20px;margin:0;flex-shrink:0;" onclick="onbAddProduct()">＋</button>
         </div>
       </div>
@@ -778,7 +793,7 @@
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <h2 class="display" style="font-size:34px;margin-bottom:16px;">Tout est <em class="italic" style="color:var(--accent);">prêt</em><span id="onb-name"></span> ✨</h2>
-        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Léa t'attend dans l'app. Prends ta première photo dès aujourd'hui · c'est le point de départ de ton suivi</p>
+        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Léa t'attend dans l'app. Prends ta première photo dès aujourd'hui, c'est le point de départ de ton suivi</p>
         <div style="margin-top:22px;display:flex;flex-direction:column;gap:9px;max-width:300px;text-align:left;">
           <div style="display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--ink-soft);"><span>🌸</span><span>Rituel prend soin de toi, ce n'est pas un avis médical.</span></div>
         </div>
@@ -820,7 +835,7 @@
         <div style="font-size:26px;">🌟</div>
         <div style="flex:1;min-width:0;">
           <div style="font-family:var(--serif);font-size:15px;">Ton premier bilan de peau est prêt</div>
-          <div style="font-size:12px;color:var(--muted);">5 jours de suivi · regarde ce que ça raconte</div>
+          <div style="font-size:12px;color:var(--muted);">5 jours de suivi : regarde ce que ça raconte</div>
         </div>
         <div style="color:var(--muted);font-size:18px;">›</div>
       </div>
@@ -1104,7 +1119,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 11.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 12.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1645,20 +1660,30 @@
     btn.textContent = loading ? 'Un instant…' : labelIdle;
   }
 
+    function pickSignupGenre(g){
+    state.signupGenre=g;
+    var f=document.getElementById('gp-femme'), h=document.getElementById('gp-homme');
+    if(f) f.classList.toggle('sel', g==='femme');
+    if(h) h.classList.toggle('sel', g==='homme');
+  }
   async function doSignup(){
     const name=document.getElementById('signup-name').value.trim();
     const email=document.getElementById('signup-email').value.trim().toLowerCase();
     const pass=document.getElementById('signup-pass').value;
+    const age=parseInt(document.getElementById('signup-age').value,10);
     const err=document.getElementById('signup-error'); err.textContent='';
     const btn=document.querySelector('#form-signup .btn');
     if(!name){ err.textContent='Indiquez votre prénom.'; return; }
+    if(!age || age<13 || age>120){ err.textContent='Indique un âge valide.'; return; }
+    if(!state.signupGenre){ err.textContent='Indique si tu es une femme ou un homme.'; return; }
     if(!validEmail(email)){ err.textContent='E-mail invalide.'; return; }
     if(pass.length<6){ err.textContent='Mot de passe : 6 caractères minimum.'; return; }
     if(!document.getElementById('signup-consent').checked){ err.textContent='Veuillez accepter la politique de confidentialité pour continuer.'; return; }
     setBtnLoading(btn, true);
+    state.age=age; state.genre=state.signupGenre;
     const { data, error } = await sb.auth.signUp({
       email, password: pass,
-      options:{ data:{ prenom: name } }
+      options:{ data:{ prenom: name, age: age, genre: state.signupGenre } }
     });
     setBtnLoading(btn, false, 'Créer mon carnet Rituel');
     if(error){
@@ -1749,7 +1774,7 @@
     if(!p) return;
     if(p.prenom) state.name = p.prenom;
     if(p.type_peau) state.skinType = p.type_peau;
-    if(p.objectifs){ try{ const o=JSON.parse(p.objectifs); if(Array.isArray(o)){ state.concerns=o; } else { state.concerns=o.concerns||[]; state.goal=o.goal||null; } }catch(e){ state.concerns=[]; } }
+    if(p.objectifs){ try{ const o=JSON.parse(p.objectifs); if(Array.isArray(o)){ state.concerns=o; } else { state.concerns=o.concerns||[]; state.goal=o.goal||null; state.age=o.age||null; } }catch(e){ state.concerns=[]; } }
     state.rituelType = p.rituel_type || state.rituelType || 'both';
     if(p.genre) state.genre = p.genre;
     state.coachGenre = 'femme';
@@ -1766,7 +1791,7 @@
       id: currentUser.id,
       prenom: state.name,
       type_peau: state.skinType,
-      objectifs: JSON.stringify({ concerns: state.concerns||[], goal: state.goal||null }),
+      objectifs: JSON.stringify({ concerns: state.concerns||[], goal: state.goal||null, age: state.age||null }),
       genre: state.genre,
       coach_genre: state.coachGenre || 'femme'
     });
@@ -1815,6 +1840,8 @@
 
   // ===== Onboarding =====
   function onbShow(n){
+    // Sauter la page genre (4) si déjà renseigné à l'inscription
+    if(n===4 && state.genre){ n = (state.onbStep < 4) ? 5 : 3; }
     state.onbStep=n;
     if(n===6){ document.getElementById('onb-name').textContent = state.name ? ', '+state.name : ''; }
     document.querySelectorAll('.onb-page').forEach(p=>p.classList.remove('active'));
@@ -1840,11 +1867,14 @@
   function onbAddProduct(){
     const inp=document.getElementById('onb-prod-input');
     const br=document.getElementById('onb-brand-input');
-    if(!inp) return;
-    const nom=inp.value.trim(); if(!nom) return;
-    const marque=br ? br.value.trim() : '';
-    onbProducts.push({ nom, marque });
-    inp.value=''; if(br) br.value='';
+    if(!inp || !br) return;
+    const cap=function(s){ return s.replace(/\b\w/g, function(ch){ return ch.toUpperCase(); }); };
+    const nom=inp.value.trim();
+    const marque=br.value.trim();
+    if(!nom){ inp.focus(); return; }
+    if(!marque){ showToast('Ajoute aussi la marque 🌸'); br.focus(); return; }
+    onbProducts.push({ nom: cap(nom), marque: cap(marque) });
+    inp.value=''; br.value='';
     renderOnbProducts(); inp.focus();
   }
   function onbRemoveProduct(i){ onbProducts.splice(i,1); renderOnbProducts(); }
