@@ -747,6 +747,7 @@
       <div class="onb-options">
         <button class="onb-opt" data-value="constance" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🪞</span><div class="onb-opt-text"><div class="onb-opt-title">Tenir une routine</div><div class="onb-opt-desc">La régularité avant tout</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="comprendre" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🔍</span><div class="onb-opt-text"><div class="onb-opt-title">Comprendre ma peau</div><div class="onb-opt-desc">Voir ce qui marche et l'évolution</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="deux" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Les deux</div><div class="onb-opt-desc">Tenir ma routine et comprendre ma peau</div></div><div class="onb-opt-check"></div></button>
         
       </div>
       <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step3" disabled>Continuer</button></div>
@@ -1062,12 +1063,11 @@
   <div id="routine" class="screen">
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mes <em style="font-style:italic;color:var(--accent);">produits</em></div></div>
-      <button class="add-btn" onclick="openProductForm()">+ Ajouter</button>
+      <div style="display:flex;gap:8px;"><button class="add-btn" onclick="openBarcodeSheet()" style="padding:8px 12px;">🏷️</button><button class="add-btn" onclick="openProductForm()">+ Ajouter</button></div>
     </div>
     <div style="padding:0 20px 4px;color:var(--muted);font-size:12px;line-height:1.5;">Tous tes produits, au même endroit. Tu choisis lesquels vont le matin / le soir depuis l'onglet <span style="color:var(--accent-deep);">Rituel</span> 🌸</div>
     <div class="section">
       <div id="products-list" style="display:flex;flex-direction:column;gap:12px;"></div>
-      <button class="add-product-card" onclick="openProductForm()">＋ Ajouter un produit</button>
     </div>
     <div class="section">
       <div style="background:var(--surface-warm);border-radius:18px;padding:18px;display:flex;align-items:center;">
@@ -1119,7 +1119,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 12.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 12.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1127,7 +1127,7 @@
   <nav class="nav hidden" id="nav">
     <div class="nav-item active" data-screen="home" onclick="navTo('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9M5 10v10a2 2 0 002 2h3v-6h4v6h3a2 2 0 002-2V10" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Aujourd'hui</div></div>
     <div class="nav-item" data-screen="journal" onclick="navTo('journal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Journal</div></div>
-    <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2h4v3l1.2 2A3 3 0 0116 8.7V19a2 2 0 01-2 2h-4a2 2 0 01-2-2V8.7a3 3 0 01.8-1.7L10 5V2z" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 12h7" stroke-linecap="round"/></svg><div class="nav-label">Soins</div></div>
+    <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2h4v3l1.2 2A3 3 0 0116 8.7V19a2 2 0 01-2 2h-4a2 2 0 01-2-2V8.7a3 3 0 01.8-1.7L10 5V2z" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 12h7" stroke-linecap="round"/></svg><div class="nav-label">Produits</div></div>
     <div class="nav-item" data-screen="ritual" onclick="navTo('ritual')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Rituel</div></div>
     <div class="nav-item" data-screen="profile" onclick="navTo('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Moi</div></div>
   </nav>
@@ -1527,24 +1527,14 @@
       <div class="sheet-handle"></div>
       <div class="sheet-title" id="product-sheet-title">Nouveau produit</div>
 
-      <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">Icône</label>
-      <div class="emoji-picker" id="emoji-picker" style="margin:8px 0 16px;"></div>
-
-      <div class="field"><label>Nom du produit *</label><input id="pf-nom" placeholder="Ex. Sérum vitamine C"></div>
-      <button class="add-product-card" style="margin-top:10px;" onclick="openBarcodeSheet()">🏷️ Scanner le code-barres <span class="plus-pill">PLUS</span></button>
-      <div class="field" style="margin-top:12px;"><label>Catégorie</label><div id="pf-cats" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;"><button type="button" class="rj-chip" data-cat="demaquillant" onclick="pfSetCat(this,'demaquillant')">🧼 Démaquillant</button><button type="button" class="rj-chip" data-cat="nettoyant" onclick="pfSetCat(this,'nettoyant')">🫧 Nettoyant</button><button type="button" class="rj-chip" data-cat="toner" onclick="pfSetCat(this,'toner')">💦 Lotion / toner</button><button type="button" class="rj-chip" data-cat="serum" onclick="pfSetCat(this,'serum')">✨ Sérum</button><button type="button" class="rj-chip" data-cat="yeux" onclick="pfSetCat(this,'yeux')">👁️ Yeux</button><button type="button" class="rj-chip" data-cat="creme" onclick="pfSetCat(this,'creme')">🧴 Crème</button><button type="button" class="rj-chip" data-cat="spf" onclick="pfSetCat(this,'spf')">☀️ SPF</button><button type="button" class="rj-chip" data-cat="masque" onclick="pfSetCat(this,'masque')">🎭 Masque / exfo</button><button type="button" class="rj-chip" data-cat="cible" onclick="pfSetCat(this,'cible')">🩹 Soin ciblé</button><button type="button" class="rj-chip" data-cat="autre" onclick="pfSetCat(this,'autre')">🌿 Autre</button></div></div>
+      <div class="field"><label>Catégorie</label><div id="pf-cats" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;"><button type="button" class="rj-chip" data-cat="demaquillant" onclick="pfSetCat(this,'demaquillant')">🧼 Démaquillant</button><button type="button" class="rj-chip" data-cat="nettoyant" onclick="pfSetCat(this,'nettoyant')">🫧 Nettoyant</button><button type="button" class="rj-chip" data-cat="toner" onclick="pfSetCat(this,'toner')">💦 Lotion / toner</button><button type="button" class="rj-chip" data-cat="serum" onclick="pfSetCat(this,'serum')">✨ Sérum</button><button type="button" class="rj-chip" data-cat="yeux" onclick="pfSetCat(this,'yeux')">👁️ Yeux</button><button type="button" class="rj-chip" data-cat="creme" onclick="pfSetCat(this,'creme')">🧴 Crème</button><button type="button" class="rj-chip" data-cat="spf" onclick="pfSetCat(this,'spf')">☀️ SPF</button><button type="button" class="rj-chip" data-cat="masque" onclick="pfSetCat(this,'masque')">🎭 Masque / exfo</button><button type="button" class="rj-chip" data-cat="cible" onclick="pfSetCat(this,'cible')">🩹 Soin ciblé</button><button type="button" class="rj-chip" data-cat="autre" onclick="pfSetCat(this,'autre')">🌿 Autre</button></div></div>
+      <div class="field" style="margin-top:12px;"><label>Nom du produit *</label><input id="pf-nom" placeholder="Ex. Sérum vitamine C"></div>
+      <div class="field" style="margin-top:12px;"><label>Marque</label><input id="pf-marque" placeholder="Ex. La Roche-Posay"></div>
       <div class="field" style="margin-top:12px;"><label>Effets / bienfaits (optionnel)</label><input id="pf-effets" placeholder="Ex. éclaircit les taches"></div>
       <div class="field" style="margin-top:12px;"><label>Prix en € (optionnel)</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="Ex. 15"></div>
       <div class="field" style="margin-top:12px;"><label>Date d'ouverture (optionnel)</label><input id="pf-ouverture" type="date"></div>
       <div class="field" style="margin-top:12px;"><label>Début d'utilisation (optionnel)</label><input id="pf-debut" type="date"></div>
       <div class="field" style="margin-top:12px;"><label>Date de péremption (optionnel)</label><input id="pf-peremption" type="date"></div>
-
-      <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;display:block;margin-top:16px;">Photo du produit (optionnel)</label>
-      <div style="margin-top:8px;display:flex;align-items:center;gap:12px;">
-        <div class="product-thumb" id="pf-photo-thumb" style="cursor:pointer;" onclick="document.getElementById('pf-photo-input').click()">📷</div>
-        <button type="button" class="btn-outline-sm" onclick="document.getElementById('pf-photo-input').click()">Choisir une photo</button>
-        <input type="file" id="pf-photo-input" accept="image/*" style="display:none" onchange="pfPhotoPreview(this)">
-      </div>
 
       <div class="auth-error" id="pf-error" style="margin-top:12px;"></div>
       <button class="btn btn-accent" style="margin-top:8px;" onclick="saveProduct()">Enregistrer</button>
@@ -2720,21 +2710,19 @@
     pfPhotoFile = null; pfPhotoPath = null; pfEmoji = '🧴'; pfCat='autre';
     document.getElementById('pf-error').textContent='';
     document.getElementById('pf-nom').value='';
+    document.getElementById('pf-marque').value='';
     document.getElementById('pf-effets').value='';
     document.getElementById('pf-prix').value='';
     document.getElementById('pf-ouverture').value='';
     document.getElementById('pf-debut').value='';
     document.getElementById('pf-peremption').value='';
-    document.getElementById('pf-photo-input').value='';
-    document.getElementById('pf-photo-thumb').innerHTML='📷';
     document.getElementById('pf-delete').style.display = id ? 'block' : 'none';
     document.getElementById('product-sheet-title').textContent = id ? 'Modifier le produit' : 'Nouveau produit';
-    renderEmojiPicker();
     document.getElementById('product-sheet').classList.add('open');
     if(id){
       const { data: p } = await sb.from('products').select('*').eq('id', id).maybeSingle();
       if(p){
-        document.getElementById('pf-nom').value = p.nom||'';
+        var _full=(p.nom||''); var _parts=_full.split(' · '); document.getElementById('pf-nom').value=_parts[0]||''; document.getElementById('pf-marque').value=_parts[1]||'';
         document.getElementById('pf-effets').value = p.effets||'';
         pfCat = p.categorie || 'autre';
         document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.toggle('selected', b.dataset.cat===pfCat));
@@ -2742,9 +2730,6 @@
         document.getElementById('pf-ouverture').value = p.date_ouverture || '';
         document.getElementById('pf-debut').value = p.date_debut || '';
         document.getElementById('pf-peremption').value = p.date_peremption || '';
-        pfEmoji = p.emoji || '🧴'; renderEmojiPicker();
-        pfPhotoPath = p.photo_path || null;
-        if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) document.getElementById('pf-photo-thumb').innerHTML=`<img src="${url}" alt="">`; }
       }
     }
   }
@@ -2758,9 +2743,12 @@
 
   async function saveProduct(){
     if(!currentUser) return;
-    const nom = document.getElementById('pf-nom').value.trim();
+    const cap = function(s){ return s.replace(/\b\w/g, function(ch){ return ch.toUpperCase(); }); };
+    const nomRaw = document.getElementById('pf-nom').value.trim();
+    const marqueRaw = document.getElementById('pf-marque').value.trim();
     const err = document.getElementById('pf-error');
-    if(!nom){ err.textContent='Donne au moins un nom au produit.'; return; }
+    if(!nomRaw){ err.textContent='Donne au moins un nom au produit.'; return; }
+    const nom = marqueRaw ? (cap(nomRaw)+' · '+cap(marqueRaw)) : cap(nomRaw);
     const effets = document.getElementById('pf-effets').value.trim();
     const prixRaw = document.getElementById('pf-prix').value.trim();
     const prix = prixRaw==='' ? null : parseFloat(prixRaw.replace(',','.'));
@@ -2769,19 +2757,12 @@
     const d_per = document.getElementById('pf-peremption').value || null;
     err.textContent='';
     showToast('Enregistrement…');
-    let photo_path = pfPhotoPath;
-    if(pfPhotoFile){
-      const ext=(pfPhotoFile.name.split('.').pop()||'jpg').toLowerCase();
-      const path=`${currentUser.id}/products/${Date.now()}.${ext}`;
-      const { error: upErr } = await sb.storage.from('photos').upload(path, pfPhotoFile, { upsert:true });
-      if(!upErr) photo_path = path;
-    }
     if(editingProductId){
-      await sb.from('products').update({ nom, effets, categorie: pfCat, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per }).eq('id', editingProductId);
+      await sb.from('products').update({ nom, effets, categorie: pfCat, prix, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per }).eq('id', editingProductId);
     } else {
       const { data: existing } = await sb.from('products').select('id').eq('user_id', currentUser.id);
       const position = existing ? existing.length : 0;
-      await sb.from('products').insert({ user_id: currentUser.id, moment:'matin', position, nom, effets, categorie: pfCat, prix, emoji: pfEmoji, photo_path, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per, in_matin:true, in_soir:true });
+      await sb.from('products').insert({ user_id: currentUser.id, moment:'matin', position, nom, effets, categorie: pfCat, prix, emoji:'🧴', date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per, in_matin:true, in_soir:true });
     }
     closeProductSheet();
     showToast('Produit enregistré ✓');
@@ -3260,7 +3241,7 @@
 
   // Rassemble le contexte (données perso) envoyé à Léa pour des conseils personnalisés
   async function buildLeaContext(){
-    const GOAL_GUIDE={ constance:"L'utilisateur veut surtout TENIR SA ROUTINE. Encourage la régularité, les petites victoires quotidiennes, et aide à ancrer l'habitude. Valorise la constance plus que la performance.", comprendre:"L'utilisateur veut surtout COMPRENDRE SA PEAU. Aide à identifier ce qui marche et ce qui aggrave, fais des liens entre ses habitudes (sommeil, produits, contexte) et l'état de sa peau.", resultats:"L'utilisateur veut surtout VOIR DES RÉSULTATS. Aide à repérer l'évolution dans le temps, encourage le suivi photo, et donne un retour honnête sur ce qui semble fonctionner ou non au fil des jours." };
+    const GOAL_GUIDE={ constance:"L'utilisateur veut surtout TENIR SA ROUTINE. Encourage la régularité, les petites victoires quotidiennes, et aide à ancrer l'habitude. Valorise la constance plus que la performance.", comprendre:"L'utilisateur veut surtout COMPRENDRE SA PEAU. Aide à identifier ce qui marche et ce qui aggrave, fais des liens entre ses habitudes (sommeil, produits, contexte) et l'état de sa peau.", deux:"L'utilisateur veut À LA FOIS tenir sa routine ET comprendre sa peau. Encourage la régularité au quotidien, tout en l'aidant à identifier ce qui marche et à faire des liens entre ses habitudes et l'état de sa peau.", resultats:"L'utilisateur veut surtout VOIR DES RÉSULTATS. Aide à repérer l'évolution dans le temps, encourage le suivi photo, et donne un retour honnête sur ce qui semble fonctionner ou non au fil des jours." };
     const ctx = {
       name: state.name || '',
       goal: (state.goal && GOAL_GUIDE[state.goal]) ? GOAL_GUIDE[state.goal] : null,
