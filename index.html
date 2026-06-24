@@ -1132,7 +1132,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 13.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 13.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1557,33 +1557,20 @@
         </div>
       </div>
 
-      <!-- État du produit -->
+      <!-- Conservation du produit (toutes les infos ensemble) -->
       <div style="margin-top:18px;">
-        <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">État du produit</label>
-        <div style="display:flex;gap:8px;margin-top:6px;">
-          <button type="button" class="pf-state-btn" id="pf-state-open" onclick="pfSetState('open')">🪻 Produit ouvert</button>
-          <button type="button" class="pf-state-btn" id="pf-state-closed" onclick="pfSetState('closed')">🔒 Produit fermé</button>
-        </div>
-      </div>
-
-      <!-- Bloc OUVERT -->
-      <div id="pf-open-block" style="display:none;margin-top:14px;">
-        <div class="field"><label>Depuis quand est-il ouvert ?</label><input id="pf-ouverture" type="date" onchange="pfRefreshPerem()"></div>
+        <div class="field"><label>Date de péremption (sur le produit)</label><input id="pf-peremption" type="date" onchange="pfRefreshPerem()"></div>
+        <div class="field" style="margin-top:12px;"><label>Date d'ouverture</label><input id="pf-ouverture" type="date" onchange="pfRefreshPerem()"></div>
         <div style="margin-top:12px;">
-          <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">Durée de conservation</label>
+          <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">Durée de conservation après ouverture</label>
           <div style="display:flex;gap:8px;margin-top:6px;">
             <button type="button" class="pf-mois-btn" data-mois="3" onclick="pfSetMois(3)">3M</button>
             <button type="button" class="pf-mois-btn" data-mois="6" onclick="pfSetMois(6)">6M</button>
             <button type="button" class="pf-mois-btn" data-mois="9" onclick="pfSetMois(9)">9M</button>
             <button type="button" class="pf-mois-btn" data-mois="12" onclick="pfSetMois(12)">12M</button>
           </div>
-          <div id="pf-perem-calc" style="margin-top:8px;font-size:12px;color:var(--muted);"></div>
+          <div id="pf-perem-calc" style="margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.5;"></div>
         </div>
-      </div>
-
-      <!-- Bloc FERMÉ -->
-      <div id="pf-closed-block" style="display:none;margin-top:14px;">
-        <div class="field"><label>Périmé le</label><input id="pf-peremption" type="date"></div>
       </div>
 
       <div class="auth-error" id="pf-error" style="margin-top:12px;"></div>
@@ -2700,13 +2687,21 @@
       const exp=new Date(p.date_peremption); const today=new Date(); today.setHours(0,0,0,0);
       const days=Math.round((exp-today)/86400000);
       if(days<0){
-        // déjà périmé : on n'affiche pas la date, juste "Périmé"
+        // déjà périmé : on n'affiche pas la date, juste "Périmé depuis X jours"
         const dPass = Math.abs(days);
         const sinceTxt = dPass===0 ? "aujourd'hui" : (dPass===1 ? 'depuis 1 jour' : 'depuis '+dPass+' jours');
-        badge='<div><span class="prod-badge prod-badge-red">⚠️ Périmé '+sinceTxt+'</span></div>';
+        badge='<div><span class="prod-badge" style="background:#FBE2DC;color:#B23A1E;">⚠️ Périmé '+sinceTxt+'</span></div>';
       } else {
         parts.push('Périme le '+fmt(p.date_peremption));
-        if(days<=30) badge='<div><span class="prod-badge prod-badge-amber">À finir · '+days+'j</span></div>';
+        // Code couleur selon le temps restant (en mois approx.)
+        const months = days/30;
+        let col=null, lbl='';
+        if(months > 9){ col=null; }                                   // > 9 mois : pas de couleur
+        else if(months > 6){ col=['#E3F0E0','#3E7A4E']; lbl='Encore '+Math.round(months)+' mois'; }   // 6-9 : vert
+        else if(months > 3){ col=['#F7ECCB','#8A6A1E']; lbl='Encore '+Math.round(months)+' mois'; }   // 3-6 : orange
+        else if(days>30){ col=['#FBE2DC','#B23A1E']; lbl='Plus que '+Math.round(months)+' mois'; }    // 1-3 : rouge
+        else { col=['#FBE2DC','#B23A1E']; lbl='À finir · '+days+'j'; }                                // < 1 mois : rouge urgent
+        if(col){ badge='<div><span class="prod-badge" style="background:'+col[0]+';color:'+col[1]+';">'+lbl+'</span></div>'; }
       }
     }
     const line = parts.length ? '<div class="product-dates">'+parts.join(' · ')+'</div>' : '';
@@ -2798,36 +2793,43 @@
   function closeProductSheet(){ document.getElementById('product-sheet').classList.remove('open'); }
 
 
-  function pfSetState(s){
-    pfState = s;
-    const bo=document.getElementById('pf-state-open'), bc=document.getElementById('pf-state-closed');
-    if(bo) bo.classList.toggle('sel', s==='open');
-    if(bc) bc.classList.toggle('sel', s==='closed');
-    const ob=document.getElementById('pf-open-block'), cb=document.getElementById('pf-closed-block');
-    if(ob) ob.style.display = s==='open' ? 'block' : 'none';
-    if(cb) cb.style.display = s==='closed' ? 'block' : 'none';
-  }
   function pfSetMois(m){
-    pfMois = m;
-    document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.toggle('sel', parseInt(b.dataset.mois,10)===m));
+    pfMois = (pfMois===m) ? null : m;  // re-cliquer désélectionne
+    document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.toggle('sel', parseInt(b.dataset.mois,10)===pfMois));
     pfRefreshPerem();
   }
+  // Calcule la date de péremption EFFECTIVE : la plus proche entre
+  // la date imprimée sur le produit et (ouverture + durée de conservation).
+  function pfEffectivePerem(printedStr, ouvStr, mois){
+    const dates=[];
+    if(printedStr){ dates.push(new Date(printedStr)); }
+    if(ouvStr && mois){ const d=new Date(ouvStr); d.setMonth(d.getMonth()+mois); dates.push(d); }
+    if(!dates.length) return null;
+    return new Date(Math.min.apply(null, dates.map(d=>d.getTime())));
+  }
   function pfRefreshPerem(){
-    const ouvEl=document.getElementById('pf-ouverture');
     const el = document.getElementById('pf-perem-calc');
-    if(!ouvEl || !el) return;
-    const ouv = ouvEl.value;
-    if(!ouv || !pfMois){ el.textContent=''; return; }
-    const d = new Date(ouv); d.setMonth(d.getMonth() + pfMois);
-    const fmt = d.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
-    el.textContent = '→ Périmé vers le ' + fmt;
+    if(!el) return;
+    const printed = (document.getElementById('pf-peremption')||{}).value || '';
+    const ouv = (document.getElementById('pf-ouverture')||{}).value || '';
+    const eff = pfEffectivePerem(printed, ouv, pfMois);
+    if(!eff){ el.textContent=''; return; }
+    const fmt = eff.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    // Expliquer quelle date est retenue
+    let note = '';
+    if(printed && ouv && pfMois){
+      const dOuv=new Date(ouv); dOuv.setMonth(dOuv.getMonth()+pfMois);
+      const dPr=new Date(printed);
+      note = (dPr <= dOuv) ? ' (date sur le produit)' : ' (après ouverture)';
+    }
+    el.textContent = '🌸 Périme le ' + fmt + note;
   }
 
   async function openProductForm(id){
     editingProductId = id || null;
     pfPhotoFile = null; pfPhotoPath = null; pfEmoji = '🧴'; pfCat='autre';
     setTimeout(function(){ var b=document.getElementById('pf-icon-btn'); if(b) b.textContent='🧴'; var pk=document.getElementById('pf-icon-picker'); if(pk) pk.style.display='none'; },0);
-    pfState='open'; pfMois=null; setTimeout(function(){ pfSetState('open'); document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.remove('sel')); const el=document.getElementById('pf-perem-calc'); if(el) el.textContent=''; },0);
+    pfMois=null; setTimeout(function(){ document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.remove('sel')); const el=document.getElementById('pf-perem-calc'); if(el) el.textContent=''; },0);
     document.getElementById('pf-error').textContent='';
     document.getElementById('pf-nom').value='';
     document.getElementById('pf-marque').value='';
@@ -2843,18 +2845,18 @@
       if(p){
         var _full=(p.nom||''); var _parts=_full.split(' · '); document.getElementById('pf-nom').value=_parts[0]||''; document.getElementById('pf-marque').value=_parts[1]||'';
         pfEmoji = p.emoji || '🧴'; var _ib=document.getElementById('pf-icon-btn'); if(_ib) _ib.textContent=pfEmoji;
-        // Déduire l'état : si on a date_ouverture, c'est OUVERT ; sinon FERMÉ
-        if(p.date_ouverture){
-          pfSetState('open');
-          document.getElementById('pf-ouverture').value = p.date_ouverture;
-          // Récupérer la durée stockée (dans date_debut on a stocké le nombre de mois sous forme YYYY-MM-DD bidouille)
-          // Plus simple : on relit la durée depuis le champ effets ou via un attribut. Ici on stocke dans p.date_debut sous forme 0000-00-{mois} si présent
-          // Approche simple : on ne récupère pas la durée à l'édition, on laisse la personne re-cliquer si besoin
-          setTimeout(function(){ pfRefreshPerem(); },10);
-        } else if(p.date_peremption){
-          pfSetState('closed');
-          document.getElementById('pf-peremption').value = p.date_peremption;
+        // Remplir les dates connues (les deux peuvent coexister)
+        if(p.date_ouverture) document.getElementById('pf-ouverture').value = p.date_ouverture;
+        if(p.date_peremption) document.getElementById('pf-peremption').value = p.date_peremption;
+        // Récupérer la durée de conservation mémorisée (stockée dans date_debut sous forme "0001-01-0M")
+        if(p.date_debut){
+          var _mm = parseInt(String(p.date_debut).slice(-2),10);
+          if([3,6,9,12].indexOf(_mm)>=0){ pfMois=_mm; }
         }
+        setTimeout(function(){
+          document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.toggle('sel', parseInt(b.dataset.mois,10)===pfMois));
+          pfRefreshPerem();
+        },10);
         document.getElementById('pf-effets').value = p.effets||'';
         pfCat = p.categorie || 'autre';
         document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.toggle('selected', b.dataset.cat===pfCat));
@@ -2883,18 +2885,15 @@
     const effets = document.getElementById('pf-effets').value.trim();
     const prixRaw = document.getElementById('pf-prix').value.trim();
     const prix = prixRaw==='' ? null : parseFloat(prixRaw.replace(',','.'));
-    // État du produit : ouvert ou fermé
-    let d_ouv=null, d_per=null, d_deb=null;
-    if(pfState==='open'){
-      d_ouv = document.getElementById('pf-ouverture').value || null;
-      // Calculer la péremption à partir de l'ouverture + durée choisie
-      if(d_ouv && pfMois){
-        const _d = new Date(d_ouv); _d.setMonth(_d.getMonth() + pfMois);
-        d_per = _d.toISOString().slice(0,10);
-      }
-    } else if(pfState==='closed'){
-      d_per = document.getElementById('pf-peremption').value || null;
-    }
+    // Toutes les infos peuvent coexister. La péremption stockée = la plus proche.
+    const d_ouv = document.getElementById('pf-ouverture').value || null;
+    const printedPer = document.getElementById('pf-peremption').value || null;
+    let d_per = null;
+    const _eff = pfEffectivePerem(printedPer, d_ouv, pfMois);
+    if(_eff) d_per = _eff.toISOString().slice(0,10);
+    // Mémoriser la durée de conservation choisie dans date_debut (format "0001-01-0M")
+    let d_deb = null;
+    if(pfMois){ d_deb = '0001-01-' + (pfMois<10 ? '0'+pfMois : ''+pfMois); }
     err.textContent='';
     showToast('Enregistrement…');
     if(editingProductId){
