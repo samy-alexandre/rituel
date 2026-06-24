@@ -1070,7 +1070,7 @@
   <div id="routine" class="screen">
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mes <em style="font-style:italic;color:var(--accent);">produits</em></div></div>
-      <div style="display:flex;gap:8px;"><button class="add-btn" onclick="openBarcodeSheet()" style="padding:8px 12px;">🏷️</button><button class="add-btn" onclick="openProductForm()">+ Ajouter</button></div>
+      <div style="display:flex;gap:8px;"><button class="add-btn" onclick="openBarcodeSheet()" style="padding:8px 10px;" aria-label="Scanner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="13" y1="8" x2="13" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg></button><button class="add-btn" onclick="openProductForm()">+ Ajouter</button></div>
     </div>
     <div style="padding:0 20px 4px;color:var(--muted);font-size:12px;line-height:1.5;">Tous tes produits, au même endroit. Tu choisis lesquels vont le matin / le soir depuis l'onglet <span style="color:var(--accent-deep);">Rituel</span> 🌸</div>
     <div class="section">
@@ -1087,7 +1087,7 @@
         <div style="width:1px;align-self:stretch;background:var(--line);margin:4px 0;"></div>
         <div style="flex:1;text-align:center;"><div class="eyebrow">COÛT / MOIS</div><div class="serif" style="font-size:26px;line-height:1.1;margin-top:4px;color:var(--accent);" id="cout-val">0€</div></div>
       </div>
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px;">Le coût se calcule automatiquement à partir du prix de tes produits 🌸</div>
+      
     </div>
   </div>
 
@@ -1132,7 +1132,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 12.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 13.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1583,7 +1583,7 @@
 
       <!-- Bloc FERMÉ -->
       <div id="pf-closed-block" style="display:none;margin-top:14px;">
-        <div class="field"><label>Date de péremption</label><input id="pf-peremption" type="date"></div>
+        <div class="field"><label>Périmé le</label><input id="pf-peremption" type="date"></div>
       </div>
 
       <div class="auth-error" id="pf-error" style="margin-top:12px;"></div>
@@ -2695,13 +2695,17 @@
   function productDateInfo(p){
     const fmt=(d)=>{ const x=d.split('-'); return x[2]+'/'+x[1]+'/'+x[0].slice(2); };
     const parts=[]; let badge='';
-    if(p.date_ouverture) parts.push('Ouvert '+fmt(p.date_ouverture));
+    if(p.date_ouverture) parts.push('Ouvert le '+fmt(p.date_ouverture));
     if(p.date_peremption){
-      parts.push('périme '+fmt(p.date_peremption));
       const exp=new Date(p.date_peremption); const today=new Date(); today.setHours(0,0,0,0);
       const days=Math.round((exp-today)/86400000);
-      if(days<0) badge='<div><span class="prod-badge prod-badge-red">⚠️ Périmé</span></div>';
-      else if(days<=30) badge='<div><span class="prod-badge prod-badge-amber">À finir · '+days+'j</span></div>';
+      if(days<0){
+        // déjà périmé : on n'affiche pas la date, juste "Périmé"
+        badge='<div><span class="prod-badge prod-badge-red">⚠️ Périmé</span></div>';
+      } else {
+        parts.push('Périmé le '+fmt(p.date_peremption));
+        if(days<=30) badge='<div><span class="prod-badge prod-badge-amber">À finir · '+days+'j</span></div>';
+      }
     }
     const line = parts.length ? '<div class="product-dates">'+parts.join(' · ')+'</div>' : '';
     return line+badge;
