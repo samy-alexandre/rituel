@@ -601,6 +601,11 @@
   body { font-synthesis: none; }
   .gender-pill { flex:1; padding:11px 8px; border:1px solid var(--line); border-radius:12px; background:var(--surface); font-size:13px; font-family:inherit; color:var(--ink-soft); cursor:pointer; transition:all .15s; }
   .gender-pill.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .pf-state-btn { flex:1; padding:11px 8px; border:1px solid var(--line); border-radius:12px; background:var(--surface); font-size:13px; font-family:inherit; color:var(--ink-soft); cursor:pointer; transition:all .15s; }
+  .pf-state-btn.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .pf-mois-btn { flex:1; padding:10px 4px; border:1px solid var(--line); border-radius:10px; background:var(--surface); font-size:13px; font-weight:600; font-family:inherit; color:var(--ink-soft); cursor:pointer; transition:all .15s; }
+  .pf-mois-btn.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .pf-fav { background:none; border:none; cursor:pointer; font-size:22px; padding:4px; line-height:1; }
 </style>
 </head>
 <body class="no-select">
@@ -1119,7 +1124,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 12.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 12.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1528,13 +1533,46 @@
       <div class="sheet-title" id="product-sheet-title">Nouveau produit</div>
 
       <div class="field"><label>Catégorie</label><div id="pf-cats" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;"><button type="button" class="rj-chip" data-cat="demaquillant" onclick="pfSetCat(this,'demaquillant')">🧼 Démaquillant</button><button type="button" class="rj-chip" data-cat="nettoyant" onclick="pfSetCat(this,'nettoyant')">🫧 Nettoyant</button><button type="button" class="rj-chip" data-cat="toner" onclick="pfSetCat(this,'toner')">💦 Lotion / toner</button><button type="button" class="rj-chip" data-cat="serum" onclick="pfSetCat(this,'serum')">✨ Sérum</button><button type="button" class="rj-chip" data-cat="yeux" onclick="pfSetCat(this,'yeux')">👁️ Yeux</button><button type="button" class="rj-chip" data-cat="creme" onclick="pfSetCat(this,'creme')">🧴 Crème</button><button type="button" class="rj-chip" data-cat="spf" onclick="pfSetCat(this,'spf')">☀️ SPF</button><button type="button" class="rj-chip" data-cat="masque" onclick="pfSetCat(this,'masque')">🎭 Masque / exfo</button><button type="button" class="rj-chip" data-cat="cible" onclick="pfSetCat(this,'cible')">🩹 Soin ciblé</button><button type="button" class="rj-chip" data-cat="autre" onclick="pfSetCat(this,'autre')">🌿 Autre</button></div></div>
-      <div class="field" style="margin-top:12px;"><label>Nom du produit *</label><input id="pf-nom" placeholder="Ex. Sérum vitamine C"></div>
-      <div class="field" style="margin-top:12px;"><label>Marque</label><input id="pf-marque" placeholder="Ex. La Roche-Posay"></div>
-      <div class="field" style="margin-top:12px;"><label>Effets / bienfaits (optionnel)</label><input id="pf-effets" placeholder="Ex. éclaircit les taches"></div>
-      <div class="field" style="margin-top:12px;"><label>Prix en € (optionnel)</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="Ex. 15"></div>
-      <div class="field" style="margin-top:12px;"><label>Date d'ouverture (optionnel)</label><input id="pf-ouverture" type="date"></div>
-      <div class="field" style="margin-top:12px;"><label>Début d'utilisation (optionnel)</label><input id="pf-debut" type="date"></div>
-      <div class="field" style="margin-top:12px;"><label>Date de péremption (optionnel)</label><input id="pf-peremption" type="date"></div>
+      <!-- 2 colonnes : Nom/Marque + Effets/Prix -->
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
+          <div class="field" style="margin:0;"><label>Nom *</label><input id="pf-nom" placeholder="Ex. Sérum vitamine C"></div>
+          <div class="field" style="margin:0;"><label>Marque</label><input id="pf-marque" placeholder="Ex. La Roche-Posay"></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
+          <div class="field" style="margin:0;"><label>Effets / bienfaits</label><input id="pf-effets" placeholder="Ex. éclaircit"></div>
+          <div class="field" style="margin:0;"><label>Prix en €</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="Ex. 15"></div>
+        </div>
+      </div>
+
+      <!-- État du produit -->
+      <div style="margin-top:18px;">
+        <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">État du produit</label>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <button type="button" class="pf-state-btn" id="pf-state-open" onclick="pfSetState('open')">🪻 Produit ouvert</button>
+          <button type="button" class="pf-state-btn" id="pf-state-closed" onclick="pfSetState('closed')">🔒 Produit fermé</button>
+        </div>
+      </div>
+
+      <!-- Bloc OUVERT -->
+      <div id="pf-open-block" style="display:none;margin-top:14px;">
+        <div class="field"><label>Depuis quand est-il ouvert ?</label><input id="pf-ouverture" type="date" onchange="pfRefreshPerem()"></div>
+        <div style="margin-top:12px;">
+          <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">Durée de conservation</label>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <button type="button" class="pf-mois-btn" data-mois="3" onclick="pfSetMois(3)">3M</button>
+            <button type="button" class="pf-mois-btn" data-mois="6" onclick="pfSetMois(6)">6M</button>
+            <button type="button" class="pf-mois-btn" data-mois="9" onclick="pfSetMois(9)">9M</button>
+            <button type="button" class="pf-mois-btn" data-mois="12" onclick="pfSetMois(12)">12M</button>
+          </div>
+          <div id="pf-perem-calc" style="margin-top:8px;font-size:12px;color:var(--muted);"></div>
+        </div>
+      </div>
+
+      <!-- Bloc FERMÉ -->
+      <div id="pf-closed-block" style="display:none;margin-top:14px;">
+        <div class="field"><label>Date de péremption</label><input id="pf-peremption" type="date"></div>
+      </div>
 
       <div class="auth-error" id="pf-error" style="margin-top:12px;"></div>
       <button class="btn btn-accent" style="margin-top:8px;" onclick="saveProduct()">Enregistrer</button>
@@ -2634,6 +2672,9 @@
   let currentRoutineView = 'matin';
   let editingProductId = null;
   let pfPhotoFile = null;
+  let pfState = 'open';
+  let pfMois = null;
+  
   let pfPhotoPath = null;
   let pfEmoji = '🧴';
   const PRODUCT_EMOJIS = ['🧴','🧼','🫧','💧','💎','✨','☀️','🌙','🌸','🌿','💛','🧪','👁️','💋'];
@@ -2654,11 +2695,27 @@
     return line+badge;
   }
 
+    // ===== Favoris produits (localStorage) =====
+  function favSet(){ try{ return new Set(JSON.parse(localStorage.getItem('rituel_favs_'+(currentUser?currentUser.id:'x'))||'[]')); }catch(e){ return new Set(); } }
+  function favSave(s){ try{ localStorage.setItem('rituel_favs_'+(currentUser?currentUser.id:'x'), JSON.stringify([...s])); }catch(e){} }
+  function toggleFav(id, ev){
+    if(ev) ev.stopPropagation();
+    const s=favSet();
+    if(s.has(id)) s.delete(id); else s.add(id);
+    favSave(s);
+    loadProducts();
+  }
+
   async function loadProducts(){
     if(!currentUser) return;
     const list = document.getElementById('products-list');
     const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
-    const products = data || [];
+    const _favs = favSet();
+    const products = (data || []).slice().sort(function(a,b){
+      const fa=_favs.has(a.id)?1:0, fb=_favs.has(b.id)?1:0;
+      if(fa!==fb) return fb-fa; // favoris en premier
+      return 0;
+    });
     if(!products.length){
       list.innerHTML = `<div style="text-align:center;padding:30px 16px;color:var(--muted);font-size:14px;line-height:1.6;">Aucun produit pour l'instant.<br>Ajoute ton premier soin 🌸</div>`;
     } else {
@@ -2675,7 +2732,7 @@
             ${meta?`<div class="product-meta">${meta}</div>`:''}
             ${productDateInfo(p)}
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <button class="pf-fav" onclick="toggleFav('${p.id}', event)">${_favs.has(p.id)?'⭐':'☆'}</button>
         </div>`;
       }
       list.innerHTML = html;
@@ -2705,9 +2762,36 @@
   }
   function closeProductSheet(){ document.getElementById('product-sheet').classList.remove('open'); }
 
+
+  function pfSetState(s){
+    pfState = s;
+    const bo=document.getElementById('pf-state-open'), bc=document.getElementById('pf-state-closed');
+    if(bo) bo.classList.toggle('sel', s==='open');
+    if(bc) bc.classList.toggle('sel', s==='closed');
+    const ob=document.getElementById('pf-open-block'), cb=document.getElementById('pf-closed-block');
+    if(ob) ob.style.display = s==='open' ? 'block' : 'none';
+    if(cb) cb.style.display = s==='closed' ? 'block' : 'none';
+  }
+  function pfSetMois(m){
+    pfMois = m;
+    document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.toggle('sel', parseInt(b.dataset.mois,10)===m));
+    pfRefreshPerem();
+  }
+  function pfRefreshPerem(){
+    const ouvEl=document.getElementById('pf-ouverture');
+    const el = document.getElementById('pf-perem-calc');
+    if(!ouvEl || !el) return;
+    const ouv = ouvEl.value;
+    if(!ouv || !pfMois){ el.textContent=''; return; }
+    const d = new Date(ouv); d.setMonth(d.getMonth() + pfMois);
+    const fmt = d.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    el.textContent = '→ Périmé vers le ' + fmt;
+  }
+
   async function openProductForm(id){
     editingProductId = id || null;
     pfPhotoFile = null; pfPhotoPath = null; pfEmoji = '🧴'; pfCat='autre';
+    pfState='open'; pfMois=null; setTimeout(function(){ pfSetState('open'); document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.remove('sel')); const el=document.getElementById('pf-perem-calc'); if(el) el.textContent=''; },0);
     document.getElementById('pf-error').textContent='';
     document.getElementById('pf-nom').value='';
     document.getElementById('pf-marque').value='';
@@ -2723,6 +2807,18 @@
       const { data: p } = await sb.from('products').select('*').eq('id', id).maybeSingle();
       if(p){
         var _full=(p.nom||''); var _parts=_full.split(' · '); document.getElementById('pf-nom').value=_parts[0]||''; document.getElementById('pf-marque').value=_parts[1]||'';
+        // Déduire l'état : si on a date_ouverture, c'est OUVERT ; sinon FERMÉ
+        if(p.date_ouverture){
+          pfSetState('open');
+          document.getElementById('pf-ouverture').value = p.date_ouverture;
+          // Récupérer la durée stockée (dans date_debut on a stocké le nombre de mois sous forme YYYY-MM-DD bidouille)
+          // Plus simple : on relit la durée depuis le champ effets ou via un attribut. Ici on stocke dans p.date_debut sous forme 0000-00-{mois} si présent
+          // Approche simple : on ne récupère pas la durée à l'édition, on laisse la personne re-cliquer si besoin
+          setTimeout(function(){ pfRefreshPerem(); },10);
+        } else if(p.date_peremption){
+          pfSetState('closed');
+          document.getElementById('pf-peremption').value = p.date_peremption;
+        }
         document.getElementById('pf-effets').value = p.effets||'';
         pfCat = p.categorie || 'autre';
         document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.toggle('selected', b.dataset.cat===pfCat));
@@ -2752,9 +2848,18 @@
     const effets = document.getElementById('pf-effets').value.trim();
     const prixRaw = document.getElementById('pf-prix').value.trim();
     const prix = prixRaw==='' ? null : parseFloat(prixRaw.replace(',','.'));
-    const d_ouv = document.getElementById('pf-ouverture').value || null;
-    const d_deb = document.getElementById('pf-debut').value || null;
-    const d_per = document.getElementById('pf-peremption').value || null;
+    // État du produit : ouvert ou fermé
+    let d_ouv=null, d_per=null, d_deb=null;
+    if(pfState==='open'){
+      d_ouv = document.getElementById('pf-ouverture').value || null;
+      // Calculer la péremption à partir de l'ouverture + durée choisie
+      if(d_ouv && pfMois){
+        const _d = new Date(d_ouv); _d.setMonth(_d.getMonth() + pfMois);
+        d_per = _d.toISOString().slice(0,10);
+      }
+    } else if(pfState==='closed'){
+      d_per = document.getElementById('pf-peremption').value || null;
+    }
     err.textContent='';
     showToast('Enregistrement…');
     if(editingProductId){
