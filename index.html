@@ -1132,7 +1132,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 13.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 13.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2701,9 +2701,11 @@
       const days=Math.round((exp-today)/86400000);
       if(days<0){
         // déjà périmé : on n'affiche pas la date, juste "Périmé"
-        badge='<div><span class="prod-badge prod-badge-red">⚠️ Périmé</span></div>';
+        const dPass = Math.abs(days);
+        const sinceTxt = dPass===0 ? "aujourd'hui" : (dPass===1 ? 'depuis 1 jour' : 'depuis '+dPass+' jours');
+        badge='<div><span class="prod-badge prod-badge-red">⚠️ Périmé '+sinceTxt+'</span></div>';
       } else {
-        parts.push('Périmé le '+fmt(p.date_peremption));
+        parts.push('Périme le '+fmt(p.date_peremption));
         if(days<=30) badge='<div><span class="prod-badge prod-badge-amber">À finir · '+days+'j</span></div>';
       }
     }
