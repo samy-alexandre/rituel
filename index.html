@@ -1132,7 +1132,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 13.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 13.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2681,31 +2681,35 @@
 
   function productDateInfo(p){
     const fmt=(d)=>{ const x=d.split('-'); return x[2]+'/'+x[1]+'/'+x[0].slice(2); };
-    const parts=[]; let badge='';
+    const parts=[]; let peremLine='';
     if(p.date_ouverture) parts.push('Ouvert le '+fmt(p.date_ouverture));
     if(p.date_peremption){
       const exp=new Date(p.date_peremption); const today=new Date(); today.setHours(0,0,0,0);
       const days=Math.round((exp-today)/86400000);
+      const months = days/30;
+      // Couleur selon le temps restant
+      let col;
+      if(days<0) col=['#FBE2DC','#B23A1E'];        // périmé : rouge
+      else if(months>9) col=['#EFE7DD','#7A6B5C'];  // > 9 mois : neutre
+      else if(months>6) col=['#E3F0E0','#3E7A4E'];  // 6-9 : vert
+      else if(months>3) col=['#F7ECCB','#8A6A1E'];  // 3-6 : orange
+      else col=['#FBE2DC','#B23A1E'];               // < 3 mois : rouge
+      // Texte de la pastille
+      let txt;
       if(days<0){
-        // déjà périmé : on n'affiche pas la date, juste "Périmé depuis X jours"
-        const dPass = Math.abs(days);
-        const sinceTxt = dPass===0 ? "aujourd'hui" : (dPass===1 ? 'depuis 1 jour' : 'depuis '+dPass+' jours');
-        badge='<div><span class="prod-badge" style="background:#FBE2DC;color:#B23A1E;">⚠️ Périmé '+sinceTxt+'</span></div>';
+        const dPass=Math.abs(days);
+        txt = '⚠️ Périmé ' + (dPass===0?"aujourd'hui":(dPass===1?'depuis 1 jour':'depuis '+dPass+' jours'));
+      } else if(days===0){
+        txt = '⚠️ Périme aujourd\'hui';
+      } else if(days<=60){
+        txt = 'Périme le '+fmt(p.date_peremption)+' · J-'+days;
       } else {
-        parts.push('Périme le '+fmt(p.date_peremption));
-        // Code couleur selon le temps restant (en mois approx.)
-        const months = days/30;
-        let col=null, lbl='';
-        if(months > 9){ col=null; }                                   // > 9 mois : pas de couleur
-        else if(months > 6){ col=['#E3F0E0','#3E7A4E']; lbl='Encore '+Math.round(months)+' mois'; }   // 6-9 : vert
-        else if(months > 3){ col=['#F7ECCB','#8A6A1E']; lbl='Encore '+Math.round(months)+' mois'; }   // 3-6 : orange
-        else if(days>30){ col=['#FBE2DC','#B23A1E']; lbl='Plus que '+Math.round(months)+' mois'; }    // 1-3 : rouge
-        else { col=['#FBE2DC','#B23A1E']; lbl='À finir · '+days+'j'; }                                // < 1 mois : rouge urgent
-        if(col){ badge='<div><span class="prod-badge" style="background:'+col[0]+';color:'+col[1]+';">'+lbl+'</span></div>'; }
+        txt = 'Périme le '+fmt(p.date_peremption);
       }
+      peremLine = '<div style="margin-top:5px;"><span class="prod-badge" style="background:'+col[0]+';color:'+col[1]+';">'+txt+'</span></div>';
     }
     const line = parts.length ? '<div class="product-dates">'+parts.join(' · ')+'</div>' : '';
-    return line+badge;
+    return line+peremLine;
   }
 
     // ===== Favoris produits (localStorage) =====
