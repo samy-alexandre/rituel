@@ -2758,7 +2758,7 @@
   function pfPhotoPreview(input){
     const f=input.files[0]; if(!f) return;
     pfPhotoFile=f;
-    const r=new FileReader(); r.onload=ev=>{ document.getElementById('pf-photo-thumb').innerHTML=`<img src="${ev.target.result}" alt="">`; }; r.readAsDataURL(f);
+    const _t=document.getElementById('pf-photo-thumb'); if(!_t) return; const r=new FileReader(); r.onload=ev=>{ _t.innerHTML=`<img src="${ev.target.result}" alt="">`; }; r.readAsDataURL(f);
   }
   function closeProductSheet(){ document.getElementById('product-sheet').classList.remove('open'); }
 
@@ -2798,7 +2798,6 @@
     document.getElementById('pf-effets').value='';
     document.getElementById('pf-prix').value='';
     document.getElementById('pf-ouverture').value='';
-    document.getElementById('pf-debut').value='';
     document.getElementById('pf-peremption').value='';
     document.getElementById('pf-delete').style.display = id ? 'block' : 'none';
     document.getElementById('product-sheet-title').textContent = id ? 'Modifier le produit' : 'Nouveau produit';
@@ -2824,7 +2823,6 @@
         document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.toggle('selected', b.dataset.cat===pfCat));
         document.getElementById('pf-prix').value = (p.prix!=null?p.prix:'');
         document.getElementById('pf-ouverture').value = p.date_ouverture || '';
-        document.getElementById('pf-debut').value = p.date_debut || '';
         document.getElementById('pf-peremption').value = p.date_peremption || '';
       }
     }
