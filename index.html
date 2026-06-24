@@ -606,6 +606,8 @@
   .pf-mois-btn { flex:1; padding:10px 4px; border:1px solid var(--line); border-radius:10px; background:var(--surface); font-size:13px; font-weight:600; font-family:inherit; color:var(--ink-soft); cursor:pointer; transition:all .15s; }
   .pf-mois-btn.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
   .pf-fav { background:none; border:none; cursor:pointer; font-size:22px; padding:4px; line-height:1; }
+  .sort-chip { flex-shrink:0; padding:7px 13px; border:1px solid var(--line); border-radius:20px; background:var(--surface); font-size:12.5px; font-family:inherit; color:var(--ink-soft); cursor:pointer; white-space:nowrap; transition:all .15s; }
+  .sort-chip.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
 </style>
 </head>
 <body class="no-select">
@@ -1072,6 +1074,11 @@
     </div>
     <div style="padding:0 20px 4px;color:var(--muted);font-size:12px;line-height:1.5;">Tous tes produits, au même endroit. Tu choisis lesquels vont le matin / le soir depuis l'onglet <span style="color:var(--accent-deep);">Rituel</span> 🌸</div>
     <div class="section">
+      <div style="display:flex;gap:7px;margin-bottom:12px;overflow-x:auto;">
+        <button type="button" class="sort-chip sel" data-sort="fav" onclick="setProductSort('fav')">⭐ Favoris</button>
+        <button type="button" class="sort-chip" data-sort="alpha" onclick="setProductSort('alpha')">A-Z</button>
+        <button type="button" class="sort-chip" data-sort="perem" onclick="setProductSort('perem')">⏳ Péremption</button>
+      </div>
       <div id="products-list" style="display:flex;flex-direction:column;gap:12px;"></div>
     </div>
     <div class="section">
@@ -1125,7 +1132,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 12.8<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 12.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2711,14 +2718,33 @@
     loadProducts();
   }
 
+    let productSort = 'fav';  // 'fav', 'alpha', 'perem'
+  function setProductSort(s){
+    productSort = s;
+    document.querySelectorAll('.sort-chip').forEach(b=>b.classList.toggle('sel', b.dataset.sort===s));
+    loadProducts();
+  }
+
   async function loadProducts(){
     if(!currentUser) return;
     const list = document.getElementById('products-list');
     const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const _favs = favSet();
     const products = (data || []).slice().sort(function(a,b){
+      if(productSort==='alpha'){
+        return (a.nom||'').localeCompare(b.nom||'', 'fr', {sensitivity:'base'});
+      }
+      if(productSort==='perem'){
+        // les produits avec une date de péremption d'abord, du plus proche au plus lointain
+        const da=a.date_peremption||'', db=b.date_peremption||'';
+        if(!da && !db) return 0;
+        if(!da) return 1;  // sans date → à la fin
+        if(!db) return -1;
+        return da.localeCompare(db);
+      }
+      // défaut : favoris en premier
       const fa=_favs.has(a.id)?1:0, fb=_favs.has(b.id)?1:0;
-      if(fa!==fb) return fb-fa; // favoris en premier
+      if(fa!==fb) return fb-fa;
       return 0;
     });
     if(!products.length){
