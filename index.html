@@ -1125,7 +1125,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 12.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 12.8<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1540,13 +1540,13 @@
       <div class="field"><label>Catégorie</label><div id="pf-cats" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;"><button type="button" class="rj-chip" data-cat="demaquillant" onclick="pfSetCat(this,'demaquillant')">🧼 Démaquillant</button><button type="button" class="rj-chip" data-cat="nettoyant" onclick="pfSetCat(this,'nettoyant')">🫧 Nettoyant</button><button type="button" class="rj-chip" data-cat="toner" onclick="pfSetCat(this,'toner')">💦 Lotion / toner</button><button type="button" class="rj-chip" data-cat="serum" onclick="pfSetCat(this,'serum')">✨ Sérum</button><button type="button" class="rj-chip" data-cat="yeux" onclick="pfSetCat(this,'yeux')">👁️ Yeux</button><button type="button" class="rj-chip" data-cat="creme" onclick="pfSetCat(this,'creme')">🧴 Crème</button><button type="button" class="rj-chip" data-cat="spf" onclick="pfSetCat(this,'spf')">☀️ SPF</button><button type="button" class="rj-chip" data-cat="masque" onclick="pfSetCat(this,'masque')">🎭 Masque / exfo</button><button type="button" class="rj-chip" data-cat="cible" onclick="pfSetCat(this,'cible')">🩹 Soin ciblé</button><button type="button" class="rj-chip" data-cat="autre" onclick="pfSetCat(this,'autre')">🌿 Autre</button></div></div>
       <!-- 2 colonnes : Nom/Marque + Effets/Prix -->
       <div style="display:flex;gap:10px;margin-top:12px;">
-        <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
-          <div class="field" style="margin:0;"><label>Nom *</label><input id="pf-nom" placeholder="Ex. Sérum vitamine C"></div>
-          <div class="field" style="margin:0;"><label>Marque</label><input id="pf-marque" placeholder="Ex. La Roche-Posay"></div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">
+          <div class="field" style="margin:0;min-width:0;"><label>Nom *</label><input id="pf-nom" placeholder="Sérum vitamine C" style="width:100%;box-sizing:border-box;"></div>
+          <div class="field" style="margin:0;min-width:0;"><label>Marque</label><input id="pf-marque" placeholder="La Roche-Posay" style="width:100%;box-sizing:border-box;"></div>
         </div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
-          <div class="field" style="margin:0;"><label>Effets / bienfaits</label><input id="pf-effets" placeholder="Ex. éclaircit"></div>
-          <div class="field" style="margin:0;"><label>Prix en €</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="Ex. 15"></div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">
+          <div class="field" style="margin:0;min-width:0;"><label>Effets</label><input id="pf-effets" placeholder="éclaircit" style="width:100%;box-sizing:border-box;"></div>
+          <div class="field" style="margin:0;min-width:0;"><label>Prix en €</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="15" style="width:100%;box-sizing:border-box;"></div>
         </div>
       </div>
 
