@@ -1072,7 +1072,13 @@
       <div class="topbar-greet"><div class="topbar-name">Mes <em style="font-style:italic;color:var(--accent);">produits</em></div></div>
       <div style="display:flex;gap:8px;"><button class="add-btn" onclick="openBarcodeSheet()" style="padding:8px 10px;" aria-label="Scanner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="13" y1="8" x2="13" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg></button><button class="add-btn" onclick="openProductForm()">+ Ajouter</button></div>
     </div>
-    <div style="padding:0 20px 4px;color:var(--muted);font-size:12px;line-height:1.5;">Tous tes produits, au même endroit. Tu choisis lesquels vont le matin / le soir depuis l'onglet <span style="color:var(--accent-deep);">Rituel</span> 🌸</div>
+    <div style="padding:0 20px 14px;">
+      <div style="background:var(--surface-warm);border-radius:18px;padding:14px 18px;display:flex;align-items:center;">
+        <div style="flex:1;text-align:center;"><div class="eyebrow">PRODUITS</div><div class="serif" style="font-size:24px;line-height:1.1;margin-top:2px;" id="prod-count">0</div></div>
+        <div style="width:1px;align-self:stretch;background:var(--line);margin:2px 0;"></div>
+        <div style="flex:1;text-align:center;"><div class="eyebrow">COÛT / MOIS</div><div class="serif" style="font-size:24px;line-height:1.1;margin-top:2px;color:var(--accent);" id="cout-val">0€</div></div>
+      </div>
+    </div>
     <div class="section">
       <div style="display:flex;gap:7px;margin-bottom:12px;overflow-x:auto;">
         <button type="button" class="sort-chip sel" data-sort="fav" onclick="setProductSort('fav')">⭐ Favoris</button>
@@ -1081,14 +1087,7 @@
       </div>
       <div id="products-list" style="display:flex;flex-direction:column;gap:12px;"></div>
     </div>
-    <div class="section">
-      <div style="background:var(--surface-warm);border-radius:18px;padding:18px;display:flex;align-items:center;">
-        <div style="flex:1;text-align:center;"><div class="eyebrow">PRODUITS</div><div class="serif" style="font-size:26px;line-height:1.1;margin-top:4px;" id="prod-count">0</div></div>
-        <div style="width:1px;align-self:stretch;background:var(--line);margin:4px 0;"></div>
-        <div style="flex:1;text-align:center;"><div class="eyebrow">COÛT / MOIS</div><div class="serif" style="font-size:26px;line-height:1.1;margin-top:4px;color:var(--accent);" id="cout-val">0€</div></div>
-      </div>
-      
-    </div>
+
   </div>
 
   <!-- ====================== PROFILE ====================== -->
@@ -1132,7 +1131,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 13.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 13.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2701,10 +2700,9 @@
         txt = '⚠️ Périmé ' + (dPass===0?"aujourd'hui":(dPass===1?'depuis 1 jour':'depuis '+dPass+' jours'));
       } else if(days===0){
         txt = '⚠️ Périme aujourd\'hui';
-      } else if(days<=60){
-        txt = 'Périme le '+fmt(p.date_peremption)+' · J-'+days;
       } else {
-        txt = 'Périme le '+fmt(p.date_peremption);
+        const joursTxt = days===1 ? '1 jour' : days+' jours';
+        txt = 'Périme le '+fmt(p.date_peremption)+' ('+joursTxt+')';
       }
       peremLine = '<div style="margin-top:5px;"><span class="prod-badge" style="background:'+col[0]+';color:'+col[1]+';">'+txt+'</span></div>';
     }
