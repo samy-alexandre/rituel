@@ -1150,7 +1150,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 14.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 14.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1577,7 +1577,7 @@
 
       <!-- Conservation du produit (toutes les infos ensemble) -->
       <div style="margin-top:18px;">
-        <div class="field"><label>Date de péremption (sur le produit)</label><input id="pf-peremption" type="text" readonly placeholder="Choisir une date" onclick="dpOpen('pf-peremption')" style="cursor:pointer;" onchange="pfRefreshPerem()"></div>
+        <div class="field"><label>Date de péremption</label><input id="pf-peremption" type="text" readonly placeholder="Choisir une date" onclick="dpOpen('pf-peremption')" style="cursor:pointer;" onchange="pfRefreshPerem()"></div>
         <div class="field" style="margin-top:12px;"><label>Date d'ouverture</label><input id="pf-ouverture" type="text" readonly placeholder="Choisir une date" onclick="dpOpen('pf-ouverture')" style="cursor:pointer;" onchange="pfRefreshPerem()"></div>
         <div style="margin-top:12px;">
           <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">Durée de conservation après ouverture</label>
@@ -2936,8 +2936,7 @@
         pfCat = p.categorie || 'autre';
         document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.toggle('selected', b.dataset.cat===pfCat));
         document.getElementById('pf-prix').value = (p.prix!=null?p.prix:'');
-        document.getElementById('pf-ouverture').value = p.date_ouverture || '';
-        document.getElementById('pf-peremption').value = p.date_peremption || '';
+
       }
     }
   }
