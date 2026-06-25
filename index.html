@@ -1095,14 +1095,10 @@
   <!-- ====================== ROUTINE ====================== -->
   <div id="routine" class="screen">
     <div class="topbar">
-      <div class="topbar-greet"><div class="topbar-name">Mes <em style="font-style:italic;color:var(--accent);">produits</em></div></div>
+      <div class="topbar-greet"><div class="topbar-name">Mes <em style="font-style:italic;color:var(--accent);">produits</em> <span id="prod-count" style="font-family:var(--sans);font-style:normal;font-size:15px;color:var(--muted);font-weight:500;">0</span></div></div>
       <div style="display:flex;gap:8px;"><button class="add-btn" onclick="openBarcodeSheet()" style="padding:8px 10px;" aria-label="Scanner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="13" y1="8" x2="13" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg></button><button class="add-btn" onclick="openProductForm()">+ Ajouter</button></div>
     </div>
-    <div style="padding:0 20px 14px;">
-      <div style="background:var(--surface-warm);border-radius:18px;padding:14px 18px;text-align:center;">
-        <div class="eyebrow">MES PRODUITS</div><div class="serif" style="font-size:24px;line-height:1.1;margin-top:2px;" id="prod-count">0</div>
-      </div>
-    </div>
+
     <div class="section">
       <div style="display:flex;gap:7px;margin-bottom:12px;overflow-x:auto;">
         <button type="button" class="sort-chip sel" data-sort="fav" onclick="setProductSort('fav')">⭐ Favoris</button>
@@ -1155,7 +1151,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 14.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 15.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
