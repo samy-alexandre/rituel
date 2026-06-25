@@ -608,6 +608,25 @@
   .pf-fav { background:none; border:none; cursor:pointer; font-size:22px; padding:4px; line-height:1; }
   .sort-chip { flex-shrink:0; padding:7px 13px; border:1px solid var(--line); border-radius:20px; background:var(--surface); font-size:12.5px; font-family:inherit; color:var(--ink-soft); cursor:pointer; white-space:nowrap; transition:all .15s; }
   .sort-chip.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
+  /* ===== Datepicker custom (aux couleurs du thème) ===== */
+  .dp-overlay { position:fixed; inset:0; background:rgba(46,33,28,0.35); z-index:9000; display:none; align-items:center; justify-content:center; padding:20px; }
+  .dp-overlay.open { display:flex; }
+  .dp-card { background:var(--surface); border-radius:22px; padding:18px; width:100%; max-width:320px; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+  .dp-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .dp-title { font-family:var(--serif); font-size:17px; color:var(--ink); text-transform:capitalize; }
+  .dp-nav { background:var(--surface-warm); border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; color:var(--accent-deep); font-size:18px; display:flex; align-items:center; justify-content:center; }
+  .dp-nav:active { background:var(--blush-soft); }
+  .dp-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .dp-dow { text-align:center; font-size:11px; color:var(--muted); padding:4px 0; font-weight:600; }
+  .dp-day { aspect-ratio:1; border:none; background:none; border-radius:10px; cursor:pointer; font-size:13.5px; color:var(--ink); font-family:inherit; display:flex; align-items:center; justify-content:center; transition:all .12s; }
+  .dp-day:hover { background:var(--surface-warm); }
+  .dp-day.other { color:var(--line); }
+  .dp-day.today { font-weight:700; color:var(--accent-deep); }
+  .dp-day.sel { background:var(--accent); color:#fff; font-weight:600; }
+  .dp-foot { display:flex; gap:8px; margin-top:14px; }
+  .dp-btn { flex:1; padding:11px; border-radius:12px; border:none; font-family:inherit; font-size:13px; cursor:pointer; }
+  .dp-btn-clear { background:var(--surface-warm); color:var(--ink-soft); }
+  .dp-btn-today { background:var(--accent); color:#fff; }
 </style>
 </head>
 <body class="no-select">
@@ -1131,7 +1150,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 14.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 14.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1342,7 +1361,7 @@
         <button class="rit-opt" id="cy-off" onclick="cySetEnabled(false)">🌙<span>Désactivé</span></button>
       </div>
       <div id="cy-body">
-        <div class="field" style="margin-top:14px;"><label>Premier jour de tes dernières règles</label><input type="date" id="cy-start"></div>
+        <div class="field" style="margin-top:14px;"><label>Premier jour de tes dernières règles</label><input type="text" readonly id="cy-start" placeholder="Choisir une date" onclick="dpOpen('cy-start')" style="cursor:pointer;"></div>
         <button onclick="cyToday()" class="btn-soft" style="display:block;margin:12px auto 0;">Mes règles commencent aujourd'hui</button>
         <div class="field" style="margin-top:14px;"><label>Durée moyenne du cycle (jours)</label><input type="number" id="cy-length" min="20" max="45" value="28"></div>
       </div>
@@ -1558,8 +1577,8 @@
 
       <!-- Conservation du produit (toutes les infos ensemble) -->
       <div style="margin-top:18px;">
-        <div class="field"><label>Date de péremption (sur le produit)</label><input id="pf-peremption" type="date" onchange="pfRefreshPerem()"></div>
-        <div class="field" style="margin-top:12px;"><label>Date d'ouverture</label><input id="pf-ouverture" type="date" onchange="pfRefreshPerem()"></div>
+        <div class="field"><label>Date de péremption (sur le produit)</label><input id="pf-peremption" type="text" readonly placeholder="Choisir une date" onclick="dpOpen('pf-peremption')" style="cursor:pointer;" onchange="pfRefreshPerem()"></div>
+        <div class="field" style="margin-top:12px;"><label>Date d'ouverture</label><input id="pf-ouverture" type="text" readonly placeholder="Choisir une date" onclick="dpOpen('pf-ouverture')" style="cursor:pointer;" onchange="pfRefreshPerem()"></div>
         <div style="margin-top:12px;">
           <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">Durée de conservation après ouverture</label>
           <div style="display:flex;gap:8px;margin-top:6px;">
@@ -2795,6 +2814,60 @@
   function closeProductSheet(){ document.getElementById('product-sheet').classList.remove('open'); }
 
 
+
+  // ===== Datepicker custom (logique) =====
+  function dpFmtDisplay(iso){ if(!iso) return ''; const p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+  let dpTarget=null, dpView=new Date(), dpSelected=null;
+  const DP_MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const DP_DOW=['L','M','M','J','V','S','D'];
+  function dpOpen(inputId){
+    dpTarget=document.getElementById(inputId);
+    if(!dpTarget) return;
+    const v=dpTarget.getAttribute('data-iso');
+    if(v){ dpSelected=new Date(v); dpView=new Date(v); }
+    else { dpSelected=null; dpView=new Date(); }
+    // jours de la semaine (une seule fois)
+    const dow=document.getElementById('dp-dow');
+    dow.innerHTML=DP_DOW.map(d=>'<div class="dp-dow">'+d+'</div>').join('');
+    dpRender();
+    document.getElementById('dp-overlay').classList.add('open');
+  }
+  function dpClose(){ document.getElementById('dp-overlay').classList.remove('open'); dpTarget=null; }
+  function dpPrevMonth(){ dpView.setMonth(dpView.getMonth()-1); dpRender(); }
+  function dpNextMonth(){ dpView.setMonth(dpView.getMonth()+1); dpRender(); }
+  function dpRender(){
+    document.getElementById('dp-title').textContent = DP_MONTHS[dpView.getMonth()]+' '+dpView.getFullYear();
+    const y=dpView.getFullYear(), m=dpView.getMonth();
+    const first=new Date(y,m,1);
+    let startDow=first.getDay(); startDow=(startDow===0)?6:startDow-1; // lundi=0
+    const daysInMonth=new Date(y,m+1,0).getDate();
+    const daysPrev=new Date(y,m,0).getDate();
+    const today=new Date(); today.setHours(0,0,0,0);
+    let html='';
+    // jours du mois précédent (grisés)
+    for(let i=startDow-1;i>=0;i--){ html+='<button type="button" class="dp-day other" disabled>'+(daysPrev-i)+'</button>'; }
+    // jours du mois
+    for(let d=1;d<=daysInMonth;d++){
+      const date=new Date(y,m,d);
+      let cls='dp-day';
+      if(date.getTime()===today.getTime()) cls+=' today';
+      if(dpSelected && date.getFullYear()===dpSelected.getFullYear() && date.getMonth()===dpSelected.getMonth() && date.getDate()===dpSelected.getDate()) cls+=' sel';
+      const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      html+='<button type="button" class="'+cls+'" onclick="dpPick(\''+ds+'\')">'+d+'</button>';
+    }
+    document.getElementById('dp-days').innerHTML=html;
+  }
+  function dpPick(ds){
+    if(!dpTarget) return;
+    dpTarget.setAttribute('data-iso', ds);
+    dpTarget.value = dpFmtDisplay(ds);
+    dpTarget.dispatchEvent(new Event('change'));
+    dpClose();
+  }
+  function dpClear(){ if(dpTarget){ dpTarget.setAttribute('data-iso',''); dpTarget.value=''; dpTarget.dispatchEvent(new Event('change')); } dpClose(); }
+  function dpToday(){ const t=new Date(); dpPick(t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')); }
+
   function pfSetMois(m){
     pfMois = (pfMois===m) ? null : m;  // re-cliquer désélectionne
     document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.toggle('sel', parseInt(b.dataset.mois,10)===pfMois));
@@ -2812,8 +2885,8 @@
   function pfRefreshPerem(){
     const el = document.getElementById('pf-perem-calc');
     if(!el) return;
-    const printed = (document.getElementById('pf-peremption')||{}).value || '';
-    const ouv = (document.getElementById('pf-ouverture')||{}).value || '';
+    const _pe=document.getElementById('pf-peremption'); const printed = _pe ? (_pe.getAttribute('data-iso')||'') : '';
+    const _ou=document.getElementById('pf-ouverture'); const ouv = _ou ? (_ou.getAttribute('data-iso')||'') : '';
     const eff = pfEffectivePerem(printed, ouv, pfMois);
     if(!eff){ el.textContent=''; return; }
     const fmt = eff.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
@@ -2831,7 +2904,7 @@
     editingProductId = id || null;
     pfPhotoFile = null; pfPhotoPath = null; pfEmoji = '🧴'; pfCat='autre';
     setTimeout(function(){ var b=document.getElementById('pf-icon-btn'); if(b) b.textContent='🧴'; var pk=document.getElementById('pf-icon-picker'); if(pk) pk.style.display='none'; },0);
-    pfMois=null; setTimeout(function(){ document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.remove('sel')); const el=document.getElementById('pf-perem-calc'); if(el) el.textContent=''; },0);
+    pfMois=null; setTimeout(function(){ document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.remove('sel')); ['pf-ouverture','pf-peremption'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.setAttribute('data-iso',''); e.value=''; } }); const el=document.getElementById('pf-perem-calc'); if(el) el.textContent=''; },0);
     document.getElementById('pf-error').textContent='';
     document.getElementById('pf-nom').value='';
     document.getElementById('pf-marque').value='';
@@ -2848,8 +2921,8 @@
         var _full=(p.nom||''); var _parts=_full.split(' · '); document.getElementById('pf-nom').value=_parts[0]||''; document.getElementById('pf-marque').value=_parts[1]||'';
         pfEmoji = p.emoji || '🧴'; var _ib=document.getElementById('pf-icon-btn'); if(_ib) _ib.textContent=pfEmoji;
         // Remplir les dates connues (les deux peuvent coexister)
-        if(p.date_ouverture) document.getElementById('pf-ouverture').value = p.date_ouverture;
-        if(p.date_peremption) document.getElementById('pf-peremption').value = p.date_peremption;
+        if(p.date_ouverture){ var _o=document.getElementById('pf-ouverture'); _o.setAttribute('data-iso',p.date_ouverture); _o.value=dpFmtDisplay(p.date_ouverture); }
+        if(p.date_peremption){ var _pp=document.getElementById('pf-peremption'); _pp.setAttribute('data-iso',p.date_peremption); _pp.value=dpFmtDisplay(p.date_peremption); }
         // Récupérer la durée de conservation mémorisée (stockée dans date_debut sous forme "0001-01-0M")
         if(p.date_debut){
           var _mm = parseInt(String(p.date_debut).slice(-2),10);
@@ -2889,8 +2962,8 @@
     const prixRaw = document.getElementById('pf-prix').value.trim();
     const prix = prixRaw==='' ? null : parseFloat(prixRaw.replace(',','.'));
     // Toutes les infos peuvent coexister. La péremption stockée = la plus proche.
-    const d_ouv = document.getElementById('pf-ouverture').value || null;
-    const printedPer = document.getElementById('pf-peremption').value || null;
+    const d_ouv = document.getElementById('pf-ouverture').getAttribute('data-iso') || null;
+    const printedPer = document.getElementById('pf-peremption').getAttribute('data-iso') || null;
     let d_per = null;
     const _eff = pfEffectivePerem(printedPer, d_ouv, pfMois);
     if(_eff) d_per = _eff.toISOString().slice(0,10);
@@ -4318,10 +4391,10 @@
     if(b) b.classList.toggle('selected', !on);
     if(body) body.style.display = on ? 'block' : 'none';
   }
-  function cyToday(){ const el=document.getElementById('cy-start'); if(el) el.value=todayStr(); }
+  function cyToday(){ const el=document.getElementById('cy-start'); if(el){ const t=todayStr(); el.setAttribute('data-iso',t); el.value=dpFmtDisplay(t); } }
   function openCycleSheet(){
     cyTmp={ enabled: !!state.cycleEnabled };
-    const st=document.getElementById('cy-start'); if(st) st.value = state.cycleLastStart || '';
+    const st=document.getElementById('cy-start'); if(st){ const _v=state.cycleLastStart||''; st.setAttribute('data-iso',_v); st.value=_v?dpFmtDisplay(_v):''; }
     const ln=document.getElementById('cy-length'); if(ln) ln.value = state.cycleLength || 28;
     cySetEnabled(cyTmp.enabled);
     document.getElementById('cycle-sheet').classList.add('open');
@@ -4329,7 +4402,7 @@
   function closeCycleSheet(){ document.getElementById('cycle-sheet').classList.remove('open'); }
   async function saveCycle(){
     state.cycleEnabled = cyTmp.enabled;
-    const st=(document.getElementById('cy-start').value||'').trim();
+    const st=((document.getElementById('cy-start').getAttribute('data-iso')||'')||'').trim();
     state.cycleLastStart = st || null;
     state.cycleLength = Math.max(20, Math.min(45, parseInt(document.getElementById('cy-length').value,10)||28));
     if(currentUser){
@@ -4790,5 +4863,22 @@
   })();
   document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
 </script>
+
+  <!-- Datepicker custom -->
+  <div class="dp-overlay" id="dp-overlay" onclick="if(event.target===this)dpClose()">
+    <div class="dp-card">
+      <div class="dp-head">
+        <button type="button" class="dp-nav" onclick="dpPrevMonth()">‹</button>
+        <div class="dp-title" id="dp-title">—</div>
+        <button type="button" class="dp-nav" onclick="dpNextMonth()">›</button>
+      </div>
+      <div class="dp-grid" id="dp-dow"></div>
+      <div class="dp-grid" id="dp-days" style="margin-top:4px;"></div>
+      <div class="dp-foot">
+        <button type="button" class="dp-btn dp-btn-clear" onclick="dpClear()">Effacer</button>
+        <button type="button" class="dp-btn dp-btn-today" onclick="dpToday()">Aujourd'hui</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
