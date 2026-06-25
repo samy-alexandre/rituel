@@ -1155,7 +1155,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 14.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 14.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2775,7 +2775,7 @@
       return 0;
     });
     if(!products.length){
-      list.innerHTML = `<div style="text-align:center;padding:30px 16px;color:var(--muted);font-size:14px;line-height:1.6;">Aucun produit pour l'instant.<br>Ajoute ton premier soin 🌸</div>`;
+      list.innerHTML = `<div style="text-align:center;padding:30px 16px;color:var(--muted);font-size:14px;line-height:1.6;">Aucun produit pour l'instant 🌸</div>`;
     } else {
       let html='';
       for(let i=0;i<products.length;i++){
@@ -2823,19 +2823,18 @@
 
   // ===== Swipe-to-dismiss universel sur les fiches (.sheet) =====
   (function(){
-    let startY=0, curY=0, dragging=false, sheetEl=null, overlayEl=null;
-    let atTopConfirmed=false;  // 2 temps : il faut être en haut ET re-tirer
-    let scrollAtStart=0;
+    let startY=0, curY=0, startT=0, dragging=false, sheetEl=null, overlayEl=null, active=false;
 
     function onTouchStart(e){
       const sheet = e.target.closest('.sheet');
-      if(!sheet) return;
+      if(!sheet){ sheetEl=null; return; }
       sheetEl = sheet;
       overlayEl = sheet.closest('.sheet-overlay');
       startY = e.touches[0].clientY;
       curY = startY;
-      scrollAtStart = sheet.scrollTop;
+      startT = Date.now();
       dragging = true;
+      active = false;  // devient vrai seulement si on tire vers le bas en étant en haut
       sheetEl.style.transition = 'none';
     }
 
@@ -2844,59 +2843,52 @@
       curY = e.touches[0].clientY;
       const dy = curY - startY;  // positif = vers le bas
 
-      // On ne ferme que si on tire vers le BAS et qu'on est EN HAUT du contenu
+      // On ne s'active que si : on tire vers le bas ET le contenu est tout en haut
       if(dy > 0 && sheetEl.scrollTop <= 0){
-        // 2 temps : si on vient d'arriver en haut, premier geste = juste "résistance"
-        // On applique un déplacement avec rubber band
-        const resist = atTopConfirmed ? dy : dy * 0.35;  // 1er temps : très résistant
-        sheetEl.style.transform = 'translateY('+resist+'px)';
-        if(overlayEl){ overlayEl.style.background = 'rgba(46,33,28,'+Math.max(0.1, 0.45 - dy/600)+')'; }
-        e.preventDefault();  // empêche le scroll natif pendant le drag
+        active = true;
+        // léger rubber-band au début (plus doux sur les 40 premiers px)
+        const eased = dy < 40 ? dy * 0.6 : (24 + (dy - 40));
+        sheetEl.style.transform = 'translateY('+eased+'px)';
+        if(overlayEl){ overlayEl.style.background = 'rgba(46,33,28,'+Math.max(0.12, 0.45 - dy/500)+')'; }
+        e.preventDefault();
+      } else if(active && dy <= 0){
+        // on est revenu au-dessus : on annule
+        active = false;
+        sheetEl.style.transform = 'translateY(0)';
+        if(overlayEl){ overlayEl.style.background=''; }
       }
     }
 
     function onTouchEnd(e){
-      if(!dragging || !sheetEl) return;
+      if(!dragging || !sheetEl){ dragging=false; return; }
       dragging = false;
       const dy = curY - startY;
+      const dt = Date.now() - startT;
+      const speed = dy / Math.max(dt,1);  // vitesse du geste (px/ms)
       sheetEl.style.transition = 'transform .28s cubic-bezier(.2,.8,.2,1)';
 
-      // Seuil de fermeture
-      const threshold = atTopConfirmed ? 90 : 9999;  // 1er temps : ne ferme jamais
+      // Fermeture si : geste ample (>110px) OU geste rapide vers le bas (flick)
+      const shouldClose = active && sheetEl.scrollTop <= 0 && (dy > 110 || (dy > 40 && speed > 0.5));
 
-      if(dy > threshold && sheetEl.scrollTop <= 0){
-        // Fermer : on glisse vers le bas puis on déclenche la fermeture réelle
+      if(shouldClose){
         sheetEl.style.transform = 'translateY(100%)';
-        const ov = overlayEl;
+        const ov = overlayEl, sh = sheetEl;
         setTimeout(function(){
           if(ov) ov.classList.remove('open');
-          if(sheetEl){ sheetEl.style.transform=''; sheetEl.style.transition=''; }
+          if(sh){ sh.style.transform=''; sh.style.transition=''; }
           if(ov) ov.style.background='';
-          atTopConfirmed=false;
-        }, 260);
+        }, 250);
       } else {
-        // Revenir en place
+        // revenir en place
         sheetEl.style.transform = 'translateY(0)';
         if(overlayEl){ overlayEl.style.background=''; }
-        // Si on était en haut et qu'on a tiré un peu → on "confirme" le 1er temps
-        if(dy > 20 && sheetEl.scrollTop <= 0){ atTopConfirmed = true; }
-        // Reset du flag après un court délai si l'utilisateur ne fait rien
-        // (on garde le flag tant qu'on reste en haut)
       }
-    }
-
-    // Quand on rescrolle dans le contenu, on annule la confirmation
-    function onScroll(e){
-      const sheet = e.target;
-      if(sheet && sheet.classList && sheet.classList.contains('sheet')){
-        if(sheet.scrollTop > 5){ atTopConfirmed = false; }
-      }
+      active = false;
     }
 
     document.addEventListener('touchstart', onTouchStart, {passive:true});
     document.addEventListener('touchmove', onTouchMove, {passive:false});
     document.addEventListener('touchend', onTouchEnd, {passive:true});
-    document.addEventListener('scroll', onScroll, {passive:true, capture:true});
   })();
 
   // ===== Datepicker custom (logique) =====
@@ -4466,10 +4458,22 @@
       if(g){ g.href='https://www.google.com/search?q='+encodeURIComponent(code); g.style.display='inline-block'; }
       return;
     }
-    const full=[d.marque, d.nom].filter(Boolean).join(' · ');
-    const nomEl=document.getElementById('pf-nom'); if(nomEl) nomEl.value=full;
+    // Pré-remplir la fiche produit avec les infos trouvées
     closeBarcodeSheet();
-    showToast('Produit trouvé ✨');
+    openProductForm();
+    setTimeout(function(){
+      const cap=function(s){ return s? s.replace(/\b\w/g, function(ch){ return ch.toUpperCase(); }) : ''; };
+      const nomEl=document.getElementById('pf-nom'); if(nomEl && d.nom) nomEl.value=cap(d.nom);
+      const mqEl=document.getElementById('pf-marque'); if(mqEl && d.marque) mqEl.value=cap(d.marque);
+      const efEl=document.getElementById('pf-effets');
+      if(efEl && d.effets){ efEl.value = d.effets.charAt(0).toUpperCase()+d.effets.slice(1); }
+      // Catégorie devinée
+      if(d.categorie){
+        const catBtn=document.querySelector('#pf-cats .rj-chip[data-cat="'+d.categorie+'"]');
+        if(catBtn){ pfSetCat(catBtn, d.categorie); }
+      }
+    }, 120);
+    showToast('Produit trouvé ✨ Vérifie et complète 🌸');
   }
 
   // ===== Suivi de cycle (opt-in, discret) =====
