@@ -1038,6 +1038,13 @@
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
     </div>
+    <div id="rituel-cout-card" style="display:none;padding:0 20px 4px;">
+      <div style="background:var(--surface-warm);border-radius:18px;padding:14px 18px;text-align:center;">
+        <div class="eyebrow">COÛT ESTIMÉ / MOIS</div>
+        <div class="serif" style="font-size:24px;line-height:1.1;margin-top:2px;color:var(--accent);" id="rituel-cout-val">0€</div>
+        <div style="font-size:10.5px;color:var(--muted);margin-top:4px;" id="rituel-cout-note"></div>
+      </div>
+    </div>
     
     <div class="section">
       <div style="margin:18px 0 14px;">
@@ -1092,10 +1099,8 @@
       <div style="display:flex;gap:8px;"><button class="add-btn" onclick="openBarcodeSheet()" style="padding:8px 10px;" aria-label="Scanner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="13" y1="8" x2="13" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg></button><button class="add-btn" onclick="openProductForm()">+ Ajouter</button></div>
     </div>
     <div style="padding:0 20px 14px;">
-      <div style="background:var(--surface-warm);border-radius:18px;padding:14px 18px;display:flex;align-items:center;">
-        <div style="flex:1;text-align:center;"><div class="eyebrow">PRODUITS</div><div class="serif" style="font-size:24px;line-height:1.1;margin-top:2px;" id="prod-count">0</div></div>
-        <div style="width:1px;align-self:stretch;background:var(--line);margin:2px 0;"></div>
-        <div style="flex:1;text-align:center;"><div class="eyebrow">COÛT / MOIS</div><div class="serif" style="font-size:24px;line-height:1.1;margin-top:2px;color:var(--accent);" id="cout-val">0€</div></div>
+      <div style="background:var(--surface-warm);border-radius:18px;padding:14px 18px;text-align:center;">
+        <div class="eyebrow">MES PRODUITS</div><div class="serif" style="font-size:24px;line-height:1.1;margin-top:2px;" id="prod-count">0</div>
       </div>
     </div>
     <div class="section">
@@ -1150,7 +1155,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 14.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 14.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2815,6 +2820,85 @@
 
 
 
+
+  // ===== Swipe-to-dismiss universel sur les fiches (.sheet) =====
+  (function(){
+    let startY=0, curY=0, dragging=false, sheetEl=null, overlayEl=null;
+    let atTopConfirmed=false;  // 2 temps : il faut être en haut ET re-tirer
+    let scrollAtStart=0;
+
+    function onTouchStart(e){
+      const sheet = e.target.closest('.sheet');
+      if(!sheet) return;
+      sheetEl = sheet;
+      overlayEl = sheet.closest('.sheet-overlay');
+      startY = e.touches[0].clientY;
+      curY = startY;
+      scrollAtStart = sheet.scrollTop;
+      dragging = true;
+      sheetEl.style.transition = 'none';
+    }
+
+    function onTouchMove(e){
+      if(!dragging || !sheetEl) return;
+      curY = e.touches[0].clientY;
+      const dy = curY - startY;  // positif = vers le bas
+
+      // On ne ferme que si on tire vers le BAS et qu'on est EN HAUT du contenu
+      if(dy > 0 && sheetEl.scrollTop <= 0){
+        // 2 temps : si on vient d'arriver en haut, premier geste = juste "résistance"
+        // On applique un déplacement avec rubber band
+        const resist = atTopConfirmed ? dy : dy * 0.35;  // 1er temps : très résistant
+        sheetEl.style.transform = 'translateY('+resist+'px)';
+        if(overlayEl){ overlayEl.style.background = 'rgba(46,33,28,'+Math.max(0.1, 0.45 - dy/600)+')'; }
+        e.preventDefault();  // empêche le scroll natif pendant le drag
+      }
+    }
+
+    function onTouchEnd(e){
+      if(!dragging || !sheetEl) return;
+      dragging = false;
+      const dy = curY - startY;
+      sheetEl.style.transition = 'transform .28s cubic-bezier(.2,.8,.2,1)';
+
+      // Seuil de fermeture
+      const threshold = atTopConfirmed ? 90 : 9999;  // 1er temps : ne ferme jamais
+
+      if(dy > threshold && sheetEl.scrollTop <= 0){
+        // Fermer : on glisse vers le bas puis on déclenche la fermeture réelle
+        sheetEl.style.transform = 'translateY(100%)';
+        const ov = overlayEl;
+        setTimeout(function(){
+          if(ov) ov.classList.remove('open');
+          if(sheetEl){ sheetEl.style.transform=''; sheetEl.style.transition=''; }
+          if(ov) ov.style.background='';
+          atTopConfirmed=false;
+        }, 260);
+      } else {
+        // Revenir en place
+        sheetEl.style.transform = 'translateY(0)';
+        if(overlayEl){ overlayEl.style.background=''; }
+        // Si on était en haut et qu'on a tiré un peu → on "confirme" le 1er temps
+        if(dy > 20 && sheetEl.scrollTop <= 0){ atTopConfirmed = true; }
+        // Reset du flag après un court délai si l'utilisateur ne fait rien
+        // (on garde le flag tant qu'on reste en haut)
+      }
+    }
+
+    // Quand on rescrolle dans le contenu, on annule la confirmation
+    function onScroll(e){
+      const sheet = e.target;
+      if(sheet && sheet.classList && sheet.classList.contains('sheet')){
+        if(sheet.scrollTop > 5){ atTopConfirmed = false; }
+      }
+    }
+
+    document.addEventListener('touchstart', onTouchStart, {passive:true});
+    document.addEventListener('touchmove', onTouchMove, {passive:false});
+    document.addEventListener('touchend', onTouchEnd, {passive:true});
+    document.addEventListener('scroll', onScroll, {passive:true, capture:true});
+  })();
+
   // ===== Datepicker custom (logique) =====
   function dpFmtDisplay(iso){ if(!iso) return ''; const p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
 
@@ -3108,7 +3192,48 @@
     loadHomeRoutine(); loadRituels();
   }
 
+
+  // ===== Coût estimé par mois de la routine en cours =====
+  async function renderRituelCout(){
+    if(!currentUser) return;
+    const card=document.getElementById('rituel-cout-card');
+    const val=document.getElementById('rituel-cout-val');
+    const note=document.getElementById('rituel-cout-note');
+    if(!card||!val) return;
+    const { data } = await sb.from('products').select('prix,date_ouverture,date_debut,in_matin,in_soir').eq('user_id', currentUser.id);
+    const arr = data || [];
+    let total=0, comptes=0, sansDuree=0, utilises=0;
+    arr.forEach(function(p){
+      // Seulement les produits réellement utilisés (matin OU soir)
+      if(!(p.in_matin || p.in_soir)) return;
+      utilises++;
+      const prix=parseFloat(p.prix);
+      if(isNaN(prix)||prix<=0) return;
+      // Récupérer la durée de conservation mémorisée (stockée dans date_debut "0001-01-0M")
+      let mois=null;
+      if(p.date_debut){ var mm=parseInt(String(p.date_debut).slice(-2),10); if([3,6,9,12].indexOf(mm)>=0) mois=mm; }
+      if(mois){
+        total += prix/mois;  // coût mensuel de ce produit
+        comptes++;
+      } else {
+        sansDuree++;
+      }
+    });
+    if(utilises===0){ card.style.display='none'; return; }
+    card.style.display='block';
+    if(comptes===0){
+      val.textContent='—';
+      note.textContent='Ajoute une durée de conservation à tes produits pour estimer le coût mensuel 🌸';
+    } else {
+      val.textContent='~'+Math.round(total)+'€';
+      let txt = 'Basé sur '+comptes+' produit'+(comptes>1?'s':'')+' avec durée de conservation';
+      if(sansDuree>0){ txt += ' · '+sansDuree+' sans durée (non compté'+(sansDuree>1?'s':'')+')'; }
+      note.textContent = txt;
+    }
+  }
+
   async function loadRituels(){
+    renderRituelCout();
     const host=document.getElementById('rituels-list'); if(!host) return;
     const { data } = await sb.from('rituels').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rits = data || [];
