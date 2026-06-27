@@ -643,9 +643,19 @@
   .rph-sub { position:relative; z-index:2; text-align:center; font-family:var(--serif); font-style:italic; font-size:13px; color:rgba(245,237,226,0.72); margin-top:6px; }
   .rph-divider { position:relative; z-index:2; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:13px; color:#C9A24F; opacity:0.7; font-size:11px; }
   .rph-divider::before, .rph-divider::after { content:''; width:28px; height:1px; background:#C9A24F; opacity:0.5; }
-  /* le bloc rituel sur fond clair, prolonge la tête */
-  #home-rituel-section .period-switch { border-radius:0; margin-bottom:0; border-left:1px solid rgba(201,162,79,0.3); border-right:1px solid rgba(201,162,79,0.3); background:linear-gradient(180deg,#FFFEFB,#FAF3EA); padding:12px; }
-  #home-rituel-section .routine-list { border-radius:0 0 22px 22px; border:1px solid rgba(201,162,79,0.3); border-top:none; box-shadow:0 12px 38px rgba(142,60,38,0.15); }
+  /* le bloc rituel sombre, prolonge la tête (toute la carte premium) */
+  #home-rituel-section .period-switch { border-radius:0; margin-bottom:0; border-left:1px solid rgba(201,162,79,0.3); border-right:1px solid rgba(201,162,79,0.3); background:#33241F; padding:12px; }
+  #home-rituel-section .period-btn { color:rgba(245,237,226,0.6); }
+  #home-rituel-section .period-btn.active { background:rgba(201,162,79,0.18); color:#E2C98A; }
+  #home-rituel-section .routine-list { border-radius:0 0 22px 22px; border:1px solid rgba(201,162,79,0.3); border-top:none; box-shadow:0 12px 38px rgba(42,30,25,0.35); background:linear-gradient(180deg,#2E211C,#2A1E19); }
+  #home-rituel-section .routine-item { border-bottom:1px solid rgba(201,162,79,0.12); }
+  #home-rituel-section .routine-name { color:#F0E6DA; }
+  #home-rituel-section .routine-product { color:rgba(240,230,218,0.55); }
+  #home-rituel-section .routine-check { border-color:rgba(201,162,79,0.4); }
+  #home-rituel-section .routine-item.done .routine-check { background:#C9A24F; border-color:#C9A24F; }
+  #home-rituel-section .routine-time { color:rgba(240,230,218,0.4); }
+  /* la tête n'a plus le radius bas (continuité avec le corps) */
+  .rituel-premium-head { border-radius:22px 22px 0 0 !important; }
 </style>
 </head>
 <body class="no-select">
@@ -864,6 +874,7 @@
         <div class="avatar" onclick="navTo('profile')" id="topbar-avatar">V</div>
       </div>
     </div>
+      
 
     <div class="section" id="lettre-cta" style="display:none;">
       <div class="msg-card" style="margin:0;max-width:100%;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="openLettre()">
@@ -886,26 +897,7 @@
         <div style="color:var(--muted);font-size:18px;">›</div>
       </div>
     </div>
-
-    <div class="plant-card">
-      <div id="plant-host"></div>
-      <div class="plant-caption" id="plant-caption">Ta plante pousse avec ta série 🌱</div>
-      <div class="streak">
-        <div class="streak-flame" id="streak-flame">🌱</div>
-        <div class="streak-text">
-          <div class="streak-num"><em id="streak-num">0</em> <span id="streak-unit">jour</span></div>
-          <div class="streak-label" id="streak-label">Fais ton rituel pour démarrer ta série ✨</div>
-        </div>
-        <div class="streak-mini" id="streak-mini"></div>
-      </div>
-      <div style="text-align:center;margin:2px 0 12px;"><button id="rest-btn" onclick="takeRestDay()" class="btn-soft" style="display:block;margin:12px auto 0;">🧊 Jour de repos</button></div>
-      <div class="plant-actions">
-        <button class="plant-change" onclick="openPlantSheet()">🌱 Changer de plante</button>
-        <button class="plant-change" onclick="shareStreakImage()">📤 Partager</button>
-      </div>
-    </div>
-
-    <div class="section" id="home-rituel-section">
+      <div class="section" id="home-rituel-section">
       <div class="rituel-premium-head" onclick="navTo('ritual')">
         <span class="rph-corner rph-c1">❦</span><span class="rph-corner rph-c2">❦</span>
         <div class="rph-orn"><span class="rph-moon">☾</span>✦ ⟡ ✦</div>
@@ -937,6 +929,26 @@
         <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Crème de nuit</div><div class="routine-product">CeraVe PM</div></div><div class="routine-time">…</div></div>
       </div>
     </div>
+
+    <div class="plant-card">
+      <div id="plant-host"></div>
+      <div class="plant-caption" id="plant-caption">Ta plante pousse avec ta série 🌱</div>
+      <div class="streak">
+        <div class="streak-flame" id="streak-flame">🌱</div>
+        <div class="streak-text">
+          <div class="streak-num"><em id="streak-num">0</em> <span id="streak-unit">jour</span></div>
+          <div class="streak-label" id="streak-label">Fais ton rituel pour démarrer ta série ✨</div>
+        </div>
+        <div class="streak-mini" id="streak-mini"></div>
+      </div>
+      <div style="text-align:center;margin:2px 0 12px;"><button id="rest-btn" onclick="takeRestDay()" class="btn-soft" style="display:block;margin:12px auto 0;">🧊 Jour de repos</button></div>
+      <div class="plant-actions">
+        <button class="plant-change" onclick="openPlantSheet()">🌱 Changer de plante</button>
+        <button class="plant-change" onclick="shareStreakImage()">📤 Partager</button>
+      </div>
+    </div>
+
+    
 
     <div class="photo-mini" onclick="openPhotoChoice()">
       <div class="photo-mini-thumb">
@@ -1192,7 +1204,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 15.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 15.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
