@@ -1075,6 +1075,7 @@
   <div id="ritual" class="screen">
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
+      <button onclick="(function(){var h=document.getElementById('rituel-help');h.style.display=h.style.display==='none'?'block':'none';})()" aria-label="Aide" style="width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);font-size:16px;font-family:var(--serif);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">?</button>
     </div>
         <div id="rituel-actuel-card" style="display:none;padding:0 20px 4px;"></div>
     <div id="rituel-cout-card" style="display:none;padding:0 20px 4px;">
@@ -1085,7 +1086,7 @@
       </div>
     </div>
     
-    <div class="section" id="rituel-presets-section">
+    <div class="section" id="rituel-presets-section" style="display:none;">
       <div style="margin:18px 0 14px;">
         <div class="section-head" style="margin-bottom:6px;"><h3 class="section-title" style="font-size:16px;">Pars d'une routine <em>toute faite</em> ✨</h3></div>
         <p style="color:var(--muted);font-size:12px;margin:0 0 10px;line-height:1.5;">Choisis ton profil : on crée les produits et le rituel pour toi, dans le bon ordre. Tu personnalises ensuite.</p>
@@ -1101,7 +1102,7 @@
       </div>
       <button class="add-product-card" style="margin-top:0;" onclick="openRituelEditor()">＋ Créer un rituel</button>
       <button class="btn-soft" id="rituel-choose-btn-tab" style="display:none;margin:12px auto 0;" onclick="openRituelSelect()">Choisir mon rituel actif</button>
-      <div style="text-align:center;margin-top:10px;"><button onclick="(function(){var h=document.getElementById('rituel-help');h.style.display=h.style.display==='none'?'block':'none';})()" style="background:none;border:none;color:var(--muted);font-family:inherit;font-size:12.5px;text-decoration:none;cursor:pointer;padding:4px;">Comment ça marche ?</button></div>
+
       <div id="rituel-help" style="display:none;background:var(--surface-warm);border-radius:14px;padding:14px;margin-top:12px;font-size:13px;color:var(--ink-soft);line-height:1.6;">1. Crée un rituel et donne-lui un nom (ex. « Routine du matin »).<br>2. Choisis quand tu le fais · matin, soir ou les deux.<br>3. Ajoute tes produits, puis <b>glisse les cartes</b> pour les ordonner : les étapes 1, 2, 3… se numérotent toutes seules 🌸</div>
       <div id="rituels-list"></div>
     </div>
@@ -1207,7 +1208,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2826,6 +2827,7 @@
     loadProducts();
   }
 
+  let isPremium = false;  // activable plus tard avec le paiement
       let productSort = 'fav';  // 'fav', 'alpha', 'perem'
   function setProductSort(s){
     productSort = s;
@@ -3275,10 +3277,11 @@
     const actif = (rits||[]).find(r=>r.actif);
     const coutCard=document.getElementById('rituel-cout-card');
     if(!actif){
-      // Pas de rituel actif → cacher la carte rituel + le coût, montrer les presets
+      // Pas de rituel actif → cacher la carte rituel + le coût
       card.style.display='none';
       if(coutCard) coutCard.style.display='none';
-      if(presets) presets.style.display='';
+      // Les routines toutes faites = avantage Rituel+ (cachées en free)
+      if(presets) presets.style.display = isPremium ? '' : 'none';
       return;
     }
     // Récupérer les produits du rituel actif
