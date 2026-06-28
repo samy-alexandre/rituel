@@ -1098,7 +1098,7 @@
     </div>
     <div class="section">
       <button class="add-product-card" style="margin-top:0;" onclick="openRituelEditor()">＋ Créer un rituel</button>
-      <button class="btn-soft" id="rituel-choose-btn-tab" style="display:none;margin:12px auto 0;" onclick="openRituelSelect()">Choisir mon rituel actif</button>
+      
 
 
       <div id="rituels-list"></div>
@@ -1205,7 +1205,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 17.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3467,11 +3467,12 @@
     window.__allRituels = rits;
     renderRituelActuel(rits);
     if(!rits.length){ host.innerHTML=''; const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display='none'; return; }
-    host.innerHTML = '<div class="eyebrow" style="margin:20px 0 12px;">MES RITUELS</div>' + rits.map(r=>{
-      const moji = r.moment==='matin'?'☀️ MATIN':(r.moment==='soir'?'🌙 SOIR':'☀️🌙 MATIN & SOIR');
-      const cnt = Array.isArray(r.produits)?r.produits.length:0;
-      return `<div class="product-card" onclick="openRituelEditor('${r.id}')" style="margin-bottom:10px;"><div class="product-thumb">🧖‍♀️</div><div class="product-info" style="flex:1;"><div class="product-step">${moji}${r.actif?' <span style="color:var(--accent);">· ACTIF ✓</span>':''}</div><div class="product-name">${escapeHtml(r.nom||'Mon rituel')}</div><div class="product-meta">${cnt} étape${cnt>1?'s':''}</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
-    }).join('');
+    // Plus de liste encombrante : juste un bouton "Changer de rituel" si on a plusieurs rituels
+    if(rits.length >= 2){
+      host.innerHTML = '<button onclick="openRituelSelect()" style="width:100%;margin-top:14px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-size:13.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">🔄 Changer de rituel ('+rits.length+')</button>';
+    } else {
+      host.innerHTML = '';
+    }
     const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display = rits.length>1 ? 'block' : 'none';
   }
 
