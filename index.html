@@ -1210,7 +1210,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1602,7 +1602,28 @@
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">Ajouter des produits</div>
-      <p style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Choisis les produits de ce rituel 🌸</p>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 14px;line-height:1.5;">Choisis les produits de ce rituel 🌸</p>
+      <div style="display:flex;gap:5px;margin-bottom:14px;">
+        <button type="button" class="sort-chip sel" data-rdsort="fav" onclick="setRdSort('fav')">Favoris</button>
+        <button type="button" class="sort-chip" data-rdsort="alpha" onclick="setRdSort('alpha')">A-Z</button>
+        <button type="button" class="sort-chip" data-rdsort="perem" onclick="setRdSort('perem')">Date</button>
+        <div class="cat-dd" style="position:relative;flex-shrink:0;">
+          <button type="button" class="sort-chip" id="rd-cat-btn" onclick="toggleRdCatDD()" style="display:flex;align-items:center;gap:5px;">Catégorie <span style="font-size:8px;opacity:0.6;">▼</span></button>
+          <div class="cat-dd-menu" id="rd-cat-menu">
+            <button type="button" class="cat-dd-opt sel" data-cat="all" onclick="pickRdCat('all','Catégorie')">Toutes</button>
+            <button type="button" class="cat-dd-opt" data-cat="demaquillant" onclick="pickRdCat('demaquillant','Démaquillant')">Démaquillant</button>
+            <button type="button" class="cat-dd-opt" data-cat="nettoyant" onclick="pickRdCat('nettoyant','Nettoyant')">Nettoyant</button>
+            <button type="button" class="cat-dd-opt" data-cat="toner" onclick="pickRdCat('toner','Lotion / toner')">Lotion / toner</button>
+            <button type="button" class="cat-dd-opt" data-cat="serum" onclick="pickRdCat('serum','Sérum')">Sérum</button>
+            <button type="button" class="cat-dd-opt" data-cat="yeux" onclick="pickRdCat('yeux','Yeux')">Yeux</button>
+            <button type="button" class="cat-dd-opt" data-cat="creme" onclick="pickRdCat('creme','Crème')">Crème</button>
+            <button type="button" class="cat-dd-opt" data-cat="spf" onclick="pickRdCat('spf','SPF')">SPF</button>
+            <button type="button" class="cat-dd-opt" data-cat="masque" onclick="pickRdCat('masque','Masque / exfo')">Masque / exfo</button>
+            <button type="button" class="cat-dd-opt" data-cat="cible" onclick="pickRdCat('cible','Soin ciblé')">Soin ciblé</button>
+            <button type="button" class="cat-dd-opt" data-cat="autre" onclick="pickRdCat('autre','Autre')">Autre</button>
+          </div>
+        </div>
+      </div>
       <div id="rd-picker-list" style="display:flex;flex-direction:column;gap:8px;"></div>
       <button class="btn btn-accent" style="margin-top:14px;" onclick="confirmRdPicker()">Ajouter à mon rituel</button>
       <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeRdPicker()">Fermer</button>
@@ -3381,7 +3402,7 @@
 
   async function openRituelEditor(id){
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
-    const { data: prods } = await sb.from('products').select('id,nom,emoji,effets,categorie').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+    const { data: prods } = await sb.from('products').select('id,nom,emoji,effets,categorie,date_peremption').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     rdProductMap = {}; (prods||[]).forEach(p=>{ rdProductMap[p.id]=p; });
     if(id){
       const { data: r } = await sb.from('rituels').select('*').eq('id', id).maybeSingle();
@@ -3466,19 +3487,76 @@
       };
     });
   }
-  async function openRdPicker(){
-    rdPickerSel = new Set();
+  // ===== Tri/filtre du picker de produits (rituel) =====
+  let rdSort = 'fav';
+  let rdCatFilter = 'all';
+  function setRdSort(s){
+    rdSort = s;
+    document.querySelectorAll('[data-rdsort]').forEach(b=>b.classList.toggle('sel', b.dataset.rdsort===s));
+    renderRdPickerList();
+  }
+  function toggleRdCatDD(){ document.getElementById('rd-cat-menu').classList.toggle('open'); }
+  function pickRdCat(cat, label){
+    rdCatFilter = cat;
+    document.querySelectorAll('#rd-cat-menu .cat-dd-opt').forEach(b=>b.classList.toggle('sel', b.dataset.cat===cat));
+    const btn=document.getElementById('rd-cat-btn');
+    btn.innerHTML = label + ' <span style="font-size:8px;opacity:0.6;">▼</span>';
+    btn.classList.toggle('active-filter', cat!=='all');
+    document.getElementById('rd-cat-menu').classList.remove('open');
+    renderRdPickerList();
+  }
+  // construit la liste filtrée + triée
+  function renderRdPickerList(){
     const list=document.getElementById('rd-picker-list');
-    const ids = Object.keys(rdProductMap).filter(id=>!rituelDraft.produits.includes(id));
-    if(!ids.length){ list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px;line-height:1.5;">Tous tes produits sont déjà dans ce rituel, ou tu n\'as pas encore de produit. <button class="btn-soft" style="padding:7px 14px;font-size:11.5px;margin-top:8px;" onclick="closeRdPicker();navTo(\'routine\')">Ajouter un produit →</button></div>'; }
-    else {
-      list.innerHTML = ids.map(id=>{ const p=rdProductMap[id]; return `<button class="rd-pick" data-id="${id}" onclick="rdTogglePick('${id}',this)" style="display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;text-align:left;"><div class="rd-emoji">${p.emoji||'🧴'}</div><div style="flex:1;font-family:var(--serif);font-size:15px;">${escapeHtml(p.nom||'')}</div><div class="rd-check" style="width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);flex-shrink:0;"></div></button>`; }).join('');
+    if(!list) return;
+    let ids = Object.keys(rdProductMap).filter(id=>!rituelDraft.produits.includes(id));
+    // filtre catégorie
+    if(rdCatFilter!=='all'){
+      ids = ids.filter(id=>{ const p=rdProductMap[id]; return (p && (p.categorie||'autre')===rdCatFilter); });
     }
+    // tri
+    const favs = (typeof favSet==='function') ? favSet() : new Set();
+    ids.sort(function(a,b){
+      const pa=rdProductMap[a], pb=rdProductMap[b];
+      if(rdSort==='alpha'){ return (pa.nom||'').localeCompare(pb.nom||'', 'fr', {sensitivity:'base'}); }
+      if(rdSort==='perem'){
+        const da=pa.date_peremption||'', db=pb.date_peremption||'';
+        if(!da && !db) return 0; if(!da) return 1; if(!db) return -1; return da.localeCompare(db);
+      }
+      // favoris
+      const fa=favs.has(a)?1:0, fb=favs.has(b)?1:0;
+      if(fa!==fb) return fb-fa; return 0;
+    });
+    if(!ids.length){
+      list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px;line-height:1.5;">Aucun produit dans cette vue 🌸</div>';
+      return;
+    }
+    list.innerHTML = ids.map(id=>{ const p=rdProductMap[id]; const sel=rdPickerSel.has(id);
+      const nom=(p.nom||'').split(' · ')[0];
+      return '<button class="rd-pick'+(sel?' picked':'')+'" data-id="'+id+'" onclick="rdTogglePick(\''+id+'\',this)" style="display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid '+(sel?'var(--accent)':'var(--line)')+';background:var(--surface);cursor:pointer;text-align:left;">'+
+        '<span style="font-size:20px;">'+(p.emoji||'🧴')+'</span>'+
+        '<span style="flex:1;font-size:14px;color:var(--ink);">'+nom+'</span>'+
+        '<span style="width:22px;height:22px;border-radius:50%;border:1.5px solid '+(sel?'var(--accent)':'var(--line)')+';background:'+(sel?'var(--accent)':'transparent')+';display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;">'+(sel?'✓':'')+'</span>'+
+      '</button>';
+    }).join('');
+  }
+
+    async function openRdPicker(){
+    rdPickerSel = new Set();
+    rdSort = 'fav'; rdCatFilter = 'all';
+    // reset visuel des chips
+    setTimeout(function(){
+      document.querySelectorAll('[data-rdsort]').forEach(b=>b.classList.toggle('sel', b.dataset.rdsort==='fav'));
+      const cb=document.getElementById('rd-cat-btn'); if(cb){ cb.innerHTML='Catégorie <span style="font-size:8px;opacity:0.6;">▼</span>'; cb.classList.remove('active-filter'); }
+      document.querySelectorAll('#rd-cat-menu .cat-dd-opt').forEach(b=>b.classList.toggle('sel', b.dataset.cat==='all'));
+    },0);
+    renderRdPickerList();
     document.getElementById('rd-picker').classList.add('open');
   }
   function rdTogglePick(id, btn){
-    if(rdPickerSel.has(id)){ rdPickerSel.delete(id); btn.style.borderColor='var(--line)'; btn.style.background='var(--surface)'; btn.querySelector('.rd-check').style.background='transparent'; btn.querySelector('.rd-check').style.borderColor='var(--line)'; }
-    else { rdPickerSel.add(id); btn.style.borderColor='var(--accent)'; btn.style.background='var(--blush-soft)'; btn.querySelector('.rd-check').style.background='var(--accent)'; btn.querySelector('.rd-check').style.borderColor='var(--accent)'; }
+    if(rdPickerSel.has(id)){ rdPickerSel.delete(id); }
+    else { rdPickerSel.add(id); }
+    renderRdPickerList();
   }
   function closeRdPicker(){ document.getElementById('rd-picker').classList.remove('open'); }
   function confirmRdPicker(){
