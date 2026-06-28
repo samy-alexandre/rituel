@@ -664,6 +664,7 @@
   .cat-dd-opt:hover { background:var(--surface-warm); }
   .cat-dd-opt.sel { background:var(--accent); color:#fff; }
   #cat-dd-btn.active-filter { background:var(--accent); color:#fff; border-color:var(--accent); }
+  #selection-bar.show { transform:translateY(0) !important; }
 </style>
 </head>
 <body class="no-select">
@@ -1204,7 +1205,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.8<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2852,7 +2853,86 @@
     loadProducts();
   }
 
-  async function loadProducts(){
+  // ===== Mode sélection multiple des produits (appui long) =====
+  let selectionMode = false;
+  let selectedProducts = new Set();
+  let longPressTimer = null;
+
+  function startLongPress(id){
+    cancelLongPress();
+    longPressTimer = setTimeout(function(){
+      if(!selectionMode){
+        enterSelectionMode();
+        toggleProductSelection(id);
+        if(navigator.vibrate) navigator.vibrate(40);
+      }
+    }, 500);
+  }
+  function cancelLongPress(){ if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; } }
+
+  function onProductCardClick(id, e){
+    if(e && e.target && e.target.classList && e.target.classList.contains('pf-fav')) return;
+    if(selectionMode){
+      if(e) e.stopPropagation();
+      toggleProductSelection(id);
+    } else {
+      openProductForm(id);
+    }
+  }
+
+  function enterSelectionMode(){
+    selectionMode = true;
+    selectedProducts.clear();
+    document.querySelectorAll('#products-list .sel-circle').forEach(c=>c.style.display='flex');
+    document.getElementById('selection-bar').classList.add('show');
+  }
+  function exitSelectionMode(){
+    selectionMode = false;
+    selectedProducts.clear();
+    document.querySelectorAll('#products-list .sel-circle').forEach(c=>{ c.style.display='none'; c.style.background='transparent'; c.style.borderColor='var(--line)'; c.textContent=''; });
+    document.querySelectorAll('#products-list .product-card').forEach(card=>card.style.background='');
+    document.getElementById('selection-bar').classList.remove('show');
+  }
+  function toggleProductSelection(id){
+    const card = document.querySelector('#products-list .product-card[data-pid="'+id+'"]');
+    if(!card) return;
+    const circle = card.querySelector('.sel-circle');
+    if(selectedProducts.has(id)){
+      selectedProducts.delete(id);
+      if(circle){ circle.style.background='transparent'; circle.style.borderColor='var(--line)'; circle.textContent=''; }
+      card.style.background='';
+    } else {
+      selectedProducts.add(id);
+      if(circle){ circle.style.background='var(--accent)'; circle.style.borderColor='var(--accent)'; circle.textContent='✓'; }
+      card.style.background='var(--blush-soft)';
+    }
+    // mettre à jour le compteur de la barre
+    const cnt=document.getElementById('selection-count');
+    if(cnt) cnt.textContent = selectedProducts.size + ' sélectionné' + (selectedProducts.size>1?'s':'');
+    // si plus rien de sélectionné, on peut sortir du mode
+    if(selectedProducts.size===0) exitSelectionMode();
+  }
+
+  // suppression avec confirmation
+  function askDeleteSelected(){
+    if(selectedProducts.size===0) return;
+    document.getElementById('del-confirm-count').textContent = selectedProducts.size>1 ? ('ces '+selectedProducts.size+' produits') : 'ce produit';
+    document.getElementById('del-confirm-overlay').style.display='flex';
+  }
+  function closeDeleteConfirm(){ document.getElementById('del-confirm-overlay').style.display='none'; }
+  async function confirmDeleteSelected(){
+    const ids = Array.from(selectedProducts);
+    closeDeleteConfirm();
+    if(!ids.length) return;
+    try {
+      await sb.from('products').delete().in('id', ids);
+      showToast(ids.length>1 ? (ids.length+' produits supprimés 🌸') : 'Produit supprimé 🌸');
+    } catch(e){ showToast('Erreur lors de la suppression'); }
+    exitSelectionMode();
+    loadProducts();
+  }
+
+    async function loadProducts(){
     if(!currentUser) return;
     const list = document.getElementById('products-list');
     const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
@@ -2888,7 +2968,8 @@
         let thumb = p.emoji || '🧴';
         if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) thumb=`<img src="${url}" alt="">`; }
         const meta = [p.effets?escapeHtml(p.effets):'', (p.prix!=null&&p.prix!=='')?(p.prix+'€'):''].filter(Boolean).join(' · ');
-        html += `<div class="product-card" onclick="openProductForm('${p.id}')">
+        html += `<div class="product-card" data-pid="${p.id}" onclick="onProductCardClick('${p.id}', event)" ontouchstart="startLongPress('${p.id}')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">
+          <div class="sel-circle" style="display:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;align-items:center;justify-content:center;color:#fff;font-size:13px;"></div>
           <div class="product-thumb">${thumb}</div>
           <div class="product-info" style="flex:1;">
             <div class="product-name">${escapeHtml(p.nom||'')}</div>
@@ -7504,6 +7585,26 @@
         <div style="display:flex;gap:10px;"><span style="color:var(--accent);font-weight:600;">3.</span><span>Ajoute tes produits, puis glisse les cartes pour les ordonner. Les étapes se numérotent toutes seules 🌸</span></div>
       </div>
       <button onclick="closeRituelHelp()" style="width:100%;margin-top:18px;padding:12px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:14px;cursor:pointer;">J'ai compris</button>
+    </div>
+  </div>
+
+  <!-- Barre de sélection multiple (bas) -->
+  <div id="selection-bar" style="position:fixed;left:0;right:0;bottom:0;z-index:550;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 20px rgba(46,33,28,0.12);padding:14px 20px calc(14px + env(safe-area-inset-bottom));transform:translateY(120%);transition:transform .25s cubic-bezier(.2,.8,.2,1);display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto;">
+    <button onclick="exitSelectionMode()" style="background:var(--surface-warm);border:none;border-radius:12px;padding:11px 16px;font-family:inherit;font-size:13px;color:var(--ink-soft);cursor:pointer;">Annuler</button>
+    <div id="selection-count" style="flex:1;text-align:center;font-size:13px;color:var(--ink);font-weight:500;">0 sélectionné</div>
+    <button onclick="askDeleteSelected()" style="background:#B23A1E;border:none;border-radius:12px;padding:11px 18px;font-family:inherit;font-size:13px;color:#fff;cursor:pointer;font-weight:500;">Supprimer</button>
+  </div>
+
+  <!-- Popup confirmation suppression -->
+  <div id="del-confirm-overlay" onclick="if(event.target===this)closeDeleteConfirm()" style="display:none;position:fixed;inset:0;background:rgba(46,33,28,0.45);backdrop-filter:blur(6px);z-index:700;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--surface);border-radius:22px;padding:24px 22px;max-width:320px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);text-align:center;">
+      <div style="font-size:32px;margin-bottom:10px;">🗑️</div>
+      <div style="font-family:var(--serif);font-size:19px;color:var(--ink);margin-bottom:8px;">Êtes-vous sûr ?</div>
+      <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:20px;">Tu vas supprimer <span id="del-confirm-count">ce produit</span>. Cette action est définitive.</div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeDeleteConfirm()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-size:14px;cursor:pointer;">Annuler</button>
+        <button onclick="confirmDeleteSelected()" style="flex:1;padding:12px;border-radius:12px;border:none;background:#B23A1E;color:#fff;font-family:inherit;font-size:14px;cursor:pointer;">Supprimer</button>
+      </div>
     </div>
   </div>
 </body>
