@@ -1216,7 +1216,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 17.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 17.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2246,6 +2246,7 @@
     const host=document.getElementById('scroll-host'); if(host) host.scrollTo(0,0);
     window.scrollTo(0,0);
     const bub=document.getElementById('lea-bubble'); if(bub) bub.style.display = (currentUser && screen!=='chat') ? 'flex' : 'none';
+    updateFab(screen);
     if(currentUser){
       if(screen==='home'){ loadHomeData(); loadTodayPhoto(); }
       else if(screen==='routine'){ loadProducts(); }
