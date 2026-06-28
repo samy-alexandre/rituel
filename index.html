@@ -1075,16 +1075,10 @@
   <div id="ritual" class="screen">
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
-      <button onclick="(function(){var h=document.getElementById('rituel-help');h.style.display=h.style.display==='none'?'block':'none';})()" aria-label="Aide" style="width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);font-size:16px;font-family:var(--serif);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">?</button>
+      <button onclick="openRituelHelp()" aria-label="Aide" style="width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);font-size:16px;font-family:var(--serif);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">?</button>
     </div>
         <div id="rituel-actuel-card" style="display:none;padding:0 20px 4px;"></div>
-    <div id="rituel-cout-card" style="display:none;padding:0 20px 4px;">
-      <div style="background:var(--surface-warm);border-radius:18px;padding:14px 18px;text-align:center;">
-        <div class="eyebrow">COÛT ESTIMÉ / MOIS</div>
-        <div class="serif" style="font-size:24px;line-height:1.1;margin-top:2px;color:var(--accent);" id="rituel-cout-val">0€</div>
-        <div style="font-size:10.5px;color:var(--muted);margin-top:4px;" id="rituel-cout-note"></div>
-      </div>
-    </div>
+    
     
     <div class="section" id="rituel-presets-section" style="display:none;">
       <div style="margin:18px 0 14px;">
@@ -1105,7 +1099,7 @@
       <button class="add-product-card" style="margin-top:0;" onclick="openRituelEditor()">＋ Créer un rituel</button>
       <button class="btn-soft" id="rituel-choose-btn-tab" style="display:none;margin:12px auto 0;" onclick="openRituelSelect()">Choisir mon rituel actif</button>
 
-      <div id="rituel-help" style="display:none;background:var(--surface-warm);border-radius:14px;padding:14px;margin-top:12px;font-size:13px;color:var(--ink-soft);line-height:1.6;">1. Crée un rituel et donne-lui un nom (ex. « Routine du matin »).<br>2. Choisis quand tu le fais · matin, soir ou les deux.<br>3. Ajoute tes produits, puis <b>glisse les cartes</b> pour les ordonner : les étapes 1, 2, 3… se numérotent toutes seules 🌸</div>
+
       <div id="rituels-list"></div>
     </div>
   </div>
@@ -1210,7 +1204,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3541,7 +3535,10 @@
     }).join('');
   }
 
-    async function openRdPicker(){
+  function openRituelHelp(){ document.getElementById('rituel-help-overlay').style.display='flex'; }
+  function closeRituelHelp(){ document.getElementById('rituel-help-overlay').style.display='none'; }
+
+      async function openRdPicker(){
     rdPickerSel = new Set();
     rdSort = 'fav'; rdCatFilter = 'all';
     // reset visuel des chips
@@ -7494,6 +7491,19 @@
         <button type="button" class="dp-btn dp-btn-clear" onclick="dpClear()">Effacer</button>
         <button type="button" class="dp-btn dp-btn-today" onclick="dpToday()">Aujourd'hui</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Popup aide rituel -->
+  <div id="rituel-help-overlay" onclick="if(event.target===this)closeRituelHelp()" style="display:none;position:fixed;inset:0;background:rgba(46,33,28,0.45);backdrop-filter:blur(6px);z-index:600;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--surface);border-radius:22px;padding:24px 22px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+      <div style="font-family:var(--serif);font-size:20px;color:var(--ink);margin-bottom:14px;">Comment créer un rituel ?</div>
+      <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.7;">
+        <div style="display:flex;gap:10px;margin-bottom:12px;"><span style="color:var(--accent);font-weight:600;">1.</span><span>Crée un rituel et donne-lui un nom (ex. « Routine du matin »).</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:12px;"><span style="color:var(--accent);font-weight:600;">2.</span><span>Choisis quand tu le fais : matin, soir ou les deux.</span></div>
+        <div style="display:flex;gap:10px;"><span style="color:var(--accent);font-weight:600;">3.</span><span>Ajoute tes produits, puis glisse les cartes pour les ordonner. Les étapes se numérotent toutes seules 🌸</span></div>
+      </div>
+      <button onclick="closeRituelHelp()" style="width:100%;margin-top:18px;padding:12px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:14px;cursor:pointer;">J'ai compris</button>
     </div>
   </div>
 </body>
