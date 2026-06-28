@@ -1076,6 +1076,7 @@
     <div class="topbar">
       <div class="topbar-greet"><div class="topbar-name">Mon <em style="font-style:italic;color:var(--accent);">rituel</em></div></div>
     </div>
+        <div id="rituel-actuel-card" style="display:none;padding:0 20px 4px;"></div>
     <div id="rituel-cout-card" style="display:none;padding:0 20px 4px;">
       <div style="background:var(--surface-warm);border-radius:18px;padding:14px 18px;text-align:center;">
         <div class="eyebrow">COÛT ESTIMÉ / MOIS</div>
@@ -1084,7 +1085,7 @@
       </div>
     </div>
     
-    <div class="section">
+    <div class="section" id="rituel-presets-section">
       <div style="margin:18px 0 14px;">
         <div class="section-head" style="margin-bottom:6px;"><h3 class="section-title" style="font-size:16px;">Pars d'une routine <em>toute faite</em> ✨</h3></div>
         <p style="color:var(--muted);font-size:12px;margin:0 0 10px;line-height:1.5;">Choisis ton profil : on crée les produits et le rituel pour toi, dans le bon ordre. Tu personnalises ensuite.</p>
@@ -1206,7 +1207,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 16.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3265,6 +3266,58 @@
   }
 
   // ===== Coût estimé par mois de la routine en cours =====
+  // ===== Affichage adaptatif : carte "ton rituel actuel" en haut =====
+  async function renderRituelActuel(rits){
+    const card=document.getElementById('rituel-actuel-card');
+    const presets=document.getElementById('rituel-presets-section');
+    if(!card) return;
+    // Trouver le rituel actif
+    const actif = (rits||[]).find(r=>r.actif);
+    if(!actif){
+      // Pas de rituel actif → cacher la carte, montrer les presets
+      card.style.display='none';
+      if(presets) presets.style.display='';
+      return;
+    }
+    // Récupérer les produits du rituel actif
+    const ids = Array.isArray(actif.produits) ? actif.produits : [];
+    let prods=[];
+    if(ids.length){
+      const { data } = await sb.from('products').select('id,nom,emoji').in('id', ids);
+      const pmap={}; (data||[]).forEach(p=>pmap[p.id]=p);
+      prods = ids.map(id=>pmap[id]).filter(Boolean);
+    }
+    const momentTxt = actif.moment==='matin'?'☀️ Le matin':(actif.moment==='soir'?'🌙 Le soir':'☀️🌙 Matin & soir');
+    let stepsHtml='';
+    if(prods.length){
+      stepsHtml = prods.map((p,i)=>{
+        const nom=(p.nom||'').split(' · ')[0]; // retirer la marque pour l'affichage
+        return '<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(201,162,79,0.15);">'+
+          '<div style="width:25px;height:25px;border-radius:50%;background:var(--blush-soft);color:var(--accent-deep);font-family:var(--serif);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+(i+1)+'</div>'+
+          '<div style="font-size:14px;color:var(--ink);">'+(p.emoji||'🧴')+' '+nom+'</div></div>';
+      }).join('');
+    } else {
+      stepsHtml = '<div style="padding:12px 0;color:var(--muted);font-size:13px;">Aucun produit dans ce rituel pour l\'instant 🌸</div>';
+    }
+    card.innerHTML =
+      '<div style="border-radius:22px;overflow:hidden;border:1px solid rgba(201,162,79,0.35);box-shadow:0 10px 30px rgba(142,60,38,0.12);">'+
+        '<div style="background:linear-gradient(165deg,#6B4A3A,#543828);padding:20px 22px 18px;position:relative;">'+
+          '<div style="position:relative;z-index:2;">'+
+            '<div style="font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:rgba(226,201,138,0.85);margin-bottom:5px;">Ton rituel actuel</div>'+
+            '<div style="font-family:var(--serif);font-size:24px;font-weight:500;color:#F5EDE2;line-height:1.1;">'+(actif.nom||'Mon rituel')+'</div>'+
+            '<div style="font-size:12px;color:rgba(245,237,226,0.72);margin-top:5px;">'+momentTxt+' · '+prods.length+' étape'+(prods.length>1?'s':'')+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="background:linear-gradient(180deg,#FFFEFB,#FAF3EA);padding:6px 18px 14px;">'+
+          stepsHtml+
+          '<button onclick="openRituelEditor(\''+actif.id+'\')" style="width:100%;margin-top:12px;padding:11px;border-radius:12px;border:1px solid var(--accent);background:transparent;color:var(--accent-deep);font-family:inherit;font-size:13px;cursor:pointer;">Modifier ce rituel</button>'+
+        '</div>'+
+      '</div>';
+    card.style.display='block';
+    // On a un rituel actif → cacher les presets (pas besoin de recommencer)
+    if(presets) presets.style.display='none';
+  }
+
   async function renderRituelCout(){
     if(!currentUser) return;
     const card=document.getElementById('rituel-cout-card');
@@ -3308,8 +3361,9 @@
     const host=document.getElementById('rituels-list'); if(!host) return;
     const { data } = await sb.from('rituels').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rits = data || [];
-    if(!rits.length){ host.innerHTML=''; const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display='none'; return; }
     window.__allRituels = rits;
+    renderRituelActuel(rits);
+    if(!rits.length){ host.innerHTML=''; const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display='none'; return; }
     host.innerHTML = '<div class="eyebrow" style="margin:20px 0 12px;">MES RITUELS</div>' + rits.map(r=>{
       const moji = r.moment==='matin'?'☀️ MATIN':(r.moment==='soir'?'🌙 SOIR':'☀️🌙 MATIN & SOIR');
       const cnt = Array.isArray(r.produits)?r.produits.length:0;
