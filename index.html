@@ -1216,7 +1216,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 17.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 17.8<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1788,7 +1788,7 @@
   </div>
 </div>
 <!-- Bouton + flottant (FAB) -->
-  <button id="fab-add" onclick="fabAction()" aria-label="Ajouter" style="display:none;position:fixed;bottom:166px;right:14px;width:58px;height:58px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:30px;font-weight:300;line-height:1;cursor:pointer;box-shadow:0 6px 20px rgba(142,60,38,0.35);z-index:90;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;">+</button>
+  <button id="fab-add" onclick="fabAction()" aria-label="Ajouter" style="display:none;position:fixed;bottom:96px;right:14px;width:58px;height:58px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:30px;font-weight:300;line-height:1;cursor:pointer;box-shadow:0 6px 20px rgba(142,60,38,0.35);z-index:90;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;">+</button>
 
 
 <!-- Librairie Supabase (backend : comptes, base de données, stockage photos) -->
@@ -3822,7 +3822,7 @@
   function initLeaBubble(){
     const b=document.getElementById('lea-bubble'); if(!b || bubbleInit) return;
     bubbleInit=true;
-    placeBubble(window.innerWidth - 58 - 14, window.innerHeight - 58 - 96);
+    placeBubble(window.innerWidth - 58 - 14, window.innerHeight - 58 - 166);
     let dragging=false, moved=false, sx=0, sy=0, ox=0, oy=0;
     b.addEventListener('pointerdown', e=>{
       dragging=true; moved=false;
@@ -6092,7 +6092,7 @@
   function initLeaBubble(){
     const b=document.getElementById('lea-bubble'); if(!b || bubbleInit) return;
     bubbleInit=true;
-    placeBubble(window.innerWidth - 58 - 14, window.innerHeight - 58 - 96);
+    placeBubble(window.innerWidth - 58 - 14, window.innerHeight - 58 - 166);
     let dragging=false, moved=false, sx=0, sy=0, ox=0, oy=0;
     b.addEventListener('pointerdown', e=>{
       dragging=true; moved=false;
