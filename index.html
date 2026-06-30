@@ -1216,7 +1216,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 17.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 17.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1788,7 +1788,7 @@
   </div>
 </div>
 <!-- Bouton + flottant (FAB) -->
-  <button id="fab-add" onclick="fabAction()" aria-label="Ajouter" style="display:none;position:fixed;bottom:148px;right:20px;width:58px;height:58px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:30px;font-weight:300;line-height:1;cursor:pointer;box-shadow:0 6px 20px rgba(142,60,38,0.35);z-index:90;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;">+</button>
+  <button id="fab-add" onclick="fabAction()" aria-label="Ajouter" style="display:none;position:fixed;bottom:166px;right:14px;width:58px;height:58px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:30px;font-weight:300;line-height:1;cursor:pointer;box-shadow:0 6px 20px rgba(142,60,38,0.35);z-index:90;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;">+</button>
 
 
 <!-- Librairie Supabase (backend : comptes, base de données, stockage photos) -->
@@ -2031,7 +2031,7 @@
     const inp=document.getElementById('onb-prod-input');
     const br=document.getElementById('onb-brand-input');
     if(!inp || !br) return;
-    const cap=function(s){ return s.replace(/\b\w/g, function(ch){ return ch.toUpperCase(); }); };
+    const cap=function(s){ if(!s) return ''; return s.toLowerCase().replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, function(m,sep,ch){ return sep + ch.toUpperCase(); }); };
     const nom=inp.value.trim();
     const marque=br.value.trim();
     if(!nom){ inp.focus(); return; }
@@ -3268,7 +3268,7 @@
 
   async function saveProduct(){
     if(!currentUser) return;
-    const cap = function(s){ return s.replace(/\b\w/g, function(ch){ return ch.toUpperCase(); }); };
+    const cap=function(s){ if(!s) return ''; return s.toLowerCase().replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, function(m,sep,ch){ return sep + ch.toUpperCase(); }); };
     const nomRaw = document.getElementById('pf-nom').value.trim();
     const marqueRaw = document.getElementById('pf-marque').value.trim();
     const err = document.getElementById('pf-error');
@@ -4887,7 +4887,7 @@
     closeBarcodeSheet();
     openProductForm();
     setTimeout(function(){
-      const cap=function(s){ return s? s.replace(/\b\w/g, function(ch){ return ch.toUpperCase(); }) : ''; };
+      const cap=function(s){ if(!s) return ''; return s.toLowerCase().replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, function(m,sep,ch){ return sep + ch.toUpperCase(); }); };
       const nomEl=document.getElementById('pf-nom'); if(nomEl && d.nom) nomEl.value=cap(d.nom);
       const mqEl=document.getElementById('pf-marque'); if(mqEl && d.marque) mqEl.value=cap(d.marque);
       const efEl=document.getElementById('pf-effets');
@@ -5723,7 +5723,7 @@
 
   async function saveProduct(){
     if(!currentUser) return;
-    const cap = function(s){ return s.replace(/\b\w/g, function(ch){ return ch.toUpperCase(); }); };
+    const cap=function(s){ if(!s) return ''; return s.toLowerCase().replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, function(m,sep,ch){ return sep + ch.toUpperCase(); }); };
     const nomRaw = document.getElementById('pf-nom').value.trim();
     const marqueRaw = document.getElementById('pf-marque').value.trim();
     const err = document.getElementById('pf-error');
@@ -7157,7 +7157,7 @@
     closeBarcodeSheet();
     openProductForm();
     setTimeout(function(){
-      const cap=function(s){ return s? s.replace(/\b\w/g, function(ch){ return ch.toUpperCase(); }) : ''; };
+      const cap=function(s){ if(!s) return ''; return s.toLowerCase().replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, function(m,sep,ch){ return sep + ch.toUpperCase(); }); };
       const nomEl=document.getElementById('pf-nom'); if(nomEl && d.nom) nomEl.value=cap(d.nom);
       const mqEl=document.getElementById('pf-marque'); if(mqEl && d.marque) mqEl.value=cap(d.marque);
       const efEl=document.getElementById('pf-effets');
