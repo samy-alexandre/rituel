@@ -715,6 +715,16 @@
   .rp-hebdo { display:flex; align-items:center; gap:13px; width:100%; padding:13px 15px; border-radius:20px; border:none; background:var(--surface); cursor:pointer; font-family:inherit; text-align:left; margin-bottom:8px; box-shadow:0 10px 26px rgba(46,33,28,0.07); }
   .rp-hebdo .av { width:46px; height:46px; border-radius:15px; background:linear-gradient(140deg,#F6DAD3,#EDBFB2); display:flex; align-items:center; justify-content:center; font-size:23px; flex-shrink:0; }
   .rp-hebdo .day { color:#B0693F; font-weight:600; }
+  .rp-sw { position:relative; display:inline-block; width:38px; height:22px; flex-shrink:0; }
+  .rp-sw input { opacity:0; width:0; height:0; }
+  .rp-sw .k { position:absolute; cursor:pointer; inset:0; background:#E3D5C3; border-radius:22px; transition:.2s; }
+  .rp-sw .k:before { content:''; position:absolute; height:16px; width:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(46,33,28,0.25); }
+  .rp-sw input:checked + .k { background:var(--accent); }
+  .rp-sw input:checked + .k:before { transform:translateX(16px); }
+  .rp-card.off { box-shadow:0 6px 16px rgba(46,33,28,0.05); padding-bottom:17px; }
+  .rp-card.off .rp-badge-ico, .rp-card.off .rp-card-name, .rp-card.off .rp-card-sub { opacity:.55; }
+  .rp-hebdo.off .av, .rp-hebdo.off .hb-name, .rp-hebdo.off .hb-sub { opacity:.55; }
+  .rp-badges { display:flex; gap:5px; flex-shrink:0; }
   .rp-add-link { background:none; border:none; color:var(--accent); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; padding:8px 4px; }
 </style>
 </head>
@@ -964,7 +974,7 @@
       </div>
       <div class="section-head" style="margin-bottom:12px;">
         <div style="font-size:11px;color:var(--muted);"></div>
-      <button class="btn-soft" id="rituel-choose-btn" style="display:none;padding:6px 12px;font-size:11px;" onclick="openRituelSelect()">Choisir ✓</button></div>
+      </div>
       <div id="home-rituel-empty" style="display:none;text-align:center;padding:12px 6px 4px;">
         <button class="btn-soft" onclick="navTo('ritual')">Créer mon rituel 🌱</button>
       </div>
@@ -1252,7 +1262,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3440,10 +3450,6 @@
       else { if(wM)mT=true; if(wS)sT=true; }
     });
     if(off.length){ try{ sb.from('rituels').update({actif:false}).in('id', off).then(function(){}); }catch(e){} }
-    if(!daily.some(r=>r.actif) && daily.length){
-      const pick=daily[daily.length-1]; pick.actif=true;
-      try{ sb.from('rituels').update({actif:true}).eq('id', pick.id).then(function(){}); }catch(e){}
-    }
     return rituels;
   }
   function momentBadge(m){ return m==='matin'?'☀️ Matin':(m==='soir'?'🌙 Soir':'☀️🌙 Matin & soir'); }
@@ -3475,7 +3481,23 @@
 
   // ===== Coût estimé par mois de la routine en cours =====
   // ===== Affichage adaptatif : carte "ton rituel actuel" en haut =====
-    async function openRituelQuick(m){
+    async function toggleRituelActif(id){
+    const all = window.__allRituels || [];
+    const t = all.find(r=>r.id===id);
+    if(!t) return;
+    const turnOn = !t.actif;
+    try{
+      if(turnOn && t.moment!=='hebdo'){
+        const tM=(t.moment==='matin'||t.moment==='both'), tS=(t.moment==='soir'||t.moment==='both');
+        const off=all.filter(r=>r.actif && r.id!==t.id && r.moment!=='hebdo' && ((tM&&(r.moment==='matin'||r.moment==='both'))||(tS&&(r.moment==='soir'||r.moment==='both')))).map(r=>r.id);
+        if(off.length) await sb.from('rituels').update({actif:false}).in('id', off);
+      }
+      await sb.from('rituels').update({actif:turnOn}).eq('id', id);
+    }catch(e){}
+    loadRituels();
+  }
+
+  async function openRituelQuick(m){
     await openRituelEditor();
     rdSetMoment(m);
     const nomEl=document.getElementById('rd-nom');
@@ -3511,13 +3533,8 @@
       return;
     }
 
-    // ── Routine quotidienne + Rituel hebdomadaire ──
-    const act = pickActive(rits);
-    const allIds = [...new Set([
-      ...(act.matin && Array.isArray(act.matin.produits) ? act.matin.produits : []),
-      ...(act.soir && Array.isArray(act.soir.produits) ? act.soir.produits : []),
-      ...hebdos.flatMap(h=>Array.isArray(h.produits)?h.produits:[])
-    ])];
+    // ── Toutes les routines, avec activation ──
+    const allIds = [...new Set(rits.flatMap(r=>Array.isArray(r.produits)?r.produits:[]))];
     let pmap={};
     if(allIds.length){
       const { data } = await sb.from('products').select('id,nom,emoji').in('id', allIds);
@@ -3532,6 +3549,15 @@
       }
       return '';
     }
+    function swHtml(r){
+      return '<label class="rp-sw" onclick="event.stopPropagation()"><input type="checkbox" '+(r.actif?'checked':'')+' onchange="toggleRituelActif(\''+r.id+'\')"><span class="k"></span></label>';
+    }
+    function badges(moment){
+      if(moment==='both') return '<span class="rp-badges"><span class="rp-badge-ico matin">☀️</span><span class="rp-badge-ico soir">🌙</span></span>';
+      const cls = moment==='matin' ? 'matin' : 'soir';
+      const e = moment==='matin' ? '☀️' : '🌙';
+      return '<span class="rp-badge-ico '+cls+'">'+e+'</span>';
+    }
     function stepRow(p, idx){
       const parts=(p.nom||'').split(' · ');
       return '<div class="rp-step">'+
@@ -3540,50 +3566,46 @@
         (parts[1]?'<div class="rp-pbrand">'+parts[1]+'</div>':'')+
         '</div></div>';
     }
-    function slotCard(moment, r){
-      const emoji = moment==='matin' ? '☀️' : '🌙';
-      const label = moment==='matin' ? 'Routine du matin' : 'Routine du soir';
-      if(!r){
-        return '<button class="rp-invite" onclick="openRituelQuick(\''+moment+'\')"><span style="font-size:20px;">'+emoji+'</span><span>Ajoute ta '+label.toLowerCase()+' <span style="color:var(--accent);">+</span></span></button>';
-      }
+    function dailyCard(r){
+      const label = r.moment==='matin' ? 'Routine du matin' : (r.moment==='soir' ? 'Routine du soir' : 'Matin & soir');
       const prods = (Array.isArray(r.produits)?r.produits:[]).map(id=>pmap[id]).filter(Boolean);
       const n = prods.length;
       const freq = freqLabel(r);
       const sub = n+' étape'+(n>1?'s':'') + (freq ? ' · '+freq : '');
-      const steps = n
-        ? prods.map(stepRow).join('')
-        : '<div style="padding:10px 0 12px;color:var(--muted);font-size:12.5px;">Aucun produit pour l\'instant 🌸</div>';
-      return '<div class="rp-card">'+
+      const steps = r.actif
+        ? '<div class="rp-steps">'+(n ? prods.map(stepRow).join('') : '<div style="padding:10px 0 12px;color:var(--muted);font-size:12.5px;">Aucun produit pour l\'instant 🌸</div>')+'</div>'
+        : '';
+      return '<div class="rp-card'+(r.actif?'':' off')+'">'+
         '<div class="rp-card-head">'+
-          '<div class="rp-card-title"><span class="rp-badge-ico '+moment+'">'+emoji+'</span>'+
+          '<div class="rp-card-title">'+badges(r.moment)+
           '<div style="min-width:0;flex:1;"><span class="rp-card-name">'+(r.nom||label)+'</span><div class="rp-card-sub">'+sub+'</div></div></div>'+
+          swHtml(r)+
           '<button class="rp-dots" onclick="openRituelEditor(\''+r.id+'\')" aria-label="Modifier">⋯</button>'+
         '</div>'+
-        '<div class="rp-steps">'+steps+'</div>'+
+        steps+
       '</div>';
     }
-    function hebdoSection(){
-      let h = '<div class="rp-label" style="margin-top:20px;">Rituel hebdomadaire</div>';
-      if(!hebdos.length){
-        h += '<button class="rp-invite" style="margin-bottom:0;" onclick="openRituelQuick(\'hebdo\')"><span style="font-size:19px;">🧖‍♀️</span><span>Ajoute un soin hebdo (masque, gommage...) <span style="color:var(--accent);">+</span></span></button>';
-        return h;
-      }
-      h += hebdos.map(function(r){
-        const day = (r.rappels && typeof r.rappels.hebdoDay==='number') ? DAYS_FR[r.rappels.hebdoDay] : 'dimanche';
-        const n = Array.isArray(r.produits)?r.produits.length:0;
-        return '<button class="rp-hebdo" onclick="openRituelEditor(\''+r.id+'\')">'+
-          '<span class="av">🧖‍♀️</span>'+
-          '<span style="flex:1;min-width:0;"><span style="display:block;font-size:14.5px;font-weight:600;color:var(--ink);">'+(r.nom||'Soins de la semaine')+'</span>'+
-          '<span style="display:block;font-size:11.5px;color:var(--muted);margin-top:2px;"><span class="day">Le '+day+'</span> · '+n+' étape'+(n>1?'s':'')+'</span></span>'+
-          '<span style="color:var(--muted);font-size:17px;">›</span></button>';
-      }).join('');
-      h += '<button class="rp-add-link" onclick="openRituelQuick(\'hebdo\')">+ Ajouter un autre soin</button>';
-      return h;
+    function hebdoRow(r){
+      const day = (r.rappels && typeof r.rappels.hebdoDay==='number') ? DAYS_FR[r.rappels.hebdoDay] : 'dimanche';
+      const n = Array.isArray(r.produits)?r.produits.length:0;
+      return '<div class="rp-hebdo'+(r.actif?'':' off')+'" onclick="openRituelEditor(\''+r.id+'\')" style="cursor:pointer;">'+
+        '<span class="av">🧖‍♀️</span>'+
+        '<span style="flex:1;min-width:0;"><span class="hb-name" style="display:block;font-size:14.5px;font-weight:600;color:var(--ink);">'+(r.nom||'Soins de la semaine')+'</span>'+
+        '<span class="hb-sub" style="display:block;font-size:11.5px;color:var(--muted);margin-top:2px;"><span class="day">Le '+day+'</span> · '+n+' étape'+(n>1?'s':'')+'</span></span>'+
+        swHtml(r)+'</div>';
     }
 
-    card.innerHTML =
-      '<div class="rp-label">Routine quotidienne</div>'+
-      slotCard('matin', act.matin) + slotCard('soir', act.soir) + hebdoSection();
+    const sortActive = arr => [...arr].sort((a,b)=>(b.actif?1:0)-(a.actif?1:0));
+    let html = '<div class="rp-label">Routine quotidienne</div>';
+    html += daily.length
+      ? sortActive(daily).map(dailyCard).join('')
+      : '<button class="rp-invite" onclick="openRituelQuick(\'matin\')"><span style="font-size:20px;">☀️</span><span>Ajoute ta première routine <span style="color:var(--accent);">+</span></span></button>';
+    html += '<div class="rp-label" style="margin-top:20px;">Rituel hebdomadaire</div>';
+    html += hebdos.length
+      ? sortActive(hebdos).map(hebdoRow).join('') + '<button class="rp-add-link" onclick="openRituelQuick(\'hebdo\')">+ Ajouter un autre soin</button>'
+      : '<button class="rp-invite" style="margin-bottom:0;" onclick="openRituelQuick(\'hebdo\')"><span style="font-size:19px;">🧖‍♀️</span><span>Ajoute un soin hebdo (masque, gommage...) <span style="color:var(--accent);">+</span></span></button>';
+
+    card.innerHTML = html;
     card.style.display='block';
   }
 
@@ -3633,13 +3655,7 @@
     window.__allRituels = rits;
     renderRituelActuel(rits);
     if(!rits.length){ host.innerHTML=''; const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display='none'; return; }
-    // Plus de liste encombrante : juste un bouton "Changer de rituel" si on a plusieurs rituels
-    const _daily = rits.filter(r=>r.moment!=='hebdo');
-    if(_daily.length >= 2){
-      host.innerHTML = '<button onclick="openRituelSelect()" style="width:100%;margin-top:14px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-size:13.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">🔄 Changer de rituel ('+_daily.length+')</button>';
-    } else {
-      host.innerHTML = '';
-    }
+    host.innerHTML = '';
     const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display = rits.length>1 ? 'block' : 'none';
   }
 
