@@ -676,34 +676,46 @@
   .rd-switch input:checked + .rd-slider:before { transform:translateX(18px); }
   .rd-day { width:34px; height:34px; border-radius:50%; border:1.5px solid var(--line); background:var(--surface); font-size:12.5px; font-family:inherit; color:var(--ink-soft); cursor:pointer; flex-shrink:0; transition:all .15s; }
   .rd-day.on { background:var(--accent); color:#fff; border-color:var(--accent); }
-  /* ═══ Page Rituel v18.2 ═══ */
-  .rp-hello { font-family:var(--serif); font-size:27px; color:var(--ink); }
-  .rp-hello-sub { font-size:13px; color:var(--muted); margin-top:3px; }
-  .rp-hero { width:116px; height:116px; border-radius:50%; margin:22px auto 18px; background:radial-gradient(circle at 32% 28%, #FBE9D7, var(--blush-soft) 72%); display:flex; align-items:center; justify-content:center; font-size:54px; box-shadow:0 14px 34px rgba(142,60,38,0.12); }
-  .rp-title { font-family:var(--serif); font-size:24px; color:var(--ink); line-height:1.22; text-align:center; }
-  .rp-sub { color:var(--muted); font-size:13px; margin:10px 0 22px; line-height:1.55; text-align:center; }
-  .rp-cta { display:flex; align-items:center; gap:14px; width:100%; padding:16px; border-radius:18px; cursor:pointer; font-family:inherit; text-align:left; margin-bottom:10px; border:1px solid var(--line); background:var(--surface); transition:transform .12s ease; }
-  .rp-cta:active { transform:scale(0.985); }
-  .rp-cta.hero { border:1px solid rgba(201,90,63,0.35); background:linear-gradient(135deg,#F9DCC4,#F7EAD8); box-shadow:0 8px 22px rgba(201,90,63,0.14); }
-  .rp-cta .e { font-size:22px; }
+  /* ═══ Page Rituel v3 ═══ */
+  .rp-hello { font-family:var(--serif); font-size:28px; color:var(--ink); }
+  .rp-hello-sub { font-size:13px; color:var(--muted); margin-top:2px; }
+  .rp-hero-wrap { position:relative; width:150px; margin:26px auto 20px; }
+  .rp-hero { width:126px; height:126px; border-radius:50%; margin:0 auto; background:radial-gradient(circle at 32% 28%, #FBE7D2, #F4D7C4 74%); display:flex; align-items:center; justify-content:center; font-size:58px; box-shadow:0 18px 40px rgba(201,90,63,0.18), inset 0 -8px 18px rgba(201,90,63,0.10); }
+  .rp-petal { position:absolute; opacity:.8; }
+  .rp-title { font-family:var(--serif); font-size:25px; color:var(--ink); line-height:1.22; text-align:center; }
+  .rp-sub { color:var(--muted); font-size:13px; margin:10px 0 24px; line-height:1.55; text-align:center; }
+  .rp-cta { display:flex; align-items:center; gap:13px; width:100%; padding:13px 15px; border-radius:19px; cursor:pointer; font-family:inherit; text-align:left; margin-bottom:11px; border:1px solid rgba(46,33,28,0.07); background:var(--surface); box-shadow:0 8px 22px rgba(46,33,28,0.05); transition:transform .12s ease; }
+  .rp-cta:active { transform:scale(0.983); }
+  .rp-cta.hero { border:1px solid rgba(201,90,63,0.4); background:linear-gradient(135deg,#F8CFA5,#F6E3C4); box-shadow:0 12px 28px rgba(201,90,63,0.22); }
+  .rp-cta .ico { width:42px; height:42px; border-radius:50%; background:var(--blush-soft); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .rp-cta.hero .ico { background:rgba(255,255,255,0.55); }
   .rp-cta .t { display:block; font-size:14.5px; font-weight:600; color:var(--ink); }
   .rp-cta .d { display:block; font-size:11.5px; color:var(--muted); margin-top:2px; }
-  .rp-label { font-size:13px; font-weight:600; color:var(--ink-soft); margin:4px 2px 10px; }
-  .rp-card { background:var(--surface); border:1px solid rgba(46,33,28,0.06); border-radius:20px; padding:16px 16px 6px; margin-bottom:12px; box-shadow:0 10px 26px rgba(46,33,28,0.05); }
-  .rp-card-head { display:flex; align-items:center; justify-content:space-between; }
-  .rp-card-title { display:flex; align-items:center; gap:9px; font-size:15px; font-weight:600; color:var(--ink); }
-  .rp-dots { background:none; border:none; color:var(--muted); font-size:19px; cursor:pointer; padding:2px 6px; line-height:1; }
-  .rp-card-sub { font-size:11.5px; color:var(--muted); margin:3px 0 4px 27px; }
-  .rp-step { display:flex; align-items:center; gap:11px; padding:10px 0; border-bottom:1px solid rgba(46,33,28,0.05); }
+  .rp-cta.hero .d { color:#8E5B3F; }
+  .rp-cta .chev { margin-left:auto; color:var(--muted); font-size:17px; }
+  .rp-cta.hero .chev { color:#B0693F; }
+  .rp-label { font-size:12px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; color:#B99B6B; margin:6px 2px 12px; }
+  .rp-card { background:var(--surface); border-radius:22px; padding:17px 17px 7px; margin-bottom:14px; box-shadow:0 14px 34px rgba(46,33,28,0.09), 0 2px 6px rgba(46,33,28,0.04); }
+  .rp-card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .rp-card-title { display:flex; align-items:center; gap:11px; min-width:0; flex:1; }
+  .rp-badge-ico { width:36px; height:36px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .rp-badge-ico.matin { background:linear-gradient(135deg,#F8D9AE,#F3C393); }
+  .rp-badge-ico.soir { background:linear-gradient(135deg,#E5D3C3,#D3B99F); }
+  .rp-card-name { display:block; font-size:15.5px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rp-card-sub { font-size:11.5px; color:var(--muted); margin-top:2px; }
+  .rp-dots { background:var(--surface-warm); border:none; border-radius:50%; width:32px; height:32px; color:var(--ink-soft); font-size:17px; cursor:pointer; line-height:1; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .rp-steps { margin-top:6px; }
+  .rp-step { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(46,33,28,0.055); }
   .rp-step:last-child { border-bottom:none; }
-  .rp-num { width:20px; height:20px; border-radius:50%; background:var(--blush-soft); color:var(--accent-deep); font-family:var(--serif); font-size:11px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .rp-thumb { width:40px; height:40px; border-radius:12px; background:var(--surface-warm); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .rp-thumb { position:relative; width:42px; height:42px; border-radius:13px; background:linear-gradient(160deg,var(--blush-soft),#F2D8D1); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .rp-thumb .n { position:absolute; top:-5px; left:-5px; width:17px; height:17px; border-radius:50%; background:var(--accent); color:#fff; font-size:9.5px; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(201,90,63,0.4); }
   .rp-pname { font-size:13.5px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .rp-pbrand { font-size:11px; color:var(--muted); margin-top:1px; }
-  .rp-invite { display:flex; align-items:center; gap:12px; width:100%; padding:15px 16px; border-radius:18px; border:1.5px dashed rgba(46,33,28,0.16); background:transparent; cursor:pointer; font-family:inherit; text-align:left; margin-bottom:12px; color:var(--muted); font-size:13px; }
-  .rp-hebdo { display:flex; align-items:center; gap:12px; width:100%; padding:13px 15px; border-radius:18px; border:1px solid rgba(46,33,28,0.06); background:var(--surface); cursor:pointer; font-family:inherit; text-align:left; margin-bottom:8px; box-shadow:0 6px 18px rgba(46,33,28,0.04); }
-  .rp-hebdo .av { width:42px; height:42px; border-radius:13px; background:linear-gradient(135deg,var(--blush-soft),#F3DDD3); display:flex; align-items:center; justify-content:center; font-size:21px; flex-shrink:0; }
-  .rp-add-link { background:none; border:none; color:var(--accent); font-size:12.5px; font-family:inherit; cursor:pointer; padding:6px 4px; }
+  .rp-pbrand { font-size:11px; color:var(--muted); margin-top:1.5px; }
+  .rp-invite { display:flex; align-items:center; gap:12px; width:100%; padding:16px; border-radius:19px; border:1.5px dashed rgba(185,155,107,0.5); background:rgba(255,253,250,0.5); cursor:pointer; font-family:inherit; text-align:left; margin-bottom:14px; color:var(--muted); font-size:13px; }
+  .rp-hebdo { display:flex; align-items:center; gap:13px; width:100%; padding:13px 15px; border-radius:20px; border:none; background:var(--surface); cursor:pointer; font-family:inherit; text-align:left; margin-bottom:8px; box-shadow:0 10px 26px rgba(46,33,28,0.07); }
+  .rp-hebdo .av { width:46px; height:46px; border-radius:15px; background:linear-gradient(140deg,#F6DAD3,#EDBFB2); display:flex; align-items:center; justify-content:center; font-size:23px; flex-shrink:0; }
+  .rp-hebdo .day { color:#B0693F; font-weight:600; }
+  .rp-add-link { background:none; border:none; color:var(--accent); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; padding:8px 4px; }
 </style>
 </head>
 <body class="no-select">
@@ -1240,7 +1252,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3481,15 +3493,20 @@
 
     // ── Écran d'accueil (aucun rituel) ──
     if(!rits.length){
+      const petals =
+        '<svg class="rp-petal" style="top:-6px;left:2px;" width="26" height="26" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#E8A98C" transform="rotate(-30 12 12)"/></svg>'+
+        '<svg class="rp-petal" style="top:22px;right:-8px;" width="20" height="20" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#C9A24F" opacity="0.7" transform="rotate(45 12 12)"/></svg>'+
+        '<svg class="rp-petal" style="bottom:2px;left:-10px;" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#D98E6B" opacity="0.65" transform="rotate(160 12 12)"/></svg>'+
+        '<svg class="rp-petal" style="bottom:-4px;right:14px;" width="15" height="15" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#E8C9A0" opacity="0.8" transform="rotate(-120 12 12)"/></svg>';
       card.innerHTML =
         '<div class="rp-hello">Hello 👋</div>'+
         '<div class="rp-hello-sub">Ton rituel, ton évolution.</div>'+
-        '<div class="rp-hero">🧖‍♀️</div>'+
+        '<div class="rp-hero-wrap">'+petals+'<div class="rp-hero">🧖‍♀️</div></div>'+
         '<div class="rp-title">Crée ta routine<br>en quelques secondes</div>'+
         '<p class="rp-sub">Des routines simples, personnalisées<br>et adaptées à ta peau.</p>'+
-        '<button class="rp-cta hero" onclick="openRituelQuick(\'matin\')"><span class="e">☀️</span><span><span class="t">Routine du matin</span><span class="d">Prépare ta peau pour la journée</span></span></button>'+
-        '<button class="rp-cta" onclick="openRituelQuick(\'soir\')"><span class="e">🌙</span><span><span class="t">Routine du soir</span><span class="d">Prends soin de ta peau le soir</span></span></button>'+
-        '<button class="rp-cta" onclick="openRituelEditor()"><span class="e">✨</span><span><span class="t">Rituel personnalisé</span><span class="d">Crée une routine unique</span></span></button>';
+        '<button class="rp-cta hero" onclick="openRituelQuick(\'matin\')"><span class="ico">☀️</span><span><span class="t">Routine du matin</span><span class="d">Prépare ta peau pour la journée</span></span><span class="chev">›</span></button>'+
+        '<button class="rp-cta" onclick="openRituelQuick(\'soir\')"><span class="ico">🌙</span><span><span class="t">Routine du soir</span><span class="d">Prends soin de ta peau le soir</span></span><span class="chev">›</span></button>'+
+        '<button class="rp-cta" onclick="openRituelEditor()"><span class="ico">✨</span><span><span class="t">Rituel personnalisé</span><span class="d">Crée une routine unique</span></span><span class="chev">›</span></button>';
       card.style.display='block';
       return;
     }
@@ -3518,8 +3535,7 @@
     function stepRow(p, idx){
       const parts=(p.nom||'').split(' · ');
       return '<div class="rp-step">'+
-        '<div class="rp-num">'+(idx+1)+'</div>'+
-        '<div class="rp-thumb">'+(p.emoji||'🧴')+'</div>'+
+        '<div class="rp-thumb"><span class="n">'+(idx+1)+'</span>'+(p.emoji||'🧴')+'</div>'+
         '<div style="flex:1;min-width:0;"><div class="rp-pname">'+(parts[0]||'')+'</div>'+
         (parts[1]?'<div class="rp-pbrand">'+parts[1]+'</div>':'')+
         '</div></div>';
@@ -3538,14 +3554,16 @@
         ? prods.map(stepRow).join('')
         : '<div style="padding:10px 0 12px;color:var(--muted);font-size:12.5px;">Aucun produit pour l\'instant 🌸</div>';
       return '<div class="rp-card">'+
-        '<div class="rp-card-head"><div class="rp-card-title"><span>'+emoji+'</span><span>'+(r.nom||label)+'</span></div>'+
-        '<button class="rp-dots" onclick="openRituelEditor(\''+r.id+'\')" aria-label="Modifier">⋯</button></div>'+
-        '<div class="rp-card-sub">'+sub+'</div>'+
-        steps+
+        '<div class="rp-card-head">'+
+          '<div class="rp-card-title"><span class="rp-badge-ico '+moment+'">'+emoji+'</span>'+
+          '<div style="min-width:0;flex:1;"><span class="rp-card-name">'+(r.nom||label)+'</span><div class="rp-card-sub">'+sub+'</div></div></div>'+
+          '<button class="rp-dots" onclick="openRituelEditor(\''+r.id+'\')" aria-label="Modifier">⋯</button>'+
+        '</div>'+
+        '<div class="rp-steps">'+steps+'</div>'+
       '</div>';
     }
     function hebdoSection(){
-      let h = '<div class="rp-label" style="margin-top:18px;">Rituel hebdomadaire</div>';
+      let h = '<div class="rp-label" style="margin-top:20px;">Rituel hebdomadaire</div>';
       if(!hebdos.length){
         h += '<button class="rp-invite" style="margin-bottom:0;" onclick="openRituelQuick(\'hebdo\')"><span style="font-size:19px;">🧖‍♀️</span><span>Ajoute un soin hebdo (masque, gommage...) <span style="color:var(--accent);">+</span></span></button>';
         return h;
@@ -3555,9 +3573,9 @@
         const n = Array.isArray(r.produits)?r.produits.length:0;
         return '<button class="rp-hebdo" onclick="openRituelEditor(\''+r.id+'\')">'+
           '<span class="av">🧖‍♀️</span>'+
-          '<span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:600;color:var(--ink);">'+(r.nom||'Soins de la semaine')+'</span>'+
-          '<span style="display:block;font-size:11.5px;color:var(--muted);margin-top:2px;">Le '+day+' · '+n+' étape'+(n>1?'s':'')+'</span></span>'+
-          '<span style="color:var(--muted);font-size:16px;">›</span></button>';
+          '<span style="flex:1;min-width:0;"><span style="display:block;font-size:14.5px;font-weight:600;color:var(--ink);">'+(r.nom||'Soins de la semaine')+'</span>'+
+          '<span style="display:block;font-size:11.5px;color:var(--muted);margin-top:2px;"><span class="day">Le '+day+'</span> · '+n+' étape'+(n>1?'s':'')+'</span></span>'+
+          '<span style="color:var(--muted);font-size:17px;">›</span></button>';
       }).join('');
       h += '<button class="rp-add-link" onclick="openRituelQuick(\'hebdo\')">+ Ajouter un autre soin</button>';
       return h;
