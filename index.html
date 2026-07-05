@@ -726,6 +726,12 @@
   .rp-hebdo.off .av, .rp-hebdo.off .hb-name, .rp-hebdo.off .hb-sub { opacity:.55; }
   .rp-badges { display:flex; gap:5px; flex-shrink:0; }
   .rp-add-link { background:none; border:none; color:var(--accent); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; padding:8px 4px; }
+  /* ═══ Journal v3 ═══ */
+  #journal .cal-card { background:var(--surface); border:none; border-radius:22px; box-shadow:0 14px 34px rgba(46,33,28,0.09), 0 2px 6px rgba(46,33,28,0.04); }
+  #journal .ba-card { background:var(--surface); border:none; border-radius:20px; box-shadow:0 10px 26px rgba(46,33,28,0.07); }
+  #journal .rp-label { margin:6px 2px 12px; }
+  #journal .cal-legend { opacity:.85; }
+  #journal .journal-grid img { border-radius:14px; }
 </style>
 </head>
 <body class="no-select">
@@ -1058,12 +1064,7 @@
   </div>
 
   <div id="journal" class="screen">
-    <div class="topbar">
-      <div class="topbar-greet"><div class="topbar-name">Mon journal</div></div>
-
-    </div>
-
-    <div class="section section-cal">
+    <div class="section section-cal" style="padding-top:26px;">
       <div class="cal-card">
       <div class="cal-head">
         <button class="cal-nav" onclick="calMonth(-1)">‹</button>
@@ -1080,30 +1081,8 @@
     </div>
     </div>
 
-    <div class="section" id="week-recap" style="display:none;">
-      <div class="section-head"><h3 class="section-title">Ma <em>semaine</em></h3></div>
-      <div class="ba-card" style="flex-direction:column;align-items:stretch;gap:14px;">
-        <div id="wr-summary" style="font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink-soft);line-height:1.5;">…</div>
-        <div class="stats-grid" id="wr-tiles" style="grid-template-columns:1fr 1fr;gap:10px;"></div>
-      </div>
-    </div>
-
-    <div class="section" id="insights-section" style="display:none;">
-      <div class="section-head"><h3 class="section-title">Tes <em>découvertes</em> <span class="plus-pill">PLUS</span></h3></div>
-      <div id="insights-list" style="display:flex;flex-direction:column;gap:10px;"></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;">De petites observations sur tes données · des pistes, pas des vérités 🌿</div>
-    </div>
-
-    <div class="section" id="memory-section" style="display:none;">
-      <div class="section-head"><h3 class="section-title">Il y a <em>quelque temps</em></h3></div>
-      <div class="ba-card" style="flex-direction:column;align-items:stretch;padding:10px;gap:10px;">
-        <img id="memory-img" alt="" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;">
-        <div id="memory-caption" style="font-size:13px;color:var(--ink-soft);text-align:center;line-height:1.5;"></div>
-      </div>
-    </div>
-
     <div class="section" id="ba-section" style="display:none;">
-      <div class="section-head"><h3 class="section-title">Avant <em>/ après</em></h3></div>
+      <div class="rp-label">Avant / après</div>
       <div class="ba-card" style="flex-direction:column;align-items:stretch;padding:10px;">
         <div style="position:relative;width:100%;aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:var(--surface-warm);">
           <img id="ba-after-img" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
@@ -1120,14 +1099,36 @@
     </div>
 
     <div class="section" id="eclat-section" style="display:none;">
-      <div class="section-head"><h3 class="section-title">Évolution de l'<em>éclat</em></h3></div>
+      <div class="rp-label">Évolution de l'éclat</div>
       <div class="ba-card" style="flex-direction:column;align-items:stretch;gap:10px;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:12px;color:var(--muted);">Tes derniers relevés</span><span style="font-family:var(--serif);"><em id="eclat-last" style="font-size:22px;color:var(--accent);font-style:italic;">…</em><span style="font-size:12px;color:var(--muted);"> /100</span></span></div>
         <div id="eclat-graph"></div>
       </div>
     </div>
 
-    <div class="section-head" style="padding:0 20px;margin:8px 0 12px;"><h3 class="section-title">Mes <em>photos</em></h3></div>
+    <div class="section" id="week-recap" style="display:none;">
+      <div class="rp-label">Ma semaine</div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;gap:14px;">
+        <div id="wr-summary" style="font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink-soft);line-height:1.5;">…</div>
+        <div class="stats-grid" id="wr-tiles" style="grid-template-columns:1fr 1fr;gap:10px;"></div>
+      </div>
+    </div>
+
+    <div class="section" id="insights-section" style="display:none;">
+      <div class="rp-label">Tes découvertes <span class="plus-pill">PLUS</span></div>
+      <div id="insights-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;">De petites observations sur tes données · des pistes, pas des vérités 🌿</div>
+    </div>
+
+    <div class="section" id="memory-section" style="display:none;">
+      <div class="rp-label">Il y a quelque temps</div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;padding:10px;gap:10px;">
+        <img id="memory-img" alt="" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;">
+        <div id="memory-caption" style="font-size:13px;color:var(--ink-soft);text-align:center;line-height:1.5;"></div>
+      </div>
+    </div>
+
+    <div class="rp-label" style="padding:0 20px;margin:8px 20px 12px;">Mes photos</div>
     <div class="journal-grid" id="journal-grid"></div>
 
     <div style="height:24px;"></div>
@@ -1262,7 +1263,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
