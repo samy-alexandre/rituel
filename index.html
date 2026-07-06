@@ -351,7 +351,7 @@
   .moment-chip { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); font-size: 17px; cursor: pointer; opacity: 0.38; transition: all .15s; }
   .moment-chip.on { opacity: 1; border-color: var(--accent); background: var(--blush-soft); }
   .rd-card { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 10px; }
-  .rd-card.dragging { opacity: 0.55; box-shadow: var(--shadow); }
+  .rd-card.dragging { transition:none; opacity:0.95; position:relative; z-index:6; box-shadow:0 12px 26px rgba(46,33,28,0.22); border-color:rgba(201,90,63,0.4); }
   .rd-handle { cursor: grab; color: var(--muted); font-size: 22px; padding: 4px 4px; touch-action: none; user-select: none; line-height: 1; }
   .rd-remove { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px; }
   .rd-emoji { width: 38px; height: 38px; border-radius: 10px; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
@@ -1263,7 +1263,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1633,14 +1633,17 @@
   <div class="sheet-overlay" id="rituel-sheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div class="sheet-title" id="rd-title">Créer un rituel</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <button onclick="closeRituelSheet()" aria-label="Retour" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--surface-warm);color:var(--ink-soft);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">←</button>
+        <div class="sheet-title" id="rd-title" style="margin:0;">Créer un rituel</div>
+      </div>
       <div class="field"><label>Nom du rituel</label><input id="rd-nom" placeholder="Ex. Routine du matin"></div>
+      <div id="rd-when">
       <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;display:block;margin-top:16px;">Quand ?</label>
       <div class="rit-type" style="margin:10px 0 6px;">
         <button class="rit-opt" id="rd-m-matin" onclick="rdSetMoment('matin')">☀️<span>Matin</span></button>
         <button class="rit-opt" id="rd-m-soir" onclick="rdSetMoment('soir')">🌙<span>Soir</span></button>
-        <button class="rit-opt" id="rd-m-both" onclick="rdSetMoment('both')">☀️🌙<span>Les deux</span></button>
-        <button class="rit-opt" id="rd-m-hebdo" onclick="rdSetMoment('hebdo')">🗓️<span>Hebdo</span></button>
+      </div>
       </div>
       <div id="rd-hebdo-day" style="display:none;margin:4px 0 8px;">
         <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:7px;">Quel jour de la semaine ?</div>
@@ -3423,7 +3426,7 @@
       const off=(oth||[]).map(r=>r.id);
       if(off.length) await sb.from('rituels').update({actif:false}).in('id', off);
       const { count } = await sb.from('rituels').select('id',{count:'exact',head:true}).eq('user_id', currentUser.id);
-      await sb.from('rituels').insert({ user_id:currentUser.id, nom:P.nom, moment:'both', produits:ids, position:(count||0), actif:true });
+      await sb.from('rituels').insert({ user_id:currentUser.id, nom:P.nom, moment:'matin', produits:ids, position:(count||0), actif:true });
       window.__allRituels=null;
       showToast('Routine créée et activée ✨');
       loadRituels(); if(typeof loadProducts==='function') loadProducts();
@@ -3501,8 +3504,10 @@
   async function openRituelQuick(m){
     await openRituelEditor();
     rdSetMoment(m);
+    const lbl = m==='matin'?'Routine du matin':(m==='soir'?'Routine du soir':(m==='hebdo'?'Soin hebdomadaire':'Ma routine'));
+    const t=document.getElementById('rd-title'); if(t) t.textContent = lbl;
     const nomEl=document.getElementById('rd-nom');
-    if(nomEl){ nomEl.placeholder = m==='matin'?'Routine du matin':(m==='soir'?'Routine du soir':(m==='hebdo'?'Soins de la semaine':'Ma routine')); }
+    if(nomEl){ nomEl.placeholder = (m==='hebdo'?'Soins de la semaine':lbl); }
   }
 
   async function renderRituelActuel(rits){
@@ -3527,9 +3532,9 @@
         '<div class="rp-hero-wrap">'+petals+'<div class="rp-hero">🧖‍♀️</div></div>'+
         '<div class="rp-title">Crée ta routine<br>en quelques secondes</div>'+
         '<p class="rp-sub">Des routines simples, personnalisées<br>et adaptées à ta peau.</p>'+
-        '<button class="rp-cta hero" onclick="openRituelQuick(\'matin\')"><span class="ico">☀️</span><span><span class="t">Routine du matin</span><span class="d">Prépare ta peau pour la journée</span></span><span class="chev">›</span></button>'+
+        '<button class="rp-cta" onclick="openRituelQuick(\'matin\')"><span class="ico">☀️</span><span><span class="t">Routine du matin</span><span class="d">Prépare ta peau pour la journée</span></span><span class="chev">›</span></button>'+
         '<button class="rp-cta" onclick="openRituelQuick(\'soir\')"><span class="ico">🌙</span><span><span class="t">Routine du soir</span><span class="d">Prends soin de ta peau le soir</span></span><span class="chev">›</span></button>'+
-        '<button class="rp-cta" onclick="openRituelEditor()"><span class="ico">✨</span><span><span class="t">Rituel personnalisé</span><span class="d">Crée une routine unique</span></span><span class="chev">›</span></button>';
+        '<button class="rp-cta" onclick="openRituelQuick(\'hebdo\')"><span class="ico">🧖‍♀️</span><span><span class="t">Soin hebdomadaire</span><span class="d">Masque, gommage · 1 fois par semaine</span></span><span class="chev">›</span></button>';
       card.style.display='block';
       return;
     }
@@ -3667,10 +3672,10 @@
     let loadedRappels = null;
     if(id){
       const { data: r } = await sb.from('rituels').select('*').eq('id', id).maybeSingle();
-      rituelDraft = r ? { id:r.id, nom:r.nom||'', moment:r.moment||'both', produits:(Array.isArray(r.produits)?r.produits.slice():[]) } : { id:null, nom:'', moment:'both', produits:[] };
+      rituelDraft = r ? { id:r.id, nom:r.nom||'', moment:r.moment||'matin', produits:(Array.isArray(r.produits)?r.produits.slice():[]) } : { id:null, nom:'', moment:'matin', produits:[] };
       loadedRappels = r ? r.rappels : null;
     } else {
-      rituelDraft = { id:null, nom:'', moment:'both', produits:[] };
+      rituelDraft = { id:null, nom:'', moment:'matin', produits:[] };
     }
     document.getElementById('rd-title').textContent = id ? 'Modifier le rituel' : 'Créer un rituel';
     document.getElementById('rd-nom').value = rituelDraft.nom;
@@ -3772,7 +3777,8 @@
 
     function rdSetMoment(m){
     rituelDraft.moment = m;
-    ['matin','soir','both','hebdo'].forEach(x=>{ const el=document.getElementById('rd-m-'+x); if(el) el.classList.toggle('selected', x===m); });
+    ['matin','soir'].forEach(x=>{ const el=document.getElementById('rd-m-'+x); if(el) el.classList.toggle('selected', x===m); });
+    const when=document.getElementById('rd-when'); if(when) when.style.display = (m==='hebdo') ? 'none' : 'block';
     const hd=document.getElementById('rd-hebdo-day'); if(hd) hd.style.display = (m==='hebdo') ? 'block' : 'none';
     if(document.getElementById('rd-rem-on') && document.getElementById('rd-rem-on').checked) rdSyncRemTimes();
   }
@@ -3822,22 +3828,48 @@
       h.onpointerdown=(e)=>{
         e.preventDefault();
         const dragEl=h.closest('.rd-card'); if(!dragEl) return;
+        const cards=[...list.querySelectorAll('.rd-card')];
+        const idx=cards.indexOf(dragEl);
+        const gap=parseFloat(getComputedStyle(list).rowGap)||8;
+        const rowH=dragEl.offsetHeight+gap;
+        const startY=e.clientY;
+        let curIdx=idx;
         dragEl.classList.add('dragging');
+        try{ h.setPointerCapture(e.pointerId); }catch(_){}
+        const others=cards.filter(x=>x!==dragEl);
         const move=(ev)=>{
-          const others=[...list.querySelectorAll('.rd-card:not(.dragging)')];
-          let after=null;
-          for(const c of others){ const r=c.getBoundingClientRect(); if(ev.clientY < r.top + r.height/2){ after=c; break; } }
-          if(after) list.insertBefore(dragEl, after); else list.appendChild(dragEl);
-          renumberRd();
+          const dy=ev.clientY-startY;
+          dragEl.style.transform='translateY('+dy+'px)';
+          let target=idx+Math.round(dy/rowH);
+          target=Math.max(0, Math.min(cards.length-1, target));
+          if(target!==curIdx){
+            curIdx=target;
+            others.forEach(o=>{
+              const oi=cards.indexOf(o);
+              let shift=0;
+              if(idx<curIdx && oi>idx && oi<=curIdx) shift=-rowH;
+              else if(idx>curIdx && oi>=curIdx && oi<idx) shift=rowH;
+              o.style.transform = shift ? 'translateY('+shift+'px)' : '';
+            });
+            if(navigator.vibrate) navigator.vibrate(8);
+          }
         };
         const up=()=>{
           document.removeEventListener('pointermove',move);
           document.removeEventListener('pointerup',up);
+          document.removeEventListener('pointercancel',up);
           dragEl.classList.remove('dragging');
-          rituelDraft.produits = [...list.querySelectorAll('.rd-card')].map(c=>c.dataset.id);
+          cards.forEach(x=>{ x.style.transform=''; });
+          if(curIdx!==idx){
+            const order=[...others]; order.splice(curIdx,0,dragEl);
+            order.forEach(x=>list.appendChild(x));
+            renumberRd();
+          }
+          rituelDraft.produits = [...list.querySelectorAll('.rd-card')].map(x=>x.dataset.id);
         };
         document.addEventListener('pointermove',move);
         document.addEventListener('pointerup',up);
+        document.addEventListener('pointercancel',up);
       };
     });
   }
