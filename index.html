@@ -1263,7 +1263,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1633,10 +1633,7 @@
   <div class="sheet-overlay" id="rituel-sheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-        <button onclick="closeRituelSheet()" aria-label="Retour" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--surface-warm);color:var(--ink-soft);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">←</button>
-        <div class="sheet-title" id="rd-title" style="margin:0;">Créer un rituel</div>
-      </div>
+      <div class="sheet-title" id="rd-title">Créer un rituel</div>
       <div class="field"><label>Nom du rituel</label><input id="rd-nom" placeholder="Ex. Routine du matin"></div>
       <div id="rd-when">
       <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;display:block;margin-top:16px;">Quand ?</label>
@@ -2968,6 +2965,7 @@
     loadProducts();
   }
 
+  let rpForceWelcome = false;  // afficher l'écran d'accueil de création même avec des rituels
   let isPremium = false;  // activable plus tard avec le paiement
       let productSort = 'fav';  // 'fav', 'alpha', 'perem'
   function setProductSort(s){
@@ -3501,9 +3499,15 @@
     loadRituels();
   }
 
+  function rpGoWelcome(){ rpForceWelcome=true; renderRituelActuel(window.__allRituels||[]); }
+  function rpBackToList(){ rpForceWelcome=false; renderRituelActuel(window.__allRituels||[]); }
+
   async function openRituelQuick(m){
+    rpForceWelcome=false;
     await openRituelEditor();
     rdSetMoment(m);
+    // Flux guidé : le moment est déjà connu, on cache "Quand ?"
+    const when=document.getElementById('rd-when'); if(when) when.style.display='none';
     const lbl = m==='matin'?'Routine du matin':(m==='soir'?'Routine du soir':(m==='hebdo'?'Soin hebdomadaire':'Ma routine'));
     const t=document.getElementById('rd-title'); if(t) t.textContent = lbl;
     const nomEl=document.getElementById('rd-nom');
@@ -3519,14 +3523,16 @@
     const hebdos = rits.filter(r=>r.moment==='hebdo');
     if(presets) presets.style.display = (isPremium && !daily.length) ? '' : 'none';
 
-    // ── Écran d'accueil (aucun rituel) ──
-    if(!rits.length){
+    // ── Écran d'accueil (aucun rituel, ou demandé via la flèche) ──
+    if(!rits.length || rpForceWelcome){
+      const backBtn = rits.length ? '<button onclick="rpBackToList()" aria-label="Retour" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--surface);box-shadow:0 4px 12px rgba(46,33,28,0.08);color:var(--ink-soft);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">←</button>' : '';
       const petals =
         '<svg class="rp-petal" style="top:-6px;left:2px;" width="26" height="26" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#E8A98C" transform="rotate(-30 12 12)"/></svg>'+
         '<svg class="rp-petal" style="top:22px;right:-8px;" width="20" height="20" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#C9A24F" opacity="0.7" transform="rotate(45 12 12)"/></svg>'+
         '<svg class="rp-petal" style="bottom:2px;left:-10px;" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#D98E6B" opacity="0.65" transform="rotate(160 12 12)"/></svg>'+
         '<svg class="rp-petal" style="bottom:-4px;right:14px;" width="15" height="15" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#E8C9A0" opacity="0.8" transform="rotate(-120 12 12)"/></svg>';
       card.innerHTML =
+        backBtn+
         '<div class="rp-hello">Hello 👋</div>'+
         '<div class="rp-hello-sub">Ton rituel, ton évolution.</div>'+
         '<div class="rp-hero-wrap">'+petals+'<div class="rp-hero">🧖‍♀️</div></div>'+
@@ -3602,7 +3608,7 @@
     }
 
     const sortActive = arr => [...arr].sort((a,b)=>(b.actif?1:0)-(a.actif?1:0));
-    let html = '<div class="rp-label">Routine quotidienne</div>';
+    let html = '<button onclick="rpGoWelcome()" aria-label="Créer une routine" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--surface);box-shadow:0 4px 12px rgba(46,33,28,0.08);color:var(--ink-soft);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">←</button><div class="rp-label">Routine quotidienne</div>';
     html += daily.length
       ? sortActive(daily).map(dailyCard).join('')
       : '<button class="rp-invite" onclick="openRituelQuick(\'matin\')"><span style="font-size:20px;">☀️</span><span>Ajoute ta première routine <span style="color:var(--accent);">+</span></span></button>';
@@ -3667,6 +3673,7 @@
 
   async function openRituelEditor(id){
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    rpForceWelcome=false;
     const { data: prods } = await sb.from('products').select('id,nom,emoji,effets,categorie,date_peremption').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     rdProductMap = {}; (prods||[]).forEach(p=>{ rdProductMap[p.id]=p; });
     let loadedRappels = null;
