@@ -1263,7 +1263,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 19.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 19.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2085,7 +2085,7 @@
     const inp=document.getElementById('onb-prod-input');
     const br=document.getElementById('onb-brand-input');
     if(!inp || !br) return;
-    const cap=function(s){ if(!s) return ''; return s.toLowerCase().replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, function(m,sep,ch){ return sep + ch.toUpperCase(); }); };
+    const cap=function(s){ if(!s) return ''; s=s.trim(); return s.charAt(0).toUpperCase()+s.slice(1); };
     const nom=inp.value.trim();
     const marque=br.value.trim();
     if(!nom){ inp.focus(); return; }
@@ -2303,6 +2303,7 @@
     const bub=document.getElementById('lea-bubble'); if(bub) bub.style.display = (currentUser && screen!=='chat') ? 'flex' : 'none';
     updateFab(screen);
     if(screen!=='ritual'){ rpForceWelcome=false; rpSlotView=null; }
+    else { rpSlotView=null; rpForceWelcome=false; }
     if(currentUser){
       if(screen==='home'){ loadHomeData(); loadTodayPhoto(); }
       else if(screen==='routine'){ loadProducts(); }
@@ -3326,7 +3327,7 @@
 
   async function saveProduct(){
     if(!currentUser) return;
-    const cap=function(s){ if(!s) return ''; return s.toLowerCase().replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, function(m,sep,ch){ return sep + ch.toUpperCase(); }); };
+    const cap=function(s){ if(!s) return ''; s=s.trim(); return s.charAt(0).toUpperCase()+s.slice(1); };
     const nomRaw = document.getElementById('pf-nom').value.trim();
     const marqueRaw = document.getElementById('pf-marque').value.trim();
     const err = document.getElementById('pf-error');
@@ -3530,116 +3531,95 @@
     const hebdos = rits.filter(r=>r.moment==='hebdo');
     if(presets) presets.style.display = (isPremium && !daily.length) ? '' : 'none';
 
-    // ── Écran d'accueil (aucun rituel, ou demandé via la flèche) ──
-    if(!rits.length || rpForceWelcome){
-      const backBtn = rits.length ? '<button onclick="rpBackToList()" aria-label="Retour" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--surface);box-shadow:0 4px 12px rgba(46,33,28,0.08);color:var(--ink-soft);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">←</button>' : '';
-      const petals =
-        '<svg class="rp-petal" style="top:-6px;left:2px;" width="26" height="26" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#E8A98C" transform="rotate(-30 12 12)"/></svg>'+
-        '<svg class="rp-petal" style="top:22px;right:-8px;" width="20" height="20" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#C9A24F" opacity="0.7" transform="rotate(45 12 12)"/></svg>'+
-        '<svg class="rp-petal" style="bottom:2px;left:-10px;" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#D98E6B" opacity="0.65" transform="rotate(160 12 12)"/></svg>'+
-        '<svg class="rp-petal" style="bottom:-4px;right:14px;" width="15" height="15" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#E8C9A0" opacity="0.8" transform="rotate(-120 12 12)"/></svg>';
-      card.innerHTML =
-        backBtn+
-        '<div class="rp-hello">Hello 👋</div>'+
-        '<div class="rp-hello-sub">Ton rituel, ton évolution.</div>'+
-        '<div class="rp-hero-wrap">'+petals+'<div class="rp-hero">🧖‍♀️</div></div>'+
-        '<div class="rp-title">Crée ta routine<br>en quelques secondes</div>'+
-        '<p class="rp-sub">Des routines simples, personnalisées<br>et adaptées à ta peau.</p>'+
-        '<button class="rp-cta" onclick="rpHubGo(\'matin\')"><span class="ico">☀️</span><span><span class="t">Routine du matin</span><span class="d">Prépare ta peau pour la journée</span></span><span class="chev">›</span></button>'+
-        '<button class="rp-cta" onclick="rpHubGo(\'soir\')"><span class="ico">🌙</span><span><span class="t">Routine du soir</span><span class="d">Prends soin de ta peau le soir</span></span><span class="chev">›</span></button>'+
-        '<button class="rp-cta" onclick="rpHubGo(\'hebdo\')"><span class="ico">🧖‍♀️</span><span><span class="t">Soin hebdomadaire</span><span class="d">Masque, gommage · 1 fois par semaine</span></span><span class="chev">›</span></button>';
-      card.style.display='block';
-      return;
-    }
-
-    // ── Toutes les routines, avec activation ──
-    const allIds = [...new Set(rits.flatMap(r=>Array.isArray(r.produits)?r.produits:[]))];
-    let pmap={};
-    if(allIds.length){
-      const { data } = await sb.from('products').select('id,nom,emoji').in('id', allIds);
-      (data||[]).forEach(p=>pmap[p.id]=p);
-    }
-    const DAYS_FR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
-
-    function freqLabel(r){
-      const rap=r.rappels;
-      if(rap && rap.on && Array.isArray(rap.days) && rap.days.length){
-        return rap.days.length===7 ? 'Tous les jours' : (rap.days.length+' j/semaine');
-      }
-      return '';
-    }
-    function swHtml(r){
-      return '<label class="rp-sw" onclick="event.stopPropagation()"><input type="checkbox" '+(r.actif?'checked':'')+' onchange="toggleRituelActif(\''+r.id+'\')"><span class="k"></span></label>';
-    }
-    function badges(moment){
-      if(moment==='both') return '<span class="rp-badges"><span class="rp-badge-ico matin">☀️</span><span class="rp-badge-ico soir">🌙</span></span>';
-      const cls = moment==='matin' ? 'matin' : 'soir';
-      const e = moment==='matin' ? '☀️' : '🌙';
-      return '<span class="rp-badge-ico '+cls+'">'+e+'</span>';
-    }
-    function stepRow(p, idx){
-      const parts=(p.nom||'').split(' · ');
-      return '<div class="rp-step">'+
-        '<div class="rp-thumb"><span class="n">'+(idx+1)+'</span>'+(p.emoji||'🧴')+'</div>'+
-        '<div style="flex:1;min-width:0;"><div class="rp-pname">'+(parts[0]||'')+'</div>'+
-        (parts[1]?'<div class="rp-pbrand">'+parts[1]+'</div>':'')+
-        '</div></div>';
-    }
-    function dailyCard(r){
-      const label = r.moment==='matin' ? 'Routine du matin' : (r.moment==='soir' ? 'Routine du soir' : 'Matin & soir');
-      const prods = (Array.isArray(r.produits)?r.produits:[]).map(id=>pmap[id]).filter(Boolean);
-      const n = prods.length;
-      const freq = freqLabel(r);
-      const sub = n+' étape'+(n>1?'s':'') + (freq ? ' · '+freq : '');
-      const steps = r.actif
-        ? '<div class="rp-steps">'+(n ? prods.map(stepRow).join('') : '<div style="padding:10px 0 12px;color:var(--muted);font-size:12.5px;">Aucun produit pour l\'instant 🌸</div>')+'</div>'
-        : '';
-      return '<div class="rp-card'+(r.actif?'':' off')+'">'+
-        '<div class="rp-card-head">'+
-          '<div class="rp-card-title">'+badges(r.moment)+
-          '<div style="min-width:0;flex:1;"><span class="rp-card-name">'+(r.nom||label)+'</span><div class="rp-card-sub">'+sub+'</div></div></div>'+
-          swHtml(r)+
-          '<button class="rp-dots" onclick="openRituelEditor(\''+r.id+'\')" aria-label="Modifier">⋯</button>'+
-        '</div>'+
-        steps+
-      '</div>';
-    }
-    function hebdoRow(r){
-      const day = (r.rappels && typeof r.rappels.hebdoDay==='number') ? DAYS_FR[r.rappels.hebdoDay] : 'dimanche';
-      const n = Array.isArray(r.produits)?r.produits.length:0;
-      return '<div class="rp-hebdo'+(r.actif?'':' off')+'" onclick="openRituelEditor(\''+r.id+'\')" style="cursor:pointer;">'+
-        '<span class="av">🧖‍♀️</span>'+
-        '<span style="flex:1;min-width:0;"><span class="hb-name" style="display:block;font-size:14.5px;font-weight:600;color:var(--ink);">'+(r.nom||'Soins de la semaine')+'</span>'+
-        '<span class="hb-sub" style="display:block;font-size:11.5px;color:var(--muted);margin-top:2px;"><span class="day">Le '+day+'</span> · '+n+' étape'+(n>1?'s':'')+'</span></span>'+
-        swHtml(r)+'</div>';
-    }
-
-    const sortActive = arr => [...arr].sort((a,b)=>(b.actif?1:0)-(a.actif?1:0));
-
-    // ── Sous-vue d'un créneau (ouverte depuis l'accueil hub) ──
+    // ── Sous-vue d'un créneau ──
     if(rpSlotView){
       const mv=rpSlotView;
-      const lbl = mv==='matin'?'Routine du matin':(mv==='soir'?'Routine du soir':'Soins hebdomadaires');
       const items = mv==='hebdo' ? hebdos : daily.filter(r=>r.moment===mv || r.moment==='both');
+      if(!items.length){ rpSlotView=null; return renderRituelActuel(rits); }
+      const allIds=[...new Set(items.flatMap(r=>Array.isArray(r.produits)?r.produits:[]))];
+      let pmap={};
+      if(allIds.length){
+        const { data } = await sb.from('products').select('id,nom,emoji').in('id', allIds);
+        (data||[]).forEach(p=>pmap[p.id]=p);
+      }
+      const DAYS_FR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+      function freqLabel(r){
+        const rap=r.rappels;
+        if(rap && rap.on && Array.isArray(rap.days) && rap.days.length){
+          return rap.days.length===7 ? 'Tous les jours' : (rap.days.length+' j/semaine');
+        }
+        return '';
+      }
+      function swHtml(r){
+        return '<label class="rp-sw" onclick="event.stopPropagation()"><input type="checkbox" '+(r.actif?'checked':'')+' onchange="toggleRituelActif(\''+r.id+'\')"><span class="k"></span></label>';
+      }
+      function badges(moment){
+        if(moment==='both') return '<span class="rp-badges"><span class="rp-badge-ico matin">☀️</span><span class="rp-badge-ico soir">🌙</span></span>';
+        const cls = moment==='matin' ? 'matin' : 'soir';
+        const e = moment==='matin' ? '☀️' : '🌙';
+        return '<span class="rp-badge-ico '+cls+'">'+e+'</span>';
+      }
+      function stepRow(p, idx){
+        const parts=(p.nom||'').split(' · ');
+        return '<div class="rp-step">'+
+          '<div class="rp-thumb"><span class="n">'+(idx+1)+'</span>'+(p.emoji||'🧴')+'</div>'+
+          '<div style="flex:1;min-width:0;"><div class="rp-pname">'+(parts[0]||'')+'</div>'+
+          (parts[1]?'<div class="rp-pbrand">'+parts[1]+'</div>':'')+
+          '</div></div>';
+      }
+      function dailyCard(r){
+        const label = r.moment==='matin' ? 'Routine du matin' : (r.moment==='soir' ? 'Routine du soir' : 'Matin & soir');
+        const prods = (Array.isArray(r.produits)?r.produits:[]).map(id=>pmap[id]).filter(Boolean);
+        const n = prods.length;
+        const freq = freqLabel(r);
+        const sub = n+' étape'+(n>1?'s':'') + (freq ? ' · '+freq : '');
+        const steps = r.actif
+          ? '<div class="rp-steps">'+(n ? prods.map(stepRow).join('') : '<div style="padding:10px 0 12px;color:var(--muted);font-size:12.5px;">Aucun produit pour l\'instant 🌸</div>')+'</div>'
+          : '';
+        return '<div class="rp-card'+(r.actif?'':' off')+'">'+
+          '<div class="rp-card-head">'+
+            '<div class="rp-card-title">'+badges(r.moment)+
+            '<div style="min-width:0;flex:1;"><span class="rp-card-name">'+(r.nom||label)+'</span><div class="rp-card-sub">'+sub+'</div></div></div>'+
+            swHtml(r)+
+            '<button class="rp-dots" onclick="openRituelEditor(\''+r.id+'\')" aria-label="Modifier">⋯</button>'+
+          '</div>'+
+          steps+
+        '</div>';
+      }
+      function hebdoRow(r){
+        const day = (r.rappels && typeof r.rappels.hebdoDay==='number') ? DAYS_FR[r.rappels.hebdoDay] : 'dimanche';
+        const n = Array.isArray(r.produits)?r.produits.length:0;
+        return '<div class="rp-hebdo'+(r.actif?'':' off')+'" onclick="openRituelEditor(\''+r.id+'\')" style="cursor:pointer;">'+
+          '<span class="av">🧖‍♀️</span>'+
+          '<span style="flex:1;min-width:0;"><span class="hb-name" style="display:block;font-size:14.5px;font-weight:600;color:var(--ink);">'+(r.nom||'Soins de la semaine')+'</span>'+
+          '<span class="hb-sub" style="display:block;font-size:11.5px;color:var(--muted);margin-top:2px;"><span class="day">Le '+day+'</span> · '+n+' étape'+(n>1?'s':'')+'</span></span>'+
+          swHtml(r)+'</div>';
+      }
+      const sortActive = arr => [...arr].sort((a,b)=>(b.actif?1:0)-(a.actif?1:0));
+      const lbl = mv==='matin'?'Routine du matin':(mv==='soir'?'Routine du soir':'Soins hebdomadaires');
       let sh = '<button onclick="rpSlotBack()" aria-label="Retour" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--surface);box-shadow:0 4px 12px rgba(46,33,28,0.08);color:var(--ink-soft);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">←</button>';
       sh += '<div class="rp-label">'+lbl+'</div>';
       sh += sortActive(items).map(mv==='hebdo'?hebdoRow:dailyCard).join('');
-      sh += '<button class="rp-add-link" onclick="openRituelQuick(\''+mv+'\')">+ '+(mv==='hebdo'?'Ajouter un autre soin':'Nouvelle routine du '+mv)+'</button>';
       card.innerHTML = sh;
       card.style.display='block';
       return;
     }
 
-    let html = '<button onclick="rpGoWelcome()" aria-label="Créer une routine" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--surface);box-shadow:0 4px 12px rgba(46,33,28,0.08);color:var(--ink-soft);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">←</button><div class="rp-label">Routine quotidienne</div>';
-    html += daily.length
-      ? sortActive(daily).map(dailyCard).join('')
-      : '<button class="rp-invite" onclick="openRituelQuick(\'matin\')"><span style="font-size:20px;">☀️</span><span>Ajoute ta première routine <span style="color:var(--accent);">+</span></span></button>';
-    html += '<div class="rp-label" style="margin-top:20px;">Rituel hebdomadaire</div>';
-    html += hebdos.length
-      ? sortActive(hebdos).map(hebdoRow).join('') + '<button class="rp-add-link" onclick="openRituelQuick(\'hebdo\')">+ Ajouter un autre soin</button>'
-      : '<button class="rp-invite" style="margin-bottom:0;" onclick="openRituelQuick(\'hebdo\')"><span style="font-size:19px;">🧖‍♀️</span><span>Ajoute un soin hebdo (masque, gommage...) <span style="color:var(--accent);">+</span></span></button>';
-
-    card.innerHTML = html;
+    // ── Accueil hub (par défaut) ──
+    const petals =
+      '<svg class="rp-petal" style="top:-6px;left:2px;" width="26" height="26" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#E8A98C" transform="rotate(-30 12 12)"/></svg>'+
+      '<svg class="rp-petal" style="top:22px;right:-8px;" width="20" height="20" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#C9A24F" opacity="0.7" transform="rotate(45 12 12)"/></svg>'+
+      '<svg class="rp-petal" style="bottom:2px;left:-10px;" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#D98E6B" opacity="0.65" transform="rotate(160 12 12)"/></svg>'+
+      '<svg class="rp-petal" style="bottom:-4px;right:14px;" width="15" height="15" viewBox="0 0 24 24"><path d="M12 2C15 7 15 12 12 15C9 12 9 7 12 2Z" fill="#E8C9A0" opacity="0.8" transform="rotate(-120 12 12)"/></svg>';
+    card.innerHTML =
+      '<div class="rp-hello">Hello 👋</div>'+
+      '<div class="rp-hello-sub">Ton rituel, ton évolution.</div>'+
+      '<div class="rp-hero-wrap">'+petals+'<div class="rp-hero">🧖‍♀️</div></div>'+
+      '<div class="rp-title">Crée ta routine<br>en quelques secondes</div>'+
+      '<p class="rp-sub">Des routines simples, personnalisées<br>et adaptées à ta peau.</p>'+
+      '<button class="rp-cta" onclick="rpHubGo(\'matin\')"><span class="ico">☀️</span><span><span class="t">Routine du matin</span><span class="d">Prépare ta peau pour la journée</span></span><span class="chev">›</span></button>'+
+      '<button class="rp-cta" onclick="rpHubGo(\'soir\')"><span class="ico">🌙</span><span><span class="t">Routine du soir</span><span class="d">Prends soin de ta peau le soir</span></span><span class="chev">›</span></button>'+
+      '<button class="rp-cta" onclick="rpHubGo(\'hebdo\')"><span class="ico">🧖‍♀️</span><span><span class="t">Soin hebdomadaire</span><span class="d">Masque, gommage · 1 fois par semaine</span></span><span class="chev">›</span></button>';
     card.style.display='block';
   }
 
@@ -4008,7 +3988,7 @@
     await recomputeRituelType();
     closeRituelSheet();
     showToast('Rituel enregistré ✓');
-    rpForceWelcome=false;
+    rpSlotView=null;
     window.__allRituels=null;
     loadRituels();
     loadHomeRoutine();
@@ -5099,7 +5079,7 @@
     closeBarcodeSheet();
     openProductForm();
     setTimeout(function(){
-      const cap=function(s){ if(!s) return ''; return s.toLowerCase().replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, function(m,sep,ch){ return sep + ch.toUpperCase(); }); };
+      const cap=function(s){ if(!s) return ''; s=s.trim(); return s.charAt(0).toUpperCase()+s.slice(1); };
       const nomEl=document.getElementById('pf-nom'); if(nomEl && d.nom) nomEl.value=cap(d.nom);
       const mqEl=document.getElementById('pf-marque'); if(mqEl && d.marque) mqEl.value=cap(d.marque);
       const efEl=document.getElementById('pf-effets');
