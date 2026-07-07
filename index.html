@@ -1263,7 +1263,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 19.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 19.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1635,13 +1635,7 @@
       <div class="sheet-handle"></div>
       <div class="sheet-title" id="rd-title">Créer un rituel</div>
       <div class="field"><label>Nom du rituel</label><input id="rd-nom" placeholder="Ex. Routine du matin"></div>
-      <div id="rd-when">
-      <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;display:block;margin-top:16px;">Quand ?</label>
-      <div class="rit-type" style="margin:10px 0 6px;">
-        <button class="rit-opt" id="rd-m-matin" onclick="rdSetMoment('matin')">☀️<span>Matin</span></button>
-        <button class="rit-opt" id="rd-m-soir" onclick="rdSetMoment('soir')">🌙<span>Soir</span></button>
-      </div>
-      </div>
+      
       <div id="rd-hebdo-day" style="display:none;margin:4px 0 8px;">
         <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:7px;">Quel jour de la semaine ?</div>
         <div style="display:flex;gap:5px;">
@@ -2285,14 +2279,15 @@
   function fabAction(){
     const cur = document.getElementById('app').getAttribute('data-screen');
     if(cur==='routine'){ openProductForm(); }
-    else if(cur==='ritual'){ openRituelEditor(); }
+    else if(cur==='ritual'){ openRituelQuick(rpSlotView||'matin'); }
   }
   function updateFab(screen){
     const fab=document.getElementById('fab-add');
     if(!fab) return;
-    // FAB visible seulement sur Produits et Rituel
-    if(screen==='routine' || screen==='ritual'){ fab.classList.add('show'); }
-    else { fab.classList.remove('show'); }
+    const cur = screen || document.getElementById('app').getAttribute('data-screen');
+    let show = (cur==='routine');
+    if(cur==='ritual') show = !!rpSlotView;  // sur Rituel : seulement dans une page de créneau
+    fab.classList.toggle('show', show);
   }
 
     function navTo(screen){
@@ -3519,8 +3514,6 @@
     renderRituelActuel(window.__allRituels||[]);
     await openRituelEditor();
     rdSetMoment(m);
-    // Flux guidé : le moment est déjà connu, on cache "Quand ?"
-    const when=document.getElementById('rd-when'); if(when) when.style.display='none';
     const lbl = m==='matin'?'Routine du matin':(m==='soir'?'Routine du soir':(m==='hebdo'?'Soin hebdomadaire':'Ma routine'));
     const t=document.getElementById('rd-title'); if(t) t.textContent = lbl;
     const nomEl=document.getElementById('rd-nom');
@@ -3532,6 +3525,7 @@
     const presets=document.getElementById('rituel-presets-section');
     if(!card) return;
     rits = rits || [];
+    updateFab();
     const daily = rits.filter(r=>r.moment!=='hebdo');
     const hebdos = rits.filter(r=>r.moment==='hebdo');
     if(presets) presets.style.display = (isPremium && !daily.length) ? '' : 'none';
@@ -3811,8 +3805,6 @@
 
     function rdSetMoment(m){
     rituelDraft.moment = m;
-    ['matin','soir'].forEach(x=>{ const el=document.getElementById('rd-m-'+x); if(el) el.classList.toggle('selected', x===m); });
-    const when=document.getElementById('rd-when'); if(when) when.style.display = (m==='hebdo') ? 'none' : 'block';
     const hd=document.getElementById('rd-hebdo-day'); if(hd) hd.style.display = (m==='hebdo') ? 'block' : 'none';
     if(document.getElementById('rd-rem-on') && document.getElementById('rd-rem-on').checked) rdSyncRemTimes();
   }
