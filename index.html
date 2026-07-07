@@ -1263,7 +1263,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2307,6 +2307,7 @@
     window.scrollTo(0,0);
     const bub=document.getElementById('lea-bubble'); if(bub) bub.style.display = (currentUser && screen!=='chat') ? 'flex' : 'none';
     updateFab(screen);
+    if(screen!=='ritual'){ rpForceWelcome=false; rpSlotView=null; }
     if(currentUser){
       if(screen==='home'){ loadHomeData(); loadTodayPhoto(); }
       else if(screen==='routine'){ loadProducts(); }
@@ -2965,7 +2966,8 @@
     loadProducts();
   }
 
-  let rpForceWelcome = false;  // afficher l'écran d'accueil de création même avec des rituels
+  let rpForceWelcome = false;
+  let rpSlotView = null;  // 'matin' | 'soir' | 'hebdo' : sous-vue d'un créneau  // afficher l'écran d'accueil de création même avec des rituels
   let isPremium = false;  // activable plus tard avec le paiement
       let productSort = 'fav';  // 'fav', 'alpha', 'perem'
   function setProductSort(s){
@@ -3499,11 +3501,19 @@
     loadRituels();
   }
 
+  function rpHubGo(m){
+    const rits = window.__allRituels || [];
+    const has = m==='hebdo' ? rits.some(r=>r.moment==='hebdo') : rits.some(r=>r.moment===m || r.moment==='both');
+    if(!has){ openRituelQuick(m); return; }
+    rpSlotView=m; rpForceWelcome=false;
+    renderRituelActuel(rits);
+  }
+  function rpSlotBack(){ rpSlotView=null; rpForceWelcome=true; renderRituelActuel(window.__allRituels||[]); }
+
   function rpGoWelcome(){ rpForceWelcome=true; renderRituelActuel(window.__allRituels||[]); }
   function rpBackToList(){ rpForceWelcome=false; renderRituelActuel(window.__allRituels||[]); }
 
   async function openRituelQuick(m){
-    rpForceWelcome=false;
     await openRituelEditor();
     rdSetMoment(m);
     // Flux guidé : le moment est déjà connu, on cache "Quand ?"
@@ -3538,9 +3548,9 @@
         '<div class="rp-hero-wrap">'+petals+'<div class="rp-hero">🧖‍♀️</div></div>'+
         '<div class="rp-title">Crée ta routine<br>en quelques secondes</div>'+
         '<p class="rp-sub">Des routines simples, personnalisées<br>et adaptées à ta peau.</p>'+
-        '<button class="rp-cta" onclick="openRituelQuick(\'matin\')"><span class="ico">☀️</span><span><span class="t">Routine du matin</span><span class="d">Prépare ta peau pour la journée</span></span><span class="chev">›</span></button>'+
-        '<button class="rp-cta" onclick="openRituelQuick(\'soir\')"><span class="ico">🌙</span><span><span class="t">Routine du soir</span><span class="d">Prends soin de ta peau le soir</span></span><span class="chev">›</span></button>'+
-        '<button class="rp-cta" onclick="openRituelQuick(\'hebdo\')"><span class="ico">🧖‍♀️</span><span><span class="t">Soin hebdomadaire</span><span class="d">Masque, gommage · 1 fois par semaine</span></span><span class="chev">›</span></button>';
+        '<button class="rp-cta" onclick="rpHubGo(\'matin\')"><span class="ico">☀️</span><span><span class="t">Routine du matin</span><span class="d">Prépare ta peau pour la journée</span></span><span class="chev">›</span></button>'+
+        '<button class="rp-cta" onclick="rpHubGo(\'soir\')"><span class="ico">🌙</span><span><span class="t">Routine du soir</span><span class="d">Prends soin de ta peau le soir</span></span><span class="chev">›</span></button>'+
+        '<button class="rp-cta" onclick="rpHubGo(\'hebdo\')"><span class="ico">🧖‍♀️</span><span><span class="t">Soin hebdomadaire</span><span class="d">Masque, gommage · 1 fois par semaine</span></span><span class="chev">›</span></button>';
       card.style.display='block';
       return;
     }
@@ -3608,6 +3618,21 @@
     }
 
     const sortActive = arr => [...arr].sort((a,b)=>(b.actif?1:0)-(a.actif?1:0));
+
+    // ── Sous-vue d'un créneau (ouverte depuis l'accueil hub) ──
+    if(rpSlotView){
+      const mv=rpSlotView;
+      const lbl = mv==='matin'?'Routine du matin':(mv==='soir'?'Routine du soir':'Soins hebdomadaires');
+      const items = mv==='hebdo' ? hebdos : daily.filter(r=>r.moment===mv || r.moment==='both');
+      let sh = '<button onclick="rpSlotBack()" aria-label="Retour" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--surface);box-shadow:0 4px 12px rgba(46,33,28,0.08);color:var(--ink-soft);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">←</button>';
+      sh += '<div class="rp-label">'+lbl+'</div>';
+      sh += sortActive(items).map(mv==='hebdo'?hebdoRow:dailyCard).join('');
+      sh += '<button class="rp-add-link" onclick="openRituelQuick(\''+mv+'\')">+ '+(mv==='hebdo'?'Ajouter un autre soin':'Nouvelle routine du '+mv)+'</button>';
+      card.innerHTML = sh;
+      card.style.display='block';
+      return;
+    }
+
     let html = '<button onclick="rpGoWelcome()" aria-label="Créer une routine" style="width:34px;height:34px;border-radius:50%;border:none;background:var(--surface);box-shadow:0 4px 12px rgba(46,33,28,0.08);color:var(--ink-soft);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">←</button><div class="rp-label">Routine quotidienne</div>';
     html += daily.length
       ? sortActive(daily).map(dailyCard).join('')
@@ -3673,7 +3698,6 @@
 
   async function openRituelEditor(id){
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
-    rpForceWelcome=false;
     const { data: prods } = await sb.from('products').select('id,nom,emoji,effets,categorie,date_peremption').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     rdProductMap = {}; (prods||[]).forEach(p=>{ rdProductMap[p.id]=p; });
     let loadedRappels = null;
@@ -3989,6 +4013,7 @@
     await recomputeRituelType();
     closeRituelSheet();
     showToast('Rituel enregistré ✓');
+    rpForceWelcome=false;
     window.__allRituels=null;
     loadRituels();
     loadHomeRoutine();
