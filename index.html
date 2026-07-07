@@ -453,7 +453,7 @@
   .stat-tile-trend { font-size: 11px; color: var(--sage); margin-top: 8px; display: flex; align-items: center; gap: 4px; font-weight: 500; }
   .stat-tile-trend.down { color: var(--accent); }
 
-  .journal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 0 20px; }
+  .journal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 20px; }
   .ba-card { margin: 0 20px; background: var(--surface); border-radius: 20px; box-shadow: var(--shadow); padding: 14px; display: flex; align-items: center; gap: 10px; }
   .ba-img { width: 100%; aspect-ratio: 3/4; border-radius: 14px; overflow: hidden; background: var(--surface-warm); }
   .ba-img img { width: 100%; height: 100%; object-fit: cover; }
@@ -484,7 +484,9 @@
   .dd-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
   .dd-row span:first-child { color: var(--muted); }
   .dd-row:last-child { border-bottom: none; }
-  .journal-cell { aspect-ratio: 1; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; background: var(--surface-warm); transition: transform .2s; }
+  .journal-cell { aspect-ratio: 1; border-radius: 16px; overflow: hidden; position: relative; cursor: pointer; background: linear-gradient(150deg, var(--blush-soft), #F3E3D6); box-shadow: 0 6px 16px rgba(46,33,28,0.06); transition: transform .15s; }
+  .journal-cell:active { transform: scale(0.97); }
+  .journal-cell.empty::after { content: '🌸'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; opacity: 0.4; }
   .journal-cell:active { transform: scale(0.95); }
   .journal-cell.empty { background: var(--surface-warm); border: 1px dashed var(--line); }
   .journal-cell .skin-render { width: 100%; height: 100%; }
@@ -1297,7 +1299,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 19.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 19.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -5402,10 +5404,10 @@
     const sparkReg = sparkline(days.map(e=>dayComplete(e)?1:0), true);
 
     const tiles=[
-      {ico:'✅', val:rituelDays, sub:'Rituels réalisés<br>/ 7 jours', spark:sparkReg},
-      {ico:'📈', val:regularite+'%', sub:'Régularité', spark:sparkScore},
-      {ico:'📷', val:photoN, sub:'Photos ajoutées', spark:''},
-      {ico:'😊', val:moodLabel, sub:'Humeur<br>dominante', spark:'', small:true}
+      {ico:'🌿', val:rituelDays, sub:'Rituels réalisés<br>/ 7 jours', spark:sparkReg},
+      {ico:'📊', val:regularite+'%', sub:'Régularité', spark:sparkScore},
+      {ico:'📸', val:photoN, sub:'Photos ajoutées', spark:''},
+      {ico:'🌸', val:moodLabel, sub:'Humeur<br>dominante', spark:'', small:true}
     ];
     document.getElementById('ov-tiles').innerHTML = tiles.map(t=>
       '<div class="ov-tile"><div class="top"><div class="ov-ico">'+t.ico+'</div>'+(t.spark||'')+'</div>'+
@@ -5512,8 +5514,8 @@
         html+=`<div class="journal-cell"><div class="skin-render" style="background:linear-gradient(135deg,#F5D5BC,#C97A52);"></div><div class="journal-cell-date">${day}</div></div>`;
       }
     }
-    grid.innerHTML=html;
-  }
+    html += '<div class="journal-cell empty add" onclick="openDaySheet()" style="display:flex;align-items:center;justify-content:center;background:transparent;border:1.5px dashed var(--line);box-shadow:none;"><span style="font-size:26px;color:var(--accent);opacity:0.7;">+</span></div>';
+    grid.innerHTML = html; }
 
   // ===== Calendrier du Journal =====
   const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
