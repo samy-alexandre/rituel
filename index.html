@@ -1263,7 +1263,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 18.9<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 19.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3514,6 +3514,9 @@
   function rpBackToList(){ rpForceWelcome=false; renderRituelActuel(window.__allRituels||[]); }
 
   async function openRituelQuick(m){
+    // Le fond affiche la sous-vue du créneau concerné (que le matin quand on crée du matin, etc.)
+    rpSlotView=m; rpForceWelcome=false;
+    renderRituelActuel(window.__allRituels||[]);
     await openRituelEditor();
     rdSetMoment(m);
     // Flux guidé : le moment est déjà connu, on cache "Quand ?"
