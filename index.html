@@ -630,24 +630,24 @@
   .dp-btn-today { background:var(--accent); color:#fff; }
   .cat-opt { padding:7px 12px; border:1px solid var(--line); border-radius:16px; background:var(--surface); font-size:12.5px; font-family:inherit; color:var(--ink-soft); cursor:pointer; white-space:nowrap; transition:all .15s; }
   .cat-opt.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
-  /* ===== Carte rituel premium (page Aujourd'hui) ===== */
-  .rituel-premium-head { position:relative; background:linear-gradient(165deg,#6B4A3A,#543828); border-radius:22px 22px 0 0; padding:24px 22px 20px; overflow:hidden; cursor:pointer; margin-bottom:0; }
-  .rituel-premium-head::before { content:''; position:absolute; inset:7px; border-radius:15px; border:1px solid rgba(201,162,79,0.45); pointer-events:none; }
-  .rituel-premium-head::after { content:''; position:absolute; inset:10px; border-radius:12px; border:1px solid rgba(201,162,79,0.18); pointer-events:none; }
-  .rph-corner { position:absolute; font-size:12px; color:#C9A24F; opacity:0.6; z-index:2; }
-  .rph-c1 { top:15px; left:16px; } .rph-c2 { top:15px; right:16px; }
-  .rph-orn { position:relative; z-index:2; text-align:center; color:#C9A24F; font-size:14px; letter-spacing:3px; margin-bottom:9px; }
-  .rph-moon { font-size:17px; display:block; margin-bottom:1px; }
-  .rph-eyebrow { position:relative; z-index:2; text-align:center; font-family:var(--sans); font-size:9.5px; letter-spacing:3px; text-transform:uppercase; color:rgba(226,201,138,0.85); margin-bottom:8px; }
-  .rph-title { position:relative; z-index:2; text-align:center; font-family:var(--serif); font-size:31px; font-weight:500; color:#F5EDE2; line-height:1.05; letter-spacing:0.5px; }
-  .rph-title em { font-style:italic; color:#E2C98A; }
-  .rph-sub { position:relative; z-index:2; text-align:center; font-family:var(--serif); font-style:italic; font-size:13px; color:rgba(245,237,226,0.72); margin-top:6px; }
-  .rph-divider { position:relative; z-index:2; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:13px; color:#C9A24F; opacity:0.7; font-size:11px; }
-  .rph-divider::before, .rph-divider::after { content:''; width:28px; height:1px; background:#C9A24F; opacity:0.5; }
+  
+  
+  
+  
+  
+   
+  
+  
+  
+  
+  
+  
+  
+  
   /* tête sombre dorée + corps clair crème (mélange premium) */
-  #home-rituel-section .period-switch { border-radius:0; margin-bottom:0; border-left:1px solid rgba(201,162,79,0.35); border-right:1px solid rgba(201,162,79,0.35); background:#FAF3EA; padding:12px; }
-  #home-rituel-section .period-btn { color:var(--muted); }
-  #home-rituel-section .period-btn.active { background:#FFFDFA; color:var(--accent-deep); box-shadow:0 1px 4px rgba(142,60,38,0.1); }
+  
+  
+  
   #home-rituel-section .routine-list { border-radius:0 0 22px 22px; border:1px solid rgba(201,162,79,0.35); border-top:none; box-shadow:0 12px 38px rgba(142,60,38,0.13); background:linear-gradient(180deg,#FFFEFB,#FAF3EA); }
   #home-rituel-section .routine-item { border-bottom:1px solid rgba(201,162,79,0.15); }
   #home-rituel-section .routine-name { color:var(--ink); }
@@ -656,7 +656,7 @@
   #home-rituel-section .routine-item.done .routine-check { background:#C9A24F; border-color:#C9A24F; }
   #home-rituel-section .routine-time { color:var(--muted); }
   /* la tête garde son radius haut (continuité avec le corps) */
-  .rituel-premium-head { border-radius:22px 22px 0 0 !important; }
+  
   .sort-select { flex-shrink:0; padding:6px 28px 6px 10px; border:1px solid var(--line); border-radius:16px; background:var(--surface); font-size:11.5px; font-family:inherit; color:var(--ink-soft); cursor:pointer; -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23968779' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
   .sort-select:focus { outline:none; border-color:var(--accent); }
   .sort-select.active-filter { background-color:var(--accent); color:#fff; border-color:var(--accent); }
@@ -747,6 +747,60 @@
   .ev-tab { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1px solid var(--line); background:var(--surface); font-family:inherit; font-size:12.5px; color:var(--ink-soft); cursor:pointer; white-space:nowrap; }
   .ev-tab.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
   .ev-card { margin:0 20px; background:var(--surface); border-radius:20px; padding:18px 16px 12px; box-shadow:0 10px 26px rgba(46,33,28,0.06); }
+  /* ═══ Aujourd'hui : la carte du jour ═══ */
+  .hr-card { background:var(--surface); border-radius:22px; padding:17px 17px 8px; box-shadow:0 14px 34px rgba(46,33,28,0.09), 0 2px 6px rgba(46,33,28,0.04); }
+  .hr-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .hr-title-wrap { display:flex; align-items:center; gap:11px; min-width:0; flex:1; }
+  .hr-emoji { width:38px; height:38px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; background:linear-gradient(135deg,#F8D9AE,#F3C393); }
+  .hr-emoji.soir { background:linear-gradient(135deg,#E5D3C3,#D3B99F); }
+  .hr-title { font-size:16px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hr-sub { font-size:11.5px; color:var(--muted); margin-top:2px; }
+  .hr-switch { display:flex; gap:3px; background:var(--surface-warm); border-radius:20px; padding:3px; flex-shrink:0; }
+  .hr-sw-btn { border:none; background:transparent; width:32px; height:28px; border-radius:16px; font-size:14px; cursor:pointer; transition:background .15s; line-height:1; }
+  .hr-sw-btn.active { background:var(--surface); box-shadow:0 2px 6px rgba(46,33,28,0.10); }
+  .hr-bar { height:5px; border-radius:5px; background:var(--surface-warm); margin:13px 0 4px; overflow:hidden; }
+  .hr-bar-fill { height:100%; width:0%; border-radius:5px; background:linear-gradient(90deg,#E8A87C,var(--accent)); transition:width .35s cubic-bezier(.4,0,.2,1); }
+
+  /* Étapes cochables, style v3 */
+  #home .routine-item { display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid rgba(46,33,28,0.055); cursor:pointer; background:transparent; border-radius:0; transition:opacity .2s; }
+  #home .routine-item:last-child { border-bottom:none; }
+  #home .routine-thumb { position:relative; width:42px; height:42px; border-radius:13px; background:linear-gradient(160deg,var(--blush-soft),#F2D8D1); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; transition:filter .2s; }
+  #home .routine-thumb .n { position:absolute; top:-5px; left:-5px; width:17px; height:17px; border-radius:50%; background:var(--accent); color:#fff; font-size:9.5px; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(201,90,63,0.4); }
+  #home .routine-info { flex:1; min-width:0; }
+  #home .routine-name { font-size:13.5px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .2s; }
+  #home .routine-product { font-size:11px; color:var(--muted); margin-top:1.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #home .routine-check { width:26px; height:26px; border-radius:50%; border:1.5px solid var(--line); background:transparent; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+  #home .routine-check::after { content:'✓'; color:#fff; font-size:13px; font-weight:700; opacity:0; transform:scale(.5); transition:all .2s; }
+  #home .routine-item.done .routine-check { background:var(--accent); border-color:var(--accent); }
+  #home .routine-item.done .routine-check::after { opacity:1; transform:scale(1); }
+  #home .routine-item.done .routine-name { color:var(--muted); text-decoration:line-through; text-decoration-color:rgba(150,135,121,0.5); }
+  #home .routine-item.done .routine-thumb { filter:grayscale(0.4); opacity:.6; }
+  #home .routine-item:active { opacity:.7; }
+  #home .routine-time { display:none; }
+  /* ═══ Aujourd'hui : carte série compacte ═══ */
+  .plant-card { margin:0 20px 14px; background:var(--surface); border-radius:22px; box-shadow:0 12px 30px rgba(46,33,28,0.07); padding:16px 18px 10px; display:block; }
+  .pc-row { display:flex; align-items:center; gap:16px; }
+  #plant-host { width:78px; height:78px; min-height:0; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  #plant-host svg { width:100%; height:100%; }
+  .pc-info { flex:1; min-width:0; }
+  .plant-card .streak { all:unset; }
+  .plant-card .streak-num { font-family:var(--serif); font-size:15px; color:var(--ink-soft); }
+  .plant-card .streak-num em { font-style:normal; font-size:27px; font-weight:600; color:var(--accent); }
+  .plant-card .streak-label { font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.4; }
+  .plant-card .streak-mini { display:flex; gap:4px; margin-top:9px; }
+  .pc-actions { display:flex; gap:6px; justify-content:space-between; margin-top:13px; padding-top:11px; border-top:1px solid rgba(46,33,28,0.06); }
+  .pc-actions button { flex:1; background:transparent; border:none; font-family:inherit; font-size:11.5px; color:var(--ink-soft); cursor:pointer; padding:6px 2px; border-radius:10px; white-space:nowrap; transition:background .15s; }
+  .pc-actions button:active { background:var(--surface-warm); }
+  /* ═══ Rituel+ : choix de l'abonnement ═══ */
+  .plus-plans { display:flex; gap:10px; }
+  .plus-plan { position:relative; flex:1; display:flex; flex-direction:column; align-items:center; gap:1px; padding:16px 10px 13px; border-radius:18px; border:1.5px solid var(--line); background:var(--surface); cursor:pointer; font-family:inherit; transition:transform .12s, box-shadow .2s; }
+  .plus-plan:active { transform:scale(.98); }
+  .plus-plan:first-child { border-color:var(--accent); background:linear-gradient(160deg,#FCEFE2,#FAF3EA); box-shadow:0 10px 24px rgba(201,90,63,0.16); }
+  .plus-plan:disabled { opacity:.6; }
+  .pp-badge { position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:var(--accent); color:#fff; font-size:9.5px; font-weight:700; letter-spacing:.4px; padding:3px 9px; border-radius:10px; white-space:nowrap; }
+  .pp-price { font-family:var(--serif); font-size:24px; color:var(--ink); line-height:1.1; }
+  .pp-per { font-size:11.5px; color:var(--ink-soft); }
+  .pp-eq { font-size:10.5px; color:var(--muted); margin-top:3px; }
 </style>
 </head>
 <body class="no-select">
@@ -985,53 +1039,44 @@
       </div>
     </div>
       <div class="section" id="home-rituel-section">
-      <div class="rituel-premium-head" onclick="navTo('ritual')">
-        <span class="rph-corner rph-c1">❦</span><span class="rph-corner rph-c2">❦</span>
-        <div class="rph-orn"><span class="rph-moon">☾</span>✦ ⟡ ✦</div>
-        <div class="rph-eyebrow" id="rph-eyebrow">Ton moment du matin</div>
-        <div class="rph-title">Le <em>rituel</em></div>
-        <div class="rph-sub">un instant, rien que pour toi</div>
-        <div class="rph-divider">⟡</div>
-      </div>
-      <div class="section-head" style="margin-bottom:12px;">
-        <div style="font-size:11px;color:var(--muted);"></div>
-      </div>
-      <div id="home-rituel-empty" style="display:none;text-align:center;padding:12px 6px 4px;">
+      <div id="home-rituel-empty" style="display:none;">
         <button class="btn-soft" onclick="navTo('ritual')">Créer mon rituel 🌱</button>
       </div>
-      <div class="period-switch">
-        <button class="period-btn active" id="pb-matin" onclick="switchPeriod('matin')">☀️ Matin</button>
-        <button class="period-btn" id="pb-soir" onclick="switchPeriod('soir')">🌙 Soir</button>
-      </div>
-      <div class="routine-list" id="routine-matin">
-        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Nettoyant doux</div><div class="routine-product">Avène Cleanance Gel</div></div><div class="routine-time">…</div></div>
-        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Sérum vitamine C</div><div class="routine-product">The Ordinary 15%</div></div><div class="routine-time">…</div></div>
-        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Hydratant</div><div class="routine-product">CeraVe Lotion</div></div><div class="routine-time">…</div></div>
-        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">SPF 50</div><div class="routine-product">La Roche-Posay Anthelios</div></div><div class="routine-time">…</div></div>
-      </div>
-      <div class="routine-list hidden" id="routine-soir">
-        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Démaquillant</div><div class="routine-product">Eau micellaire</div></div><div class="routine-time">…</div></div>
-        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Nettoyant doux</div><div class="routine-product">Avène Cleanance Gel</div></div><div class="routine-time">…</div></div>
-        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Traitement / sérum</div><div class="routine-product">Niacinamide 10%</div></div><div class="routine-time">…</div></div>
-        <div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">Crème de nuit</div><div class="routine-product">CeraVe PM</div></div><div class="routine-time">…</div></div>
+      <div class="hr-card" id="hr-card">
+        <div class="hr-head">
+          <div class="hr-title-wrap">
+            <span class="hr-emoji" id="hr-emoji">☀️</span>
+            <div style="min-width:0;flex:1;">
+              <div class="hr-title" id="hr-title">Routine du matin</div>
+              <div class="hr-sub" id="hr-sub">0 sur 0 · c'est parti 🌸</div>
+            </div>
+          </div>
+          <div class="hr-switch">
+            <button class="hr-sw-btn active" id="pb-matin" onclick="switchPeriod('matin')">☀️</button>
+            <button class="hr-sw-btn" id="pb-soir" onclick="switchPeriod('soir')">🌙</button>
+          </div>
+        </div>
+        <div class="hr-bar"><div class="hr-bar-fill" id="hr-bar-fill"></div></div>
+        <div class="routine-list" id="routine-matin"></div>
+        <div class="routine-list hidden" id="routine-soir"></div>
       </div>
     </div>
 
     <div class="plant-card">
-      <div id="plant-host"></div>
-      <div class="plant-caption" id="plant-caption">Ta plante pousse avec ta série 🌱</div>
-      <div class="streak">
-        <div class="streak-flame" id="streak-flame">🌱</div>
-        <div class="streak-text">
+      <div class="pc-row">
+        <div id="plant-host"></div>
+        <div class="pc-info">
           <div class="streak-num"><em id="streak-num">0</em> <span id="streak-unit">jour</span></div>
           <div class="streak-label" id="streak-label">Fais ton rituel pour démarrer ta série ✨</div>
+          <div class="streak-mini" id="streak-mini"></div>
+          <div class="plant-caption" id="plant-caption" style="display:none;"></div>
+          <span class="streak-flame" id="streak-flame" style="display:none;"></span>
         </div>
-        <div class="streak-mini" id="streak-mini"></div>
       </div>
-      <div style="text-align:center;margin:2px 0 12px;"><button id="rest-btn" onclick="takeRestDay()" class="btn-soft" style="display:block;margin:12px auto 0;">🧊 Jour de repos</button></div>
-      <div class="plant-actions">
-        <button class="plant-change" onclick="openPlantSheet()">🌱 Changer de plante</button>
-        <button class="plant-change" onclick="shareStreakImage()">📤 Partager</button>
+      <div class="pc-actions">
+        <button id="rest-btn" onclick="takeRestDay()">🧊 Jour de repos</button>
+        <button onclick="openPlantSheet()">🌱 Changer</button>
+        <button onclick="shareStreakImage()">📤 Partager</button>
       </div>
     </div>
 
@@ -1079,7 +1124,11 @@
   </div>
 
   <div id="journal" class="screen">
-    <div class="section section-cal" style="padding-top:26px;">
+    <div style="padding:26px 20px 0;">
+      <div class="rp-hello">Ton évolution 🌸</div>
+      <div id="suivi-accroche" style="display:none;margin-top:14px;"></div>
+    </div>
+    <div class="section section-cal" style="padding-top:16px;">
       <div class="cal-card">
       <div class="cal-head">
         <button class="cal-nav" onclick="calMonth(-1)">‹</button>
@@ -1220,7 +1269,8 @@
       <textarea class="chat-input" id="chat-input" placeholder="Pose ta question…" rows="1" oninput="resizeChat(this)"></textarea>
       <button class="chat-send" onclick="sendUserMsg()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
-    <div class="chat-locked-note" id="chat-locked-note">Tu as atteint la limite de 15 échanges du jour 🌸 Léa revient demain.</div>
+    <div class="chat-locked-note" id="chat-locked-note">Tu as utilisé tes 5 échanges du jour 🌸</div>
+        <button class="btn btn-accent" style="margin-top:10px;" onclick="openPlusSheet('Léa illimitée, pour continuer votre conversation quand tu veux 💬')">Passer à Rituel+ · Léa illimitée</button>
   </div>
 
   <!-- ====================== ROUTINE ====================== -->
@@ -1268,6 +1318,16 @@
       <div class="profile-badges" id="profile-badges"></div>
     </div>
 
+      <div id="premium-manage" style="display:none;margin:0 20px 16px;background:var(--surface);border-radius:20px;padding:16px 18px;box-shadow:0 10px 26px rgba(46,33,28,0.06);">
+        <div style="display:flex;align-items:center;gap:11px;">
+          <span style="width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,#F8D9AE,#F3C393);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🌸</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14.5px;font-weight:600;color:var(--ink);">Rituel+ actif</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">Merci de faire vivre Rituel 💛</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:12px;" onclick="openBillingPortal()">Gérer mon abonnement</button>
+      </div>
     <div class="premium-card" onclick="openPlusSheet()">
       <div class="premium-eyebrow">RITUEL+</div>
       <div class="premium-title">Une compagne <em>illimitée</em>, un suivi tout en finesse</div>
@@ -1299,14 +1359,14 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 19.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
 
   <nav class="nav hidden" id="nav">
     <div class="nav-item active" data-screen="home" onclick="navTo('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9M5 10v10a2 2 0 002 2h3v-6h4v6h3a2 2 0 002-2V10" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Aujourd'hui</div></div>
-    <div class="nav-item" data-screen="journal" onclick="navTo('journal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Journal</div></div>
+    <div class="nav-item" data-screen="journal" onclick="navTo('journal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Suivi</div></div>
     <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2h4v3l1.2 2A3 3 0 0116 8.7V19a2 2 0 01-2 2h-4a2 2 0 01-2-2V8.7a3 3 0 01.8-1.7L10 5V2z" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 12h7" stroke-linecap="round"/></svg><div class="nav-label">Produits</div></div>
     <div class="nav-item" data-screen="ritual" onclick="navTo('ritual')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Rituel</div></div>
     <div class="nav-item" data-screen="profile" onclick="navTo('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Moi</div></div>
@@ -1437,19 +1497,34 @@
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">Rituel<span style="color:var(--accent);">+</span></div>
-      <p style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Pour aller plus loin avec ta compagne de routine, sans limite 🌸</p>
-      <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;color:var(--ink-soft);line-height:1.5;">
-        <div>💬 Léa <b>illimitée</b> (chat sans limite quotidienne)</div>
-        <div>📸 Observations photo <b>illimitées</b> + courbe d'éclat</div>
-        <div>💌 La lettre du mois &nbsp;·&nbsp; 🧖 Rituel guidé</div>
-        <div>🎞️ Timelapse &nbsp;·&nbsp; 📊 Tes découvertes &nbsp;·&nbsp; 📄 Carnet PDF</div>
-        <div>🏷️ Scanner code-barres &nbsp;·&nbsp; 🎨 Thèmes & plantes exclusifs</div>
+      <p id="plus-reason" style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Pour aller plus loin avec ta compagne de routine, sans limite 🌸</p>
+
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:18px;">
+        <div>💬 <b>Léa illimitée</b> — pose-lui toutes tes questions</div>
+        <div>📸 <b>Analyse de tes photos</b> par Léa</div>
+        <div>📊 <b>Tes découvertes</b> — ce que tes données racontent</div>
+        <div>🎞️ <b>Timelapse</b> — ton évolution en accéléré</div>
+        <div>💌 <b>La lettre du mois</b> · 📄 <b>Ton carnet PDF</b></div>
       </div>
-      <div style="text-align:center;margin:18px 0 4px;"><span class="serif" style="font-size:26px;">2,99 €</span><span style="color:var(--muted);font-size:13px;"> /mois</span> &nbsp;<span style="color:var(--muted);font-size:12px;">ou 19,99 €/an · offre de lancement 🌱</span></div>
-      <div style="text-align:center;font-size:12px;color:var(--accent-deep);font-weight:600;margin-bottom:14px;">✨ 1er mois offert</div>
-      <button class="btn btn-accent" onclick="showToast('Abonnement bientôt disponible 🌸')">Essayer 1 mois gratuit</button>
-      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closePlusSheet()">Plus tard</button>
-      <p style="color:var(--muted);font-size:10.5px;text-align:center;margin-top:12px;line-height:1.4;">Pendant la bêta, tout est encore débloqué pour tout le monde 💛</p>
+
+      <div class="plus-plans">
+        <button class="plus-plan plus-buy" id="plus-buy-an" onclick="startCheckout('an')">
+          <span class="pp-badge">2 mois offerts</span>
+          <span class="pp-price">29 €</span>
+          <span class="pp-per">par an</span>
+          <span class="pp-eq">soit 2,42 €/mois</span>
+        </button>
+        <button class="plus-plan plus-buy" id="plus-buy-mois" onclick="startCheckout('mois')">
+          <span class="pp-price">3,99 €</span>
+          <span class="pp-per">par mois</span>
+          <span class="pp-eq">sans engagement</span>
+        </button>
+      </div>
+
+      <p style="text-align:center;font-size:11px;color:var(--muted);margin:14px 0 8px;line-height:1.5;">
+        Paiement sécurisé par Stripe · résiliable à tout moment 🌸
+      </p>
+      <button class="btn btn-ghost" onclick="closePlusSheet()">Plus tard</button>
     </div>
   </div>
 
@@ -2017,6 +2092,76 @@
     location.reload();
   }
 
+  // ═══════════ Rituel+ (abonnement Stripe) ═══════════
+  function refreshPremiumUI(){
+    // Carte de vente dans le profil : cachée si déjà abonnée
+    const card=document.querySelector('.premium-card');
+    if(card) card.style.display = isPremium ? 'none' : '';
+    const gere=document.getElementById('premium-manage');
+    if(gere) gere.style.display = isPremium ? '' : 'none';
+    // Badges "PLUS" : inutiles une fois abonnée
+    document.querySelectorAll('.plus-pill').forEach(b=>{ b.style.display = isPremium ? 'none' : ''; });
+  }
+
+  // Porte d'entrée unique : renvoie true si l'accès est autorisé, sinon ouvre le paywall
+  function requirePlus(raison){
+    if(isPremium) return true;
+    openPlusSheet(raison);
+    return false;
+  }
+
+  async function startCheckout(plan){
+    if(!currentUser){ showToast('Connecte-toi d\'abord 🌸'); return; }
+    const btns=document.querySelectorAll('.plus-buy');
+    btns.forEach(b=>{ b.disabled=true; });
+    const old=document.getElementById('plus-buy-mois');
+    try{
+      const { data:{ session } } = await sb.auth.getSession();
+      if(!session){ showToast('Reconnecte-toi 🌸'); btns.forEach(b=>{ b.disabled=false; }); return; }
+      const r=await fetch('/api/checkout',{
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+session.access_token },
+        body: JSON.stringify({ plan })
+      });
+      const d=await r.json();
+      if(d && d.url){ window.location.href = d.url; return; }
+      showToast(d && d.error ? d.error : 'Paiement indisponible pour le moment 🌸');
+    }catch(e){
+      showToast('Oups : '+(e.message||'réessaie'));
+    }
+    btns.forEach(b=>{ b.disabled=false; });
+  }
+
+  async function openBillingPortal(){
+    if(!currentUser) return;
+    try{
+      const { data:{ session } } = await sb.auth.getSession();
+      const r=await fetch('/api/portal',{ method:'POST', headers:{ 'Authorization':'Bearer '+session.access_token } });
+      const d=await r.json();
+      if(d && d.url){ window.location.href=d.url; return; }
+      showToast(d && d.error ? d.error : 'Indisponible pour le moment');
+    }catch(e){ showToast('Oups : '+(e.message||'réessaie')); }
+  }
+
+  // Retour depuis la page de paiement Stripe
+  async function checkPaymentReturn(){
+    const p=new URLSearchParams(location.search);
+    const r=p.get('paiement');
+    if(!r) return;
+    history.replaceState({}, '', location.pathname);
+    if(r==='ok'){
+      showToast('Bienvenue dans Rituel+ 🌸');
+      // Le webhook Stripe peut mettre quelques secondes : on rafraîchit le profil
+      for(let i=0;i<5;i++){
+        await new Promise(res=>setTimeout(res, 1200));
+        const prof=await loadProfile();
+        if(prof && prof.is_premium){ applyProfile(prof); break; }
+      }
+    } else if(r==='annule'){
+      showToast('Paiement annulé · tu peux réessayer quand tu veux 🌸');
+    }
+  }
+
   // ===== Profil (table profiles) =====
   async function loadProfile(){
     if(!currentUser) return null;
@@ -2025,6 +2170,8 @@
   }
   function applyProfile(p){
     if(!p) return;
+    isPremium = !!p.is_premium;
+    refreshPremiumUI();
     if(p.prenom) state.name = p.prenom;
     if(p.type_peau) state.skinType = p.type_peau;
     if(p.objectifs){ try{ const o=JSON.parse(p.objectifs); if(Array.isArray(o)){ state.concerns=o; } else { state.concerns=o.concerns||[]; state.goal=o.goal||null; state.age=o.age||null; } }catch(e){ state.concerns=[]; } }
@@ -2160,6 +2307,7 @@
     updateBellDot();
     startReminderScheduler();
     initLeaBubble();
+    checkPaymentReturn();
   }
 
   function updateUserUI(){
@@ -2406,8 +2554,9 @@
     currentPeriod = p;
     document.getElementById('pb-matin').classList.toggle('active', p==='matin');
     document.getElementById('pb-soir').classList.toggle('active', p==='soir');
-    var eb=document.getElementById('rph-eyebrow');
-    if(eb) eb.textContent = p==='soir' ? 'Ton moment du soir' : 'Ton moment du matin';
+    const em=document.getElementById('hr-emoji'), ti=document.getElementById('hr-title');
+    if(em){ em.textContent = p==='soir' ? '🌙' : '☀️'; em.classList.toggle('soir', p==='soir'); }
+    if(ti) ti.textContent = p==='soir' ? 'Routine du soir' : 'Routine du matin';
     document.getElementById('routine-matin').classList.toggle('hidden', p!=='matin');
     document.getElementById('routine-soir').classList.toggle('hidden', p!=='soir');
     updateRoutineCount();
@@ -2420,16 +2569,31 @@
   }
   function updateRoutineCount(){
     const s=listStats(currentPeriod);
+    const fill=document.getElementById('hr-bar-fill');
+    const sub=document.getElementById('hr-sub');
+    const pct = s.total ? Math.round((s.done/s.total)*100) : 0;
+    if(fill) fill.style.width = pct+'%';
+    if(sub){
+      if(!s.total) sub.textContent = 'Aucune étape pour l\'instant';
+      else if(s.complete) sub.textContent = 'Terminé, bravo 🌸';
+      else sub.textContent = s.done+' sur '+s.total+(s.done===0?' · c\'est parti 🌸':' · continue 🌿');
+    }
   }
   async function toggleRoutine(el){
     el.classList.toggle('done');
-    el.querySelector('.routine-time').textContent = el.classList.contains('done')
-      ? new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '…';
     const list = el.closest('.routine-list');
     const period = (list && list.id==='routine-soir') ? 'soir' : 'matin';
+    if(navigator.vibrate) navigator.vibrate(10);
     updateRoutineCount();
+    // Mémoriser les étapes cochées de ce créneau
+    const doneIds = [...list.querySelectorAll('.routine-item.done')].map(x=>x.dataset.pid).filter(Boolean);
+    window.__homeSteps = window.__homeSteps || { matin:[], soir:[] };
+    window.__homeSteps[period] = doneIds;
     const complete = listStats(period).complete;
-    await updateTodayEntry(period==='soir' ? { routine_soir: complete } : { routine_matin: complete });
+    const fields = period==='soir' ? { routine_soir: complete } : { routine_matin: complete };
+    fields.steps = { matin: window.__homeSteps.matin||[], soir: window.__homeSteps.soir||[] };
+    try{ await updateTodayEntry(fields); }
+    catch(e){ await updateTodayEntry(period==='soir' ? { routine_soir: complete } : { routine_matin: complete }); }
     bustStreak();
     renderStreak();
   }
@@ -2770,7 +2934,7 @@
     const homeSec=document.getElementById('home-rituel-section');
     if(homeSec) homeSec.style.display='block';
     const emptyEl=document.getElementById('home-rituel-empty');
-    const partEls=[homeSec?homeSec.querySelector('.period-switch'):null, document.getElementById('routine-matin'), document.getElementById('routine-soir')];
+    const partEls=[document.getElementById('hr-card')];
     if(!rituels.length){
       if(emptyEl) emptyEl.style.display='block';
       partEls.forEach(el=>{ if(el) el.style.display='none'; });
@@ -2786,15 +2950,17 @@
     const hasS = !!act.soir;
     const chooseBtn=document.getElementById('rituel-choose-btn');
     if(chooseBtn) chooseBtn.style.display = rituels.length>1 ? 'inline-block' : 'none';
-    const swEl = homeSec ? homeSec.querySelector('.period-switch') : null;
-    if(swEl){
-      swEl.style.display='flex';
-      swEl.querySelectorAll('.period-btn').forEach(b=>{
-        const isM=(b.getAttribute('onclick')||'').includes("'matin'");
-        b.style.display = (isM ? hasM : hasS) ? '' : 'none';
-      });
-    }
-    switchPeriod(hasM ? 'matin' : 'soir');
+    // Le sélecteur ☀️/🌙 n'a de sens que si les deux créneaux existent
+    const swEl = homeSec ? homeSec.querySelector('.hr-switch') : null;
+    if(swEl) swEl.style.display = (hasM && hasS) ? 'flex' : 'none';
+    // Créneau par défaut selon l'heure : le soir à partir de 17h
+    const _h = new Date().getHours();
+    const _prefSoir = _h >= 17;
+    let _p = 'matin';
+    if(_prefSoir && hasS) _p='soir';
+    else if(hasM) _p='matin';
+    else if(hasS) _p='soir';
+    switchPeriod(_p);
     try{
       const gi2=document.getElementById('greet-invite');
       if(gi2){
@@ -2809,6 +2975,13 @@
     }catch(e){}
     const { data: prods } = await sb.from('products').select('id,nom,effets,emoji,categorie').eq('user_id', currentUser.id);
     const pmap={}; (prods||[]).forEach(p=>{ pmap[p.id]=p; });
+    // Étapes déjà cochées aujourd'hui (mémorisées en base)
+    window.__homeSteps = { matin:[], soir:[] };
+    try{
+      const { data: te } = await sb.from('entries').select('steps').eq('user_id', currentUser.id).eq('date', todayStr()).limit(1);
+      const st = (te && te.length && te[0].steps) ? te[0].steps : null;
+      if(st){ window.__homeSteps = { matin: Array.isArray(st.matin)?st.matin:[], soir: Array.isArray(st.soir)?st.soir:[] }; }
+    }catch(e){}
     for(const moment of ['matin','soir']){
       const list = document.getElementById('routine-'+moment);
       const src = act[moment];
@@ -2818,7 +2991,16 @@
       if(!items.length){
         list.innerHTML = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;">Rien pour le ${moment==='soir'?'soir':'matin'} pour l'instant.<br><button class="btn-soft" style="padding:7px 14px;font-size:11.5px;margin-top:8px;" onclick="navTo('ritual')">Complète-le dans l'onglet Rituel →</button></div>`;
       } else {
-        list.innerHTML = items.map(p=>`<div class="routine-item" onclick="toggleRoutine(this)"><div class="routine-check"></div><div class="routine-info"><div class="routine-name">${escapeHtml(p.nom||'')}</div>${p.effets?`<div class="routine-product">${escapeHtml(p.effets)}</div>`:''}</div><div class="routine-time">…</div></div>`).join('');
+        const doneIds = (window.__homeSteps && window.__homeSteps[moment]) || [];
+        list.innerHTML = items.map((p,i)=>{
+          const parts=(p.nom||'').split(' · ');
+          const isDone = doneIds.indexOf(p.id)>=0;
+          return `<div class="routine-item${isDone?' done':''}" data-pid="${p.id}" onclick="toggleRoutine(this)">`+
+            `<div class="routine-thumb"><span class="n">${i+1}</span>${p.emoji||'🧴'}</div>`+
+            `<div class="routine-info"><div class="routine-name">${escapeHtml(parts[0]||'')}</div>`+
+            `${parts[1]?`<div class="routine-product">${escapeHtml(parts[1])}</div>`:(p.effets?`<div class="routine-product">${escapeHtml(p.effets)}</div>`:'')}</div>`+
+            `<div class="routine-check"></div></div>`;
+        }).join('');
       }
     }
   }
@@ -4204,9 +4386,13 @@
 
   // ===== Limite IA bêta : message doux + bandeau =====
   function leaLimitMsg(){
-    return "Je dois faire une petite pause pour aujourd'hui 🌸\n\nRituel est en bêta et gratuit pour le moment. Pour garder l'app accessible, l'IA est limitée à 15 échanges par jour le temps du lancement. On se retrouve demain ! (Plus tard, une version Rituel+ lèvera cette limite.)";
+    return "Je dois faire une petite pause pour aujourd'hui 🌸\n\nLéa est offerte à raison de 5 échanges par jour. Avec Rituel+, elle devient illimitée 🌸";
   }
-  function showLimitToast(){ showToast("Limite du jour atteinte · l'IA revient demain 🌸"); }
+  function showLimitToast(){
+    if(isPremium){ showToast("Oups, réessaie dans un instant 🌸"); return; }
+    showToast("Tes 5 échanges du jour sont utilisés 🌸");
+    setTimeout(()=>openPlusSheet('Léa illimitée avec Rituel+ 💬'), 900);
+  }
 
   // ===== Chat · vraie Léa via le backend sécurisé (/api/lea) =====
   function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -4446,6 +4632,7 @@
   }
   function acceptPhotoConsent(){ try{ localStorage.setItem('rituel_photo_consent_'+currentUser.id,'oui'); }catch(e){} askLeaPhoto(); }
   async function askLeaPhoto(){
+    if(!requirePlus('Léa analyse ta photo et te dit ce qu\'elle observe sur ta peau 📸')) return;
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
     const box=document.getElementById('lea-photo-result'); if(!box) return;
     box.style.display='block';
@@ -4510,6 +4697,7 @@
   function loadScript(src){ return new Promise((res,rej)=>{ if(document.querySelector('script[data-src="'+src+'"]')){res();return;} const s=document.createElement('script'); s.src=src; s.setAttribute('data-src',src); s.onload=()=>res(); s.onerror=()=>rej(new Error('load fail')); document.head.appendChild(s); }); }
   async function photoToDataURL(path){ try{ const url=await signedPhoto(path); if(!url) return null; const resp=await fetch(url); const blob=await resp.blob(); return await new Promise(r=>{ const fr=new FileReader(); fr.onloadend=()=>r(String(fr.result)); fr.readAsDataURL(blob); }); }catch(e){ return null; } }
   async function exportCarnetPDF(){
+    if(!requirePlus('Ton carnet de peau, tout beau, à garder ou imprimer 📄')) return;
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
     showToast('Préparation de ton carnet…');
     try{
@@ -4601,7 +4789,12 @@
     card.style.display='block';
   }
 
-  function openPlusSheet(){ document.getElementById('plus-sheet').classList.add('open'); }
+  function openPlusSheet(raison){
+    const r=document.getElementById('plus-reason');
+    if(r) r.textContent = raison || 'Pour aller plus loin avec ta compagne de routine, sans limite 🌸';
+    document.querySelectorAll('.plus-buy').forEach(b=>{ b.disabled=false; });
+    document.getElementById('plus-sheet').classList.add('open');
+  }
   function closePlusSheet(){ document.getElementById('plus-sheet').classList.remove('open'); }
 
   // ===== Badges & souvenirs (calculés depuis l'historique) =====
@@ -4764,6 +4957,7 @@
     return txt;
   }
   async function openLettre(arch){
+    if(!requirePlus('Ta lettre du mois : le bilan doux de ton parcours 💌')) return;
     const body=document.getElementById('lettre-body');
     document.getElementById('lettre-sheet').classList.add('open');
     if(typeof arch==='string'){ body.innerHTML=formatMessage(arch); return; }
@@ -5012,7 +5206,7 @@
       const reg=await navigator.serviceWorker.ready;
       const s=await reg.pushManager.getSubscription();
       b.textContent = s ? 'Désactiver les notifications' : 'Activer les notifications';
-      if(st) st.textContent = s ? 'Activées ✓ · rappels vers 8h30 et 20h30 🌸' : '';
+      if(st) st.textContent = s ? 'Activées ✓ · aux jours et heures de tes rituels 🌸' : '';
     }catch(e){}
   }
   async function togglePush(){
@@ -5031,7 +5225,7 @@
       if(!d || !d.publicKey){ showToast('Push pas encore configuré côté serveur 🔧'); return; }
       sub=await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlB64ToU8(d.publicKey) });
       const j=sub.toJSON();
-      await fetch('/api/push',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'subscribe', endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, user_id: currentUser?currentUser.id:null }) });
+      await fetch('/api/push',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'subscribe', endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, user_id: currentUser?currentUser.id:null, tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || null) }) });
       showToast('Notifications activées 🔔'); refreshPushBtn();
     }catch(e){ showToast('Oups : '+(e.message||'réessaie')); }
   }
@@ -5248,6 +5442,7 @@
   let tlPhotos=[], tlIdx=0, tlTimer=null, tlPlaying=false;
   function fmtDateLong(ds){ try{ const d=new Date(ds+'T00:00:00'); const M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']; return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear(); }catch(e){ return ds; } }
   async function openTimelapse(){
+    if(!requirePlus('Revois toute ton évolution en accéléré, jour après jour 🎞️')) return;
     if(!currentUser) return;
     showToast('Chargement de ton évolution…');
     const { data } = await sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).order('date',{ascending:true});
@@ -5314,6 +5509,7 @@
 
   // ===== Tes découvertes (corrélations douces, jamais culpabilisantes) =====
   async function loadInsights(){
+    if(!isPremium){ const s=document.getElementById('insights-section'); if(s) s.style.display='none'; return; }
     const sec=document.getElementById('insights-section'); if(!sec) return;
     sec.style.display='none';
     if(!currentUser) return;
@@ -5491,8 +5687,46 @@
       '</svg>';
   }
 
-    async function loadJournalFromDB(){
+  async function loadSuiviAccroche(){
+    const host=document.getElementById('suivi-accroche'); if(!host) return;
+    if(!currentUser){ host.style.display='none'; return; }
+    const since=new Date(); since.setDate(since.getDate()-13);
+    let es=[];
+    try{
+      const { data } = await sb.from('entries').select('date,score_peau').eq('user_id',currentUser.id).gte('date',since.toISOString().slice(0,10)).order('date',{ascending:true});
+      es=data||[];
+    }catch(e){ es=[]; }
+    const byDate={}; es.forEach(e=>{ if(e.score_peau!=null) byDate[e.date]=Number(e.score_peau); });
+    const vals=Object.keys(byDate).sort().map(k=>byDate[k]);
+    if(vals.length<2){ host.style.display='none'; return; }
+    const first=vals[0], last=vals[vals.length-1], delta=last-first;
+    let phrase, emoji;
+    if(delta>=5){ phrase='Ta peau progresse joliment'; emoji='🌿'; }
+    else if(delta>=0){ phrase='Ta peau reste stable, continue'; emoji='🌸'; }
+    else { phrase='Chaque jour compte, garde le rythme'; emoji='💧'; }
+    const max=Math.max(...vals), min=Math.min(...vals), range=(max-min)||1;
+    const W=300,H=54, step=W/(vals.length-1);
+    let d='';
+    vals.forEach((v,i)=>{ const x=i*step, y=H-4-((v-min)/range)*(H-8); d+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1)+' '; });
+    const area='M0,'+H+' '+d.replace(/^M/,'L')+' L'+W+','+H+' Z';
+    host.innerHTML =
+      '<div style="background:linear-gradient(150deg,#FFFEFB,#FAF3EA);border-radius:20px;padding:16px 18px;box-shadow:0 12px 30px rgba(46,33,28,0.08);">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'+
+          '<div style="display:flex;align-items:center;gap:9px;"><span style="font-size:22px;">'+emoji+'</span><span style="font-family:var(--serif);font-size:16px;color:var(--ink);">'+phrase+'</span></div>'+
+          (delta!==0?'<span style="font-size:12px;font-weight:600;color:'+(delta>0?'#3E7A4E':'var(--accent)')+';">'+(delta>0?'+':'')+delta+'</span>':'')+
+        '</div>'+
+        '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;overflow:visible;">'+
+          '<path d="'+area+'" fill="var(--blush-soft)" opacity="0.5"/>'+
+          '<path d="'+d+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+
+          '<circle cx="'+((vals.length-1)*step).toFixed(1)+'" cy="'+(H-4-((last-min)/range)*(H-8)).toFixed(1)+'" r="4" fill="var(--accent)"/>'+
+        '</svg>'+
+      '</div>';
+    host.style.display='block';
+  }
+
+      async function loadJournalFromDB(){
     const grid=document.getElementById('journal-grid'); if(!grid) return;
+    loadSuiviAccroche();
     loadOverview();
     loadWeekRecap();
     loadMemory();
