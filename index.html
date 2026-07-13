@@ -814,6 +814,9 @@
   .chat-locked-note.show > div { font-size:12px; color:var(--muted); line-height:1.4; margin-bottom:9px; }
   .chat-plus-btn { display:block; width:100%; padding:11px 14px; border-radius:14px; border:none; background:var(--accent); color:#fff; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; box-shadow:0 6px 16px rgba(201,90,63,0.28); }
   .chat-plus-btn:active { transform:scale(.985); }
+  /* ═══ Rituel+ : bloc de gestion ═══ */
+  .pm-btn { display:block; width:100%; margin-top:12px; padding:12px 14px; border-radius:14px; border:1px solid var(--line); background:var(--surface-warm); color:var(--ink); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:transform .12s; }
+  .pm-btn:active { transform:scale(.985); }
 </style>
 </head>
 <body class="no-select">
@@ -1333,18 +1336,16 @@
       <div class="profile-badges" id="profile-badges"></div>
     </div>
 
-      <div id="premium-manage" style="display:none;margin:0 20px 16px;background:var(--surface);border-radius:20px;padding:16px 18px;box-shadow:0 10px 26px rgba(46,33,28,0.06);">
+      <div id="premium-manage" style="display:none;margin:0 20px 16px;background:var(--surface);border-radius:20px;padding:16px 18px 14px;box-shadow:0 10px 26px rgba(46,33,28,0.06);">
         <div style="display:flex;align-items:center;gap:11px;">
           <span style="width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,#F8D9AE,#F3C393);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🌸</span>
           <div style="flex:1;min-width:0;">
-            <div style="font-size:14.5px;font-weight:600;color:var(--ink);">Rituel+ actif</div>
-            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;" id="premium-renew">Merci de faire vivre Rituel 💛</div>
+            <div style="font-size:14.5px;font-weight:600;color:var(--ink);" id="premium-title">Rituel+ actif</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;" id="premium-renew">—</div>
           </div>
         </div>
-        <button class="btn btn-ghost" style="margin-top:12px;" onclick="openBillingPortal()">Gérer ou annuler mon abonnement</button>
-        <div style="font-size:10.5px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.45;">
-          Tu gardes l'accès jusqu'à la fin de la période déjà payée 🌸
-        </div>
+        <div id="premium-note" style="font-size:11.5px;color:var(--ink-soft);background:var(--surface-warm);border-radius:12px;padding:10px 12px;margin-top:12px;line-height:1.45;">—</div>
+        <button class="pm-btn" onclick="openBillingPortal()" id="premium-btn">Gérer mon abonnement</button>
       </div>
     <div class="premium-card" onclick="openPlusSheet()">
       <div class="premium-eyebrow">RITUEL+</div>
@@ -1377,7 +1378,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2118,14 +2119,25 @@
     if(card) card.style.display = isPremium ? 'none' : '';
     const gere=document.getElementById('premium-manage');
     if(gere) gere.style.display = isPremium ? '' : 'none';
-    // Date du prochain renouvellement
+    // Statut lisible : renouvellement prévu, ou abonnement annulé
     const rn=document.getElementById('premium-renew');
+    const ti=document.getElementById('premium-title');
+    const nt=document.getElementById('premium-note');
+    const bt=document.getElementById('premium-btn');
     if(rn && isPremium){
-      if(premiumUntil){
-        const d=new Date(premiumUntil);
-        rn.textContent = 'Renouvellement automatique le '+d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
+      const dateTxt = premiumUntil
+        ? new Date(premiumUntil).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})
+        : null;
+      if(premiumCancel){
+        if(ti) ti.textContent = 'Rituel+ · annulé';
+        rn.textContent = dateTxt ? ('Se termine le '+dateTxt) : 'Se termine à la fin de la période';
+        if(nt) nt.innerHTML = 'Ton abonnement ne sera <b>pas renouvelé</b>. Tu gardes tout jusqu\'à cette date 🌸';
+        if(bt) bt.textContent = 'Réactiver mon abonnement';
       } else {
-        rn.textContent = 'Renouvellement automatique · sans engagement';
+        if(ti) ti.textContent = 'Rituel+ actif';
+        rn.textContent = dateTxt ? ('Prochain paiement le '+dateTxt) : 'Renouvellement automatique';
+        if(nt) nt.innerHTML = 'Renouvellement automatique. Si tu annules, tu gardes l\'accès jusqu\'à la fin de la période déjà payée 🌸';
+        if(bt) bt.textContent = 'Gérer ou annuler mon abonnement';
       }
     }
     // Badges "PLUS" : inutiles une fois abonnée
@@ -2211,6 +2223,7 @@
     if(!p) return;
     isPremium = !!p.is_premium;
     premiumUntil = p.premium_until || null;
+    premiumCancel = !!p.premium_cancel;
     refreshPremiumUI();
     if(p.prenom) state.name = p.prenom;
     if(p.type_peau) state.skinType = p.type_peau;
@@ -3224,7 +3237,8 @@
   let rpForceWelcome = false;
   let rpSlotView = null;  // 'matin' | 'soir' | 'hebdo' : sous-vue d'un créneau  // afficher l'écran d'accueil de création même avec des rituels
   let isPremium = false;
-  let premiumUntil = null;  // activable plus tard avec le paiement
+  let premiumUntil = null;
+  let premiumCancel = false;  // activable plus tard avec le paiement
       let productSort = 'fav';  // 'fav', 'alpha', 'perem'
   function setProductSort(s){
     productSort = s;
