@@ -1338,10 +1338,13 @@
           <span style="width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,#F8D9AE,#F3C393);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🌸</span>
           <div style="flex:1;min-width:0;">
             <div style="font-size:14.5px;font-weight:600;color:var(--ink);">Rituel+ actif</div>
-            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">Merci de faire vivre Rituel 💛</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;" id="premium-renew">Merci de faire vivre Rituel 💛</div>
           </div>
         </div>
-        <button class="btn btn-ghost" style="margin-top:12px;" onclick="openBillingPortal()">Gérer mon abonnement</button>
+        <button class="btn btn-ghost" style="margin-top:12px;" onclick="openBillingPortal()">Gérer ou annuler mon abonnement</button>
+        <div style="font-size:10.5px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.45;">
+          Tu gardes l'accès jusqu'à la fin de la période déjà payée 🌸
+        </div>
       </div>
     <div class="premium-card" onclick="openPlusSheet()">
       <div class="premium-eyebrow">RITUEL+</div>
@@ -1374,7 +1377,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1537,7 +1540,8 @@
       </div>
 
       <p style="text-align:center;font-size:11px;color:var(--muted);margin:14px 0 8px;line-height:1.5;">
-        Paiement sécurisé par Stripe · résiliable à tout moment 🌸
+        Renouvellement automatique · <b>annulable à tout moment</b> depuis ton profil<br>
+        Paiement sécurisé par Stripe 🌸
       </p>
       <button class="btn btn-ghost" onclick="closePlusSheet()">Plus tard</button>
     </div>
@@ -2114,6 +2118,16 @@
     if(card) card.style.display = isPremium ? 'none' : '';
     const gere=document.getElementById('premium-manage');
     if(gere) gere.style.display = isPremium ? '' : 'none';
+    // Date du prochain renouvellement
+    const rn=document.getElementById('premium-renew');
+    if(rn && isPremium){
+      if(premiumUntil){
+        const d=new Date(premiumUntil);
+        rn.textContent = 'Renouvellement automatique le '+d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
+      } else {
+        rn.textContent = 'Renouvellement automatique · sans engagement';
+      }
+    }
     // Badges "PLUS" : inutiles une fois abonnée
     document.querySelectorAll('.plus-pill').forEach(b=>{ b.style.display = isPremium ? 'none' : ''; });
   }
@@ -2154,7 +2168,7 @@
       const r=await fetch('/api/portal',{ method:'POST', headers:{ 'Authorization':'Bearer '+session.access_token } });
       const d=await r.json();
       if(d && d.url){ window.location.href=d.url; return; }
-      showToast(d && d.error ? d.error : 'Indisponible pour le moment');
+      showToast(d && d.error ? d.error : 'Indisponible pour le moment 🌸');
     }catch(e){ showToast('Oups : '+(e.message||'réessaie')); }
   }
 
@@ -2196,6 +2210,7 @@
   function applyProfile(p){
     if(!p) return;
     isPremium = !!p.is_premium;
+    premiumUntil = p.premium_until || null;
     refreshPremiumUI();
     if(p.prenom) state.name = p.prenom;
     if(p.type_peau) state.skinType = p.type_peau;
@@ -3207,7 +3222,8 @@
 
   let rpForceWelcome = false;
   let rpSlotView = null;  // 'matin' | 'soir' | 'hebdo' : sous-vue d'un créneau  // afficher l'écran d'accueil de création même avec des rituels
-  let isPremium = false;  // activable plus tard avec le paiement
+  let isPremium = false;
+  let premiumUntil = null;  // activable plus tard avec le paiement
       let productSort = 'fav';  // 'fav', 'alpha', 'perem'
   function setProductSort(s){
     productSort = s;
