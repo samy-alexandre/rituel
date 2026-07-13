@@ -489,7 +489,7 @@
   .journal-cell.empty::after { content: '🌸'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; opacity: 0.4; }
   .journal-cell:active { transform: scale(0.95); }
   .journal-cell.empty { background: var(--surface-warm); border: 1px dashed var(--line); }
-  .journal-cell .skin-render { width: 100%; height: 100%; }
+  .journal-cell 
   .journal-cell-date { position: absolute; top: 6px; left: 8px; font-size: 10px; color: white; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.4); letter-spacing: 0.05em; }
   .journal-cell.empty .journal-cell-date { color: var(--muted); text-shadow: none; }
   .journal-cell-dot { position: absolute; bottom: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; }
@@ -570,9 +570,9 @@
   .nav-item svg { width: 22px; height: 22px; }
   .nav-label { font-size: 10px; letter-spacing: 0.03em; font-weight: 500; }
 
-  .skin-render { position: relative; overflow: hidden; }
-  .skin-render::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.5), transparent 50%); }
-  .skin-render::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 25% 35%, rgba(142,60,38,0.22) 2px, transparent 3px), radial-gradient(circle at 62% 52%, rgba(142,60,38,0.18) 1px, transparent 2px), radial-gradient(circle at 45% 72%, rgba(142,60,38,0.16) 2px, transparent 3px); }
+  
+  
+  
 
   .hidden { display: none !important; }
   .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-8px); background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 100px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity .3s, transform .3s; max-width: 90%; box-shadow: var(--shadow-lg); pointer-events:none; }
@@ -851,6 +851,15 @@
   .ev-per { display:flex; gap:3px; background:var(--surface-warm); border-radius:16px; padding:3px; flex-shrink:0; }
   .ev-p { border:none; background:transparent; padding:5px 9px; border-radius:13px; font-family:inherit; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap; transition:all .15s; }
   .ev-p.sel { background:var(--surface); color:var(--accent); box-shadow:0 2px 6px rgba(46,33,28,0.10); }
+  /* ═══ Suivi : grille photos ═══ */
+  .journal-cell.add { display:flex; align-items:center; justify-content:center; background:transparent; border:1.5px dashed var(--line); box-shadow:none; }
+  .journal-cell.add span { font-size:26px; color:var(--accent); opacity:.65; line-height:1; }
+  .jr-empty { grid-column:1 / -1; background:var(--surface); border-radius:20px; padding:26px 22px 20px; text-align:center; box-shadow:0 10px 26px rgba(46,33,28,0.06); }
+  .jr-empty-ico { width:56px; height:56px; border-radius:50%; margin:0 auto 13px; background:radial-gradient(circle at 34% 30%, #FBE7D2, #F4D7C4 74%); display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 8px 20px rgba(201,90,63,0.14); }
+  .jr-empty-title { font-family:var(--serif); font-size:18px; color:var(--ink); }
+  .jr-empty-sub { font-size:12px; color:var(--muted); margin:7px 0 16px; line-height:1.55; }
+  .jr-empty-btn { width:100%; padding:12px 16px; border-radius:15px; border:none; background:var(--accent); color:#fff; font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 8px 20px rgba(201,90,63,0.24); }
+  .jr-empty-btn:active { transform:scale(.985); }
 </style>
 </head>
 <body class="no-select">
@@ -1429,7 +1438,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.8<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -4729,16 +4738,10 @@
   // ===== Journal =====
   function renderJournal(){
     const grid=document.getElementById('journal-grid'); if(!grid) return;
-    const today=new Date().getDate();
-    const tones=['linear-gradient(135deg,#F5D5BC,#C97A52)','linear-gradient(135deg,#E8C9A8,#A66C42)','linear-gradient(135deg,#F0D8B8,#D89460)','linear-gradient(135deg,#EDC8A8,#B07050)','linear-gradient(135deg,#F5D8C0,#C8825A)'];
-    const dots=['var(--sage)','var(--accent)','var(--gold)','var(--sage)','var(--accent)','var(--sage)','var(--sage)','var(--accent)','var(--sage)','var(--gold)','var(--sage)','var(--sage)','var(--sage)','var(--sage)'];
-    let html='';
-    for(let i=today;i>=1;i--){
-      if(i>today-14){ const tone=tones[i%tones.length], dot=dots[(today-i)%dots.length];
-        html+=`<div class="journal-cell" onclick="openEntry(${i})"><div class="skin-render" style="background:${tone};"></div><div class="journal-cell-date">${i}</div><div class="journal-cell-dot" style="background:${dot};"></div></div>`;
-      } else html+=`<div class="journal-cell empty"><div class="journal-cell-date">${i}</div></div>`;
-    }
-    grid.innerHTML=html;
+    grid.innerHTML = '<div class="jr-empty"><div class="jr-empty-ico">📷</div>'+
+      '<div class="jr-empty-title">Ta première photo</div>'+
+      '<div class="jr-empty-sub">Prends-la en lumière naturelle. Dans quelques semaines,<br>tu verras le chemin parcouru 🌸</div>'+
+      '<button class="jr-empty-btn" onclick="openPhotoChoice()">Ajouter une photo</button></div>';
   }
   function openEntry(day){ showToast(`Entrée du ${day} · vue détaillée bientôt`); }
 
@@ -5960,20 +5963,31 @@
     if(!currentUser){ renderJournal(); return; }
     const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(30);
     if(!data || !data.length){ renderJournal(); return; }
+    // On ne montre QUE les vraies photos : pas de fausses vignettes de peau.
     let html='';
+    let nbPhotos=0;
     for(const e of data){
       const url = await signedPhoto(e.photo_path);
+      if(!url) continue;
+      nbPhotos++;
       const day = e.date ? parseInt(e.date.slice(8,10),10) : '';
       const sc = e.score_peau||0;
       const dot = sc>=80?'var(--sage)':(sc>=70?'var(--gold)':'var(--accent)');
-      if(url){
-        html+=`<div class="journal-cell" onclick="openEntry('${e.date}')"><img src="${url}" style="width:100%;height:100%;object-fit:cover;"><div class="journal-cell-date">${day}</div><div class="journal-cell-dot" style="background:${dot};"></div></div>`;
-      } else {
-        html+=`<div class="journal-cell"><div class="skin-render" style="background:linear-gradient(135deg,#F5D5BC,#C97A52);"></div><div class="journal-cell-date">${day}</div></div>`;
-      }
+      html+=`<div class="journal-cell" onclick="openEntry('${e.date}')"><img src="${url}" alt="Photo du ${day}" style="width:100%;height:100%;object-fit:cover;"><div class="journal-cell-date">${day}</div><div class="journal-cell-dot" style="background:${dot};"></div></div>`;
     }
-    html += '<div class="journal-cell empty add" onclick="openDaySheet()" style="display:flex;align-items:center;justify-content:center;background:transparent;border:1.5px dashed var(--line);box-shadow:none;"><span style="font-size:26px;color:var(--accent);opacity:0.7;">+</span></div>';
-    grid.innerHTML = html; }
+
+    if(!nbPhotos){
+      // Aucune photo encore : une invitation douce, pas une grille vide
+      grid.innerHTML = '<div class="jr-empty"><div class="jr-empty-ico">📷</div>'+
+        '<div class="jr-empty-title">Ta première photo</div>'+
+        '<div class="jr-empty-sub">Prends-la en lumière naturelle. Dans quelques semaines,<br>tu verras le chemin parcouru 🌸</div>'+
+        '<button class="jr-empty-btn" onclick="openPhotoChoice()">Ajouter une photo</button></div>';
+      return;
+    }
+
+    html += '<div class="journal-cell add" onclick="openPhotoChoice()"><span>+</span></div>';
+    grid.innerHTML = html;
+  }
 
   // ===== Calendrier du Journal =====
   const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
