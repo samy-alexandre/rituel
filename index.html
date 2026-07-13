@@ -828,6 +828,25 @@
   /* Compteur discret d'échanges restants */
   .chat-quota { font-size:11px; color:var(--muted); text-align:center; padding:6px 16px 0; }
   #chat-quota { position:fixed; bottom:calc(64px + 66px + env(safe-area-inset-bottom)); left:0; right:0; max-width:480px; margin:0 auto; text-align:center; font-size:11px; color:var(--muted); pointer-events:none; z-index:2; }
+  /* ═══ Série : semainier L M M J V S D ═══ */
+  .plant-card .streak-mini { display:flex; gap:5px; margin-top:11px; }
+  .sk-day { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .sk-l { font-size:9.5px; font-weight:600; color:var(--muted); letter-spacing:.3px; }
+  .sk-p { width:22px; height:22px; border-radius:50%; background:var(--surface-warm); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:transparent; transition:all .2s; }
+  .sk-day.active .sk-p { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .sk-day.futur .sk-p { opacity:.4; }
+  .sk-day.auj .sk-p { box-shadow:0 0 0 2px rgba(201,90,63,0.25); }
+  .sk-day.auj .sk-l { color:var(--accent); }
+  /* Actions compactes */
+  .pc-actions button { flex:1; }
+  .pc-share { flex:0 0 40px !important; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); }
+  /* ═══ Aujourd'hui : aucune routine encore ═══ */
+  .hr-empty { background:var(--surface); border-radius:22px; padding:26px 22px 20px; text-align:center; box-shadow:0 14px 34px rgba(46,33,28,0.08), 0 2px 6px rgba(46,33,28,0.04); }
+  .hr-empty-ico { width:62px; height:62px; border-radius:50%; margin:0 auto 14px; background:radial-gradient(circle at 34% 30%, #FBE7D2, #F4D7C4 74%); display:flex; align-items:center; justify-content:center; font-size:28px; box-shadow:0 10px 24px rgba(201,90,63,0.16); }
+  .hr-empty-title { font-family:var(--serif); font-size:20px; color:var(--ink); }
+  .hr-empty-sub { font-size:12.5px; color:var(--muted); margin:8px 0 18px; line-height:1.55; }
+  .hr-empty-btn { width:100%; padding:13px 16px; border-radius:16px; border:none; background:var(--accent); color:#fff; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 8px 20px rgba(201,90,63,0.26); transition:transform .12s; }
+  .hr-empty-btn:active { transform:scale(.985); }
 </style>
 </head>
 <body class="no-select">
@@ -1067,7 +1086,12 @@
     </div>
       <div class="section" id="home-rituel-section">
       <div id="home-rituel-empty" style="display:none;">
-        <button class="btn-soft" onclick="navTo('ritual')">Créer mon rituel 🌱</button>
+        <div class="hr-empty">
+          <div class="hr-empty-ico">🌸</div>
+          <div class="hr-empty-title">Ta routine t'attend</div>
+          <div class="hr-empty-sub">Compose ta routine du matin ou du soir,<br>et coche tes étapes chaque jour.</div>
+          <button class="hr-empty-btn" onclick="navTo('ritual')">Créer ma routine</button>
+        </div>
       </div>
       <div class="hr-card" id="hr-card">
         <div class="hr-head">
@@ -1101,9 +1125,11 @@
         </div>
       </div>
       <div class="pc-actions">
-        <button id="rest-btn" onclick="takeRestDay()">🧊 Jour de repos</button>
-        <button onclick="openPlantSheet()">🌱 Changer</button>
-        <button onclick="shareStreakImage()">📤 Partager</button>
+        <button id="rest-btn" onclick="takeRestDay()">☁️ Repos</button>
+        <button onclick="openPlantSheet()">🪴 Plante</button>
+        <button onclick="shareStreakImage()" aria-label="Partager" class="pc-share">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        </button>
       </div>
     </div>
 
@@ -1392,7 +1418,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2713,8 +2739,20 @@
     else label.textContent='Tu es rayonnante de constance 🔥';
     const { data } = await sb.from('entries').select('date,routine_matin,routine_soir').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(14);
     const done={}; (data||[]).forEach(e=>{ done[e.date]=dayComplete(e); });
+    // Semainier : lundi → dimanche, avec l'initiale du jour
+    const LETTRES=['D','L','M','M','J','V','S'];
+    const today=new Date();
+    const jour=today.getDay();                  // 0 = dimanche
+    const depuisLundi=(jour===0?6:jour-1);      // recule jusqu'au lundi
     let mini='';
-    for(let i=6;i>=0;i--){ const dd=new Date(); dd.setDate(dd.getDate()-i); const ds=dd.toISOString().slice(0,10); mini+=`<div class="streak-day${done[ds]?' active':''}"></div>`; }
+    for(let i=0;i<7;i++){
+      const dd=new Date(); dd.setDate(dd.getDate()-depuisLundi+i);
+      const ds=dd.toISOString().slice(0,10);
+      const futur = dd > today && ds !== todayStr();
+      const cls = done[ds] ? 'active' : (futur ? 'futur' : '');
+      const auj = (ds===todayStr()) ? ' auj' : '';
+      mini += '<div class="sk-day '+cls+auj+'"><span class="sk-l">'+LETTRES[dd.getDay()]+'</span><span class="sk-p">'+(done[ds]?'✓':'')+'</span></div>';
+    }
     document.getElementById('streak-mini').innerHTML = mini;
     renderPlant(n);
   }
@@ -2969,7 +3007,7 @@
   function updateRestBtn(e){
     const btn=document.getElementById('rest-btn'); if(!btn) return;
     const isRepos = e && e.repos;
-    btn.textContent = isRepos ? '🧊 Jour de repos actif · annuler' : '🧊 Prendre un jour de repos';
+    btn.textContent = isRepos ? '☁️ Repos actif' : '☁️ Repos';
   }
   async function takeRestDay(){
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
@@ -2984,7 +3022,7 @@
       const { data: wk } = await sb.from('entries').select('date').eq('user_id',currentUser.id).eq('repos',true).gte('date',sinceStr).neq('date',today);
       if(wk && wk.length>=1){ showToast('Tu as déjà pris ton jour de repos cette semaine 🌸'); return; }
       await updateTodayEntry({ repos:true });
-      showToast('Jour de repos pris · ta série est protégée 🧊');
+      showToast('Jour de repos pris · ta série est protégée ☁️');
     }
     const { data: d2 } = await sb.from('entries').select('repos').eq('user_id',currentUser.id).eq('date',today).limit(1);
     updateRestBtn((d2&&d2.length)?d2[0]:null);
@@ -4918,7 +4956,7 @@
     { e:'🪻', n:'Premier élan',     c:'3 jours de série',               t:s=>s.best>=3 },
     { e:'🔥', n:'Une semaine',      c:'7 jours de série',               t:s=>s.best>=7 },
     { e:'🌹', n:'Trente jours',     c:'30 jours de série',              t:s=>s.best>=30 },
-    { e:'🧊', n:"L'art du repos",   c:'Prends un jour de repos',        t:s=>s.repos },
+    { e:'☁️', n:"L'art du repos",   c:'Prends un jour de repos',        t:s=>s.repos },
     { e:'🧴', n:'Vanity rempli',    c:'5 produits ajoutés',             t:s=>s.prod>=5 },
     { e:'🌸', n:'Architecte',       c:'Crée ton premier rituel',        t:s=>s.rit>=1 },
     { e:'📔', n:'Fidèle au carnet', c:'7 jours notés',                  t:s=>s.days>=7 },
@@ -5899,7 +5937,7 @@
       const tappable = !isFuture;
       if(tappable) cls+=' has';
       const cam = (e && e.photo_path) ? '<span class="cal-cam">📷</span>' : '';
-      const rest = (e && e.repos) ? '<span class="cal-rest">🧊</span>' : '';
+      const rest = (e && e.repos) ? '<span class="cal-rest">☁️</span>' : '';
       const dot = (hasEntry && !complete) ? '<span class="cal-dot"></span>' : '';
       const oc = tappable ? ` onclick="openDayDetail('${ds}')"` : '';
       html += `<div class="${cls}"${oc}>${cam}${rest}<span>${d}</span>${dot}</div>`;
