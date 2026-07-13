@@ -1377,7 +1377,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2526,6 +2526,7 @@
     window.scrollTo(0,0);
     const bub=document.getElementById('lea-bubble'); if(bub) bub.style.display = (currentUser && screen!=='chat') ? 'flex' : 'none';
     updateFab(screen);
+    if(screen==='profile') refreshPremiumUI();
     if(screen!=='ritual'){ rpForceWelcome=false; rpSlotView=null; }
     else { rpSlotView=null; rpForceWelcome=false; }
     if(currentUser){
