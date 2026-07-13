@@ -48,13 +48,35 @@ async function handler(req, res){
   const KEY = process.env.SUPABASE_SERVICE_ROLE;
   const H   = { 'apikey':KEY, 'Authorization':'Bearer ' + KEY, 'Content-Type':'application/json' };
 
-  // Met a jour le profil, en le retrouvant par user_id ou par client Stripe
+  const diag = [];
+
+  // Met a jour le profil, en le retrouvant par user_id ou par client Stripe.
+  // Renvoie le nombre de lignes reellement modifiees (0 = probleme !).
   async function majProfil(champs, userId, customerId){
     let url = null;
     if (userId)          url = SB + '/rest/v1/profiles?id=eq.' + userId;
     else if (customerId) url = SB + '/rest/v1/profiles?stripe_customer_id=eq.' + encodeURIComponent(customerId);
-    if (!url) return;
-    await fetch(url, { method:'PATCH', headers:H, body: JSON.stringify(champs) });
+    if (!url){ diag.push('AUCUNE CLE : ni user_id dans les metadata, ni customer'); return 0; }
+
+    const r = await fetch(url, {
+      method:'PATCH',
+      headers: Object.assign({}, H, { 'Prefer':'return=representation' }),
+      body: JSON.stringify(champs)
+    });
+    const txt = await r.text();
+    if (!r.ok){
+      diag.push('ECHEC ECRITURE (' + r.status + ') : ' + txt.slice(0, 200));
+      return 0;
+    }
+    let rows = [];
+    try { rows = JSON.parse(txt); } catch(e){}
+    const n = Array.isArray(rows) ? rows.length : 0;
+    if (n === 0){
+      diag.push('AUCUNE LIGNE MODIFIEE : aucun profil ne correspond a ' + (userId ? ('user_id=' + userId) : ('customer=' + customerId)));
+    } else {
+      diag.push('OK : ' + n + ' profil mis a jour (' + JSON.stringify(champs) + ')');
+    }
+    return n;
   }
 
   try{
@@ -91,11 +113,10 @@ async function handler(req, res){
         break;
     }
 
-    return res.status(200).json({ recu:true });
+    return res.status(200).json({ recu:true, type: evt.type, diag: diag });
 
   }catch(e){
-    // On renvoie 200 : sinon Stripe reessaie en boucle sur une erreur de notre cote
-    return res.status(200).json({ recu:true, note:e.message });
+    return res.status(200).json({ recu:true, type: evt.type, erreur: e.message, diag: diag });
   }
 };
 
