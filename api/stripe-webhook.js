@@ -83,26 +83,53 @@ module.exports = async function handler(req, res){
 
     const o = (evt.data && evt.data.object) ? evt.data.object : {};
 
+    // La date de fin de periode : selon les versions de l'API, elle est sur
+    // l'abonnement lui-meme ou sur sa premiere ligne. On regarde les deux.
+    function finDePeriode(sub){
+      let ts = sub.current_period_end;
+      if (!ts && sub.items && Array.isArray(sub.items.data) && sub.items.data.length){
+        ts = sub.items.data[0].current_period_end;
+      }
+      return ts ? new Date(ts * 1000).toISOString() : null;
+    }
+
     switch (evt.type){
 
       case 'checkout.session.completed': {
         const userId = await trouverUserId(o);
-        await majProfil({ is_premium:true, stripe_customer_id: o.customer || null }, userId, o.customer);
+        const champs = { is_premium:true, stripe_customer_id: o.customer || null };
+        // On va chercher l'abonnement pour connaitre la date de renouvellement tout de suite
+        if (o.subscription){
+          const sr = await fetch(STRIPE + '/subscriptions/' + o.subscription, {
+            headers: { 'Authorization': 'Bearer ' + process.env.STRIPE_SECRET_KEY }
+          });
+          if (sr.ok){
+            const sub = await sr.json();
+            champs.premium_until  = finDePeriode(sub);
+            champs.premium_cancel = !!sub.cancel_at_period_end;
+            diag.push('abonnement lu : fin=' + champs.premium_until + ' annule=' + champs.premium_cancel);
+          }
+        }
+        await majProfil(champs, userId, o.customer);
         break;
       }
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const actif = (o.status === 'active' || o.status === 'trialing');
-        const fin = o.current_period_end ? new Date(o.current_period_end * 1000).toISOString() : null;
         const userId = await trouverUserId(o);
-        await majProfil({ is_premium: actif, premium_until: fin, stripe_customer_id: o.customer || null }, userId, o.customer);
+        await majProfil({
+          is_premium: actif,
+          premium_until: finDePeriode(o),
+          premium_cancel: !!o.cancel_at_period_end,
+          stripe_customer_id: o.customer || null
+        }, userId, o.customer);
         break;
       }
 
       case 'customer.subscription.deleted': {
         const userId = await trouverUserId(o);
-        await majProfil({ is_premium:false }, userId, o.customer);
+        await majProfil({ is_premium:false, premium_cancel:false, premium_until:null }, userId, o.customer);
         break;
       }
 
