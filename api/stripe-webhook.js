@@ -4,9 +4,6 @@
 
 const crypto = require('crypto');
 
-// Vercel doit nous donner le corps brut, sinon la signature ne peut pas etre verifiee
-module.exports.config = { api: { bodyParser: false } };
-
 function rawBody(req){
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -35,7 +32,7 @@ function verifie(raw, header, secret){
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-module.exports = async function handler(req, res){
+async function handler(req, res){
   if (req.method !== 'POST') return res.status(405).end();
 
   const raw = await rawBody(req);
@@ -101,3 +98,8 @@ module.exports = async function handler(req, res){
     return res.status(200).json({ recu:true, note:e.message });
   }
 };
+
+module.exports = handler;
+// Vercel doit nous livrer le corps BRUT : sinon la signature Stripe ne peut pas être vérifiée.
+// (Cet export doit venir APRÈS module.exports = handler, sinon il est écrasé.)
+module.exports.config = { api: { bodyParser: false } };
