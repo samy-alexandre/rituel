@@ -93,6 +93,16 @@ module.exports = async function handler(req, res){
       return ts ? new Date(ts * 1000).toISOString() : null;
     }
 
+    // L'abonnement est-il programme pour s'arreter ? Selon les versions de l'API,
+    // Stripe le signale de plusieurs facons : on les regarde toutes.
+    function estAnnule(sub){
+      if (sub.cancel_at_period_end === true) return true;
+      if (sub.cancel_at) return true;                                   // date d'arret programmee
+      if (sub.cancellation_details && sub.cancellation_details.reason) return true;
+      if (sub.status === 'canceled') return true;
+      return false;
+    }
+
     switch (evt.type){
 
       case 'checkout.session.completed': {
@@ -106,8 +116,8 @@ module.exports = async function handler(req, res){
           if (sr.ok){
             const sub = await sr.json();
             champs.premium_until  = finDePeriode(sub);
-            champs.premium_cancel = !!sub.cancel_at_period_end;
-            diag.push('abonnement lu : fin=' + champs.premium_until + ' annule=' + champs.premium_cancel);
+            champs.premium_cancel = estAnnule(sub);
+            diag.push('abonnement lu : fin=' + champs.premium_until + ' annule=' + champs.premium_cancel + ' [cancel_at_period_end=' + sub.cancel_at_period_end + ' cancel_at=' + sub.cancel_at + ' status=' + sub.status + ']');
           }
         }
         await majProfil(champs, userId, o.customer);
@@ -118,10 +128,12 @@ module.exports = async function handler(req, res){
       case 'customer.subscription.updated': {
         const actif = (o.status === 'active' || o.status === 'trialing');
         const userId = await trouverUserId(o);
+        const annule = estAnnule(o);
+        diag.push('statut Stripe : status=' + o.status + ' cancel_at_period_end=' + o.cancel_at_period_end + ' cancel_at=' + o.cancel_at + ' -> annule=' + annule);
         await majProfil({
           is_premium: actif,
           premium_until: finDePeriode(o),
-          premium_cancel: !!o.cancel_at_period_end,
+          premium_cancel: annule,
           stripe_customer_id: o.customer || null
         }, userId, o.customer);
         break;
