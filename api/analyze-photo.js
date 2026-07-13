@@ -14,28 +14,23 @@ export default async function handler(req, res) {
   try {
     if (!image) return res.status(400).json({ error: "Aucune image reçue." });
 
-  // ----- Garde-fou anti-abus (bêta gratuite) : 15 actions IA / jour / personne -----
-  const DAILY_AI_LIMIT = 15;
+  // ----- L'analyse photo est réservée à Rituel+ -----
   if (user_id) {
     try {
       const SB_URL = process.env.SUPABASE_URL;
       const SB_KEY = process.env.SUPABASE_SERVICE_ROLE;
       if (SB_URL && SB_KEY) {
-        const today = new Date().toISOString().slice(0, 10);
         const headers = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
-        // Incrément atomique + lecture du total, via fonction SQL (voir SQL fourni)
-        const rpc = await fetch(SB_URL + '/rest/v1/rpc/bump_ai_usage', {
-          method: 'POST', headers,
-          body: JSON.stringify({ uid: user_id, d: today })
-        });
-        if (rpc.ok) {
-          const total = await rpc.json(); // renvoie le nb d'actions du jour APRES incrément
-          if (typeof total === 'number' && total > DAILY_AI_LIMIT) {
-            return res.status(200).json({ limited: true, observation: null });
+        const pr = await fetch(SB_URL + '/rest/v1/profiles?id=eq.' + user_id + '&select=is_premium', { headers });
+        if (pr.ok) {
+          const rows = await pr.json();
+          const premium = Array.isArray(rows) && rows.length ? !!rows[0].is_premium : false;
+          if (!premium) {
+            return res.status(200).json({ needsPlus: true, observation: null });
           }
         }
       }
-    } catch (e) { /* en cas de souci compteur, on laisse passer pour ne pas casser l'app */ }
+    } catch (e) { /* en cas de souci, on laisse passer plutôt que de casser l'app */ }
   }
 
     const estH = profile.coach === 'homme';
