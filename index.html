@@ -801,6 +801,19 @@
   .pp-price { font-family:var(--serif); font-size:24px; color:var(--ink); line-height:1.1; }
   .pp-per { font-size:11.5px; color:var(--ink-soft); }
   .pp-eq { font-size:10.5px; color:var(--muted); margin-top:3px; }
+  /* ═══ Aujourd'hui : neutraliser l'ancien style de liste (carte dans la carte) ═══ */
+  #home .routine-list { background:transparent !important; border:none !important; box-shadow:none !important; border-radius:0 !important; overflow:visible !important; }
+  #home .routine-item { padding:11px 2px !important; }
+  /* La coche : on annule le chevron dessiné en bordures de l'ancien CSS */
+  #home .routine-check::after { content:'✓' !important; width:auto !important; height:auto !important; border:none !important; transform:scale(.5) !important; color:#fff; font-size:13px; font-weight:700; opacity:0; transition:opacity .2s, transform .2s; }
+  #home .routine-item.done .routine-check::after { opacity:1 !important; transform:scale(1) !important; }
+  #home .routine-item.done .routine-check { background:var(--accent) !important; border-color:var(--accent) !important; }
+  /* ═══ Chat : bandeau de limite atteinte ═══ */
+  .chat-locked-note { display:none !important; }
+  .chat-locked-note.show { display:block !important; text-align:center; padding:10px 16px 4px; }
+  .chat-locked-note.show > div { font-size:12px; color:var(--muted); line-height:1.4; margin-bottom:9px; }
+  .chat-plus-btn { display:block; width:100%; padding:11px 14px; border-radius:14px; border:none; background:var(--accent); color:#fff; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; box-shadow:0 6px 16px rgba(201,90,63,0.28); }
+  .chat-plus-btn:active { transform:scale(.985); }
 </style>
 </head>
 <body class="no-select">
@@ -1269,8 +1282,10 @@
       <textarea class="chat-input" id="chat-input" placeholder="Pose ta question…" rows="1" oninput="resizeChat(this)"></textarea>
       <button class="chat-send" onclick="sendUserMsg()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
-    <div class="chat-locked-note" id="chat-locked-note">Tu as utilisé tes 5 échanges du jour 🌸</div>
-        <button class="btn btn-accent" style="margin-top:10px;" onclick="openPlusSheet('Léa illimitée, pour continuer votre conversation quand tu veux 💬')">Passer à Rituel+ · Léa illimitée</button>
+    <div class="chat-locked-note" id="chat-locked-note">
+          <div>Tu as utilisé tes 5 échanges du jour 🌸</div>
+          <button class="chat-plus-btn" onclick="openPlusSheet('Léa illimitée, pour continuer votre conversation quand tu veux 💬')">Passer à Rituel+ · Léa illimitée</button>
+        </div>
   </div>
 
   <!-- ====================== ROUTINE ====================== -->
@@ -1359,7 +1374,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2144,6 +2159,16 @@
   }
 
   // Retour depuis la page de paiement Stripe
+  // Le statut peut changer hors de l'app (paiement, annulation) : on revérifie au retour
+  document.addEventListener('visibilitychange', async ()=>{
+    if(document.visibilityState==='visible' && currentUser){
+      try{
+        const prof=await loadProfile();
+        if(prof && !!prof.is_premium !== isPremium){ applyProfile(prof); }
+      }catch(e){}
+    }
+  });
+
   async function checkPaymentReturn(){
     const p=new URLSearchParams(location.search);
     const r=p.get('paiement');
@@ -2953,9 +2978,9 @@
     // Le sélecteur ☀️/🌙 n'a de sens que si les deux créneaux existent
     const swEl = homeSec ? homeSec.querySelector('.hr-switch') : null;
     if(swEl) swEl.style.display = (hasM && hasS) ? 'flex' : 'none';
-    // Créneau par défaut selon l'heure : le soir à partir de 17h
+    // Créneau par défaut selon l'heure : le soir à partir de midi
     const _h = new Date().getHours();
-    const _prefSoir = _h >= 17;
+    const _prefSoir = _h >= 12;
     let _p = 'matin';
     if(_prefSoir && hasS) _p='soir';
     else if(hasM) _p='matin';
@@ -3715,10 +3740,26 @@
     loadRituels();
   }
 
-  function rpHubGo(m){
+  // On ne peut pas composer une routine sans avoir de produits
+  async function hasAnyProduct(){
+    if(!currentUser) return false;
+    try{
+      const { count } = await sb.from('products').select('id', { count:'exact', head:true }).eq('user_id', currentUser.id);
+      return (count||0) > 0;
+    }catch(e){ return true; }  // en cas de souci réseau, on ne bloque pas
+  }
+  function noProductSheet(){
+    showToast('Ajoute d\'abord tes produits 🧴');
+    setTimeout(()=>navTo('routine'), 700);
+  }
+
+  async function rpHubGo(m){
     const rits = window.__allRituels || [];
     const has = m==='hebdo' ? rits.some(r=>r.moment==='hebdo') : rits.some(r=>r.moment===m || r.moment==='both');
-    if(!has){ openRituelQuick(m); return; }
+    if(!has){
+      if(!(await hasAnyProduct())){ noProductSheet(); return; }
+      openRituelQuick(m); return;
+    }
     rpSlotView=m; rpForceWelcome=false;
     renderRituelActuel(rits);
   }
@@ -3728,6 +3769,7 @@
   function rpBackToList(){ rpForceWelcome=false; renderRituelActuel(window.__allRituels||[]); }
 
   async function openRituelQuick(m){
+    if(!(await hasAnyProduct())){ noProductSheet(); return; }
     // Le fond affiche la sous-vue du créneau concerné (que le matin quand on crée du matin, etc.)
     rpSlotView=m; rpForceWelcome=false;
     renderRituelActuel(window.__allRituels||[]);
@@ -5979,7 +6021,7 @@
         try{
           const cached = JSON.parse(localStorage.getItem('rituel_profile_'+currentUser.id) || 'null');
           if(cached && cached.type_peau){
-            profile = { prenom: (profile&&profile.prenom)||cached.prenom, type_peau: cached.type_peau, objectifs: JSON.stringify(cached.objectifs||[]) };
+            profile = { prenom: (profile&&profile.prenom)||cached.prenom, type_peau: cached.type_peau, objectifs: JSON.stringify(cached.objectifs||[]), is_premium: (profile&&profile.is_premium)||false };
             fromCache = true;
           }
         }catch(e){}
