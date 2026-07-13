@@ -847,6 +847,10 @@
   .hr-empty-sub { font-size:12.5px; color:var(--muted); margin:8px 0 18px; line-height:1.55; }
   .hr-empty-btn { width:100%; padding:13px 16px; border-radius:16px; border:none; background:var(--accent); color:#fff; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 8px 20px rgba(201,90,63,0.26); transition:transform .12s; }
   .hr-empty-btn:active { transform:scale(.985); }
+  /* ═══ Évolution : choix de la période ═══ */
+  .ev-per { display:flex; gap:3px; background:var(--surface-warm); border-radius:16px; padding:3px; flex-shrink:0; }
+  .ev-p { border:none; background:transparent; padding:5px 9px; border-radius:13px; font-family:inherit; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap; transition:all .15s; }
+  .ev-p.sel { background:var(--surface); color:var(--accent); box-shadow:0 2px 6px rgba(46,33,28,0.10); }
 </style>
 </head>
 <body class="no-select">
@@ -1209,7 +1213,14 @@
 
     <!-- Évolution de ma peau -->
     <div class="section" id="ev-section" style="display:none;">
-      <div class="rp-label">Évolution de ma peau</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 2px 12px;">
+        <div class="rp-label" style="margin:0;">Évolution de ma peau</div>
+        <div class="ev-per">
+          <button class="ev-p sel" data-p="7" onclick="evSetPeriod(7)">7 j</button>
+          <button class="ev-p" data-p="30" onclick="evSetPeriod(30)">1 mois</button>
+          <button class="ev-p" data-p="365" onclick="evSetPeriod(365)">1 an</button>
+        </div>
+      </div>
       <div class="ev-tabs" id="ev-tabs">
         <button class="ev-tab sel" data-metric="score_peau" onclick="evSetMetric('score_peau')">État global</button>
         <button class="ev-tab" data-metric="hydratation" onclick="evSetMetric('hydratation')">Hydratation</button>
@@ -1418,7 +1429,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 21.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -5718,6 +5729,7 @@
   // ═══ Vue d'ensemble + Évolution de la peau (Journal) ═══
   let evEntries = [];
   let evMetric = 'score_peau';
+  let evPeriod = 7;   // 7 jours, 30 jours ou 365 jours
 
   async function loadOverview(){
     const ovSec=document.getElementById('ov-section'), evSec=document.getElementById('ev-section');
@@ -5733,7 +5745,6 @@
     // fusion par date
     const byDate={}; es.forEach(e=>{ byDate[e.date]=byDate[e.date]?{...byDate[e.date],...e}:e; });
     const days=Object.values(byDate);
-    evEntries = days;
 
     // ── 4 tuiles ──
     let rituelDays=0, photoN=0, scoreSum=0,scoreN=0; const moodCount={};
@@ -5765,7 +5776,7 @@
     ovSec.style.display='block';
 
     // ── Évolution ──
-    if(evSec){ evSec.style.display='block'; renderEvChart(); }
+    if(evSec){ evSec.style.display='block'; loadEvData(); }
   }
 
   function sparkline(vals, isBinary){
@@ -5786,6 +5797,54 @@
     return '<svg class="ov-spark" viewBox="0 0 '+W+' '+H+'"><path d="'+d+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   }
 
+  // Charge les données du graphe selon la période choisie (7 j, 1 mois, 1 an)
+  async function loadEvData(){
+    if(!currentUser){ evEntries=[]; renderEvChart(); return; }
+    const since=new Date(); since.setDate(since.getDate()-(evPeriod-1));
+    try{
+      const { data } = await sb.from('entries')
+        .select('date,score_peau,hydratation,humeur')
+        .eq('user_id',currentUser.id)
+        .gte('date', since.toISOString().slice(0,10))
+        .order('date',{ascending:true});
+      // Une entrée par date (on fusionne les doublons)
+      const byDate={};
+      (data||[]).forEach(e=>{ byDate[e.date] = byDate[e.date] ? {...byDate[e.date], ...e} : e; });
+      evEntries = Object.keys(byDate).sort().map(k=>byDate[k]);
+    }catch(e){ evEntries=[]; }
+    renderEvChart();
+  }
+
+  function evSetPeriod(p){
+    evPeriod = p;
+    document.querySelectorAll('.ev-p').forEach(b=>b.classList.toggle('sel', Number(b.dataset.p)===p));
+    loadEvData();
+  }
+
+  // Prépare les points à tracer : jour par jour, ou moyenne par mois sur un an
+  function evPoints(){
+    const MOIS=['J','F','M','A','M','J','J','A','S','O','N','D'];
+    const val = e => {
+      const v = e[evMetric];
+      return (v!==null && v!==undefined && v!=='') ? Number(v) : null;
+    };
+    if(evPeriod <= 31){
+      return evEntries.map(e=>({ label: String(parseInt(e.date.slice(8,10),10)), v: val(e) }));
+    }
+    // Un an : on moyenne par mois pour rester lisible
+    const parMois={};
+    evEntries.forEach(e=>{
+      const v=val(e); if(v===null) return;
+      const m=e.date.slice(0,7);
+      if(!parMois[m]) parMois[m]={somme:0, n:0};
+      parMois[m].somme+=v; parMois[m].n++;
+    });
+    return Object.keys(parMois).sort().map(m=>({
+      label: MOIS[parseInt(m.slice(5,7),10)-1],
+      v: Math.round((parMois[m].somme/parMois[m].n)*10)/10
+    }));
+  }
+
   function evSetMetric(m){
     evMetric=m;
     document.querySelectorAll('.ev-tab').forEach(b=>b.classList.toggle('sel', b.dataset.metric===m));
@@ -5794,48 +5853,61 @@
 
   function renderEvChart(){
     const host=document.getElementById('ev-card'); if(!host) return;
-    const days=evEntries;
-    const raw = days.map(e=>{
-      const v=e[evMetric];
-      return v!=null && v!=='' ? Number(v) : null;
-    });
-    const pts = raw.map((v,i)=>({v,i})).filter(o=>o.v!=null);
-    if(pts.length<1){
-      host.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12.5px;padding:24px 0;">Pas encore assez de données 🌸<br>Note ton état chaque jour pour voir ta courbe.</div>';
+    const pts = evPoints();
+    const avecValeur = pts.filter(p=>p.v!==null);
+
+    if(avecValeur.length < 1){
+      const quand = evPeriod===7 ? 'cette semaine' : (evPeriod===30 ? 'ce mois-ci' : 'cette année');
+      host.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12.5px;padding:26px 0;">Pas encore de données '+quand+' 🌸<br>Note l\'état de ta peau pour voir ta courbe apparaître.</div>';
       return;
     }
-    // échelle : humeur 1-5, sinon 0-100
+
     const isMood = evMetric==='humeur';
-    const max = isMood?5:100, min=isMood?1:0;
-    const W=300,H=120, padL=8,padR=8,padT=14,padB=22;
+    const max = isMood ? 5 : 100;
+    const min = isMood ? 1 : 0;
+    const W=300, H=126, padL=10, padR=10, padT=16, padB=24;
     const iw=W-padL-padR, ih=H-padT-padB;
-    const n=days.length;
-    const xOf = i => padL + (n<=1?iw/2:(i/(n-1))*iw);
+    const n=pts.length;
+    const xOf = i => padL + (n<=1 ? iw/2 : (i/(n-1))*iw);
     const yOf = v => padT + ih - ((v-min)/((max-min)||1))*ih;
-    // ligne + aire
-    let line='', area='';
-    pts.forEach((o,k)=>{
-      const x=xOf(o.i), y=yOf(o.v);
-      line += (k?'L':'M')+x.toFixed(1)+','+y.toFixed(1)+' ';
+
+    // Courbe + aire (on ne relie que les points renseignés)
+    let line='';
+    avecValeur.forEach((p,k)=>{
+      const i = pts.indexOf(p);
+      line += (k?'L':'M') + xOf(i).toFixed(1) + ',' + yOf(p.v).toFixed(1) + ' ';
     });
-    const firstX=xOf(pts[0].i), lastX=xOf(pts[pts.length-1].i);
-    area = 'M'+firstX.toFixed(1)+','+(padT+ih)+' '+line.replace(/^M/,'L')+' L'+lastX.toFixed(1)+','+(padT+ih)+' Z';
-    // points
+    const iPremier = pts.indexOf(avecValeur[0]);
+    const iDernier = pts.indexOf(avecValeur[avecValeur.length-1]);
+    const area = 'M'+xOf(iPremier).toFixed(1)+','+(padT+ih)+' '+line.replace(/^M/,'L')+' L'+xOf(iDernier).toFixed(1)+','+(padT+ih)+' Z';
+
+    // Points : discrets si nombreux
+    const gros = avecValeur.length <= 14;
     let dots='';
-    pts.forEach(o=>{ dots+='<circle cx="'+xOf(o.i).toFixed(1)+'" cy="'+yOf(o.v).toFixed(1)+'" r="3.5" fill="var(--accent)"/>'; });
-    // labels de dates (jour du mois)
-    let labels='';
-    days.forEach((e,i)=>{
-      const d = e.date ? e.date.slice(8,10) : '';
-      if(d) labels+='<text x="'+xOf(i).toFixed(1)+'" y="'+(H-6)+'" font-size="9" fill="var(--muted)" text-anchor="middle">'+parseInt(d,10)+'</text>';
+    avecValeur.forEach(p=>{
+      const i=pts.indexOf(p);
+      dots += '<circle cx="'+xOf(i).toFixed(1)+'" cy="'+yOf(p.v).toFixed(1)+'" r="'+(gros?3.5:2)+'" fill="var(--accent)"/>';
     });
-    const last = pts[pts.length-1];
-    const lastLabel = isMood ? '' : '<text x="'+(W-padR)+'" y="12" font-size="11" fill="var(--accent)" text-anchor="end" font-weight="600">'+last.v+(isMood?'':'/100')+'</text>';
+
+    // Libellés de l'axe : on en saute si trop nombreux
+    const pas = n<=8 ? 1 : Math.ceil(n/7);
+    let labels='';
+    pts.forEach((p,i)=>{
+      if(i % pas !== 0 && i !== n-1) return;
+      labels += '<text x="'+xOf(i).toFixed(1)+'" y="'+(H-7)+'" font-size="9" fill="var(--muted)" text-anchor="middle">'+p.label+'</text>';
+    });
+
+    const dernier = avecValeur[avecValeur.length-1];
+    const valeurTxt = isMood
+      ? ['','Difficile','Mitigée','Correcte','Bonne','Rayonnante'][Math.round(dernier.v)] || ''
+      : dernier.v + '/100';
+    const entete = '<text x="'+(W-padR)+'" y="11" font-size="11" fill="var(--accent)" text-anchor="end" font-weight="600">'+valeurTxt+'</text>';
+
     host.innerHTML =
       '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;overflow:visible;">'+
         '<path d="'+area+'" fill="var(--blush-soft)" opacity="0.5"/>'+
         '<path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+
-        dots+labels+lastLabel+
+        dots + labels + entete +
       '</svg>';
   }
 
