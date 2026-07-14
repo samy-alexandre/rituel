@@ -961,6 +961,10 @@
   .rd-cancel { flex:0 0 38%; padding:14px 12px; border-radius:16px; border:1px solid var(--line); background:var(--surface); font-family:inherit; font-size:14px; font-weight:500; color:var(--ink-soft); cursor:pointer; transition:transform .12s; }
   .rd-save { flex:1; padding:14px 12px; border-radius:16px; border:none; background:var(--accent); color:#fff; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 8px 20px rgba(201,90,63,0.26); transition:transform .12s; }
   .rd-cancel:active, .rd-save:active { transform:scale(.98); }
+  /* ═══ Éditeur : le nom du rituel ═══ */
+  .rd-nom { width:100%; box-sizing:border-box; padding:14px 16px; border:1px solid var(--line); border-radius:16px; background:var(--surface); font-family:var(--serif); font-size:17px; color:var(--ink); transition:border-color .18s, box-shadow .18s; }
+  .rd-nom::placeholder { color:var(--muted); opacity:.65; font-family:var(--serif); }
+  .rd-nom:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(201,90,63,0.10); }
 </style>
 </head>
 <body class="no-select">
@@ -984,7 +988,7 @@
         <p style="font-family:var(--serif);font-style:italic;font-size:16px;color:var(--ink-soft);line-height:1.6;text-align:center;margin:6px 0 22px;">Suis ta peau jour après jour et comprends enfin ce qui la fait changer.</p>
         <div class="land-card"><span>📷</span><div><b>Suis ta peau jour après jour</b><small>Photos, humeur, sommeil, hydratation.</small></div></div>
         <div class="land-card"><span>🌿</span><div><b>Comprends ce qui marche</b><small>Produits, habitudes, cycle : tout au même endroit.</small></div></div>
-        <div class="land-card"><span>💬</span><div><b>Garde le cap avec Léa</b><small>Des conseils simples pour t'aider à ajuster ta routine.</small></div></div>
+        <div class="land-card"><span>💬</span><div><b>Garde le cap avec Léa</b><small>Des conseils simples pour t'aider à ajuster ton rituel.</small></div></div>
         <button class="btn btn-accent" onclick="startAuth('signup')" style="margin-top:20px;">Commencer mon rituel</button>
         <button onclick="startAuth('login')" class="btn-soft" style="display:block;margin:12px auto 0;">J'ai déjà un compte</button>
       </div>
@@ -1102,9 +1106,9 @@
       <h2 class="onb-title">Quel est ton <em>objectif</em> du moment ?</h2>
       <p class="onb-sub">Ton suivi avec Léa sera adapté à cet objectif. 🌸</p>
       <div class="onb-options">
-        <button class="onb-opt" data-value="constance" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🪞</span><div class="onb-opt-text"><div class="onb-opt-title">Tenir une routine</div><div class="onb-opt-desc">La régularité avant tout</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="constance" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🪞</span><div class="onb-opt-text"><div class="onb-opt-title">Tenir un rituel</div><div class="onb-opt-desc">La régularité avant tout</div></div><div class="onb-opt-check"></div></button>
         <button class="onb-opt" data-value="comprendre" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🔍</span><div class="onb-opt-text"><div class="onb-opt-title">Comprendre ma peau</div><div class="onb-opt-desc">Voir ce qui marche et l'évolution</div></div><div class="onb-opt-check"></div></button>
-        <button class="onb-opt" data-value="deux" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Les deux</div><div class="onb-opt-desc">Tenir ma routine et comprendre ma peau</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="deux" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Les deux</div><div class="onb-opt-desc">Tenir mon rituel et comprendre ma peau</div></div><div class="onb-opt-check"></div></button>
         
       </div>
       <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step3" disabled>Continuer</button></div>
@@ -1182,7 +1186,7 @@
         <div style="font-size:26px;">💌</div>
         <div style="flex:1;min-width:0;">
           <div style="font-family:var(--serif);font-size:15px;" id="lettre-cta-title">Ta lettre du mois est prête</div>
-          <div style="font-size:12px;color:var(--muted);">Le petit bilan doux de ta compagne de routine</div>
+          <div style="font-size:12px;color:var(--muted);">Le petit bilan doux de ta compagne de soin</div>
         </div>
         <div style="color:var(--muted);font-size:18px;">›</div>
       </div>
@@ -1202,9 +1206,9 @@
       <div id="home-rituel-empty" style="display:none;">
         <div class="hr-empty">
           <div class="hr-empty-ico">🌸</div>
-          <div class="hr-empty-title">Ta routine t'attend</div>
-          <div class="hr-empty-sub">Compose ta routine du matin ou du soir,<br>et coche tes étapes chaque jour.</div>
-          <button class="hr-empty-btn" onclick="navTo('ritual')">Créer ma routine</button>
+          <div class="hr-empty-title">Ton rituel t'attend</div>
+          <div class="hr-empty-sub">Compose ton rituel du matin ou du soir,<br>et coche tes étapes chaque jour.</div>
+          <button class="hr-empty-btn" onclick="navTo('ritual')">Créer mon rituel</button>
         </div>
       </div>
       <div class="hr-card" id="hr-card">
@@ -1212,7 +1216,7 @@
           <div class="hr-title-wrap">
             <span class="hr-emoji" id="hr-emoji">☀️</span>
             <div style="min-width:0;flex:1;">
-              <div class="hr-title" id="hr-title">Routine du matin</div>
+              <div class="hr-title" id="hr-title">Rituel du matin</div>
               <div class="hr-sub" id="hr-sub">0 sur 0 · c'est parti 🌸</div>
             </div>
           </div>
@@ -1305,7 +1309,7 @@
       <div class="cal-weekdays"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
       <div class="cal-grid" id="cal-grid"></div>
       <div class="cal-legend">
-        <span><i class="dot-complete"></i> Routine complète</span>
+        <span><i class="dot-complete"></i> Rituel complet</span>
         <span><i class="dot-entry"></i> Noté</span>
         <span>📷 Photo</span>
       </div>
@@ -1408,7 +1412,7 @@
     
     <div class="section" id="rituel-presets-section" style="display:none;">
       <div style="margin:18px 0 14px;">
-        <div class="section-head" style="margin-bottom:6px;"><h3 class="section-title" style="font-size:16px;">Pars d'une routine <em>toute faite</em> ✨</h3></div>
+        <div class="section-head" style="margin-bottom:6px;"><h3 class="section-title" style="font-size:16px;">Pars d'un rituel <em>toute faite</em> ✨</h3></div>
         <p style="color:var(--muted);font-size:12px;margin:0 0 10px;line-height:1.5;">Choisis ton profil : on crée les produits et le rituel pour toi, dans le bon ordre. Tu personnalises ensuite.</p>
         <div style="display:flex;flex-direction:column;gap:8px;">
         <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('grasse')"><span style="font-size:20px;">🫧</span><span style="flex:1;min-width:0;"><span style="display:block;">Peau grasse · débutant</span><span style="font-size:11px;color:var(--muted);">5 étapes</span></span><span style="color:var(--muted);">›</span></button>
@@ -1440,9 +1444,9 @@
     <div id="lea-proactive-line" style="display:none;"></div><div id="lea-tip-body" style="display:none;"></div>
     <div class="chat-feed" id="chat-feed">
       <div class="chat-day">VOTRE COMPAGNE DE ROUTINE</div>
-      <div class="msg msg-ai" id="chat-intro">Coucou 🌸 Moi c'est Léa, ta compagne de routine. Je suis là pour t'aider avec ta peau, tes produits, ta routine… ou juste pour répondre à tes questions, sans jugement. Dis-moi tout, qu'est-ce qui t'amène aujourd'hui ?</div>
+      <div class="msg msg-ai" id="chat-intro">Coucou 🌸 Moi c'est Léa, ta compagne de soin. Je suis là pour t'aider avec ta peau, tes produits, ta routine… ou juste pour répondre à tes questions, sans jugement. Dis-moi tout, qu'est-ce qui t'amène aujourd'hui ?</div>
       <div class="msg-suggestions" id="chat-starter">
-        <button class="sugg" onclick="leaQuick('Quelle routine du soir pour ma peau ?')">Quelle routine du soir ?</button>
+        <button class="sugg" onclick="leaQuick('Quel rituel du soir pour ma peau ?')">Quel rituel du soir ?</button>
         <button class="sugg" onclick="leaQuick('Je peux mélanger rétinol et vitamine C ?')">Rétinol + vitamine C ?</button>
         <button class="sugg" onclick="leaQuick('Comment estomper mes taches ?')">Estomper mes taches ?</button>
       </div>
@@ -1534,7 +1538,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.8<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1674,7 +1678,7 @@
   <div class="sheet-overlay" id="ract-sheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div class="sheet-title" id="ract-title">Ma routine</div>
+      <div class="sheet-title" id="ract-title">Mon rituel</div>
       <div class="ract-list" id="ract-list"></div>
       <button class="btn btn-ghost" onclick="closeRituelActions()">Annuler</button>
     </div>
@@ -1684,7 +1688,7 @@
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">Rituel<span style="color:var(--accent);">+</span></div>
-      <p id="plus-reason" style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Pour aller plus loin avec ta compagne de routine, sans limite 🌸</p>
+      <p id="plus-reason" style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Pour aller plus loin avec ta compagne de soin, sans limite 🌸</p>
 
       <div style="display:flex;flex-direction:column;gap:10px;font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:18px;">
         <div>💬 <b>Léa illimitée</b> — pose-lui toutes tes questions</div>
@@ -1849,8 +1853,8 @@
       <div class="intensity" style="margin-top:14px;"><div class="intensity-head"><span>💧 Hydratation</span><span id="dd-hydra-val">6 verres</span></div><input type="range" min="0" max="12" value="6" step="1" class="intensity-slider" id="dd-hydra" oninput="ddTouch('hyd');ddHydraLbl(this.value)"></div>
       <div class="intensity" style="margin-top:14px;margin-bottom:18px;"><div class="intensity-head"><span>🥗 Alimentation</span><span id="dd-alim-val">Équilibrée</span></div><input type="range" min="1" max="5" value="3" step="1" class="intensity-slider" id="dd-alim" oninput="ddTouch('ali');document.getElementById('dd-alim-val').textContent=ALIM_LABELS[this.value]||'…'"></div>
 
-      <div class="rem-row"><div class="rem-label">☀️ Routine du matin faite</div><label class="switch"><input type="checkbox" id="dd-matin"><span class="sl"></span></label></div>
-      <div class="rem-row"><div class="rem-label">🌙 Routine du soir faite</div><label class="switch"><input type="checkbox" id="dd-soir"><span class="sl"></span></label></div>
+      <div class="rem-row"><div class="rem-label">☀️ Rituel du matin faite</div><label class="switch"><input type="checkbox" id="dd-matin"><span class="sl"></span></label></div>
+      <div class="rem-row"><div class="rem-label">🌙 Rituel du soir faite</div><label class="switch"><input type="checkbox" id="dd-soir"><span class="sl"></span></label></div>
 
       <label class="dd-lbl" style="margin-top:16px;display:block;">Mes habitudes</label>
       <div id="dd-habits" style="margin-top:8px;"></div>
@@ -1939,7 +1943,7 @@
           <span class="rd-bell-dot" id="rd-bell-dot"></span>
         </button>
       </div>
-      <input type="hidden" id="rd-nom">
+      <input id="rd-nom" class="rd-nom" placeholder="Rituel du matin">
       
       <div id="rd-hebdo-day" style="display:none;margin:4px 0 8px;">
         <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:7px;">Quel jour de la semaine ?</div>
@@ -1965,7 +1969,7 @@
           <span class="rd-rem-lbl">🌙 Heure du rappel</span>
           <input type="time" id="rd-h-soir" value="21:00" class="rd-time">
         </div>
-        <div class="rd-rem-note" id="rd-rem-note">Tu recevras une notification chaque jour 🌸</div>
+        
       </div>
 
       
@@ -2080,13 +2084,13 @@
         <li><strong>Produits</strong> : noms et marques des produits que vous ajoutez, codes-barres que vous scannez.</li>
         <li><strong>Cycle (facultatif)</strong> : si vous activez le suivi du cycle, les informations liées à vos règles. Ce sont des <strong>données de santé</strong>, traitées uniquement avec votre consentement explicite.</li>
         <li><strong>Localisation (facultatif)</strong> : si vous l'autorisez, votre position approximative, utilisée pour les alertes UV / SPF. Vous pouvez refuser sans perdre l'accès au reste de l'app.</li>
-        <li><strong>Conversations avec Léa</strong> : les messages que vous échangez avec votre compagne de routine.</li>
+        <li><strong>Conversations avec Léa</strong> : les messages que vous échangez avec votre compagne de soin.</li>
         <li><strong>Notifications</strong> : si vous les activez, un identifiant technique d'abonnement (sans contenu personnel).</li>
         <li><strong>Données locales</strong> : certaines préférences sont enregistrées dans la mémoire de votre appareil (stockage local).</li>
       </ul>
 
       <h2>3. Pourquoi nous les utilisons</h2>
-      <p>Uniquement pour vous fournir le service : suivre l'évolution de votre peau dans le temps, personnaliser les conseils, faire fonctionner votre compagne de routine Léa et les analyses photo, vous envoyer vos rappels et vos alertes UV. <strong>Nous ne vendons jamais vos données et n'affichons aucune publicité.</strong></p>
+      <p>Uniquement pour vous fournir le service : suivre l'évolution de votre peau dans le temps, personnaliser les conseils, faire fonctionner votre compagne de soin Léa et les analyses photo, vous envoyer vos rappels et vos alertes UV. <strong>Nous ne vendons jamais vos données et n'affichons aucune publicité.</strong></p>
 
       <h2>4. Bases légales</h2>
       <ul>
@@ -2126,7 +2130,7 @@
       <h2>10. Âge minimum</h2>
       <p>L'application est destinée aux personnes de <strong>15 ans et plus</strong>. En dessous de cet âge, l'accord d'un parent ou tuteur est nécessaire.</p>
 
-      <h2>11. Léa, votre compagne de routine</h2>
+      <h2>11. Léa, votre compagne de soin</h2>
       <p>Léa est un assistant de conseil beauté, <strong>pas un professionnel de santé</strong>. Ses suggestions ne remplacent jamais l'avis d'un dermatologue ou d'un médecin. Pour tout problème de peau persistant, douloureux ou préoccupant, consultez un professionnel de santé.</p>
     </div>
   </div>
@@ -2714,7 +2718,7 @@
   }
   // ===== Identité du coach =====
   function coachName(){ return 'Léa'; }
-  function coachTitre(){ return 'ta compagne de routine'; }
+  function coachTitre(){ return 'ta compagne de soin'; }
   function updateChatIntro(){
     const el=document.getElementById('chat-intro'); if(!el) return;
     el.textContent = "Coucou 🌸 Moi c'est "+coachName()+", "+coachTitre()+". Je suis là pour t'aider avec ta peau, tes produits, ta routine… ou juste pour répondre à tes questions, sans jugement. Dis-moi tout, qu'est-ce qui t'amène aujourd'hui ?";
@@ -2773,7 +2777,7 @@
     document.getElementById('pb-soir').classList.toggle('active', p==='soir');
     const em=document.getElementById('hr-emoji'), ti=document.getElementById('hr-title');
     if(em){ em.textContent = p==='soir' ? '🌙' : '☀️'; em.classList.toggle('soir', p==='soir'); }
-    if(ti) ti.textContent = p==='soir' ? 'Routine du soir' : 'Routine du matin';
+    if(ti) ti.textContent = p==='soir' ? 'Rituel du soir' : 'Rituel du matin';
     document.getElementById('routine-matin').classList.toggle('hidden', p!=='matin');
     document.getElementById('routine-soir').classList.toggle('hidden', p!=='soir');
     updateRoutineCount();
@@ -3977,7 +3981,7 @@
   let __presetBusy=false;
   async function applyPreset(key){
     const P=PRESETS[key]; if(!P || !currentUser || __presetBusy) return;
-    __presetBusy=true; showToast('Création de ta routine… 🌱');
+    __presetBusy=true; showToast('Création de ton rituel… 🌱');
     try{
       const { data: mine } = await sb.from('products').select('id,nom').eq('user_id', currentUser.id);
       const byNom={}; (mine||[]).forEach(p=>byNom[(p.nom||'').toLowerCase()]=p.id);
@@ -3995,7 +3999,7 @@
       const { count } = await sb.from('rituels').select('id',{count:'exact',head:true}).eq('user_id', currentUser.id);
       await sb.from('rituels').insert({ user_id:currentUser.id, nom:P.nom, moment:'matin', produits:ids, position:(count||0), actif:true });
       window.__allRituels=null;
-      showToast('Routine créée et activée ✨');
+      showToast('Rituel créé et activé ✨');
       loadRituels(); if(typeof loadProducts==='function') loadProducts();
       loadHomeRoutine();
       navTo('home');
@@ -4098,7 +4102,7 @@
     if(!r) return;
 
     const titre = document.getElementById('ract-title');
-    if(titre) titre.textContent = r.nom || 'Ma routine';
+    if(titre) titre.textContent = r.nom || 'Mon rituel';
 
     const n = Array.isArray(r.produits) ? r.produits.length : 0;
     let html = '<button type="button" class="ract-opt" onclick="ractModifier()">'+
@@ -4143,23 +4147,23 @@
   async function ractSupprimer(){
     const id = ractId;
     closeRituelActions();
-    if(!confirm('Supprimer cette routine ?')) return;
+    if(!confirm('Supprimer ce rituel ?')) return;
     try{
       await sb.from('rituels').delete().eq('id', id);
       window.__allRituels = null;
       await loadRituels();
-      showToast('Routine supprimée 🌸');
+      showToast('Rituel supprimé 🌸');
     }catch(e){ showToast('Oups : '+(e.message||'réessaie')); }
   }
 
-  // Copie les étapes d'une routine vers l'autre créneau
+  // Copie les étapes d'un rituel vers l'autre créneau
   async function copierRituelVers(src, vers){
     if(!currentUser || !src) return;
     const prods = Array.isArray(src.produits) ? src.produits : [];
     if(!prods.length){ showToast('Rien à copier 🌸'); return; }
 
     const rits = window.__allRituels || [];
-    const nom = (vers==='matin') ? 'Routine du matin' : 'Routine du soir';
+    const nom = (vers==='matin') ? 'Rituel du matin' : 'Rituel du soir';
 
     try{
       // On AJOUTE une copie : rien n'est supprimé ni écrasé.
@@ -4181,7 +4185,7 @@
         await sb.from('rituels').update({ actif:false }).in('id', aDesactiver);
       }
 
-      showToast('Copiée vers le ' + vers + ' · ajuste-la comme tu veux 🌸');
+      showToast('Copié vers le ' + vers + ' · ajuste-la comme tu veux 🌸');
       window.__allRituels = null;
       await loadRituels();
       rpTabGo(vers);
@@ -4217,7 +4221,7 @@
     renderRituelActuel(window.__allRituels||[]);
     await openRituelEditor();
     rdSetMoment(m);
-    const lbl = m==='matin'?'Routine du matin':(m==='soir'?'Routine du soir':(m==='hebdo'?'Soin hebdomadaire':'Ma routine'));
+    const lbl = m==='matin'?'Rituel du matin':(m==='soir'?'Rituel du soir':(m==='hebdo'?'Soin hebdomadaire':'Mon rituel'));
     const t=document.getElementById('rd-title'); if(t) t.textContent = lbl;
     const nomEl=document.getElementById('rd-nom');
     if(nomEl){ nomEl.placeholder = (m==='hebdo'?'Soins de la semaine':lbl); }
@@ -4239,8 +4243,8 @@
       const items = mv==='hebdo' ? hebdos : daily.filter(r=>r.moment===mv || r.moment==='both');
       if(!items.length){
         const INFO = {
-          matin: { e:'☀️', t:'Ta routine du matin', d:'Nettoyer, protéger, préparer ta peau<br>pour la journée qui commence.' },
-          soir:  { e:'🌙', t:'Ta routine du soir',  d:'Démaquiller, réparer, laisser ta peau<br>travailler pendant la nuit.' },
+          matin: { e:'☀️', t:'Ton rituel du matin', d:'Nettoyer, protéger, préparer ta peau<br>pour la journée qui commence.' },
+          soir:  { e:'🌙', t:'Ton rituel du soir',  d:'Démaquiller, réparer, laisser ta peau<br>travailler pendant la nuit.' },
           hebdo: { e:'🧖‍♀️', t:'Ton soin de la semaine', d:'Masque, gommage, sérum intensif…<br>Un rendez-vous, une fois par semaine.' }
         };
         const info = INFO[mv] || INFO.matin;
@@ -4253,7 +4257,7 @@
           if(src && Array.isArray(src.produits) && src.produits.length){
             const eAutre = (autre === 'matin') ? '☀️' : '🌙';
             copie = '<button class="rt-copy-btn" onclick="copierRituel(\''+autre+'\',\''+mv+'\')">'+
-                      eAutre + ' Reprendre ma routine du ' + autre +
+                      eAutre + ' Reprendre mon rituel du ' + autre +
                       '<span class="rt-copy-sub">' + src.produits.length + ' étapes · tu pourras l\'ajuster</span>'+
                     '</button>';
           }
@@ -4264,7 +4268,7 @@
             '<div class="rt-empty-ico">'+info.e+'</div>'+
             '<div class="rt-empty-title">'+info.t+'</div>'+
             '<div class="rt-empty-sub">'+info.d+'</div>'+
-            '<button class="rt-empty-btn" onclick="openRituelQuick(\''+mv+'\')">Créer cette routine</button>'+
+            '<button class="rt-empty-btn" onclick="openRituelQuick(\''+mv+'\')">Créer ce rituel</button>'+
             copie +
           '</div>';
         card.style.display='block';
@@ -4302,7 +4306,7 @@
           '</div></div>';
       }
       function dailyCard(r){
-        const label = r.moment==='matin' ? 'Routine du matin' : (r.moment==='soir' ? 'Routine du soir' : 'Matin & soir');
+        const label = r.moment==='matin' ? 'Rituel du matin' : (r.moment==='soir' ? 'Rituel du soir' : 'Matin & soir');
         const prods = (Array.isArray(r.produits)?r.produits:[]).map(id=>pmap[id]).filter(Boolean);
         const n = prods.length;
         const freq = freqLabel(r);
@@ -4330,7 +4334,7 @@
           swHtml(r)+'</div>';
       }
       const sortActive = arr => [...arr].sort((a,b)=>(b.actif?1:0)-(a.actif?1:0));
-      const lbl = mv==='matin'?'Routine du matin':(mv==='soir'?'Routine du soir':'Soins hebdomadaires');
+      const lbl = mv==='matin'?'Rituel du matin':(mv==='soir'?'Rituel du soir':'Soins hebdomadaires');
       let sh = '';
       sh += sortActive(items).map(mv==='hebdo'?hebdoRow:dailyCard).join('');
       card.innerHTML = sh;
@@ -4406,12 +4410,7 @@
     setTimeout(function(){ rdApplyRappels(loadedRappels); }, 0);
     rdSetMoment(rituelDraft.moment);
 
-    // Le titre porte l'info : nom du créneau à la création, "Modifier" sinon
-    const m = rituelDraft.moment;
-    const creneau = (m==='matin') ? 'Routine du matin'
-                  : (m==='soir')  ? 'Routine du soir'
-                  : (m==='hebdo') ? 'Soin hebdomadaire' : 'Ma routine';
-    document.getElementById('rd-title').textContent = id ? 'Modifier le rituel' : creneau;
+    document.getElementById('rd-title').textContent = id ? 'Modifier le rituel' : 'Nouveau rituel';
 
     renderRdProducts();
     document.getElementById('rituel-sheet').classList.add('open');
@@ -4520,20 +4519,18 @@
     tm.style.display = (m==='matin'||m==='both') ? 'flex' : 'none';
     ts.style.display = (m==='soir'||m==='both'||m==='hebdo') ? 'flex' : 'none';
 
-    const note=document.getElementById('rd-rem-note');
-    if(note){
-      if(m==='hebdo'){
-        const JOURS=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
-        note.textContent = 'Tu recevras une notification chaque ' + (JOURS[rdHebdoDay] || 'dimanche') + ' 🌸';
-      } else {
-        note.textContent = 'Tu recevras une notification chaque jour 🌸';
-      }
-    }
   }
 
     function rdSetMoment(m){
     rituelDraft.moment = m;
     const hd=document.getElementById('rd-hebdo-day'); if(hd) hd.style.display = (m==='hebdo') ? 'block' : 'none';
+    // Le nom suggéré apparaît en gris dans le champ : discret, et modifiable
+    const nomEl=document.getElementById('rd-nom');
+    if(nomEl){
+      nomEl.placeholder = (m==='matin') ? 'Rituel du matin'
+                        : (m==='soir')  ? 'Rituel du soir'
+                        : (m==='hebdo') ? 'Soin de la semaine' : 'Mon rituel';
+    }
     if(document.getElementById('rd-rem-on') && document.getElementById('rd-rem-on').checked) rdSyncRemTimes();
   }
   function rdRemove(id){ rituelDraft.produits = rituelDraft.produits.filter(x=>x!==id); renderRdProducts(); }
@@ -4709,7 +4706,7 @@
   }
   async function saveRituel(){
     if(!currentUser) return;
-    const _autoNom = rituelDraft.moment==='matin'?'Routine du matin':(rituelDraft.moment==='soir'?'Routine du soir':(rituelDraft.moment==='hebdo'?'Soins de la semaine':'Ma routine'));
+    const _autoNom = rituelDraft.moment==='matin'?'Rituel du matin':(rituelDraft.moment==='soir'?'Rituel du soir':(rituelDraft.moment==='hebdo'?'Soins de la semaine':'Mon rituel'));
     const nom = (document.getElementById('rd-nom').value.trim()) || _autoNom;
     showToast('Enregistrement…');
     try{
@@ -5331,7 +5328,7 @@
 
   function openPlusSheet(raison){
     const r=document.getElementById('plus-reason');
-    if(r) r.textContent = raison || 'Pour aller plus loin avec ta compagne de routine, sans limite 🌸';
+    if(r) r.textContent = raison || 'Pour aller plus loin avec ta compagne de soin, sans limite 🌸';
     document.querySelectorAll('.plus-buy').forEach(b=>{ b.disabled=false; });
     document.getElementById('plus-sheet').classList.add('open');
   }
@@ -5590,7 +5587,7 @@
     }
     if(rjStep===3){
       const items=(window.__rjItems)||[];
-      b.innerHTML='<div class="serif" style="font-size:24px;text-align:center;margin-top:8px;">Ta routine du <em style="font-style:italic;color:var(--accent);">'+rjPeriod+'</em></div>'
+      b.innerHTML='<div class="serif" style="font-size:24px;text-align:center;margin-top:8px;">Ton rituel du <em style="font-style:italic;color:var(--accent);">'+rjPeriod+'</em></div>'
         +(items.length
           ? '<p style="color:var(--muted);font-size:12.5px;text-align:center;margin:6px 0 14px;">Coche ce que tu as utilisé · <button class="btn-soft" style="padding:7px 14px;font-size:11.5px;margin-top:8px;" onclick="rjCheckAll()">tout cocher</button></p>'+items.map((p,i)=>'<div class="rj-item'+(rjData.checked.has(i)?' done':'')+'" onclick="rjToggleItem(this,'+i+')"><div class="rj-check">✓</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">'+(p.emoji||'🧴')+' '+(p.nom||'')+'</div>'+(p.categorie?'<div style="font-size:10.5px;color:var(--muted);margin-top:2px;">'+catLabel(p.categorie)+'</div>':'')+(p.effets?'<div style="font-size:11.5px;color:var(--muted);">'+p.effets+'</div>':'')+'</div></div>').join('')
           : '<p style="color:var(--muted);font-size:13px;text-align:center;line-height:1.6;margin:24px 0;">'+(window.__rjHasAny?'Pas de rituel pour le '+rjPeriod+' pour le moment 🌱':'Tu n\'as pas encore créé de rituel 🌱<br>Tu pourras le faire dans l\'onglet Rituel')+'<br>Valide quand même ta journée, elle compte ✨</p>')
@@ -5633,7 +5630,7 @@
   }
   function rjSummary(){
     const t=rjData.tags; const out=[];
-    if(t.has('rougeurs')||t.has('sensible')) out.push('Ta peau semble un peu sensible aujourd\'hui · garde une routine toute douce, sans nouvel actif.');
+    if(t.has('rougeurs')||t.has('sensible')) out.push('Ta peau semble un peu sensible aujourd\'hui · garde un rituel tout doux, sans nouvel actif.');
     else if(t.has('seche')||t.has('terne')) out.push('Ta peau réclame de l\'hydratation · une couche généreuse ce soir lui fera du bien 💧');
     else if(t.has('grasse')||t.has('boutons')) out.push('Côté brillance ou petits boutons : nettoyage doux et constance, jamais d\'agressivité.');
     else if(t.has('nette')) out.push('Ta peau a l\'air en forme · continue exactement comme ça ✨');
@@ -6499,9 +6496,9 @@
 
   // ===== Rappels (notifications) =====
   const REMINDER_ITEMS = [
-    { id:'matin', body:'☀️ C\'est l\'heure de ta routine du matin 🌸', defTime:'08:00' },
+    { id:'matin', body:'☀️ C\'est l\'heure de ton rituel du matin 🌸', defTime:'08:00' },
     { id:'eau',   body:'💧 Pense à boire un verre d\'eau, ta peau te dira merci', defTime:'14:00' },
-    { id:'soir',  body:'🌙 Petit rappel : ta routine du soir t\'attend 💛', defTime:'21:00' }
+    { id:'soir',  body:'🌙 Petit rappel : ton rituel du soir t\'attend 💛', defTime:'21:00' }
   ];
   function remKey(){ return 'rituel_reminders_'+(currentUser?currentUser.id:'anon'); }
   function getReminders(){
@@ -6642,7 +6639,7 @@
     <div style="background:var(--surface);border-radius:22px;padding:24px 22px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
       <div style="font-family:var(--serif);font-size:20px;color:var(--ink);margin-bottom:14px;">Comment créer un rituel ?</div>
       <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.7;">
-        <div style="display:flex;gap:10px;margin-bottom:12px;"><span style="color:var(--accent);font-weight:600;">1.</span><span>Crée un rituel et donne-lui un nom (ex. « Routine du matin »).</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:12px;"><span style="color:var(--accent);font-weight:600;">1.</span><span>Crée un rituel et donne-lui un nom (ex. « Rituel du matin »).</span></div>
         <div style="display:flex;gap:10px;margin-bottom:12px;"><span style="color:var(--accent);font-weight:600;">2.</span><span>Choisis quand tu le fais : matin, soir ou les deux.</span></div>
         <div style="display:flex;gap:10px;"><span style="color:var(--accent);font-weight:600;">3.</span><span>Ajoute tes produits, puis glisse les cartes pour les ordonner. Les étapes se numérotent toutes seules 🌸</span></div>
       </div>
