@@ -920,7 +920,7 @@
   .sort-btn svg { color:var(--muted); flex-shrink:0; }
   .sort-btn .chev { font-size:9px; color:var(--muted); }
   .sort-btn:active { transform:scale(.98); }
-  .sort-menu { display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:230px; max-width:calc(100vw - 40px); background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:0 16px 40px rgba(46,33,28,0.16); padding:6px; z-index:60; max-height:min(46vh, 300px); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  .sort-menu { display:none; position:fixed; min-width:230px; max-width:calc(100vw - 40px); background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:0 16px 40px rgba(46,33,28,0.16); padding:6px; z-index:400; max-height:min(46vh, 320px); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
   .sort-menu::-webkit-scrollbar { width:4px; }
   .sort-menu::-webkit-scrollbar-thumb { background:var(--line); border-radius:4px; }
   .sort-menu::-webkit-scrollbar-track { background:transparent; }
@@ -1534,7 +1534,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.7<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3424,6 +3424,15 @@
     }
 
     menu.innerHTML = html;
+
+    // Placé en coordonnées écran : il ne peut plus créer de barre de défilement
+    const btn = document.getElementById('sort-btn');
+    if(btn){
+      const r = btn.getBoundingClientRect();
+      menu.style.left = Math.max(16, r.left) + 'px';
+      menu.style.top  = (r.bottom + 6) + 'px';
+      menu.style.right = 'auto';
+    }
     menu.classList.add('open');
   }
 
@@ -3456,6 +3465,9 @@
     if(!menu || !menu.classList.contains('open')) return;
     if(!e.target.closest('.sort-bar')) menu.classList.remove('open');
   });
+
+  // Le menu est fixé à l'écran : on le referme dès que la page bouge
+  window.addEventListener('scroll', closeSortMenu, true);
 
 
 
