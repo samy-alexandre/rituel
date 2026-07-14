@@ -948,6 +948,11 @@
   .ract-opt .txt { flex:1; min-width:0; }
   .ract-opt .txt small { display:block; font-size:11px; color:var(--muted); font-weight:400; margin-top:2px; }
   .ract-opt.danger { color:#B4453A; }
+  /* ═══ Éditeur : rappel simple (heure seule) ═══ */
+  .rd-rem-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 0; }
+  .rd-rem-lbl { font-size:13.5px; color:var(--ink); }
+  .rd-time { border:1px solid var(--line); border-radius:12px; padding:8px 10px; font-family:inherit; font-size:14px; color:var(--ink); background:var(--surface); }
+  .rd-rem-note { font-size:11px; color:var(--muted); margin-top:9px; line-height:1.45; }
 </style>
 </head>
 <body class="no-select">
@@ -1521,7 +1526,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.4<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1943,35 +1948,19 @@
 
       <!-- Semainier de rappels -->
       <div id="rd-rem-panel" style="display:none;margin-top:14px;background:var(--surface-warm);border-radius:16px;padding:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <div style="font-size:13px;font-weight:600;color:var(--ink);">🔔 Rappels</div>
-          <label class="rd-switch"><input type="checkbox" id="rd-rem-on" onchange="rdToggleRem()"><span class="rd-slider"></span></label>
+        <input type="checkbox" id="rd-rem-on" style="display:none;">
+        <div class="rd-rem-row" id="rd-time-matin">
+          <span class="rd-rem-lbl">☀️ Heure du rappel</span>
+          <input type="time" id="rd-h-matin" value="08:00" class="rd-time">
         </div>
-        
-        <div id="rd-rem-body" style="display:none;">
-          <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:7px;">Quels jours ?</div>
-          <div style="display:flex;gap:5px;margin-bottom:10px;">
-            <button type="button" class="rd-day" data-day="1" onclick="rdToggleDay(1)">L</button>
-            <button type="button" class="rd-day" data-day="2" onclick="rdToggleDay(2)">M</button>
-            <button type="button" class="rd-day" data-day="3" onclick="rdToggleDay(3)">M</button>
-            <button type="button" class="rd-day" data-day="4" onclick="rdToggleDay(4)">J</button>
-            <button type="button" class="rd-day" data-day="5" onclick="rdToggleDay(5)">V</button>
-            <button type="button" class="rd-day" data-day="6" onclick="rdToggleDay(6)">S</button>
-            <button type="button" class="rd-day" data-day="0" onclick="rdToggleDay(0)">D</button>
-          </div>
-          <button type="button" id="rd-alldays" onclick="rdAllDays()" style="background:none;border:none;color:var(--accent);font-size:12px;font-family:inherit;cursor:pointer;padding:0 0 12px;text-decoration:underline;">Tous les jours</button>
-          <div id="rd-time-matin" style="display:none;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);">
-            <span style="font-size:13px;color:var(--ink-soft);">☀️ Heure du matin</span>
-            <input type="time" id="rd-h-matin" value="08:00" style="border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--ink);">
-          </div>
-          <div id="rd-time-soir" style="display:none;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);">
-            <span style="font-size:13px;color:var(--ink-soft);">🌙 Heure du soir</span>
-            <input type="time" id="rd-h-soir" value="21:00" style="border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--ink);">
-          </div>
+        <div class="rd-rem-row" id="rd-time-soir">
+          <span class="rd-rem-lbl">🌙 Heure du rappel</span>
+          <input type="time" id="rd-h-soir" value="21:00" class="rd-time">
         </div>
+        <div class="rd-rem-note" id="rd-rem-note">Tu recevras une notification chaque jour 🌸</div>
       </div>
 
-      <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;display:block;margin-top:16px;">Les étapes</label>
+      
       <div id="rd-products" style="display:flex;flex-direction:column;gap:8px;margin:10px 0;"></div>
       <div id="rd-conflicts"></div>
       <button class="add-product-card" style="margin-top:0;" onclick="openRdPicker()">＋ Ajouter des produits</button>
@@ -4404,46 +4393,54 @@
   function closeRituelSheet(){ document.getElementById('rituel-sheet').classList.remove('open'); }
   // Récupère l'objet rappels depuis l'interface du semainier
   function rdCollectRappels(){
-    const on = document.getElementById('rd-rem-on') && document.getElementById('rd-rem-on').checked;
-    const m = rituelDraft ? rituelDraft.moment : 'both';
+    const onEl = document.getElementById('rd-rem-on');
+    const on = onEl && onEl.checked;
+    const m = rituelDraft ? rituelDraft.moment : 'matin';
+
     if(m==='hebdo'){
-      // Soin hebdo : on mémorise toujours le jour choisi ; le rappel utilise ce jour
+      // Soin hebdo : le rappel tombe le jour choisi pour le soin
       const obj = { on: !!on, hebdoDay: rdHebdoDay };
-      if(on){ obj.days=[rdHebdoDay]; obj.soir = document.getElementById('rd-h-soir').value || '21:00'; }
+      if(on){
+        obj.days = [rdHebdoDay];
+        obj.soir = document.getElementById('rd-h-soir').value || '21:00';
+      }
       return obj;
     }
+
     if(!on) return null;
-    const days = Array.from(rdRemDays).sort();
-    const obj = { on:true, days:days };
+    // Matin ou soir : la routine est quotidienne, donc le rappel aussi
+    const obj = { on:true, days:[0,1,2,3,4,5,6] };
     if(m==='matin'||m==='both'){ obj.matin = document.getElementById('rd-h-matin').value || '08:00'; }
-    if(m==='soir'||m==='both'){ obj.soir = document.getElementById('rd-h-soir').value || '21:00'; }
+    if(m==='soir'||m==='both'){ obj.soir  = document.getElementById('rd-h-soir').value  || '21:00'; }
     return obj;
   }
   // Applique un objet rappels à l'interface (édition)
   function rdApplyRappels(rap){
-    rdRemDays = new Set();
-    rdHebdoDay = (rap && typeof rap.hebdoDay==='number') ? rap.hebdoDay : 0;
-    document.querySelectorAll('.rd-hday').forEach(b=>b.classList.toggle('on', parseInt(b.dataset.hday,10)===rdHebdoDay));
     const onEl=document.getElementById('rd-rem-on');
-    if(rap && rap.on){
-      onEl.checked = true;
-      (rap.days||[]).forEach(d=>rdRemDays.add(d));
+    const panel=document.getElementById('rd-rem-panel');
+    const bell=document.getElementById('rd-bell');
+    if(!onEl) return;
+
+    const actif = !!(rap && rap.on);
+    onEl.checked = actif;
+
+    if(rap){
       if(rap.matin) document.getElementById('rd-h-matin').value = rap.matin;
-      if(rap.soir) document.getElementById('rd-h-soir').value = rap.soir;
-      document.getElementById('rd-rem-body').style.display='block';
-      rdSyncRemTimes();
-    } else {
-      onEl.checked = false;
-      document.getElementById('rd-rem-body').style.display='none';
+      if(rap.soir)  document.getElementById('rd-h-soir').value  = rap.soir;
     }
-    document.querySelectorAll('.rd-day:not(.rd-hday)').forEach(b=>b.classList.toggle('on', rdRemDays.has(parseInt(b.dataset.day,10))));
-    rdUpdateAllDaysLabel();
-    // Panneau fermé par défaut ; la cloche indique s'il y a des rappels
-    const _p=document.getElementById('rd-rem-panel');
-    const _b=document.getElementById('rd-bell');
-    if(_p) _p.style.display='none';
-    if(_b) _b.classList.remove('on');
-    rdRefreshBell();
+    // Le jour du soin hebdo (semainier hors rappels) : on le restaure toujours
+    rdHebdoDay = (rap && typeof rap.hebdoDay === 'number') ? rap.hebdoDay : 0;
+    document.querySelectorAll('.rd-hday').forEach(b=>{
+      b.classList.toggle('on', parseInt(b.dataset.hday,10) === rdHebdoDay);
+    });
+
+    // Le panneau reste fermé : la cloche indique juste s'il y a un rappel
+    if(panel) panel.style.display = 'none';
+    if(bell){
+      bell.classList.remove('on');
+      bell.classList.toggle('has-rem', actif);
+    }
+    rdSyncRemTimes();
   }
 
   // ===== Semainier de rappels (par rituel) =====
@@ -4451,18 +4448,24 @@
   function rdPickHebdoDay(d){
     rdHebdoDay = d;
     document.querySelectorAll('.rd-hday').forEach(b=>b.classList.toggle('on', parseInt(b.dataset.hday,10)===d));
+    rdSyncRemTimes();   // la note du rappel suit le jour choisi
   }
-
-  let rdRemDays = new Set();  // 0=dim, 1=lun ... 6=sam
   // La cloche : discrète, elle ouvre les réglages de rappel au besoin
   function rdToggleRemPanel(){
     const panel=document.getElementById('rd-rem-panel');
     const bell=document.getElementById('rd-bell');
-    if(!panel || !bell) return;
-    const ouvert = panel.style.display !== 'none';
-    panel.style.display = ouvert ? 'none' : 'block';
-    bell.classList.toggle('on', !ouvert);
-    if(!ouvert) panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    const on=document.getElementById('rd-rem-on');
+    if(!panel || !bell || !on) return;
+
+    const actif = !on.checked;      // la cloche allume ou éteint le rappel
+    on.checked = actif;
+    panel.style.display = actif ? 'block' : 'none';
+    bell.classList.toggle('on', actif);
+
+    if(actif){
+      rdSyncRemTimes();
+      panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
   }
 
   // Un point sur la cloche quand des rappels sont actifs
@@ -4479,41 +4482,26 @@
     document.getElementById('rd-rem-body').style.display = on ? 'block' : 'none';
     if(on) rdSyncRemTimes();
   }
-  function rdToggleDay(d){
-    if(rdRemDays.has(d)) rdRemDays.delete(d); else rdRemDays.add(d);
-    document.querySelector('.rd-day[data-day="'+d+'"]').classList.toggle('on', rdRemDays.has(d));
-    rdUpdateAllDaysLabel();
-  }
-  function rdAllDays(){
-    const all=[0,1,2,3,4,5,6];
-    const isAll = all.every(d=>rdRemDays.has(d));
-    rdRemDays = isAll ? new Set() : new Set(all);
-    document.querySelectorAll('.rd-day').forEach(b=>b.classList.toggle('on', rdRemDays.has(parseInt(b.dataset.day,10))));
-    rdUpdateAllDaysLabel();
-  }
-  function rdUpdateAllDaysLabel(){
-    const all=[0,1,2,3,4,5,6];
-    const isAll = all.every(d=>rdRemDays.has(d));
-    const btn=document.getElementById('rd-alldays');
-    if(btn) btn.textContent = isAll ? 'Aucun jour' : 'Tous les jours';
-  }
+  
+  
+  
   // affiche les sélecteurs d'heure selon le moment (matin/soir/both)
   function rdSyncRemTimes(){
     const tm=document.getElementById('rd-time-matin'), ts=document.getElementById('rd-time-soir');
     if(!tm||!ts) return;
-    const m = rituelDraft ? rituelDraft.moment : 'both';
+    const m = rituelDraft ? rituelDraft.moment : 'matin';
+    // Une seule heure : celle du créneau concerné
     tm.style.display = (m==='matin'||m==='both') ? 'flex' : 'none';
     ts.style.display = (m==='soir'||m==='both'||m==='hebdo') ? 'flex' : 'none';
-    // Pour un soin hebdo, le jour du rappel = le jour choisi plus haut : on cache le semainier de jours
-    const body=document.getElementById('rd-rem-body');
-    if(body){
-      const daysRow=body.querySelector('div[style*="display:flex"][style*="gap:5px"]');
-      const daysLabel=daysRow ? daysRow.previousElementSibling : null;
-      const allBtn=document.getElementById('rd-alldays');
-      const hide = (m==='hebdo');
-      if(daysRow) daysRow.style.display = hide ? 'none' : 'flex';
-      if(daysLabel) daysLabel.style.display = hide ? 'none' : 'block';
-      if(allBtn) allBtn.style.display = hide ? 'none' : 'inline';
+
+    const note=document.getElementById('rd-rem-note');
+    if(note){
+      if(m==='hebdo'){
+        const JOURS=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+        note.textContent = 'Tu recevras une notification chaque ' + (JOURS[rdHebdoDay] || 'dimanche') + ' 🌸';
+      } else {
+        note.textContent = 'Tu recevras une notification chaque jour 🌸';
+      }
     }
   }
 
