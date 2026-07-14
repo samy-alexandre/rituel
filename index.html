@@ -660,11 +660,11 @@
   .sort-select { flex-shrink:0; padding:6px 28px 6px 10px; border:1px solid var(--line); border-radius:16px; background:var(--surface); font-size:11.5px; font-family:inherit; color:var(--ink-soft); cursor:pointer; -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23968779' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
   .sort-select:focus { outline:none; border-color:var(--accent); }
   .sort-select.active-filter { background-color:var(--accent); color:#fff; border-color:var(--accent); }
-  .cat-dd-menu { display:none; position:absolute; top:calc(100% + 4px); right:0; background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 24px rgba(46,33,28,0.15); padding:5px; z-index:50; min-width:150px; max-height:280px; overflow-y:auto; }
+  
   .cat-dd-menu.open { display:block; }
-  .cat-dd-opt { display:block; width:100%; text-align:left; padding:9px 12px; border:none; background:none; font-family:inherit; font-size:13px; color:var(--ink-soft); cursor:pointer; border-radius:8px; white-space:nowrap; }
-  .cat-dd-opt:hover { background:var(--surface-warm); }
-  .cat-dd-opt.sel { background:var(--accent); color:#fff; }
+  
+  
+  
   #cat-dd-btn.active-filter { background:var(--accent); color:#fff; border-color:var(--accent); }
   #selection-bar.show { transform:translateY(0) !important; }
   #fab-add:active { transform:scale(0.92); box-shadow:0 3px 12px rgba(142,60,38,0.3); }
@@ -900,6 +900,20 @@
   .dp-year { padding:11px 4px; border-radius:12px; border:1px solid var(--line); background:var(--surface); font-family:inherit; font-size:13.5px; color:var(--ink); cursor:pointer; }
   .dp-year.sel { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
   .dp-year:active { transform:scale(.96); }
+  /* ═══ Produits : barre de filtres pleine largeur ═══ */
+  .sort-bar { display:flex; gap:5px; margin-bottom:12px; align-items:stretch; }
+  .sort-bar .sort-chip { flex:1 1 0; min-width:0; flex-shrink:1 !important; padding:7px 6px; text-align:center; justify-content:center; display:flex; align-items:center; gap:3px; }
+  .sort-bar .cat-dd { flex:1 1 0; min-width:0; position:relative; }
+  .sort-bar .cat-dd .sort-chip { width:100%; }
+  .sort-chip .chev { font-size:9px; opacity:.55; flex-shrink:0; }
+  .cat-dd-menu { display:none; position:absolute; top:calc(100% + 5px); right:0; left:auto; min-width:170px; background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 12px 30px rgba(46,33,28,0.16); padding:5px; z-index:60; }
+  .cat-dd-menu.open { display:block; }
+  .cat-dd-opt { display:flex; align-items:center; gap:9px; width:100%; padding:9px 11px; border:none; background:none; font-family:inherit; font-size:13px; color:var(--ink); cursor:pointer; border-radius:10px; text-align:left; }
+  .cat-dd-opt .e { font-size:15px; width:19px; text-align:center; flex-shrink:0; }
+  .cat-dd-opt .n { flex:1; min-width:0; white-space:nowrap; }
+  .cat-dd-opt .c { font-size:11px; color:var(--muted); flex-shrink:0; }
+  .cat-dd-opt.sel { background:var(--accent); color:#fff; }
+  .cat-dd-opt.sel .c { color:rgba(255,255,255,0.75); }
 </style>
 </head>
 <body class="no-select">
@@ -1406,11 +1420,14 @@
     </div>
 
     <div class="section">
-      <div style="display:flex;gap:5px;margin-bottom:12px;">
+      <div class="sort-bar">
         <button type="button" class="sort-chip sel" data-sort="fav" onclick="setProductSort('fav')">Favoris</button>
         <button type="button" class="sort-chip" data-sort="alpha" onclick="setProductSort('alpha')">A-Z</button>
         <button type="button" class="sort-chip" data-sort="perem" onclick="setProductSort('perem')">Date</button>
-        <button type="button" class="sort-chip" id="cat-dd-btn" onclick="openCatSheet()" style="display:flex;align-items:center;gap:5px;flex-shrink:0;">Catégorie <span style="font-size:8px;opacity:0.6;">▼</span></button>
+        <div class="cat-dd">
+          <button type="button" class="sort-chip" id="cat-dd-btn" onclick="toggleCatDD(event)">Catégorie <span class="chev">▾</span></button>
+          <div class="cat-dd-menu" id="cat-menu"></div>
+        </div>
       </div>
       
       <div id="products-list" style="display:flex;flex-direction:column;gap:12px;"></div>
@@ -1471,7 +1488,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1606,16 +1623,6 @@
   </div>
 
   
-  <!-- Filtre par catégorie -->
-  <div class="sheet-overlay" id="cat-sheet">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">Filtrer par catégorie</div>
-      <div class="cat-list" id="cat-list"></div>
-      <button class="btn btn-ghost" onclick="closeCatSheet()">Fermer</button>
-    </div>
-  </div>
-
   <div class="sheet-overlay" id="plus-sheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -3335,32 +3342,26 @@
     if(dd && menu && !dd.contains(e.target)){ menu.classList.remove('open'); }
   });
 
-    // ═══ Filtre par catégorie (feuille du bas) ═══
-  function openCatSheet(){
-    const host=document.getElementById('cat-list'); if(!host) return;
-    const prods = window.__allProducts || [];
-    // Combien de produits dans chaque catégorie ? (une catégorie vide ne sert à rien)
-    const compte = {};
-    prods.forEach(p=>{ const k=p.categorie||'cible'; compte[k]=(compte[k]||0)+1; });
+    // ═══ Filtre par catégorie (menu déroulant) ═══
+  function toggleCatDD(ev){
+    if(ev) ev.stopPropagation();
+    const menu=document.getElementById('cat-menu'); if(!menu) return;
+    if(menu.classList.contains('open')){ menu.classList.remove('open'); return; }
 
-    // "Toutes" en premier, puis les catégories qui contiennent au moins un produit
+    const prods = window.__allProducts || [];
+    // On ne propose que les catégories qui contiennent vraiment quelque chose
+    const compte = {};
+    prods.forEach(p=>{ const k=p.categorie||'autre'; compte[k]=(compte[k]||0)+1; });
     const lignes = [['all','🌸','Toutes']].concat(CATS.filter(x=>compte[x[0]]));
-    host.innerHTML = lignes.map(cat=>{
-      const [id, emoji, nom] = cat;
+
+    menu.innerHTML = lignes.map(cat=>{
+      const id=cat[0], emoji=cat[1], nom=cat[2];
       const n = (id==='all') ? prods.length : (compte[id]||0);
       const sel = (productCatFilter===id) ? ' sel' : '';
-      return '<button type="button" class="cat-opt'+sel+'" onclick="pickCat(\''+id+'\')">'+
-        '<span class="e">'+emoji+'</span>'+
-        '<span class="n">'+nom+'</span>'+
-        '<span class="c">'+n+'</span>'+
-      '</button>';
+      return '<button type="button" class="cat-dd-opt'+sel+'" onclick="pickCat(\''+id+'\')">'+
+        '<span class="e">'+emoji+'</span><span class="n">'+nom+'</span><span class="c">'+n+'</span></button>';
     }).join('');
-
-    document.getElementById('cat-sheet').classList.add('open');
-  }
-
-  function closeCatSheet(){
-    document.getElementById('cat-sheet').classList.remove('open');
+    menu.classList.add('open');
   }
 
   function pickCat(cat){
@@ -3368,12 +3369,23 @@
     const btn=document.getElementById('cat-dd-btn');
     if(btn){
       const info = CATS.find(x=>x[0]===cat);
-      btn.innerHTML = (cat==='all' ? 'Catégorie' : (info ? info[2] : 'Catégorie')) + ' <span style="font-size:8px;opacity:0.6;">▼</span>';
-      btn.classList.toggle('active-filter', cat!=='all');
+      const label = (cat==='all') ? 'Catégorie' : (info ? info[2] : 'Catégorie');
+      btn.innerHTML = label + ' <span class="chev">▾</span>';
+      btn.classList.toggle('sel', cat!=='all');
     }
-    closeCatSheet();
+    const menu=document.getElementById('cat-menu');
+    if(menu) menu.classList.remove('open');
     loadProducts();
   }
+
+  // Refermer le menu si on tape ailleurs
+  document.addEventListener('click', function(e){
+    const menu=document.getElementById('cat-menu');
+    if(!menu || !menu.classList.contains('open')) return;
+    if(!e.target.closest('.cat-dd')) menu.classList.remove('open');
+  });
+
+
 
   function setCatFilter(cat){
     productCatFilter = cat;
@@ -3479,6 +3491,8 @@
     const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const _favs = favSet();
     let baseData = (data || []);
+    // On garde la liste complète : elle sert à compter les produits par catégorie
+    window.__allProducts = baseData.slice();
     // Filtre par catégorie
     if(productCatFilter && productCatFilter!=='all'){
       baseData = baseData.filter(function(p){ return (p.categorie||'autre')===productCatFilter; });
