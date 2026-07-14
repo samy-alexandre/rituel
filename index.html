@@ -901,7 +901,7 @@
   .dp-year.sel { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
   .dp-year:active { transform:scale(.96); }
   /* ═══ Produits : barre de filtres pleine largeur ═══ */
-  .sort-bar { display:flex; gap:5px; margin-bottom:12px; align-items:stretch; }
+  
   .sort-bar .sort-chip { flex:1 1 0; min-width:0; flex-shrink:1 !important; padding:7px 6px; text-align:center; justify-content:center; display:flex; align-items:center; gap:3px; }
   .sort-bar .cat-dd { flex:1 1 0; min-width:0; position:relative; }
   .sort-bar .cat-dd .sort-chip { width:100%; }
@@ -920,7 +920,10 @@
   .sort-btn svg { color:var(--muted); flex-shrink:0; }
   .sort-btn .chev { font-size:9px; color:var(--muted); }
   .sort-btn:active { transform:scale(.98); }
-  .sort-menu { display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:230px; background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:0 16px 40px rgba(46,33,28,0.16); padding:6px; z-index:60; }
+  .sort-menu { display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:230px; max-width:calc(100vw - 40px); background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:0 16px 40px rgba(46,33,28,0.16); padding:6px; z-index:60; max-height:min(46vh, 300px); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  .sort-menu::-webkit-scrollbar { width:4px; }
+  .sort-menu::-webkit-scrollbar-thumb { background:var(--line); border-radius:4px; }
+  .sort-menu::-webkit-scrollbar-track { background:transparent; }
   .sort-menu.open { display:block; animation:sortIn .16s cubic-bezier(.2,.9,.3,1); }
   @keyframes sortIn { from{ opacity:0; transform:translateY(-5px) scale(.98); } to{ opacity:1; transform:none; } }
   .sort-opt { display:flex; align-items:center; gap:10px; width:100%; padding:11px 12px; border:none; background:none; font-family:inherit; font-size:13.5px; color:var(--ink); cursor:pointer; border-radius:11px; text-align:left; }
@@ -953,6 +956,11 @@
   .rd-rem-lbl { font-size:13.5px; color:var(--ink); }
   .rd-time { border:1px solid var(--line); border-radius:12px; padding:8px 10px; font-family:inherit; font-size:14px; color:var(--ink); background:var(--surface); }
   .rd-rem-note { font-size:11px; color:var(--muted); margin-top:9px; line-height:1.45; }
+  /* ═══ Éditeur de rituel : actions côte à côte ═══ */
+  .rd-actions { display:flex; gap:9px; margin-top:16px; }
+  .rd-cancel { flex:0 0 38%; padding:14px 12px; border-radius:16px; border:1px solid var(--line); background:var(--surface); font-family:inherit; font-size:14px; font-weight:500; color:var(--ink-soft); cursor:pointer; transition:transform .12s; }
+  .rd-save { flex:1; padding:14px 12px; border-radius:16px; border:none; background:var(--accent); color:#fff; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 8px 20px rgba(201,90,63,0.26); transition:transform .12s; }
+  .rd-cancel:active, .rd-save:active { transform:scale(.98); }
 </style>
 </head>
 <body class="no-select">
@@ -1526,7 +1534,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.5<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1931,7 +1939,7 @@
           <span class="rd-bell-dot" id="rd-bell-dot"></span>
         </button>
       </div>
-      <div class="field"><label>Nom du rituel</label><input id="rd-nom" placeholder="Ex. Routine du matin"></div>
+      <input type="hidden" id="rd-nom">
       
       <div id="rd-hebdo-day" style="display:none;margin:4px 0 8px;">
         <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:7px;">Quel jour de la semaine ?</div>
@@ -1964,9 +1972,10 @@
       <div id="rd-products" style="display:flex;flex-direction:column;gap:8px;margin:10px 0;"></div>
       <div id="rd-conflicts"></div>
       <button class="add-product-card" style="margin-top:0;" onclick="openRdPicker()">＋ Ajouter des produits</button>
-      <button class="btn btn-accent" style="margin-top:14px;" onclick="saveRituel()">Enregistrer</button>
-      <button class="btn" id="rd-delete" style="margin-top:10px;background:transparent;color:var(--accent);display:none;" onclick="deleteRituel()">Supprimer ce rituel</button>
-      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeRituelSheet()">Annuler</button>
+      <div class="rd-actions">
+        <button class="rd-cancel" onclick="closeRituelSheet()">Annuler</button>
+        <button class="rd-save" onclick="saveRituel()">Enregistrer</button>
+      </div>
     </div>
   </div>
 
@@ -4087,11 +4096,10 @@
     if((r.moment==='matin' || r.moment==='soir') && n){
       const vers = (r.moment==='matin') ? 'soir' : 'matin';
       const e = (vers==='soir') ? '🌙' : '☀️';
-      const dejaLa = rits.some(x=>x.moment===vers);
       html += '<button type="button" class="ract-opt" onclick="ractCopier(\''+vers+'\')">'+
           '<span class="ico">'+e+'</span>'+
           '<span class="txt">Copier vers le '+vers+
-            '<small>'+ n +' étape'+(n>1?'s':'')+(dejaLa ? ' · remplacera ta routine du '+vers : '')+'</small>'+
+            '<small>'+ n +' étape'+(n>1?'s':'')+' · une copie, sans rien effacer</small>'+
           '</span></button>';
     }
 
@@ -4139,29 +4147,29 @@
     if(!prods.length){ showToast('Rien à copier 🌸'); return; }
 
     const rits = window.__allRituels || [];
-    const existante = rits.find(x=>x.moment===vers);
-    if(existante && !confirm('Remplacer ta routine du '+vers+' ?')) return;
-
     const nom = (vers==='matin') ? 'Routine du matin' : 'Routine du soir';
+
     try{
-      if(existante){
-        // On met à jour la routine existante : pas de doublon dans la liste
-        const { error } = await sb.from('rituels')
-          .update({ produits: prods.slice(), actif: true })
-          .eq('id', existante.id);
-        if(error) throw error;
-      } else {
-        const { error } = await sb.from('rituels').insert({
-          user_id: currentUser.id,
-          nom: nom,
-          moment: vers,
-          produits: prods.slice(),
-          actif: true,
-          position: rits.length
-        });
-        if(error) throw error;
+      // On AJOUTE une copie : rien n'est supprimé ni écrasé.
+      const { data: nouvelle, error } = await sb.from('rituels').insert({
+        user_id: currentUser.id,
+        nom: nom,
+        moment: vers,
+        produits: prods.slice(),
+        actif: true,
+        position: rits.length
+      }).select().single();
+      if(error) throw error;
+
+      // Une seule routine active par créneau : les autres passent en réserve (sans être perdues)
+      const aDesactiver = rits
+        .filter(r => r.actif && r.moment === vers && String(r.id) !== String(nouvelle && nouvelle.id))
+        .map(r => r.id);
+      if(aDesactiver.length){
+        await sb.from('rituels').update({ actif:false }).in('id', aDesactiver);
       }
-      showToast('Routine copiée · ajuste-la comme tu veux 🌸');
+
+      showToast('Copiée vers le ' + vers + ' · ajuste-la comme tu veux 🌸');
       window.__allRituels = null;
       await loadRituels();
       rpTabGo(vers);
@@ -4382,11 +4390,17 @@
     } else {
       rituelDraft = { id:null, nom:'', moment:'matin', produits:[] };
     }
-    document.getElementById('rd-title').textContent = id ? 'Modifier le rituel' : 'Créer un rituel';
     document.getElementById('rd-nom').value = rituelDraft.nom;
     setTimeout(function(){ rdApplyRappels(loadedRappels); }, 0);
-    document.getElementById('rd-delete').style.display = id ? 'block' : 'none';
     rdSetMoment(rituelDraft.moment);
+
+    // Le titre porte l'info : nom du créneau à la création, "Modifier" sinon
+    const m = rituelDraft.moment;
+    const creneau = (m==='matin') ? 'Routine du matin'
+                  : (m==='soir')  ? 'Routine du soir'
+                  : (m==='hebdo') ? 'Soin hebdomadaire' : 'Ma routine';
+    document.getElementById('rd-title').textContent = id ? 'Modifier le rituel' : creneau;
+
     renderRdProducts();
     document.getElementById('rituel-sheet').classList.add('open');
   }
@@ -4713,15 +4727,6 @@
     window.__allRituels=null;
     loadRituels();
     loadHomeRoutine();
-  }
-  async function deleteRituel(){
-    if(!rituelDraft || !rituelDraft.id) return;
-    if(!confirm('Supprimer ce rituel ?')) return;
-    await sb.from('rituels').delete().eq('id', rituelDraft.id);
-    await recomputeRituelType();
-    closeRituelSheet();
-    showToast('Rituel supprimé');
-    loadRituels();
   }
 
   // ===== Bulle Léa flottante (déplaçable, se colle aux bords) =====
