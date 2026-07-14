@@ -887,6 +887,19 @@
   .rt-copy-btn { display:flex; flex-direction:column; align-items:center; gap:2px; width:100%; margin-top:10px; padding:11px 14px; border-radius:15px; border:1px solid var(--line); background:var(--surface-warm); font-family:inherit; font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:transform .12s; }
   .rt-copy-btn:active { transform:scale(.985); }
   .rt-copy-sub { font-size:10.5px; font-weight:400; color:var(--muted); }
+  /* ═══ Formulaire produit : deux colonnes ═══ */
+  .pf-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; min-width:0; }
+  .pf-grid .field input { width:100%; box-sizing:border-box; }
+  /* ═══ Calendrier : hauteur stable et choix rapide de l'année ═══ */
+  .dp-title { font-family:var(--serif); font-size:17px; color:var(--ink); text-transform:capitalize; background:var(--surface-warm); border:none; border-radius:12px; padding:7px 14px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:background .15s; }
+  .dp-title::after { content:'▾'; font-size:10px; opacity:.5; }
+  .dp-title:active { background:var(--line); }
+  #dp-days { min-height:246px; align-content:start; }   /* 6 semaines : la carte ne bouge plus */
+  .dp-years { display:none; grid-template-columns:repeat(4,1fr); gap:6px; max-height:246px; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:2px; }
+  .dp-years.open { display:grid; }
+  .dp-year { padding:11px 4px; border-radius:12px; border:1px solid var(--line); background:var(--surface); font-family:inherit; font-size:13.5px; color:var(--ink); cursor:pointer; }
+  .dp-year.sel { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  .dp-year:active { transform:scale(.96); }
 </style>
 </head>
 <body class="no-select">
@@ -1458,7 +1471,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 22.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -1956,11 +1969,9 @@
       <div class="field"><label>Catégorie</label><div id="pf-cats" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;"><button type="button" class="rj-chip" data-cat="demaquillant" onclick="pfSetCat(this,'demaquillant')">🧼 Démaquillant</button><button type="button" class="rj-chip" data-cat="nettoyant" onclick="pfSetCat(this,'nettoyant')">🫧 Nettoyant</button><button type="button" class="rj-chip" data-cat="toner" onclick="pfSetCat(this,'toner')">💦 Lotion / toner</button><button type="button" class="rj-chip" data-cat="serum" onclick="pfSetCat(this,'serum')">✨ Sérum</button><button type="button" class="rj-chip" data-cat="yeux" onclick="pfSetCat(this,'yeux')">👁️ Yeux</button><button type="button" class="rj-chip" data-cat="creme" onclick="pfSetCat(this,'creme')">🧴 Crème</button><button type="button" class="rj-chip" data-cat="spf" onclick="pfSetCat(this,'spf')">☀️ SPF</button><button type="button" class="rj-chip" data-cat="masque" onclick="pfSetCat(this,'masque')">🎭 Masque / exfo</button><button type="button" class="rj-chip" data-cat="cible" onclick="pfSetCat(this,'cible')">🩹 Soin ciblé</button><button type="button" class="rj-chip" data-cat="autre" onclick="pfSetCat(this,'autre')">🌿 Autre</button></div></div>
       <!-- 2 colonnes : Nom/Marque + Effets/Prix -->
       <div style="display:flex;gap:10px;margin-top:12px;">
-        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">
+        <div class="pf-grid">
           <div class="field" style="margin:0;min-width:0;"><label>Nom *</label><input id="pf-nom" placeholder="Sérum vitamine C" style="width:100%;box-sizing:border-box;"></div>
           <div class="field" style="margin:0;min-width:0;"><label>Marque</label><input id="pf-marque" placeholder="La Roche-Posay" style="width:100%;box-sizing:border-box;"></div>
-        </div>
-        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">
           <div class="field" style="margin:0;min-width:0;"><label>Effets</label><input id="pf-effets" placeholder="éclaircit" style="width:100%;box-sizing:border-box;"></div>
           <div class="field" style="margin:0;min-width:0;"><label>Prix en €</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="15" style="width:100%;box-sizing:border-box;"></div>
         </div>
@@ -1968,8 +1979,10 @@
 
       <!-- Conservation du produit (toutes les infos ensemble) -->
       <div style="margin-top:18px;">
-        <div class="field"><label>Date de péremption</label><input id="pf-peremption" type="text" readonly placeholder="Choisir une date" onclick="dpOpen('pf-peremption')" style="cursor:pointer;" onchange="pfRefreshPerem()"></div>
-        <div class="field" style="margin-top:12px;"><label>Date d'ouverture</label><input id="pf-ouverture" type="text" readonly placeholder="Choisir une date" onclick="dpOpen('pf-ouverture')" style="cursor:pointer;" onchange="pfRefreshPerem()"></div>
+        <div class="pf-grid">
+          <div class="field" style="margin:0;min-width:0;"><label>Date de péremption</label><input id="pf-peremption" type="text" readonly placeholder="Choisir" onclick="dpOpen('pf-peremption')" style="cursor:pointer;width:100%;box-sizing:border-box;" onchange="pfRefreshPerem()"></div>
+          <div class="field" style="margin:0;min-width:0;"><label>Date d'ouverture</label><input id="pf-ouverture" type="text" readonly placeholder="Choisir" onclick="dpOpen('pf-ouverture')" style="cursor:pointer;width:100%;box-sizing:border-box;" onchange="pfRefreshPerem()"></div>
+        </div>
         <div style="margin-top:12px;">
           <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">Durée de conservation après ouverture</label>
           <div style="display:flex;gap:8px;margin-top:6px;">
@@ -3616,12 +3629,53 @@
     // jours de la semaine (une seule fois)
     const dow=document.getElementById('dp-dow');
     dow.innerHTML=DP_DOW.map(d=>'<div class="dp-dow">'+d+'</div>').join('');
+    const yBox=document.getElementById('dp-years');
+    if(yBox){ yBox.classList.remove('open'); }
+    document.getElementById('dp-days').style.display='';
+    dow.style.display='';
     dpRender();
     document.getElementById('dp-overlay').classList.add('open');
   }
   function dpClose(){ document.getElementById('dp-overlay').classList.remove('open'); dpTarget=null; }
   function dpPrevMonth(){ dpView.setMonth(dpView.getMonth()-1); dpRender(); }
   function dpNextMonth(){ dpView.setMonth(dpView.getMonth()+1); dpRender(); }
+  // Choisir l'année d'un coup, au lieu de cliquer 12 fois sur la flèche
+  function dpToggleYears(){
+    const box=document.getElementById('dp-years');
+    const days=document.getElementById('dp-days');
+    const dow=document.getElementById('dp-dow');
+    if(!box) return;
+    const ouvert = box.classList.contains('open');
+    if(ouvert){
+      box.classList.remove('open');
+      days.style.display=''; dow.style.display='';
+      return;
+    }
+    // Années disponibles : de 5 ans en arrière à 15 ans en avant (péremption)
+    const y = dpView.getFullYear();
+    const now = new Date().getFullYear();
+    const debut = Math.min(now - 5, y - 5);
+    const fin   = Math.max(now + 15, y + 5);
+    let html='';
+    for(let a=debut; a<=fin; a++){
+      html += '<button type="button" class="dp-year'+(a===y?' sel':'')+'" onclick="dpPickYear('+a+')">'+a+'</button>';
+    }
+    box.innerHTML = html;
+    box.classList.add('open');
+    days.style.display='none'; dow.style.display='none';
+    // On centre la vue sur l'année courante
+    const sel = box.querySelector('.dp-year.sel');
+    if(sel) sel.scrollIntoView({ block:'center' });
+  }
+
+  function dpPickYear(a){
+    dpView = new Date(a, dpView.getMonth(), 1);
+    document.getElementById('dp-years').classList.remove('open');
+    document.getElementById('dp-days').style.display='';
+    document.getElementById('dp-dow').style.display='';
+    dpRender();
+  }
+
   function dpRender(){
     document.getElementById('dp-title').textContent = DP_MONTHS[dpView.getMonth()]+' '+dpView.getFullYear();
     const y=dpView.getFullYear(), m=dpView.getMonth();
@@ -3641,6 +3695,11 @@
       if(dpSelected && date.getFullYear()===dpSelected.getFullYear() && date.getMonth()===dpSelected.getMonth() && date.getDate()===dpSelected.getDate()) cls+=' sel';
       const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
       html+='<button type="button" class="'+cls+'" onclick="dpPick(\''+ds+'\')">'+d+'</button>';
+    }
+    // On complète toujours jusqu'à 6 semaines : la carte garde la même taille d'un mois à l'autre
+    const posees = startDow + daysInMonth;
+    for(let d=1; posees + d - 1 < 42; d++){
+      html+='<button type="button" class="dp-day other" disabled>'+d+'</button>';
     }
     document.getElementById('dp-days').innerHTML=html;
   }
@@ -6357,10 +6416,11 @@
   <div class="dp-overlay" id="dp-overlay" onclick="if(event.target===this)dpClose()">
     <div class="dp-card">
       <div class="dp-head">
-        <button type="button" class="dp-nav" onclick="dpPrevMonth()">‹</button>
-        <div class="dp-title" id="dp-title">—</div>
-        <button type="button" class="dp-nav" onclick="dpNextMonth()">›</button>
+        <button type="button" class="dp-nav" onclick="dpPrevMonth()" aria-label="Mois précédent">‹</button>
+        <button type="button" class="dp-title" id="dp-title" onclick="dpToggleYears()">—</button>
+        <button type="button" class="dp-nav" onclick="dpNextMonth()" aria-label="Mois suivant">›</button>
       </div>
+      <div class="dp-years" id="dp-years"></div>
       <div class="dp-grid" id="dp-dow"></div>
       <div class="dp-grid" id="dp-days" style="margin-top:4px;"></div>
       <div class="dp-foot">
