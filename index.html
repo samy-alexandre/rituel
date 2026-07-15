@@ -965,6 +965,61 @@
   .rd-nom { width:100%; box-sizing:border-box; padding:14px 16px; border:1px solid var(--line); border-radius:16px; background:var(--surface); font-family:var(--serif); font-size:17px; color:var(--ink); transition:border-color .18s, box-shadow .18s; }
   .rd-nom::placeholder { color:var(--muted); opacity:.65; font-family:var(--serif); }
   .rd-nom:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(201,90,63,0.10); }
+
+  /* ===== Parcours beauté (page Rituel) ===== */
+  #parcours-root{padding:0 0 30px;}
+  .pc-hero{padding:26px 22px 4px;}
+  .pc-hero-title{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--ink);letter-spacing:-0.01em;line-height:1.12;}
+  .pc-hero-title em{font-style:italic;color:var(--accent);}
+  .pc-hero-sub{margin-top:8px;color:var(--ink-soft);font-size:13.5px;line-height:1.55;max-width:335px;}
+  .pc-progress{margin-top:14px;display:flex;align-items:center;gap:10px;}
+  .pc-progress-bar{flex:1;height:6px;border-radius:99px;background:var(--bg-soft);overflow:hidden;}
+  .pc-progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sage),var(--rose),var(--accent));transition:width .6s ease;}
+  .pc-progress-txt{font-size:11.5px;color:var(--muted);font-weight:700;white-space:nowrap;letter-spacing:.02em;}
+
+  .pc-track{padding:20px 20px 4px;}
+  .pc-step{display:flex;gap:14px;position:relative;}
+  .pc-rail{position:relative;width:46px;flex-shrink:0;display:flex;justify-content:center;}
+  .pc-rail::before{content:"";position:absolute;top:24px;bottom:-14px;left:50%;width:2px;transform:translateX(-50%);background:linear-gradient(var(--accent-soft),var(--blush-soft));}
+  .pc-node{width:46px;height:46px;border-radius:50%;background:var(--surface);border:2px solid var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:21px;position:relative;z-index:2;box-shadow:var(--shadow);margin-top:2px;flex-shrink:0;}
+  .pc-node.ghost{background:var(--surface-warm);border:2px dashed var(--line);box-shadow:none;opacity:.68;font-size:19px;}
+
+  .pc-card{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin-bottom:14px;box-shadow:var(--shadow);}
+  .pc-card.ghost{background:transparent;border:1px dashed var(--line);box-shadow:none;}
+  .pc-card-top{display:flex;align-items:center;gap:8px;}
+  .pc-phase{font-family:var(--serif);font-size:16.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;line-height:1.2;}
+  .pc-card.ghost .pc-phase{color:var(--ink-soft);}
+  .pc-moment{font-size:12px;background:var(--surface-warm);border:1px solid var(--line);border-radius:99px;padding:2px 9px;white-space:nowrap;letter-spacing:1px;}
+  .pc-opt{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:var(--bg-soft);border-radius:99px;padding:3px 8px;white-space:nowrap;}
+  .pc-why{margin-top:6px;font-size:12.5px;line-height:1.5;color:var(--ink-soft);}
+  .pc-why b{color:var(--accent);font-weight:600;}
+
+  .pc-prods{margin-top:9px;display:flex;flex-direction:column;gap:6px;}
+  .pc-prod{display:flex;align-items:center;gap:9px;background:var(--surface-warm);border:1px solid var(--line);border-radius:11px;padding:7px 10px;}
+  .pc-prod-e{font-size:16px;flex-shrink:0;}
+  .pc-prod-n{font-size:13px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pc-prod-b{color:var(--muted);font-weight:500;}
+
+  .pc-add{margin-top:10px;display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;color:var(--accent);font-size:12.5px;font-weight:600;font-family:var(--sans);padding:2px 0;}
+
+  .pc-lea{margin-top:10px;display:flex;align-items:center;gap:8px;width:100%;background:var(--blush-soft);border:none;border-radius:12px;padding:8px 11px;cursor:pointer;font-family:var(--sans);text-align:left;}
+  .pc-lea-av{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--serif);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .pc-lea-lbl{flex:1;font-size:12.5px;font-weight:600;color:var(--accent-deep);}
+  .pc-lea .pc-chev{font-size:11px;color:var(--accent-deep);transition:transform .25s ease;}
+  .pc-lea.open .pc-chev{transform:rotate(180deg);}
+  .pc-lea-body{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+  .pc-lea-body>div{padding:9px 6px 4px;font-size:12.5px;line-height:1.55;color:var(--ink-soft);}
+
+  .pc-goal{display:flex;gap:14px;}
+  .pc-goal .pc-rail::before{content:none;}
+  .pc-goal-node{width:46px;height:46px;border-radius:50%;background:linear-gradient(140deg,var(--gold),var(--accent));color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;box-shadow:var(--shadow-lg);flex-shrink:0;margin-top:2px;}
+  .pc-goal-card{flex:1;min-width:0;background:linear-gradient(150deg,var(--blush-soft),var(--surface-warm));border:1px solid var(--accent-soft);border-radius:16px;padding:15px 16px;margin-bottom:8px;}
+  .pc-goal-eyebrow{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);}
+  .pc-goal-title{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink);margin-top:4px;line-height:1.22;}
+  .pc-goal-sub{margin-top:6px;font-size:12.5px;line-height:1.5;color:var(--ink-soft);}
+
+  .pc-empty{padding:6px 22px 20px;display:flex;flex-direction:column;gap:8px;}
+
 </style>
 </head>
 <body class="no-select">
@@ -1399,39 +1454,7 @@
 
   <!-- ====================== CHAT ====================== -->
   <div id="ritual" class="screen">
-    <div style="padding:26px 20px 0;">
-      <div class="rp-hello">Ton rituel 🌸</div>
-    </div>
-    <div class="rt-tabs">
-      <button class="rt-tab sel" data-m="matin" onclick="rpTabGo('matin')"><span>☀️</span> Matin</button>
-      <button class="rt-tab" data-m="soir" onclick="rpTabGo('soir')"><span>🌙</span> Soir</button>
-      <button class="rt-tab" data-m="hebdo" onclick="rpTabGo('hebdo')"><span>🧖‍♀️</span> Hebdo</button>
-    </div>
-    <div id="rituel-actuel-card" style="display:none;padding:4px 20px 4px;"></div>
-    
-    
-    <div class="section" id="rituel-presets-section" style="display:none;">
-      <div style="margin:18px 0 14px;">
-        <div class="section-head" style="margin-bottom:6px;"><h3 class="section-title" style="font-size:16px;">Pars d'un rituel <em>toute faite</em> ✨</h3></div>
-        <p style="color:var(--muted);font-size:12px;margin:0 0 10px;line-height:1.5;">Choisis ton profil : on crée les produits et le rituel pour toi, dans le bon ordre. Tu personnalises ensuite.</p>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('grasse')"><span style="font-size:20px;">🫧</span><span style="flex:1;min-width:0;"><span style="display:block;">Peau grasse · débutant</span><span style="font-size:11px;color:var(--muted);">5 étapes</span></span><span style="color:var(--muted);">›</span></button>
-        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('acne')"><span style="font-size:20px;">🌋</span><span style="flex:1;min-width:0;"><span style="display:block;">Acné légère</span><span style="font-size:11px;color:var(--muted);">4 étapes</span></span><span style="color:var(--muted);">›</span></button>
-        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('seche')"><span style="font-size:20px;">🏜️</span><span style="flex:1;min-width:0;"><span style="display:block;">Peau sèche</span><span style="font-size:11px;color:var(--muted);">4 étapes</span></span><span style="color:var(--muted);">›</span></button>
-        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('rougeurs')"><span style="font-size:20px;">🍓</span><span style="flex:1;min-width:0;"><span style="display:block;">Rougeurs</span><span style="font-size:11px;color:var(--muted);">4 étapes</span></span><span style="color:var(--muted);">›</span></button>
-        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('sensible')"><span style="font-size:20px;">🌸</span><span style="flex:1;min-width:0;"><span style="display:block;">Peau sensible</span><span style="font-size:11px;color:var(--muted);">3 étapes</span></span><span style="color:var(--muted);">›</span></button>
-        
-        <button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;" onclick="applyPreset('simple')"><span style="font-size:20px;">🌿</span><span style="flex:1;min-width:0;"><span style="display:block;">Ultra-simple · 3 étapes</span><span style="font-size:11px;color:var(--muted);">3 étapes</span></span><span style="color:var(--muted);">›</span></button>
-        </div>
-      </div>
-    </div>
-    <div class="section">
-      
-      
-
-
-      <div id="rituels-list"></div>
-    </div>
+    <div id="parcours-root"></div>
   </div>
 
   <div id="chat" class="chat-screen">
@@ -4390,6 +4413,127 @@
     }
   }
 
+  // ===== Parcours beauté : phases + rendu =====
+  const PC_PHASES = [
+    { key:'preparer', cats:['demaquillant'], emoji:'🌸', nom:'Préparer', moment:'soir', optionnel:false,
+      why:"Le soir, on retire maquillage, SPF et pollution accumulés. La peau respire et reçoit mieux les soins qui suivent.",
+      lea:"Même sans maquillage, un démaquillant le soir enlève le SPF et les impuretés de la journée. Ta peau te dira merci 🌸" },
+    { key:'nettoyer', cats:['nettoyant'], emoji:'🫧', nom:'Nettoyer', moment:'both', optionnel:false,
+      why:"On repart d'une peau nette, matin et soir — sans jamais la décaper.",
+      lea:"Le matin, un nettoyage tout doux suffit : ta peau s'est reposée toute la nuit." },
+    { key:'equilibrer', cats:['toner'], emoji:'💦', nom:'Équilibrer', moment:'both', optionnel:true,
+      why:"Une lotion rééquilibre la peau et la prépare à mieux absorber les soins qui suivent.",
+      lea:"Pas obligatoire — mais un vrai plus si ta peau tiraille juste après le nettoyage." },
+    { key:'traiter', cats:['serum','cible'], emoji:'🎯', nom:'Traiter tes besoins', moment:'both', optionnel:false,
+      why:"Le cœur du soin : les actifs qui répondent à <b>tes besoins spécifiques</b>.",
+      lea:"C'est ici que se joue le travail de fond. La régularité compte plus que la quantité 🌸" },
+    { key:'yeux', cats:['yeux'], emoji:'👁️', nom:'Contour des yeux', moment:'both', optionnel:true,
+      why:"La peau la plus fine du visage — elle mérite un soin doux et dédié.",
+      lea:"Applique du bout de l'annulaire, en tapotant : c'est le doigt le plus léger 👁️" },
+    { key:'hydrater', cats:['creme'], emoji:'💧', nom:'Hydrater', moment:'both', optionnel:false,
+      why:"On scelle l'hydratation et on renforce la barrière protectrice de la peau.",
+      lea:"Même les peaux grasses ont besoin d'hydratation — sinon elles produisent plus de sébum pour compenser." },
+    { key:'proteger', cats:['spf'], emoji:'☀️', nom:'Protéger', moment:'matin', optionnel:false,
+      why:"L'étape anti-âge n°1. Le matin, toujours — même quand il fait gris.",
+      lea:"Le SPF, c'est LE geste qui change tout sur le long terme. Renouvelle-le si tu restes longtemps dehors ☀️" },
+    { key:'semaine', cats:['masque'], emoji:'🧖‍♀️', nom:'Le rendez-vous de la semaine', moment:'hebdo', optionnel:true,
+      why:"Une fois par semaine : masque ou gommage, pour un coup d'éclat en profondeur.",
+      lea:"Une fois par semaine suffit largement — trop exfolier fragilise la barrière de la peau 🌿" }
+  ];
+
+  function pcMomentBadge(m){
+    if(m==='both') return '☀️ 🌙';
+    if(m==='matin') return '☀️ matin';
+    if(m==='soir') return '🌙 soir';
+    if(m==='hebdo') return '🧖‍♀️ hebdo';
+    return '';
+  }
+  function pcProdChip(p){
+    const parts=(p.nom||'').split(' · ');
+    const brand = parts[1] ? ' <span class="pc-prod-b">· '+parts[1]+'</span>' : '';
+    return '<div class="pc-prod"><span class="pc-prod-e">'+(p.emoji||'🧴')+'</span><span class="pc-prod-n">'+(parts[0]||'Produit')+brand+'</span></div>';
+  }
+  function togglePcLea(el){
+    el.classList.toggle('open');
+    const b=el.nextElementSibling;
+    if(b) b.style.maxHeight = el.classList.contains('open') ? (b.scrollHeight+'px') : '0';
+  }
+
+  function pcGoalHtml(){
+    const g = state.goal;
+    let title='Une peau plus équilibrée', sub='Comprise, respectée et chouchoutée, jour après jour.';
+    if(g==='constance'){ title='Tenir ton rituel'; sub="La régularité, c'est ce qui transforme vraiment la peau. Un petit geste chaque jour 🌸"; }
+    else if(g==='comprendre'){ title='Comprendre ta peau'; sub='Repérer ce qui lui fait du bien, ce qui l\'aggrave, et voir ton évolution au fil du temps.'; }
+    else if(g==='deux'){ title='Une peau équilibrée & comprise'; sub='Tenir ton rituel tout en apprenant ce qui fait vraiment du bien à ta peau.'; }
+    return '<div class="pc-goal"><div class="pc-rail"><div class="pc-goal-node">✨</div></div>'+
+      '<div class="pc-goal-card"><div class="pc-goal-eyebrow">Ton objectif</div>'+
+      '<div class="pc-goal-title">'+title+'</div><div class="pc-goal-sub">'+sub+'</div></div></div>';
+  }
+
+  function pcEmptyHtml(){
+    const presets=[['grasse','🫧','Peau grasse'],['acne','🌋','Acné légère'],['seche','🏜️','Peau sèche'],['rougeurs','🍓','Rougeurs'],['sensible','🌸','Peau sensible'],['simple','🌿','Ultra-simple']];
+    const btns=presets.map(function(a){ return '<button class="btn-soft" style="display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:13px 15px;border-radius:14px;" onclick="applyPreset(\''+a[0]+'\')"><span style="font-size:20px;">'+a[1]+'</span><span style="flex:1;">'+a[2]+'</span><span style="color:var(--muted);">›</span></button>'; }).join('');
+    return '<div class="pc-hero"><div class="pc-hero-title">Ton parcours <em>beauté</em> 🌸</div>'+
+      '<div class="pc-hero-sub">Ta peau mérite un chemin clair. Choisis un point de départ — on crée tes produits et ton parcours, tu ajustes ensuite.</div></div>'+
+      '<div class="pc-empty">'+btns+'</div>';
+  }
+
+  async function renderParcours(){
+    const root=document.getElementById('parcours-root');
+    if(!root || !currentUser) return;
+    let prods=[];
+    try{ const { data } = await sb.from('products').select('id,nom,emoji,categorie,in_matin,in_soir').eq('user_id', currentUser.id); prods = data || []; }
+    catch(e){ prods=[]; }
+    if(!prods.length){ root.innerHTML = pcEmptyHtml(); return; }
+
+    const byCat={};
+    prods.forEach(function(p){ const c=p.categorie||'autre'; (byCat[c]=byCat[c]||[]).push(p); });
+    const concerns=(state.concerns||[]).map(function(c){ return (CONCERN_LABELS[c]||c); });
+
+    let filled=0; const total=PC_PHASES.length; let steps='';
+    PC_PHASES.forEach(function(ph){
+      let items=[]; ph.cats.forEach(function(c){ items=items.concat(byCat[c]||[]); });
+      const has = items.length>0;
+      if(has) filled++;
+
+      let moment=ph.moment;
+      if(has && ph.moment==='both'){
+        const m=items.some(function(p){return p.in_matin;});
+        const s=items.some(function(p){return p.in_soir;});
+        moment = (m&&s)?'both':(m?'matin':(s?'soir':'both'));
+      }
+
+      let why=ph.why;
+      if(ph.key==='traiter' && concerns.length){
+        why='Le cœur du soin : les actifs qui ciblent <b>'+concerns.join(', ').toLowerCase()+'</b>.';
+      }
+
+      if(has){
+        steps += '<div class="pc-step"><div class="pc-rail"><div class="pc-node">'+ph.emoji+'</div></div>'+
+          '<div class="pc-card"><div class="pc-card-top"><div class="pc-phase">'+ph.nom+'</div><span class="pc-moment">'+pcMomentBadge(moment)+'</span></div>'+
+          '<div class="pc-why">'+why+'</div>'+
+          '<div class="pc-prods">'+items.map(pcProdChip).join('')+'</div>'+
+          '<button class="pc-lea" onclick="togglePcLea(this)"><span class="pc-lea-av">L</span><span class="pc-lea-lbl">Le conseil de Léa</span><span class="pc-chev">▾</span></button>'+
+          '<div class="pc-lea-body"><div>'+ph.lea+'</div></div>'+
+          '</div></div>';
+      } else {
+        steps += '<div class="pc-step"><div class="pc-rail"><div class="pc-node ghost">'+ph.emoji+'</div></div>'+
+          '<div class="pc-card ghost"><div class="pc-card-top"><div class="pc-phase">'+ph.nom+'</div>'+(ph.optionnel?'<span class="pc-opt">facultatif</span>':'')+'</div>'+
+          '<div class="pc-why">'+ph.why+'</div>'+
+          '<button class="pc-add" onclick="navTo(\'routine\')">+ Ajouter un produit à cette étape</button>'+
+          '</div></div>';
+      }
+    });
+
+    const pct = Math.round(filled/total*100);
+    const hero = '<div class="pc-hero"><div class="pc-hero-title">Ton parcours <em>beauté</em> 🌸</div>'+
+      '<div class="pc-hero-sub">Le chemin de ta peau, étape par étape. Comprends le rôle de chaque geste — et vois où tu en es.</div>'+
+      '<div class="pc-progress"><div class="pc-progress-bar"><div class="pc-progress-fill" style="width:'+pct+'%"></div></div>'+
+      '<span class="pc-progress-txt">'+filled+'/'+total+' étapes</span></div></div>';
+
+    root.innerHTML = hero + '<div class="pc-track">'+steps+pcGoalHtml()+'</div>';
+  }
+
   async function loadRituels(){
     renderRituelCout();
     const host=document.getElementById('rituels-list'); if(!host) return;
@@ -4397,6 +4541,7 @@
     const rits = data || [];
     window.__allRituels = rits;
     renderRituelActuel(rits);
+    renderParcours();
     if(!rits.length){ host.innerHTML=''; const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display='none'; return; }
     host.innerHTML = '';
     const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display = rits.length>1 ? 'block' : 'none';
