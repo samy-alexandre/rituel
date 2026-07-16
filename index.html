@@ -1454,7 +1454,7 @@
 
   <!-- ====================== CHAT ====================== -->
   <div id="ritual" class="screen">
-    <div id="parcours-root"></div>
+    <div id="parcours-root"><div class="pc-hero"><div class="pc-hero-title">Ton parcours <em>beauté</em> 🌸</div><div class="pc-hero-sub">Le chemin de ta peau se prépare…</div></div></div>
   </div>
 
   <div id="chat" class="chat-screen">
@@ -4536,12 +4536,12 @@
 
   async function loadRituels(){
     renderRituelCout();
+    renderParcours();
     const host=document.getElementById('rituels-list'); if(!host) return;
     const { data } = await sb.from('rituels').select('*,rappels').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rits = data || [];
     window.__allRituels = rits;
     renderRituelActuel(rits);
-    renderParcours();
     if(!rits.length){ host.innerHTML=''; const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display='none'; return; }
     host.innerHTML = '';
     const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display = rits.length>1 ? 'block' : 'none';
