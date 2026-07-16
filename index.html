@@ -1020,6 +1020,61 @@
 
   .pc-empty{padding:6px 22px 20px;display:flex;flex-direction:column;gap:8px;}
 
+
+  /* ===== Carnet de produits (page Produits) ===== */
+  .cn-chapter{display:flex;align-items:center;gap:9px;margin:24px 2px 13px;}
+  .cn-chapter:first-child{margin-top:4px;}
+  .cn-chapter-ic{width:30px;height:30px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:var(--shadow);}
+  .cn-chapter-t{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);letter-spacing:.01em;white-space:nowrap;}
+  .cn-chapter-n{font-size:10.5px;font-weight:700;color:var(--muted);background:var(--bg-soft);border-radius:99px;padding:2px 8px;flex-shrink:0;}
+  .cn-chapter-rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);min-width:12px;}
+
+  .cn-card{position:relative;display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:13px;margin-bottom:11px;box-shadow:var(--shadow);transition:transform .15s ease;cursor:pointer;}
+  .cn-card:active{transform:scale(0.985);}
+  .cn-thumb{width:58px;height:58px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:27px;flex-shrink:0;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(46,33,28,0.05);}
+  .cn-thumb img{width:100%;height:100%;object-fit:cover;}
+  .cn-body{flex:1;min-width:0;padding-right:20px;}
+  .cn-name{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--ink);line-height:1.22;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cn-brand{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cn-meta{font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.4;}
+  .cn-moment{display:inline-flex;gap:4px;align-items:center;font-size:11px;margin-top:6px;background:var(--surface-warm);border:1px solid var(--line);border-radius:99px;padding:2px 8px;letter-spacing:.5px;color:var(--ink-soft);}
+  .cn-fav{position:absolute;top:11px;right:11px;background:none;border:none;font-size:18px;cursor:pointer;line-height:1;padding:3px;}
+
+  .cn-empty{text-align:center;padding:44px 26px;}
+  .cn-empty-ic{font-size:34px;}
+  .cn-empty-t{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink);margin-top:12px;}
+  .cn-empty-s{color:var(--muted);font-size:13px;line-height:1.6;margin-top:7px;max-width:280px;margin-left:auto;margin-right:auto;}
+  .cn-empty-btn{margin-top:18px;display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;border:none;border-radius:99px;padding:11px 20px;font-family:var(--sans);font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:var(--shadow);}
+
+
+  /* ===== Fiche produit plein écran ===== */
+  .pb-overlay{position:fixed;inset:0;z-index:220;background:var(--bg);opacity:0;visibility:hidden;transform:scale(1.015);transition:opacity .26s ease,visibility .26s,transform .26s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .pb-overlay.show{opacity:1;visibility:visible;transform:scale(1);}
+  .pb-wrap{max-width:480px;margin:0 auto;min-height:100%;position:relative;}
+  .pb-close,.pb-fav{position:absolute;top:16px;z-index:5;width:42px;height:42px;border-radius:50%;background:rgba(255,253,250,0.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);box-shadow:0 4px 12px rgba(46,33,28,0.12);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .pb-close{left:16px;font-size:22px;color:var(--ink);}
+  .pb-fav{right:16px;font-size:19px;}
+  .pb-visual{height:42vh;min-height:260px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .pb-visual img{width:100%;height:100%;object-fit:cover;}
+  .pb-visual::after{content:"";position:absolute;left:0;right:0;bottom:0;height:72px;background:linear-gradient(transparent,var(--bg));pointer-events:none;}
+  .pb-halo{position:absolute;width:210px;height:210px;border-radius:50%;background:rgba(255,255,255,0.42);filter:blur(10px);}
+  .pb-emoji{font-size:110px;position:relative;z-index:1;filter:drop-shadow(0 14px 26px rgba(46,33,28,0.16));}
+  .pb-card{background:var(--bg);padding:6px 26px 48px;position:relative;}
+  .pb-cat{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);}
+  .pb-name{font-family:var(--serif);font-size:31px;font-weight:600;line-height:1.08;margin-top:9px;color:var(--ink);}
+  .pb-brand{font-size:14px;color:var(--muted);font-weight:500;margin-top:6px;}
+  .pb-desc{font-size:14px;color:var(--ink-soft);line-height:1.55;margin-top:16px;}
+  .pb-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
+  .pb-chip{font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 13px;color:var(--ink-soft);display:inline-flex;align-items:center;gap:6px;box-shadow:var(--shadow);}
+  .pb-chip.price{font-family:var(--serif);font-weight:600;color:var(--ink);}
+  .pb-section{margin-top:26px;padding-top:22px;border-top:1px solid var(--line);}
+  .pb-sec-t{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:13px;}
+  .pb-date-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--ink-soft);margin-bottom:11px;}
+  .pb-date-row b{font-weight:600;color:var(--ink);}
+  .pb-badge{display:inline-block;font-size:12px;font-weight:600;border-radius:99px;padding:4px 12px;text-align:right;}
+  .pb-actions{display:flex;gap:10px;margin-top:32px;}
+  .pb-edit{flex:1;background:var(--accent);color:#fff;border:none;border-radius:14px;padding:15px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;box-shadow:var(--shadow);}
+  .pb-del{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 18px;font-family:var(--sans);font-size:14px;font-weight:600;color:var(--accent-deep);cursor:pointer;}
 </style>
 </head>
 <body class="no-select">
@@ -3419,6 +3474,7 @@
 
     // ═══ Produits : un seul menu, tri + catégorie ═══
   const SORTS = [
+    { id:'cat',   n:'Par catégorie' },
     { id:'fav',   n:'Favoris d\'abord' },
     { id:'alpha', n:'De A à Z' },
     { id:'perem', n:'Par date de péremption' }
@@ -3520,7 +3576,7 @@
   let isPremium = false;
   let premiumUntil = null;
   let premiumCancel = false;  // activable plus tard avec le paiement
-      let productSort = 'fav';  // 'fav', 'alpha', 'perem'
+      let productSort = 'cat';  // 'fav', 'alpha', 'perem'
   function setProductSort(s){
     productSort = s;
     productCatFilter = 'all';   // trier remet la vue complète
@@ -3552,7 +3608,7 @@
       if(e) e.stopPropagation();
       toggleProductSelection(id);
     } else {
-      openProductForm(id);
+      openProductBook(id);
     }
   }
 
@@ -3608,6 +3664,124 @@
     loadProducts();
   }
 
+  // ===== Carnet de produits : teintes + rendu premium =====
+  const CN_TINT = { demaquillant:'#F6E6E0', nettoyant:'#E6EFE4', toner:'#E7EDF0', serum:'#F7ECD9', yeux:'#ECE7F0', creme:'#EFEAE2', spf:'#FBEFD3', masque:'#F3E4EC', cible:'#F6E2DC', autre:'#EDE9E1' };
+
+  function cnMoment(p){
+    const m=p.in_matin, s=p.in_soir;
+    if(m&&s) return '<span class="cn-moment">☀️ 🌙</span>';
+    if(m) return '<span class="cn-moment">☀️ matin</span>';
+    if(s) return '<span class="cn-moment">🌙 soir</span>';
+    return '';
+  }
+
+  async function cnCardHtml(p, favs){
+    let thumb = p.emoji || '🧴';
+    if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) thumb='<img src="'+url+'" alt="">'; }
+    const parts=(p.nom||'').split(' · ');
+    const name=escapeHtml(parts[0]||'');
+    const brand=parts.length>1 ? escapeHtml(parts.slice(1).join(' · ')) : '';
+    const meta = [p.effets?escapeHtml(p.effets):'', (p.prix!=null&&p.prix!=='')?(p.prix+'€'):''].filter(Boolean).join(' · ');
+    const tint = CN_TINT[p.categorie||'autre'] || CN_TINT.autre;
+    return '<div class="cn-card product-card" data-pid="'+p.id+'" onclick="onProductCardClick(\''+p.id+'\', event)" ontouchstart="startLongPress(\''+p.id+'\')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">'+
+      '<div class="sel-circle" style="display:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;align-items:center;justify-content:center;color:#fff;font-size:13px;"></div>'+
+      '<div class="cn-thumb" style="background:'+tint+';">'+thumb+'</div>'+
+      '<div class="cn-body">'+
+        '<div class="cn-name">'+name+'</div>'+
+        (brand?'<div class="cn-brand">'+brand+'</div>':'')+
+        (meta?'<div class="cn-meta">'+meta+'</div>':'')+
+        cnMoment(p)+
+        productDateInfo(p)+
+      '</div>'+
+      '<button class="pf-fav cn-fav" onclick="toggleFav(\''+p.id+'\', event)">'+(favs.has(p.id)?'⭐':'☆')+'</button>'+
+    '</div>';
+  }
+
+  async function cnRenderFlat(products, favs){
+    let html=''; for(const p of products){ html += await cnCardHtml(p, favs); } return html;
+  }
+
+  async function cnRenderChaptered(products, favs){
+    const groups={}; products.forEach(p=>{ const c=p.categorie||'autre'; (groups[c]=groups[c]||[]).push(p); });
+    let html='';
+    for(const cat of CATS){
+      const items=groups[cat[0]];
+      if(!items || !items.length) continue;
+      html += '<div class="cn-chapter"><span class="cn-chapter-ic">'+cat[1]+'</span><span class="cn-chapter-t">'+cat[2]+'</span><span class="cn-chapter-n">'+items.length+'</span><span class="cn-chapter-rule"></span></div>';
+      for(const p of items){ html += await cnCardHtml(p, favs); }
+    }
+    return html;
+  }
+
+  function cnEmptyHtml(){
+    return '<div class="cn-empty"><div class="cn-empty-ic">🧴</div><div class="cn-empty-t">Ton carnet est vide</div><div class="cn-empty-s">Scanne un produit ou ajoute-le à la main pour commencer ta collection.</div><button class="cn-empty-btn" onclick="openBarcodeSheet()">📷 Scanner un produit</button></div>';
+  }
+
+  // ===== Fiche produit plein écran (façon livre) =====
+  const PB_GRAD = {
+    demaquillant:['#F7E7E1','#E9CDC4'], nettoyant:['#E9F1E7','#CFE0CB'], toner:['#E7EDF1','#CDD9E1'],
+    serum:['#F8EDDA','#EDD6B0'], yeux:['#EEE8F1','#D8CDE1'], creme:['#F0EBE3','#DFD4C4'],
+    spf:['#FCF0D6','#F2DCA0'], masque:['#F5E6EE','#E4C6D6'], cible:['#F7E4DE','#EBC6BB'], autre:['#EFEBE3','#DED5C6']
+  };
+
+  function pbDates(p){
+    const fmt=(d)=>{ const x=d.split('-'); return x[2]+'/'+x[1]+'/'+x[0].slice(2); };
+    let rows='';
+    if(p.date_ouverture) rows+='<div class="pb-date-row"><span>Ouvert le</span><b>'+fmt(p.date_ouverture)+'</b></div>';
+    if(p.date_peremption){
+      const exp=new Date(p.date_peremption); const today=new Date(); today.setHours(0,0,0,0);
+      const days=Math.round((exp-today)/86400000); const months=days/30;
+      let col;
+      if(days<0) col=['#FBE2DC','#B23A1E'];
+      else if(months>9) col=['#EFE7DD','#7A6B5C'];
+      else if(months>6) col=['#E3F0E0','#3E7A4E'];
+      else if(months>3) col=['#F7ECCB','#8A6A1E'];
+      else col=['#FBE2DC','#B23A1E'];
+      let txt;
+      if(days<0){ const dp=Math.abs(days); txt='⚠️ Périmé '+(dp===0?"aujourd'hui":(dp===1?'depuis 1 jour':'depuis '+dp+' jours')); }
+      else if(days===0){ txt='⚠️ Périme aujourd\'hui'; }
+      else { txt='Périme le '+fmt(p.date_peremption)+' · '+(days===1?'1 jour':days+' jours'); }
+      rows+='<div class="pb-date-row"><span>Fraîcheur</span><span class="pb-badge" style="background:'+col[0]+';color:'+col[1]+';">'+txt+'</span></div>';
+    }
+    return rows ? '<div class="pb-section"><div class="pb-sec-t">Suivi</div>'+rows+'</div>' : '';
+  }
+
+  async function openProductBook(id){
+    const p=(window.__allProducts||[]).find(x=>String(x.id)===String(id));
+    if(!p) return;
+    const el=document.getElementById('product-book'); if(!el) return;
+    const g=PB_GRAD[p.categorie||'autre']||PB_GRAD.autre;
+    const parts=(p.nom||'').split(' · ');
+    const name=escapeHtml(parts[0]||'');
+    const brand=parts.length>1 ? escapeHtml(parts.slice(1).join(' · ')) : '';
+    const catL=(CATS.find(x=>x[0]===(p.categorie||'autre'))||['','','Soin'])[2];
+    let visual;
+    if(p.photo_path){ const url=await signedPhoto(p.photo_path); visual = url ? '<img src="'+url+'" alt="">' : '<div class="pb-halo"></div><div class="pb-emoji">'+(p.emoji||'🧴')+'</div>'; }
+    else visual='<div class="pb-halo"></div><div class="pb-emoji">'+(p.emoji||'🧴')+'</div>';
+    const isFav=favSet().has(p.id);
+    let chips='';
+    if(p.in_matin||p.in_soir){ const t=(p.in_matin&&p.in_soir)?'☀️ Matin & soir':(p.in_matin?'☀️ Matin':'🌙 Soir'); chips+='<span class="pb-chip">'+t+'</span>'; }
+    if(p.prix!=null&&p.prix!=='') chips+='<span class="pb-chip price">'+p.prix+'€</span>';
+    const desc=p.effets?('<div class="pb-desc">'+escapeHtml(p.effets)+'</div>'):'';
+    el.innerHTML='<div class="pb-wrap">'+
+      '<button class="pb-close" onclick="closeProductBook()">‹</button>'+
+      '<button class="pb-fav" id="pb-fav-btn" onclick="pbToggleFav(\''+p.id+'\')">'+(isFav?'⭐':'☆')+'</button>'+
+      '<div class="pb-visual" style="background:linear-gradient(150deg,'+g[0]+','+g[1]+');">'+visual+'</div>'+
+      '<div class="pb-card"><div class="pb-cat">'+catL+'</div><div class="pb-name">'+name+'</div>'+
+      (brand?'<div class="pb-brand">'+brand+'</div>':'')+desc+
+      (chips?'<div class="pb-chips">'+chips+'</div>':'')+
+      pbDates(p)+
+      '<div class="pb-actions"><button class="pb-edit" onclick="pbEdit(\''+p.id+'\')">Modifier</button><button class="pb-del" onclick="pbDelete(\''+p.id+'\')">Supprimer</button></div>'+
+      '</div></div>';
+    el.scrollTop=0;
+    el.classList.add('show');
+    document.body.style.overflow='hidden';
+  }
+  function closeProductBook(){ const el=document.getElementById('product-book'); if(el) el.classList.remove('show'); document.body.style.overflow=''; }
+  function pbEdit(id){ closeProductBook(); setTimeout(function(){ openProductForm(id); }, 260); }
+  function pbToggleFav(id){ const s=favSet(); if(s.has(id)) s.delete(id); else s.add(id); favSave(s); const b=document.getElementById('pb-fav-btn'); if(b) b.textContent=s.has(id)?'⭐':'☆'; loadProducts(); }
+  async function pbDelete(id){ if(!confirm('Supprimer ce produit ?')) return; try{ await sb.from('products').delete().eq('id', id); }catch(e){} closeProductBook(); if(typeof showToast==='function') showToast('Produit supprimé'); loadProducts(); }
+
     async function loadProducts(){
     if(!currentUser) return;
     const list = document.getElementById('products-list');
@@ -3639,26 +3813,11 @@
       return 0;
     });
     if(!products.length){
-      list.innerHTML = `<div style="text-align:center;padding:30px 16px;color:var(--muted);font-size:14px;line-height:1.6;">Aucun produit pour l'instant 🌸</div>`;
+      list.innerHTML = cnEmptyHtml();
+    } else if(productSort==='cat' && (!productCatFilter || productCatFilter==='all')){
+      list.innerHTML = await cnRenderChaptered(products, _favs);
     } else {
-      let html='';
-      for(let i=0;i<products.length;i++){
-        const p=products[i];
-        let thumb = p.emoji || '🧴';
-        if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) thumb=`<img src="${url}" alt="">`; }
-        const meta = [p.effets?escapeHtml(p.effets):'', (p.prix!=null&&p.prix!=='')?(p.prix+'€'):''].filter(Boolean).join(' · ');
-        html += `<div class="product-card" data-pid="${p.id}" onclick="onProductCardClick('${p.id}', event)" ontouchstart="startLongPress('${p.id}')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">
-          <div class="sel-circle" style="display:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;align-items:center;justify-content:center;color:#fff;font-size:13px;"></div>
-          <div class="product-thumb">${thumb}</div>
-          <div class="product-info" style="flex:1;">
-            <div class="product-name">${escapeHtml(p.nom||'')}</div>
-            ${meta?`<div class="product-meta">${meta}</div>`:''}
-            ${productDateInfo(p)}
-          </div>
-          <button class="pf-fav" onclick="toggleFav('${p.id}', event)">${_favs.has(p.id)?'⭐':'☆'}</button>
-        </div>`;
-      }
-      list.innerHTML = html;
+      list.innerHTML = await cnRenderFlat(products, _favs);
     }
     renderRoutineFooter();
   }
@@ -6765,6 +6924,8 @@
   })();
   document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
 </script>
+
+  <div id="product-book" class="pb-overlay"></div>
 
   <!-- Datepicker custom -->
   <div class="dp-overlay" id="dp-overlay" onclick="if(event.target===this)dpClose()">
