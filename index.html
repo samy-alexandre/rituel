@@ -1741,7 +1741,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 23.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 24.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3023,9 +3023,10 @@
   }
   function applyRoutineState(period, complete){
     const list=document.getElementById('routine-'+period);
+    if(!list) return;
     list.querySelectorAll('.routine-item').forEach(it=>{
       it.classList.toggle('done', !!complete);
-      it.querySelector('.routine-time').textContent = complete ? '✓' : '…';
+      const _rt=it.querySelector('.routine-time'); if(_rt) _rt.textContent = complete ? '✓' : '…';
     });
   }
 
@@ -4908,6 +4909,7 @@
     const pmap={}; prods.forEach(function(p){ pmap[p.id]=p; });
     const groups={matin:[],soir:[],hebdo:[]};
     rits.forEach(function(r){ const m=r.moment||'matin'; if(m==='both'){ groups.matin.push(r); groups.soir.push(r); } else if(groups[m]) groups[m].push(r); else groups.matin.push(r); });
+    if(!window.__rhAutoTab){ window.__rhAutoTab=true; if(!(groups[rhActiveTab]&&groups[rhActiveTab].length)){ const _ff=RH_MOMENTS.find(function(mo){ return groups[mo[0]]&&groups[mo[0]].length; }); if(_ff) rhActiveTab=_ff[0]; } }
 
     let html='<div class="rh-hero"><div class="rh-hero-t">Mes <em>rituels</em> 🌸</div><div class="rh-hero-s">Tes routines, par moment. Touche un rituel pour l\'ouvrir, le modifier et y ajouter des produits.</div></div>';
 
