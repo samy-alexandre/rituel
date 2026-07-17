@@ -1091,6 +1091,49 @@
   .pbk-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-soft);transition:all .25s;}
   .pbk-dot.on{background:var(--accent);width:18px;border-radius:99px;}
 
+
+  /* ===== Hub des rituels (page Rituel) ===== */
+  .rh-hero{padding:26px 22px 6px;}
+  .rh-hero-t{font-family:var(--serif);font-size:27px;font-weight:600;color:var(--ink);line-height:1.1;}
+  .rh-hero-t em{font-style:italic;color:var(--accent);}
+  .rh-hero-s{margin-top:8px;color:var(--ink-soft);font-size:13px;line-height:1.5;max-width:315px;}
+  .rh-quickstart{margin:12px 22px 0;padding:14px 15px;background:var(--surface-warm);border:1px solid var(--line);border-radius:16px;}
+  .rh-quickstart-t{font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:11px;}
+  .rh-preset-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .rh-preset{background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:8px 13px;font-size:12.5px;font-weight:600;color:var(--ink);display:inline-flex;gap:6px;align-items:center;cursor:pointer;box-shadow:var(--shadow);}
+
+  .rh-section{padding:22px 20px 2px;}
+  .rh-sec-head{display:flex;align-items:center;gap:9px;margin-bottom:13px;}
+  .rh-sec-ic{width:32px;height:32px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:var(--shadow);flex-shrink:0;}
+  .rh-sec-t{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);}
+  .rh-sec-n{font-size:11px;font-weight:700;color:var(--muted);background:var(--bg-soft);border-radius:99px;padding:2px 8px;}
+
+  .rh-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:15px 16px;margin-bottom:11px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s ease;}
+  .rh-card:active{transform:scale(0.99);}
+  .rh-card-head{display:flex;align-items:center;gap:8px;margin-bottom:13px;}
+  .rh-name{font-family:var(--serif);font-size:16.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .rh-bell{font-size:13px;}
+  .rh-tag{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--blush-soft);border-radius:99px;padding:3px 8px;white-space:nowrap;}
+
+  .rh-trail{display:flex;align-items:center;flex-wrap:wrap;row-gap:6px;}
+  .rh-node{width:38px;height:38px;border-radius:50%;background:var(--surface-warm);border:1.5px solid var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+  .rh-link{width:15px;height:0;border-top:2px dotted var(--accent-soft);flex-shrink:0;}
+  .rh-empty{font-size:12.5px;color:var(--muted);font-style:italic;padding:4px 0;}
+
+  .rh-foot{margin-top:13px;padding-top:11px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);}
+  .rh-edit{color:var(--accent);font-weight:600;}
+
+  .rh-add{width:100%;background:transparent;border:1.5px dashed var(--line);border-radius:14px;padding:13px;color:var(--accent);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:2px;}
+  .rh-add:active{background:var(--surface-warm);}
+
+
+  .rh-tabs{display:flex;gap:6px;padding:8px 20px 4px;}
+  .rh-tab{flex:1;padding:11px 6px;border-radius:13px;border:1px solid var(--line);background:var(--surface);font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-soft);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all .18s ease;box-shadow:var(--shadow);}
+  .rh-tab.on{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 6px 16px rgba(201,90,63,0.28);}
+  .rh-tab-n{font-size:11px;font-weight:700;background:rgba(0,0,0,0.08);border-radius:99px;padding:1px 7px;}
+  .rh-tab.on .rh-tab-n{background:rgba(255,255,255,0.25);}
+  .rh-panes{padding:16px 20px 4px;}
+
 </style>
 </head>
 <body class="no-select">
@@ -1525,7 +1568,7 @@
 
   <!-- ====================== CHAT ====================== -->
   <div id="ritual" class="screen">
-    <div id="parcours-root"><div class="pc-hero"><div class="pc-hero-title">Ton parcours <em>beauté</em> 🌸</div><div class="pc-hero-sub">Le chemin de ta peau se prépare…</div></div></div>
+    <div id="parcours-root"><div class="rh-hero"><div class="rh-hero-t">Mes <em>rituels</em> 🌸</div><div class="rh-hero-s">Chargement de tes routines…</div></div></div>
   </div>
 
   <div id="chat" class="chat-screen">
@@ -4761,9 +4804,73 @@
     root.innerHTML = hero + '<div class="pc-track">'+steps+pcGoalHtml()+'</div>';
   }
 
+  // ===== Hub des rituels : regroupé par moment =====
+  const RH_MOMENTS=[['matin','☀️','Matin'],['soir','🌙','Soir'],['hebdo','🧖‍♀️','Hebdo']];
+  let rhActiveTab=(new Date().getHours()>=18)?'soir':'matin';
+  function rhGoTab(m){ rhActiveTab=m; RH_MOMENTS.forEach(function(mo){ const p=document.getElementById('rh-pane-'+mo[0]); if(p) p.style.display=(mo[0]===m)?'block':'none'; }); document.querySelectorAll('.rh-tab').forEach(function(t,i){ if(RH_MOMENTS[i]) t.classList.toggle('on', RH_MOMENTS[i][0]===m); }); }
+
+  function rhTrail(r, pmap){
+    const ids=Array.isArray(r.produits)?r.produits:[];
+    if(!ids.length) return '<div class="rh-empty">Aucun produit · appuie pour en ajouter</div>';
+    let html=''; const max=6;
+    ids.slice(0,max).forEach(function(id,i){ const p=pmap[id]; const e=p?(p.emoji||'🧴'):'🧴'; if(i>0) html+='<span class="rh-link"></span>'; html+='<span class="rh-node">'+e+'</span>'; });
+    if(ids.length>max){ html+='<span class="rh-link"></span><span class="rh-node" style="font-size:12px;font-weight:700;color:var(--muted);">+'+(ids.length-max)+'</span>'; }
+    return '<div class="rh-trail">'+html+'</div>';
+  }
+
+  function rhCard(r, pmap){
+    const nb=(Array.isArray(r.produits)?r.produits.length:0);
+    const bell=(r.rappels&&r.rappels.on)?'<span class="rh-bell">🔔</span>':'';
+    const tag=(r.moment==='both')?'<span class="rh-tag">Matin & soir</span>':'';
+    return '<div class="rh-card" onclick="openRituelEditor(\''+r.id+'\')">'+
+      '<div class="rh-card-head"><div class="rh-name">'+escapeHtml(r.nom||'Mon rituel')+'</div>'+tag+bell+'</div>'+
+      rhTrail(r, pmap)+
+      '<div class="rh-foot"><span>'+nb+' étape'+(nb>1?'s':'')+'</span><span class="rh-edit">Ouvrir ›</span></div>'+
+      '</div>';
+  }
+
+  async function renderRituelsHub(){
+    const root=document.getElementById('parcours-root');
+    if(!root || !currentUser) return;
+    let rits=[], prods=[];
+    try{
+      const r1=await sb.from('rituels').select('*').eq('user_id',currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+      rits=r1.data||[];
+      const r2=await sb.from('products').select('id,nom,emoji,categorie').eq('user_id',currentUser.id);
+      prods=r2.data||[];
+    }catch(e){}
+    const pmap={}; prods.forEach(function(p){ pmap[p.id]=p; });
+    const groups={matin:[],soir:[],hebdo:[]};
+    rits.forEach(function(r){ const m=r.moment||'matin'; if(m==='both'){ groups.matin.push(r); groups.soir.push(r); } else if(groups[m]) groups[m].push(r); else groups.matin.push(r); });
+
+    let html='<div class="rh-hero"><div class="rh-hero-t">Mes <em>rituels</em> 🌸</div><div class="rh-hero-s">Tes routines, par moment. Touche un rituel pour l\'ouvrir, le modifier et y ajouter des produits.</div></div>';
+
+    if(!rits.length){
+      const presets=[['grasse','🫧','Peau grasse'],['seche','🏜️','Peau sèche'],['sensible','🌸','Sensible'],['simple','🌿','Ultra-simple']];
+      html+='<div class="rh-quickstart"><div class="rh-quickstart-t">Pas d\'idée ? Pars d\'un rituel tout fait :</div><div class="rh-preset-row">'+
+        presets.map(function(a){ return '<button class="rh-preset" onclick="applyPreset(\''+a[0]+'\')">'+a[1]+' '+a[2]+'</button>'; }).join('')+
+        '</div></div>';
+    }
+
+    let tabs='<div class="rh-tabs">';
+    RH_MOMENTS.forEach(function(mo){ const c=groups[mo[0]].length; tabs+='<button class="rh-tab'+(mo[0]===rhActiveTab?' on':'')+'" onclick="rhGoTab(\''+mo[0]+'\')">'+mo[1]+' '+mo[2]+(c?'<span class="rh-tab-n">'+c+'</span>':'')+'</button>'; });
+    tabs+='</div>';
+    let panes='';
+    RH_MOMENTS.forEach(function(mo){
+      const list=groups[mo[0]];
+      let inner='';
+      list.forEach(function(r){ inner+=rhCard(r, pmap); });
+      if(!list.length) inner+='<div class="rh-empty" style="padding:6px 2px 14px;">Aucun rituel ici pour l\'instant.</div>';
+      const lbl = mo[0]==='hebdo' ? 'Nouveau rituel hebdo' : 'Nouveau rituel du '+mo[2].toLowerCase();
+      inner+='<button class="rh-add" onclick="openRituelEditor(null,\''+mo[0]+'\')">+ '+lbl+'</button>';
+      panes+='<div class="rh-tabpane" id="rh-pane-'+mo[0]+'" style="display:'+(mo[0]===rhActiveTab?'block':'none')+';">'+inner+'</div>';
+    });
+    root.innerHTML=html + tabs + '<div class="rh-panes">'+panes+'</div>';
+  }
+
   async function loadRituels(){
     renderRituelCout();
-    renderParcours();
+    renderRituelsHub();
     const host=document.getElementById('rituels-list'); if(!host) return;
     const { data } = await sb.from('rituels').select('*,rappels').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rits = data || [];
@@ -4774,7 +4881,7 @@
     const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display = rits.length>1 ? 'block' : 'none';
   }
 
-  async function openRituelEditor(id){
+  async function openRituelEditor(id, presetMoment){
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
     const { data: prods } = await sb.from('products').select('id,nom,emoji,effets,categorie,date_peremption').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     rdProductMap = {}; (prods||[]).forEach(p=>{ rdProductMap[p.id]=p; });
@@ -4784,7 +4891,7 @@
       rituelDraft = r ? { id:r.id, nom:r.nom||'', moment:r.moment||'matin', produits:(Array.isArray(r.produits)?r.produits.slice():[]) } : { id:null, nom:'', moment:'matin', produits:[] };
       loadedRappels = r ? r.rappels : null;
     } else {
-      rituelDraft = { id:null, nom:'', moment:'matin', produits:[] };
+      rituelDraft = { id:null, nom:'', moment:(presetMoment||'matin'), produits:[] };
     }
     document.getElementById('rd-nom').value = rituelDraft.nom;
     setTimeout(function(){ rdApplyRappels(loadedRappels); }, 0);
