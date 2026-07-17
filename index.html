@@ -4893,6 +4893,7 @@
   }
 
   // ===== Chemin d'un rituel : carte sinueuse de ses étapes =====
+  function rcEditRituel(id){ closeRituelChemin(); setTimeout(function(){ openRituelEditor(id); }, 260); }
   async function openRituelChemin(id){
     const el=document.getElementById('rituel-chemin'); if(!el||!currentUser) return;
     let r=null, prods=[];
@@ -4915,7 +4916,7 @@
 
     if(!ids.length){
       inner+='<div class="rc-empty"><div class="rc-empty-t">Aucune étape pour l\'instant</div><div class="rc-empty-s">Ajoute des produits pour dessiner le chemin de ce rituel.</div></div>'+
-        '<div class="rc-actions"><button class="rc-edit" onclick="openRituelEditor(\''+r.id+'\')">＋ Ajouter des produits</button></div></div>';
+        '<div class="rc-actions"><button class="rc-edit" onclick="rcEditRituel(\''+r.id+'\')">＋ Ajouter des produits</button></div></div>';
       el.innerHTML=inner; el.scrollTop=0; el.classList.add('show'); document.body.style.overflow='hidden'; return;
     }
 
@@ -4938,7 +4939,7 @@
     nodes+='<div class="rc-node" style="left:'+gpt.x+'px;top:'+gpt.y+'px;"><div class="rc-goal">✨</div><div class="rc-lbl">Rituel complet</div></div>';
 
     inner+='<div class="rc-map" style="height:'+H+'px;">'+svg+nodes+'</div>'+
-      '<div class="rc-actions"><button class="rc-edit" onclick="openRituelEditor(\''+r.id+'\')">＋ Ajouter / réordonner les produits</button></div></div>';
+      '<div class="rc-actions"><button class="rc-edit" onclick="rcEditRituel(\''+r.id+'\')">＋ Ajouter / réordonner les produits</button></div></div>';
     el.innerHTML=inner; el.scrollTop=0; el.classList.add('show'); document.body.style.overflow='hidden';
   }
   function closeRituelChemin(){ const el=document.getElementById('rituel-chemin'); if(el) el.classList.remove('show'); document.body.style.overflow=''; }
@@ -5285,12 +5286,13 @@
       const offIds=(oth||[]).filter(r=>r.actif && r.id!==rituelDraft.id && r.moment!=='hebdo' && rituelDraft.moment!=='hebdo' && ((myM&&(r.moment==='matin'||r.moment==='both'))||(myS&&(r.moment==='soir'||r.moment==='both')))).map(r=>r.id);
       if(offIds.length) await sb.from('rituels').update({actif:false}).in('id', offIds);
     }catch(e){}
+    let savedId = rituelDraft.id || null;
     if(rituelDraft.id){
       await sb.from('rituels').update({ nom, moment:rituelDraft.moment, produits:rituelDraft.produits, actif:true, rappels:rdCollectRappels() }).eq('id', rituelDraft.id);
     } else {
       const { data: existing } = await sb.from('rituels').select('id').eq('user_id', currentUser.id);
       const position = existing ? existing.length : 0;
-      await sb.from('rituels').insert({ user_id:currentUser.id, nom, moment:rituelDraft.moment, produits:rituelDraft.produits, position, actif:true , rappels:rdCollectRappels() });
+      const { data: _ins } = await sb.from('rituels').insert({ user_id:currentUser.id, nom, moment:rituelDraft.moment, produits:rituelDraft.produits, position, actif:true , rappels:rdCollectRappels() }).select('id').maybeSingle(); savedId = _ins ? _ins.id : savedId;
     }
     await recomputeRituelType();
     closeRituelSheet();
@@ -5298,6 +5300,7 @@
     window.__allRituels=null;
     loadRituels();
     loadHomeRoutine();
+    if(savedId) setTimeout(function(){ openRituelChemin(savedId); }, 200);
   }
 
   // ===== Bulle Léa flottante (déplaçable, se colle aux bords) =====
