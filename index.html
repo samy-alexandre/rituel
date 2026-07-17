@@ -1134,6 +1134,30 @@
   .rh-tab.on .rh-tab-n{background:rgba(255,255,255,0.25);}
   .rh-panes{padding:16px 20px 4px;}
 
+
+  /* ===== Chemin d'un rituel (vue au tap) ===== */
+  .rc-overlay{position:fixed;inset:0;z-index:210;background:radial-gradient(130% 55% at 50% 0%,#FBF3E9,var(--bg) 55%);opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .28s ease,visibility .28s,transform .28s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .rc-overlay.show{opacity:1;visibility:visible;transform:translateY(0);}
+  .rc-wrap{max-width:480px;margin:0 auto;min-height:100%;position:relative;padding-bottom:34px;}
+  .rc-close{position:absolute;top:16px;left:16px;z-index:6;width:42px;height:42px;border-radius:50%;background:rgba(255,253,250,0.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);font-size:22px;color:var(--ink);box-shadow:0 4px 12px rgba(46,33,28,0.12);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .rc-head{padding:64px 24px 4px;text-align:center;}
+  .rc-moment{display:inline-block;font-size:12px;font-weight:600;color:var(--accent);background:var(--blush-soft);border-radius:99px;padding:4px 13px;}
+  .rc-title{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--ink);margin-top:10px;line-height:1.1;}
+  .rc-sub{font-size:12.5px;color:var(--muted);margin-top:7px;}
+  .rc-map{position:relative;width:340px;margin:12px auto 0;}
+  .rc-node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;cursor:pointer;z-index:3;width:100px;}
+  .rc-dot{width:58px;height:58px;border-radius:50%;background:var(--surface);border:2.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 0 0 5px rgba(201,90,63,0.09),0 8px 18px rgba(201,90,63,0.2);position:relative;transition:transform .16s ease;}
+  .rc-node:active .rc-dot{transform:scale(0.92);}
+  .rc-num{position:absolute;top:-5px;right:-5px;width:21px;height:21px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(46,33,28,0.2);}
+  .rc-lbl{margin-top:7px;font-size:11.5px;font-weight:600;color:var(--ink);text-align:center;line-height:1.22;max-width:100px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .rc-start{width:44px;height:44px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 6px 16px rgba(122,148,104,0.35);}
+  .rc-goal{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#F4D98A,var(--gold) 60%,var(--accent));display:flex;align-items:center;justify-content:center;font-size:29px;box-shadow:0 0 0 7px rgba(189,154,82,0.14),0 12px 28px rgba(189,154,82,0.4);}
+  .rc-actions{padding:10px 24px 0;max-width:400px;margin:0 auto;}
+  .rc-edit{width:100%;background:var(--accent);color:#fff;border:none;border-radius:14px;padding:15px;font-family:var(--sans);font-size:14px;font-weight:600;box-shadow:0 8px 20px rgba(201,90,63,0.28);cursor:pointer;}
+  .rc-empty{text-align:center;padding:34px 24px;}
+  .rc-empty-t{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink);}
+  .rc-empty-s{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5;max-width:270px;margin-left:auto;margin-right:auto;}
+
 </style>
 </head>
 <body class="no-select">
@@ -4822,7 +4846,7 @@
     const nb=(Array.isArray(r.produits)?r.produits.length:0);
     const bell=(r.rappels&&r.rappels.on)?'<span class="rh-bell">🔔</span>':'';
     const tag=(r.moment==='both')?'<span class="rh-tag">Matin & soir</span>':'';
-    return '<div class="rh-card" onclick="openRituelEditor(\''+r.id+'\')">'+
+    return '<div class="rh-card" onclick="openRituelChemin(\''+r.id+'\')">'+
       '<div class="rh-card-head"><div class="rh-name">'+escapeHtml(r.nom||'Mon rituel')+'</div>'+tag+bell+'</div>'+
       rhTrail(r, pmap)+
       '<div class="rh-foot"><span>'+nb+' étape'+(nb>1?'s':'')+'</span><span class="rh-edit">Ouvrir ›</span></div>'+
@@ -4867,6 +4891,57 @@
     });
     root.innerHTML=html + tabs + '<div class="rh-panes">'+panes+'</div>';
   }
+
+  // ===== Chemin d'un rituel : carte sinueuse de ses étapes =====
+  async function openRituelChemin(id){
+    const el=document.getElementById('rituel-chemin'); if(!el||!currentUser) return;
+    let r=null, prods=[];
+    try{
+      const r1=await sb.from('rituels').select('*').eq('id',id);
+      r=(r1.data&&r1.data[0])||null;
+      const r2=await sb.from('products').select('id,nom,emoji,categorie').eq('user_id',currentUser.id);
+      prods=r2.data||[];
+    }catch(e){}
+    if(!r) return;
+    window.__allProducts = prods;
+    const pmap={}; prods.forEach(function(p){ pmap[p.id]=p; });
+    const ids=Array.isArray(r.produits)?r.produits:[];
+    const momentLabel = r.moment==='soir'?'🌙 Soir':r.moment==='hebdo'?'🧖‍♀️ Hebdo':r.moment==='both'?'☀️ 🌙 Matin & soir':'☀️ Matin';
+    const momentEmoji = r.moment==='soir'?'🌙':r.moment==='hebdo'?'🧖‍♀️':'☀️';
+
+    let inner='<div class="rc-wrap"><button class="rc-close" onclick="closeRituelChemin()">‹</button>'+
+      '<div class="rc-head"><div class="rc-moment">'+momentLabel+'</div><div class="rc-title">'+escapeHtml(r.nom||'Mon rituel')+'</div>'+
+      '<div class="rc-sub">'+(ids.length? ids.length+' étape'+(ids.length>1?'s':'')+' · touche une étape pour voir le produit' : 'Ce rituel est encore vide')+'</div></div>';
+
+    if(!ids.length){
+      inner+='<div class="rc-empty"><div class="rc-empty-t">Aucune étape pour l\'instant</div><div class="rc-empty-s">Ajoute des produits pour dessiner le chemin de ce rituel.</div></div>'+
+        '<div class="rc-actions"><button class="rc-edit" onclick="openRituelEditor(\''+r.id+'\')">＋ Ajouter des produits</button></div></div>';
+      el.innerHTML=inner; el.scrollTop=0; el.classList.add('show'); document.body.style.overflow='hidden'; return;
+    }
+
+    const N=ids.length, cx=170, left=95, right=245, top=46, gap=104;
+    const pts=[{x:cx,y:top}];
+    ids.forEach(function(_,i){ pts.push({x:(i%2===0)?left:right, y:top+(i+1)*gap}); });
+    pts.push({x:cx, y:top+(N+1)*gap});
+    const H=top+(N+1)*gap+46;
+
+    let d='M '+pts[0].x+' '+pts[0].y+' L '+((pts[0].x+pts[1].x)/2)+' '+((pts[0].y+pts[1].y)/2);
+    for(let i=1;i<pts.length-1;i++){ const xc=(pts[i].x+pts[i+1].x)/2, yc=(pts[i].y+pts[i+1].y)/2; d+=' Q '+pts[i].x+' '+pts[i].y+' '+xc+' '+yc; }
+    d+=' L '+pts[pts.length-1].x+' '+pts[pts.length-1].y;
+    let svg='<svg width="340" height="'+H+'" style="position:absolute;top:0;left:0;z-index:1;overflow:visible;"><path d="'+d+'" fill="none" stroke="#DCC9AC" stroke-width="8" stroke-linecap="round" stroke-dasharray="1 14" opacity="0.9"/></svg>';
+
+    let nodes='<div class="rc-node" style="left:'+pts[0].x+'px;top:'+pts[0].y+'px;"><div class="rc-start">'+momentEmoji+'</div><div class="rc-lbl">Départ</div></div>';
+    ids.forEach(function(pid,i){ const p=pmap[pid]; const e=p?(p.emoji||'🧴'):'🧴'; const nm=p?escapeHtml((p.nom||'').split(' · ')[0]):'Produit'; const pt=pts[i+1];
+      nodes+='<div class="rc-node" style="left:'+pt.x+'px;top:'+pt.y+'px;"'+(p?' onclick="openProductBook(\''+pid+'\')"':'')+'><div class="rc-dot">'+e+'<div class="rc-num">'+(i+1)+'</div></div><div class="rc-lbl">'+nm+'</div></div>';
+    });
+    const gpt=pts[pts.length-1];
+    nodes+='<div class="rc-node" style="left:'+gpt.x+'px;top:'+gpt.y+'px;"><div class="rc-goal">✨</div><div class="rc-lbl">Rituel complet</div></div>';
+
+    inner+='<div class="rc-map" style="height:'+H+'px;">'+svg+nodes+'</div>'+
+      '<div class="rc-actions"><button class="rc-edit" onclick="openRituelEditor(\''+r.id+'\')">＋ Ajouter / réordonner les produits</button></div></div>';
+    el.innerHTML=inner; el.scrollTop=0; el.classList.add('show'); document.body.style.overflow='hidden';
+  }
+  function closeRituelChemin(){ const el=document.getElementById('rituel-chemin'); if(el) el.classList.remove('show'); document.body.style.overflow=''; }
 
   async function loadRituels(){
     renderRituelCout();
@@ -7101,6 +7176,7 @@
 </script>
 
   <div id="product-book" class="pb-overlay"></div>
+  <div id="rituel-chemin" class="rc-overlay"></div>
 
   <!-- Datepicker custom -->
   <div class="dp-overlay" id="dp-overlay" onclick="if(event.target===this)dpClose()">
