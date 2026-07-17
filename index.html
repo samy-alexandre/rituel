@@ -2882,7 +2882,7 @@
   function fabAction(){
     const cur = document.getElementById('app').getAttribute('data-screen');
     if(cur==='routine'){ openProductForm(); }
-    else if(cur==='ritual'){ openRituelQuick(rpSlotView||'matin'); }
+    else if(cur==='ritual'){ openRituelChemin(null, (typeof rhActiveTab!=='undefined' && rhActiveTab) || 'matin'); }
   }
   function updateFab(screen){
     const fab=document.getElementById('fab-add');
@@ -5151,6 +5151,7 @@
   }
 
   async function openRituelEditor(id, presetMoment){
+    if(typeof openRituelChemin==='function') return openRituelChemin(id, presetMoment);
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
     const { data: prods } = await sb.from('products').select('id,nom,emoji,effets,categorie,date_peremption').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     rdProductMap = {}; (prods||[]).forEach(p=>{ rdProductMap[p.id]=p; });
