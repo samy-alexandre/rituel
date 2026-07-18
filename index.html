@@ -919,8 +919,9 @@
   .np-btn{margin-left:auto;background:var(--accent);color:#fff;border:none;border-radius:99px;padding:9px 15px;font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(201,90,63,0.28);white-space:nowrap;}
   .np-btn:active{transform:scale(0.97);}
   .pf-pencil{position:absolute;bottom:-1px;right:-1px;width:27px;height:27px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 9px rgba(46,33,28,0.24);border:2px solid var(--surface);cursor:pointer;}
-  .pf-photo-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
-  .pf-photo-btn:active{transform:scale(0.95);}
+  .pf-photo-choice{width:100%;background:var(--accent);color:#fff;border:none;border-radius:13px;padding:12px;font-family:var(--sans);font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 6px 16px rgba(201,90,63,0.28);}
+  .pf-photo-choice:active{transform:scale(0.98);}
+  .pf-or{text-align:center;font-size:11.5px;color:var(--muted);margin:11px 0 9px;font-style:italic;}
   .sort-btn { display:inline-flex; align-items:center; gap:7px; padding:9px 14px; border:1px solid var(--line); border-radius:18px; background:var(--surface); font-family:inherit; font-size:13px; font-weight:500; color:var(--ink); cursor:pointer; box-shadow:0 2px 8px rgba(46,33,28,0.05); transition:all .15s; }
   .sort-btn svg { color:var(--muted); flex-shrink:0; }
   .sort-btn .chev { font-size:9px; color:var(--muted); }
@@ -1044,7 +1045,7 @@
   .cn-meta{font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.4;}
   .cn-moment{display:inline-flex;gap:4px;align-items:center;font-size:11px;margin-top:6px;background:var(--surface-warm);border:1px solid var(--line);border-radius:99px;padding:2px 8px;letter-spacing:.5px;color:var(--ink-soft);}
   .cn-fav{position:absolute;top:8px;right:9px;background:none;border:none;font-size:17px;cursor:pointer;line-height:1;padding:3px;color:var(--line);}
-  .cn-fav.on{color:var(--gold);}
+  .cn-fav.on{color:#F5B93B;}
 
   .cn-empty{text-align:center;padding:44px 26px;}
   .cn-empty-ic{font-size:34px;}
@@ -1059,7 +1060,8 @@
   .pb-wrap{max-width:480px;margin:0 auto;min-height:100%;position:relative;}
   .pb-close,.pb-fav{position:absolute;top:16px;z-index:5;width:42px;height:42px;border-radius:50%;background:rgba(255,253,250,0.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);box-shadow:0 4px 12px rgba(46,33,28,0.12);display:flex;align-items:center;justify-content:center;cursor:pointer;}
   .pb-close{left:16px;font-size:22px;color:var(--ink);}
-  .pb-fav{right:16px;font-size:19px;}
+  .pb-fav{right:16px;font-size:19px;color:var(--line);}
+  .pb-fav.on{color:#F5B93B;}
   .pb-visual{height:42vh;min-height:260px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
   .pb-visual img{width:100%;height:100%;object-fit:cover;}
   .pb-visual::after{content:"";position:absolute;left:0;right:0;bottom:0;height:72px;background:linear-gradient(transparent,var(--bg));pointer-events:none;}
@@ -1121,7 +1123,7 @@
   .bk2-foot{margin-top:9px;padding-top:0;display:flex;align-items:center;gap:9px;flex-shrink:0;}
   .bk2-folio{font-family:var(--serif);font-size:11px;color:var(--muted);letter-spacing:.1em;white-space:nowrap;}
   .bk2-fav{position:absolute;top:12px;right:18px;z-index:4;background:none;border:none;font-size:19px;cursor:pointer;color:var(--line);}
-  .bk2-fav.on{color:var(--gold);}
+  .bk2-fav.on{color:#F5B93B;}
 
   /* Sommaire du livre */
   .bkt{padding:26px 26px 18px 30px;height:100%;display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:none;}
@@ -1151,7 +1153,7 @@
 
   /* ===== Hub des rituels (page Rituel) ===== */
   .rh-hero{padding:26px 22px 6px;}
-  .rh-hero-t{font-family:var(--serif);font-size:27px;font-weight:600;color:var(--ink);line-height:1.1;}
+  .rh-hero-t{font-family:var(--serif);font-size:28px;font-weight:300;letter-spacing:-0.02em;color:var(--ink);line-height:1.1;}
   .rh-hero-t em{font-style:italic;color:var(--accent);}
   .rh-hero-s{margin-top:8px;color:var(--ink-soft);font-size:13px;line-height:1.5;max-width:315px;}
   .rh-quickstart{margin:12px 22px 0;padding:14px 15px;background:var(--surface-warm);border:1px solid var(--line);border-radius:16px;}
@@ -1178,10 +1180,12 @@
   .rap-ic{font-size:19px;}
   .rap-t{flex:1;font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink);}
   .rap-x{background:none;border:none;font-size:21px;color:var(--muted);cursor:pointer;line-height:1;}
-  .rap-switch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;font-size:13.5px;font-weight:600;color:var(--ink-soft);background:var(--surface-warm);border:1px solid var(--line);border-radius:13px;padding:11px 13px;cursor:pointer;}
+  .rap-sub{margin-top:9px;font-size:12.5px;line-height:1.5;color:var(--ink-soft);}
+  .rap-clock{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--surface-warm);border:1px solid var(--line);border-radius:16px;padding:12px;}
+  .rap-sel{appearance:none;-webkit-appearance:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 16px;font-family:var(--serif);font-size:26px;font-weight:600;color:var(--ink);text-align:center;cursor:pointer;box-shadow:var(--shadow);text-align-last:center;}
+  .rap-colon{font-family:var(--serif);font-size:24px;color:var(--accent);font-weight:600;}
   .rap-switch input{width:19px;height:19px;accent-color:var(--accent);cursor:pointer;}
-  .rap-body{margin-top:16px;transition:opacity .2s;}
-  .rap-body.off{opacity:.35;pointer-events:none;}
+  .rap-lbl:first-of-type{margin-top:18px;}
   .rap-lbl{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;}
   .rap-days{display:flex;gap:6px;}
   .rap-day{flex:1;aspect-ratio:1;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);font-family:var(--sans);font-size:12.5px;font-weight:700;color:var(--ink-soft);cursor:pointer;padding:0;}
@@ -1191,7 +1195,8 @@
   .rh-tag{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--blush-soft);border-radius:99px;padding:3px 8px;white-space:nowrap;}
 
   .rh-trail{display:flex;align-items:center;flex-wrap:wrap;row-gap:6px;}
-  .rh-node{width:38px;height:38px;border-radius:50%;background:var(--surface-warm);border:1.5px solid var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+  .rh-node{width:38px;height:38px;border-radius:50%;background:var(--surface-warm);border:1.5px solid var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;overflow:hidden;}
+  .rh-node img{width:100%;height:100%;object-fit:cover;}
   .rh-link{width:15px;height:0;border-top:2px dotted var(--accent-soft);flex-shrink:0;}
   .rh-empty{font-size:12.5px;color:var(--muted);font-style:italic;padding:4px 0;}
 
@@ -1232,7 +1237,8 @@
   .cm-map{position:relative;width:360px;margin:0 auto;}
   .cm-map .cm-bg{position:absolute;top:0;left:0;z-index:1;pointer-events:none;}
   .cm-node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;z-index:5;width:104px;cursor:pointer;}
-  .cm-ring{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:25px;position:relative;transition:transform .16s ease;}
+  .cm-ring{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:25px;position:relative;transition:transform .16s ease;overflow:hidden;}
+  .cm-ring img{width:100%;height:100%;object-fit:cover;}
   .cm-node:active .cm-ring{transform:scale(0.92);}
   .cm-ring.empty{background:rgba(255,253,250,0.72);border:2.5px dashed var(--accent-soft);color:var(--accent);}
   .cm-ring.filled{background:var(--surface);border:2.5px solid var(--accent);box-shadow:0 0 0 6px rgba(201,90,63,0.10),0 8px 18px rgba(201,90,63,0.22);}
@@ -1835,7 +1841,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 26.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 26.1<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2323,7 +2329,6 @@
             <button type="button" id="pf-icon-btn" onclick="pfToggleIconPicker()" style="width:78px;height:78px;border-radius:50%;border:2px solid var(--line);background:var(--surface-warm);font-size:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0;transition:all .15s;">🧴</button>
             <span class="pf-pencil" onclick="pfToggleIconPicker()">✎</span>
           </div>
-          <button type="button" class="pf-photo-btn" onclick="document.getElementById('pf-photo-input').click()" aria-label="Prendre une photo">📷</button>
           <input type="file" id="pf-photo-input" accept="image/*" capture="environment" style="display:none;" onchange="pfPhotoPreview(this)">
         </div>
       </div>
@@ -3683,7 +3688,10 @@
     const s=favSet();
     if(s.has(id)) s.delete(id); else s.add(id);
     favSave(s);
-    loadProducts();
+    const _on=s.has(id);
+    const _b=(ev&&ev.currentTarget)?ev.currentTarget:null;
+    if(_b){ _b.textContent=_on?'★':'☆'; _b.classList.toggle('on',_on); }
+    if(!_b || productSort==='fav') loadProducts();
   }
 
   let productCatFilter = 'all';
@@ -3992,7 +4000,7 @@
     const desc=p.effets?('<div class="pb-desc">'+escapeHtml(p.effets)+'</div>'):'';
     el.innerHTML='<div class="pb-wrap">'+
       '<button class="pb-close" onclick="closeProductBook()">‹</button>'+
-      '<button class="pb-fav" id="pb-fav-btn" onclick="pbToggleFav(\''+p.id+'\')">'+(isFav?'⭐':'☆')+'</button>'+
+      '<button class="pb-fav'+(isFav?' on':'')+'" id="pb-fav-btn" onclick="pbToggleFav(\''+p.id+'\')">'+(isFav?'★':'☆')+'</button>'+
       '<div class="pb-visual" style="background:linear-gradient(150deg,'+g[0]+','+g[1]+');">'+visual+'</div>'+
       '<div class="pb-card"><div class="pb-cat">'+catL+'</div><div class="pb-name">'+name+'</div>'+
       (brand?'<div class="pb-brand">'+brand+'</div>':'')+desc+
@@ -4006,7 +4014,7 @@
   }
   function closeProductBook(){ const el=document.getElementById('product-book'); if(el) el.classList.remove('show'); document.body.style.overflow=''; }
   function pbEdit(id){ closeProductBook(); setTimeout(function(){ openProductForm(id); }, 260); }
-  function pbToggleFav(id){ const s=favSet(); if(s.has(id)) s.delete(id); else s.add(id); favSave(s); const b=document.getElementById('pb-fav-btn'); if(b) b.textContent=s.has(id)?'⭐':'☆'; loadProducts(); }
+  function pbToggleFav(id){ const s=favSet(); if(s.has(id)) s.delete(id); else s.add(id); favSave(s); const b=document.getElementById('pb-fav-btn'); if(b){ b.textContent=s.has(id)?'★':'☆'; b.classList.toggle('on', s.has(id)); } }
   async function pbDelete(id){ if(!confirm('Supprimer ce produit ?')) return; try{ await sb.from('products').delete().eq('id', id); }catch(e){} closeProductBook(); if(typeof showToast==='function') showToast('Produit supprimé'); loadProducts(); }
 
   // ===== Produits en livre : vue feuilletable =====
@@ -4157,12 +4165,13 @@
     const pc=document.getElementById('prod-count'); if(pc) pc.textContent = arr.length;
   }
 
-  function renderEmojiPicker(){ var el=document.getElementById('pf-icon-picker'); if(!el) return; el.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">'+PRODUCT_EMOJIS.map(e=>`<button type="button" onclick="pickEmoji('${e}')" style="width:42px;height:42px;border-radius:12px;border:1px solid ${e===pfEmoji?'var(--accent)':'var(--line)'};background:${e===pfEmoji?'var(--accent)':'var(--surface)'};font-size:20px;cursor:pointer;">${e}</button>`).join('')+'</div>'; }
+  function renderEmojiPicker(){ var el=document.getElementById('pf-icon-picker'); if(!el) return; el.innerHTML = '<button type="button" class="pf-photo-choice" onclick="document.getElementById(\'pf-photo-input\').click()">📷  Prendre mon produit en photo</button><div class="pf-or">ou choisis une icône</div>' + '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">'+PRODUCT_EMOJIS.map(e=>`<button type="button" onclick="pickEmoji('${e}')" style="width:42px;height:42px;border-radius:12px;border:1px solid ${e===pfEmoji?'var(--accent)':'var(--line)'};background:${e===pfEmoji?'var(--accent)':'var(--surface)'};font-size:20px;cursor:pointer;">${e}</button>`).join('')+'</div>'; }
   function pfToggleIconPicker(){ var el=document.getElementById('pf-icon-picker'); if(!el) return; var open=el.style.display!=='none'; el.style.display=open?'none':'block'; if(!open) renderEmojiPicker(); }
   function pickEmoji(e){ pfEmoji=e; pfPhotoFile=null; var btn=document.getElementById('pf-icon-btn'); if(btn) btn.textContent=e; var pk=document.getElementById('pf-icon-picker'); if(pk) pk.style.display='none'; }
   function pfPhotoPreview(input){
     const f=input.files[0]; if(!f) return;
     pfPhotoFile=f;
+    const _pk=document.getElementById('pf-icon-picker'); if(_pk) _pk.style.display='none';
     const _b=document.getElementById('pf-icon-btn'); if(!_b) return; const r=new FileReader(); r.onload=ev=>{ _b.innerHTML='<img src="'+ev.target.result+'" alt="" style="width:100%;height:100%;object-fit:cover;">'; }; r.readAsDataURL(f);
   }
   function closeProductSheet(){ document.getElementById('product-sheet').classList.remove('open'); }
@@ -5051,25 +5060,33 @@
       document.body.appendChild(el); }
     const L=[['L',1],['M',2],['M',3],['J',4],['V',5],['S',6],['D',0]];
     const days=L.map(function(d){ const on=rapDraft.days.indexOf(d[1])>=0; return '<button class="rap-day'+(on?' on':'')+'" onclick="rapToggleDay('+d[1]+')">'+d[0]+'</button>'; }).join('');
+    const parts=(rapDraft.heure||'08:00').split(':');
+    const hh=parts[0]||'08', mm=parts[1]||'00';
+    let hOpts=''; for(let i=0;i<24;i++){ const v=(i<10?'0':'')+i; hOpts+='<option value="'+v+'"'+(v===hh?' selected':'')+'>'+v+'</option>'; }
+    let mins=[]; for(let i=0;i<60;i+=5){ mins.push((i<10?'0':'')+i); }
+    if(mins.indexOf(mm)<0) mins.push(mm);
+    mins.sort();
+    let mOpts=mins.map(function(v){ return '<option value="'+v+'"'+(v===mm?' selected':'')+'>'+v+'</option>'; }).join('');
+    const nb=rapDraft.days.length;
     el.innerHTML='<div class="rap-card">'+
       '<div class="rap-head"><span class="rap-ic">🔔</span><div class="rap-t">Rappel</div><button class="rap-x" onclick="rapClose()">×</button></div>'+
-      '<label class="rap-switch"><span>Recevoir un rappel</span><input type="checkbox" '+(rapDraft.on?'checked':'')+' onchange="rapToggleOn(this.checked)"></label>'+
-      '<div class="rap-body'+(rapDraft.on?'':' off')+'">'+
-        '<div class="rap-lbl">Jours</div><div class="rap-days">'+days+'</div>'+
-        '<div class="rap-lbl" style="margin-top:16px;">Heure</div><input class="rap-time" type="time" value="'+rapDraft.heure+'" onchange="rapSetHeure(this.value)">'+
-      '</div>'+
-      '<button class="rap-save" onclick="rapSave()">Enregistrer</button>'+
+      '<div class="rap-sub">Choisis les jours et l\'heure. Décoche tout pour ne plus être rappelée.</div>'+
+      '<div class="rap-lbl">Jours</div><div class="rap-days">'+days+'</div>'+
+      '<div class="rap-lbl" style="margin-top:18px;">Heure</div>'+
+      '<div class="rap-clock"><select class="rap-sel" onchange="rapSetH(this.value)">'+hOpts+'</select><span class="rap-colon">:</span><select class="rap-sel" onchange="rapSetM(this.value)">'+mOpts+'</select></div>'+
+      '<button class="rap-save" onclick="rapSave()">'+(nb?'Valider':'Désactiver le rappel')+'</button>'+
       '</div>';
     el.classList.add('show');
   }
   function rapToggleDay(d){ if(!rapDraft) return; const i=rapDraft.days.indexOf(d); if(i>=0) rapDraft.days.splice(i,1); else rapDraft.days.push(d); rapRender(); }
   function rapToggleOn(v){ if(!rapDraft) return; rapDraft.on=!!v; rapRender(); }
-  function rapSetHeure(v){ if(rapDraft) rapDraft.heure=v||'08:00'; }
+  function rapSetH(v){ if(rapDraft){ const p=(rapDraft.heure||'08:00').split(':'); rapDraft.heure=v+':'+(p[1]||'00'); } }
+  function rapSetM(v){ if(rapDraft){ const p=(rapDraft.heure||'08:00').split(':'); rapDraft.heure=(p[0]||'08')+':'+v; } }
   function rapClose(){ const el=document.getElementById('rap-overlay'); if(el) el.classList.remove('show'); rapDraft=null; }
   async function rapSave(){
     if(!rapDraft) return;
     let rap;
-    if(!rapDraft.on || !rapDraft.days.length){ rap={ on:false, days:[], hebdoDay:1 }; }
+    if(!rapDraft.days.length){ rap={ on:false, days:[], hebdoDay:1 }; }
     else if(rapDraft.moment==='hebdo'){ rap={ on:true, days:rapDraft.days, hebdoDay:rapDraft.days[0], soir:rapDraft.heure }; }
     else if(rapDraft.moment==='soir'){ rap={ on:true, days:rapDraft.days, soir:rapDraft.heure }; }
     else { rap={ on:true, days:rapDraft.days, matin:rapDraft.heure }; }
@@ -5091,7 +5108,9 @@
     const ids=Array.isArray(r.produits)?r.produits:[];
     if(!ids.length) return '<div class="rh-empty">Aucun produit · appuie pour en ajouter</div>';
     let html=''; const max=6;
-    ids.slice(0,max).forEach(function(id,i){ const p=pmap[id]; const e=p?(p.emoji||'🧴'):'🧴'; if(i>0) html+='<span class="rh-link"></span>'; html+='<span class="rh-node">'+e+'</span>'; });
+    ids.slice(0,max).forEach(function(id,i){ const p=pmap[id]; const ph=(window.__rhPhotos||{})[id];
+      const inner = ph ? '<img src="'+ph+'" alt="">' : (p?(p.emoji||'🧴'):'🧴');
+      if(i>0) html+='<span class="rh-link"></span>'; html+='<span class="rh-node">'+inner+'</span>'; });
     if(ids.length>max){ html+='<span class="rh-link"></span><span class="rh-node" style="font-size:12px;font-weight:700;color:var(--muted);">+'+(ids.length-max)+'</span>'; }
     return '<div class="rh-trail">'+html+'</div>';
   }
@@ -5115,8 +5134,10 @@
     try{
       const r1=await sb.from('rituels').select('*').eq('user_id',currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
       rits=r1.data||[];
-      const r2=await sb.from('products').select('id,nom,emoji,categorie').eq('user_id',currentUser.id);
+      const r2=await sb.from('products').select('id,nom,emoji,categorie,photo_path').eq('user_id',currentUser.id);
       prods=r2.data||[];
+      window.__rhPhotos={};
+      for(const _p of prods){ if(_p.photo_path){ try{ const _u=await signedPhoto(_p.photo_path); if(_u) window.__rhPhotos[_p.id]=_u; }catch(e){} } }
     }catch(e){}
     const pmap={}; prods.forEach(function(p){ pmap[p.id]=p; });
     window.__rhRituels=rits;
@@ -5213,7 +5234,9 @@
     if(!el) throw new Error('conteneur #rituel-chemin absent');
     if(!currentUser) throw new Error('pas connecte (currentUser null)');
     let prods=[];
-    try{ const r=await sb.from('products').select('id,nom,emoji,categorie').eq('user_id',currentUser.id); prods=r.data||[]; }catch(e){}
+    try{ const r=await sb.from('products').select('id,nom,emoji,categorie,photo_path').eq('user_id',currentUser.id); prods=r.data||[]; }catch(e){}
+    window.__cmPhotos={};
+    for(const _p of prods){ if(_p.photo_path){ try{ const _u=await signedPhoto(_p.photo_path); if(_u) window.__cmPhotos[_p.id]=_u; }catch(e){} } }
     window.__cmProds=prods; window.__allProducts=prods;
     const pmap={}; prods.forEach(function(p){ pmap[p.id]=p; });
     let r=null;
@@ -5268,7 +5291,9 @@
       const pos='style="left:'+pt.x+'px;top:'+pt.y+'px;"';
       if(p){ const nm=(p.nom||'').split(' · ')[0];
         const act = isEdit ? 'onclick="cmOpenCarousel(\''+key+'\','+pt.x+','+pt.y+')"' : 'onclick="openProductBook(\''+pid+'\')"';
-        nodes+='<div class="cm-node" '+pos+' '+act+'><div class="cm-ring filled">'+(p.emoji||'🧴')+'</div><div class="cm-lbl">'+ph.nom+'</div><div class="cm-sub">'+escapeHtml(nm)+'</div></div>';
+        const _ph=(window.__cmPhotos||{})[pid];
+        const _in = _ph ? '<img src="'+_ph+'" alt="">' : (p.emoji||'🧴');
+        nodes+='<div class="cm-node" '+pos+' '+act+'><div class="cm-ring filled">'+_in+'</div><div class="cm-lbl">'+ph.nom+'</div><div class="cm-sub">'+escapeHtml(nm)+'</div></div>';
       } else if(isEdit){
         nodes+='<div class="cm-node" '+pos+' onclick="cmOpenCarousel(\''+key+'\','+pt.x+','+pt.y+')"><div class="cm-ring empty"><span class="cm-add">+</span></div><div class="cm-lbl">'+ph.nom+'</div><div class="cm-sub">facultatif</div></div>';
       } else {
@@ -5304,7 +5329,7 @@
     if(!document.getElementById('cm-pop')){ const d=document.createElement('div'); d.id='cm-pop'; d.className='cm-pop'; document.getElementById('rituel-chemin').appendChild(d); }
     const ph=CM_PHASES[key]; const list=cmProductsForPhase(key); const cur=chDraft.filled[key];
     let cards;
-    if(list.length){ cards=list.map(function(p){ const parts=(p.nom||'').split(' · '); return '<div class="cm-pcard'+(cur===p.id?' sel':'')+'" onclick="cmPick(\''+key+'\',\''+p.id+'\')"><div class="cm-pcard-e">'+(p.emoji||'🧴')+'</div><div class="cm-pcard-n">'+escapeHtml(parts[0]||'')+'</div><div class="cm-pcard-b">'+escapeHtml(parts[1]||'')+'</div></div>'; }).join(''); }
+    if(list.length){ cards=list.map(function(p){ const parts=(p.nom||'').split(' · '); const _u=(window.__cmPhotos||{})[p.id]; const _e=_u?'<img src="'+_u+'" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">':(p.emoji||'🧴'); return '<div class="cm-pcard'+(cur===p.id?' sel':'')+'" onclick="cmPick(\''+key+'\',\''+p.id+'\')"><div class="cm-pcard-e">'+_e+'</div><div class="cm-pcard-n">'+escapeHtml(parts[0]||'')+'</div><div class="cm-pcard-b">'+escapeHtml(parts[1]||'')+'</div></div>'; }).join(''); }
     else { cards='<div class="cm-pop-none">Aucun produit dans cette catégorie.<br>Ajoute-en un depuis l\'onglet Produits.</div>'; }
     const removeBtn = cur ? '<button class="cm-pop-remove" onclick="cmClear(\''+key+'\')">Retirer de cette étape</button>' : '';
     const pop=document.getElementById('cm-pop');
