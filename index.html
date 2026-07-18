@@ -1741,7 +1741,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 24.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 24.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -4997,7 +4997,10 @@
   function cmProductsForPhase(key){ return (window.__cmProds||[]).filter(function(p){ return CM_CAT2PHASE[p.categorie]===key; }); }
 
   async function openRituelChemin(id, presetMoment){
-    const el=document.getElementById('rituel-chemin'); if(!el||!currentUser) return;
+   try{
+    const el=document.getElementById('rituel-chemin');
+    if(!el) throw new Error('conteneur #rituel-chemin absent');
+    if(!currentUser) throw new Error('pas connecte (currentUser null)');
     let prods=[];
     try{ const r=await sb.from('products').select('id,nom,emoji,categorie').eq('user_id',currentUser.id); prods=r.data||[]; }catch(e){}
     window.__cmProds=prods; window.__allProducts=prods;
@@ -5013,6 +5016,7 @@
     chDraft={ id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:filled };
     cmRender();
     el.scrollTop=0; el.classList.add('show'); document.body.style.overflow='hidden';
+   }catch(_e){ if(window.console)console.error('carte rituel:',_e); if(typeof showToast==='function') showToast('Oups, la carte n\'a pas pu s\'ouvrir'); }
   }
 
   function cmRender(){
@@ -7375,7 +7379,7 @@
 </script>
 
   <div id="product-book" class="pb-overlay"></div>
-  <div id="rituel-chemin" class="rc-overlay"></div>
+  <div id="rituel-chemin" class="cm-overlay"></div>
 
   <!-- Datepicker custom -->
   <div class="dp-overlay" id="dp-overlay" onclick="if(event.target===this)dpClose()">
