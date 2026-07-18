@@ -1126,15 +1126,16 @@
   .bkt-sub{text-align:center;font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--muted);margin-top:7px;}
   .bkt-div{display:flex;align-items:center;gap:9px;margin:16px 0 4px;}
   .bkt-div span{color:var(--accent-soft);font-size:11px;}
-  .bkt-cat{display:flex;align-items:center;gap:8px;margin:15px 0 4px;}
+  .bkt-cat{display:flex;align-items:center;gap:8px;margin:14px 0 3px;grid-column:1 / -1;}
   .bkt-cat-t{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);white-space:nowrap;font-weight:700;}
   .bkt-rule{flex:1;height:1px;background:var(--line);}
-  .bkt-item{display:flex;align-items:baseline;gap:8px;padding:6px 2px;cursor:pointer;}
+  .bkt-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:18px;align-items:start;}
+  .bkt-item{display:flex;align-items:baseline;gap:6px;padding:5px 1px;cursor:pointer;min-width:0;}
   .bkt-item:active{opacity:.6;}
-  .bkt-e{font-size:14px;}
-  .bkt-n{font-family:var(--serif);font-size:13.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
-  .bkt-lead{flex:1;border-bottom:1px dotted var(--line);transform:translateY(-4px);min-width:10px;}
-  .bkt-p{font-family:var(--serif);font-size:11.5px;color:var(--muted);letter-spacing:.06em;white-space:nowrap;}
+  .bkt-e{font-size:13px;flex-shrink:0;}
+  .bkt-n{font-family:var(--serif);font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;min-width:0;}
+  .bkt-lead{flex:1 1 auto;border-bottom:1px dotted var(--line);transform:translateY(-4px);min-width:8px;}
+  .bkt-p{font-family:var(--serif);font-size:10.5px;color:var(--muted);letter-spacing:.04em;white-space:nowrap;flex-shrink:0;}
   .bkt-hint{margin-top:auto;padding-top:18px;text-align:center;font-family:var(--serif);font-style:italic;font-size:11.5px;color:var(--muted);}
   .pbk-dots{position:absolute;bottom:6px;left:0;right:0;display:flex;justify-content:center;gap:6px;z-index:6;pointer-events:none;}
   .pbk-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-soft);transition:all .25s;}
@@ -1793,7 +1794,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 25.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 25.3<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3985,7 +3986,7 @@
       '<div class="bkt-title">Mon herbier<br>de <em>soins</em></div>'+
       '<div class="bkt-sub">'+n+' planche'+(n>1?'s':'')+' · '+nbCat+' famille'+(nbCat>1?'s':'')+'</div>'+
       '<div class="bkt-div"><span class="bkt-rule"></span><span>❦</span><span class="bkt-rule"></span></div>'+
-      body+
+      '<div class="bkt-grid">'+body+'</div>'+
       '<div class="bkt-hint">glisse pour feuilleter →</div>'+
       '</div></div>';
   }
