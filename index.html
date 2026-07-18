@@ -1085,8 +1085,36 @@
   .pl-book::-webkit-scrollbar{display:none;}
   .pbk-page{min-width:100%;height:100%;scroll-snap-align:start;overflow-y:auto;position:relative;scrollbar-width:none;}
   .pbk-page::-webkit-scrollbar{display:none;}
-  .pbk-page .pb-visual{height:38vh;min-height:224px;}
-  .pbk-page .pb-card{padding-bottom:26px;}
+  .pbk-page{background:linear-gradient(90deg,rgba(46,33,28,0.10),rgba(46,33,28,0.02) 18px,rgba(46,33,28,0) 34px),radial-gradient(120% 60% at 50% 0%,#FFFDF8,var(--surface-warm) 70%);}
+  .bk2{padding:20px 24px 30px 30px;min-height:100%;display:flex;flex-direction:column;}
+  .bk2-head{display:flex;align-items:center;gap:9px;margin-bottom:14px;}
+  .bk2-rule{flex:1;height:1px;background:var(--line);}
+  .bk2-plate-no{font-family:var(--serif);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  .bk2-plate{border:1px solid var(--line);background:#FFFDFA;padding:7px;box-shadow:0 1px 0 rgba(46,33,28,0.04);}
+  .bk2-plate-in{border:1px solid var(--accent-soft);padding:20px 12px;display:flex;align-items:center;justify-content:center;position:relative;min-height:186px;overflow:hidden;}
+  .bk2-plate-in img{width:100%;height:186px;object-fit:cover;}
+  .bk2-emoji{font-size:82px;line-height:1;filter:drop-shadow(0 10px 18px rgba(46,33,28,0.16));}
+  .bk2-corner{position:absolute;font-size:11px;color:var(--accent-soft);}
+  .bk2-corner.tl{top:6px;left:7px;}.bk2-corner.tr{top:6px;right:7px;}
+  .bk2-corner.bl{bottom:6px;left:7px;}.bk2-corner.br{bottom:6px;right:7px;}
+  .bk2-caption{text-align:center;font-family:var(--serif);font-style:italic;font-size:11.5px;color:var(--muted);margin-top:8px;}
+  .bk2-title{font-family:var(--serif);font-size:27px;font-weight:600;color:var(--ink);text-align:center;line-height:1.12;margin-top:16px;}
+  .bk2-latin{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--ink-soft);text-align:center;margin-top:5px;}
+  .bk2-orn{text-align:center;color:var(--accent-soft);font-size:13px;margin:13px 0 3px;letter-spacing:.4em;}
+  .bk2-rows{margin-top:6px;}
+  .bk2-row{display:flex;align-items:baseline;gap:7px;padding:6px 0;}
+  .bk2-k{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  .bk2-lead{flex:1;border-bottom:1px dotted var(--line);transform:translateY(-3px);min-width:14px;}
+  .bk2-v{font-family:var(--serif);font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;}
+  .bk2-v.badge{font-family:var(--sans);font-size:11px;font-weight:600;border-radius:99px;padding:3px 10px;}
+  .bk2-notes-t{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin-top:16px;}
+  .bk2-notes{margin-top:7px;padding-top:1px;font-family:var(--serif);font-size:13.5px;color:var(--ink-soft);line-height:23px;background-image:repeating-linear-gradient(transparent,transparent 22px,var(--line) 22px,var(--line) 23px);min-height:69px;}
+  .bk2-foot{margin-top:auto;padding-top:20px;display:flex;align-items:center;gap:9px;}
+  .bk2-folio{font-family:var(--serif);font-size:12px;color:var(--muted);letter-spacing:.1em;white-space:nowrap;}
+  .bk2-actions{display:flex;gap:9px;margin-top:16px;}
+  .bk2-edit{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;font-family:var(--serif);font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;}
+  .bk2-del{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 15px;font-family:var(--serif);font-size:13.5px;font-weight:600;color:var(--accent-deep);cursor:pointer;}
+  .bk2-fav{position:absolute;top:16px;right:20px;z-index:4;background:none;border:none;font-size:20px;cursor:pointer;}
   .pbk-dots{position:absolute;bottom:6px;left:0;right:0;display:flex;justify-content:center;gap:6px;z-index:6;pointer-events:none;}
   .pbk-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-soft);transition:all .25s;}
   .pbk-dot.on{background:var(--accent);width:18px;border-radius:99px;}
@@ -1169,6 +1197,8 @@
   .cm-validate .cm-shine{position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.35),transparent);animation:cmShine 3.4s ease-in-out infinite;}
   @keyframes cmShine{0%{left:-60%;}55%,100%{left:130%;}}
   .cm-validate-hint{text-align:center;font-size:11.5px;color:var(--muted);margin-top:10px;}
+  .cm-node.cm-muted{cursor:default;opacity:.55;}
+  .cm-node.cm-muted .cm-ring.empty{border-style:solid;border-color:var(--line);filter:grayscale(.35);}
 
   .cm-pop{position:absolute;z-index:20;width:272px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 44px rgba(46,33,28,0.28);padding:12px 12px 14px;opacity:0;transform:scale(0.9);transform-origin:top center;transition:opacity .16s ease,transform .16s ease;pointer-events:none;}
   .cm-pop.show{opacity:1;transform:scale(1);pointer-events:auto;}
@@ -1741,7 +1771,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 24.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 25.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -3914,33 +3944,55 @@
   function toggleProductView(){ setProdView(getProdView()==='book'?'list':'book'); loadProducts(); }
   function pbkToggleFav(id, el){ const s=favSet(); if(s.has(id)) s.delete(id); else s.add(id); favSave(s); if(el) el.textContent=s.has(id)?'⭐':'☆'; }
 
-  async function pbkPage(p, favs){
-    const g=PB_GRAD[p.categorie||'autre']||PB_GRAD.autre;
+  function bkRoman(n){ const r=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']]; let s=''; r.forEach(function(p){ while(n>=p[0]){ s+=p[1]; n-=p[0]; } }); return s||'I'; }
+  function bkRow(k,v,cls){ return '<div class="bk2-row"><span class="bk2-k">'+k+'</span><span class="bk2-lead"></span><span class="bk2-v'+(cls||'')+'">'+v+'</span></div>'; }
+  function bkDateRows(p){
+    const fmt=function(d){ const x=d.split('-'); return x[2]+'/'+x[1]+'/'+x[0].slice(2); };
+    let out='';
+    if(p.date_ouverture) out+=bkRow('Ouvert le', fmt(p.date_ouverture));
+    if(p.date_peremption){
+      const exp=new Date(p.date_peremption), t=new Date(); t.setHours(0,0,0,0);
+      const days=Math.round((exp-t)/86400000), months=days/30;
+      let c; if(days<0) c=['#FBE2DC','#B23A1E']; else if(months>9) c=['#EFE7DD','#7A6B5C']; else if(months>6) c=['#E3F0E0','#3E7A4E']; else if(months>3) c=['#F7ECCB','#8A6A1E']; else c=['#FBE2DC','#B23A1E'];
+      let txt; if(days<0) txt='Périmé'; else if(days===0) txt="Périme aujourd'hui"; else txt=fmt(p.date_peremption)+' · '+days+' j';
+      out+='<div class="bk2-row"><span class="bk2-k">Fraîcheur</span><span class="bk2-lead"></span><span class="bk2-v badge" style="background:'+c[0]+';color:'+c[1]+';">'+txt+'</span></div>';
+    }
+    return out;
+  }
+  async function pbkPage(p, favs, idx, total){
     const parts=(p.nom||'').split(' · ');
     const name=escapeHtml(parts[0]||'');
     const brand=parts.length>1 ? escapeHtml(parts.slice(1).join(' · ')) : '';
-    const catL=(CATS.find(x=>x[0]===(p.categorie||'autre'))||['','','Soin'])[2];
-    let visual;
-    if(p.photo_path){ const url=await signedPhoto(p.photo_path); visual = url ? '<img src="'+url+'" alt="">' : '<div class="pb-halo"></div><div class="pb-emoji">'+(p.emoji||'🧴')+'</div>'; }
-    else visual='<div class="pb-halo"></div><div class="pb-emoji">'+(p.emoji||'🧴')+'</div>';
-    let chips='';
-    if(p.in_matin||p.in_soir){ const t=(p.in_matin&&p.in_soir)?'☀️ Matin & soir':(p.in_matin?'☀️ Matin':'🌙 Soir'); chips+='<span class="pb-chip">'+t+'</span>'; }
-    if(p.prix!=null&&p.prix!=='') chips+='<span class="pb-chip price">'+p.prix+'€</span>';
-    const desc=p.effets?('<div class="pb-desc">'+escapeHtml(p.effets)+'</div>'):'';
+    const catL=(CATS.find(function(x){return x[0]===(p.categorie||'autre');})||['','','Soin'])[2];
+    let plate;
+    if(p.photo_path){ const url=await signedPhoto(p.photo_path); plate = url ? '<img src="'+url+'" alt="">' : '<div class="bk2-emoji">'+(p.emoji||'🧴')+'</div>'; }
+    else plate='<div class="bk2-emoji">'+(p.emoji||'🧴')+'</div>';
+    const moment=(p.in_matin&&p.in_soir)?'Matin & soir':(p.in_matin?'Matin':(p.in_soir?'Soir':'—'));
+    let rows=bkRow('Catégorie', escapeHtml(catL))+bkRow('Moment', moment);
+    if(p.prix!=null&&p.prix!=='') rows+=bkRow('Prix', p.prix+' €');
+    rows+=bkDateRows(p);
+    const notes=p.effets?escapeHtml(p.effets):'—';
     return '<div class="pbk-page" data-pid="'+p.id+'">'+
-      '<button class="pb-fav" onclick="pbkToggleFav(\''+p.id+'\',this)">'+(favs.has(p.id)?'⭐':'☆')+'</button>'+
-      '<div class="pb-visual" style="background:linear-gradient(150deg,'+g[0]+','+g[1]+');">'+visual+'</div>'+
-      '<div class="pb-card"><div class="pb-cat">'+catL+'</div><div class="pb-name">'+name+'</div>'+
-      (brand?'<div class="pb-brand">'+brand+'</div>':'')+desc+
-      (chips?'<div class="pb-chips">'+chips+'</div>':'')+
-      pbDates(p)+
-      '<div class="pb-actions"><button class="pb-edit" onclick="openProductForm(\''+p.id+'\')">Modifier</button><button class="pb-del" onclick="pbDelete(\''+p.id+'\')">Supprimer</button></div>'+
+      '<button class="bk2-fav" onclick="pbkToggleFav(\''+p.id+'\',this)">'+(favs.has(p.id)?'⭐':'☆')+'</button>'+
+      '<div class="bk2">'+
+        '<div class="bk2-head"><span class="bk2-rule"></span><span class="bk2-plate-no">Planche N° '+bkRoman(idx+1)+'</span><span class="bk2-rule"></span></div>'+
+        '<div class="bk2-plate"><div class="bk2-plate-in">'+
+          '<span class="bk2-corner tl">❦</span><span class="bk2-corner tr">❦</span><span class="bk2-corner bl">❦</span><span class="bk2-corner br">❦</span>'+
+          plate+'</div></div>'+
+        '<div class="bk2-caption">'+escapeHtml(catL)+'</div>'+
+        '<div class="bk2-title">'+name+'</div>'+
+        (brand?'<div class="bk2-latin">'+brand+'</div>':'')+
+        '<div class="bk2-orn">❧</div>'+
+        '<div class="bk2-rows">'+rows+'</div>'+
+        '<div class="bk2-notes-t">Notes</div><div class="bk2-notes">'+notes+'</div>'+
+        '<div class="bk2-actions"><button class="bk2-edit" onclick="openProductForm(\''+p.id+'\')">Modifier</button><button class="bk2-del" onclick="pbDelete(\''+p.id+'\')">Retirer</button></div>'+
+        '<div class="bk2-foot"><span class="bk2-rule"></span><span class="bk2-folio">— '+(idx+1)+' / '+total+' —</span><span class="bk2-rule"></span></div>'+
       '</div></div>';
   }
 
   async function renderProductsBook(products, favs){
     const list=document.getElementById('products-list');
-    let pages=''; for(const p of products){ pages += await pbkPage(p, favs); }
+    let pages=''; for(let i=0;i<products.length;i++){ pages += await pbkPage(products[i], favs, i, products.length); }
     list.style.cssText=''; list.className='pl-book';
     list.innerHTML=pages;
     const sec=list.parentElement;
@@ -4370,7 +4422,6 @@
       showToast('Rituel créé et activé ✨');
       loadRituels(); if(typeof loadProducts==='function') loadProducts();
       loadHomeRoutine();
-      navTo('home');
     }catch(e){ showToast('Oups, réessaie dans un instant 🌿'); }
     __presetBusy=false;
   }
@@ -4892,7 +4943,7 @@
     return '<div class="rh-card" onclick="openRituelChemin(\''+r.id+'\')">'+
       '<div class="rh-card-head"><div class="rh-name">'+escapeHtml(r.nom||'Mon rituel')+'</div>'+tag+bell+'</div>'+
       rhTrail(r, pmap)+
-      '<div class="rh-foot"><span>'+nb+' étape'+(nb>1?'s':'')+'</span><span class="rh-edit">Ouvrir ›</span></div>'+
+      '<div class="rh-foot"><span>'+nb+' étape'+(nb>1?'s':'')+'</span></div>'+
       '</div>';
   }
 
@@ -4928,9 +4979,7 @@
       const list=groups[mo[0]];
       let inner='';
       list.forEach(function(r){ inner+=rhCard(r, pmap); });
-      if(!list.length) inner+='<div class="rh-empty" style="padding:6px 2px 14px;">Aucun rituel ici pour l\'instant.</div>';
-      const lbl = mo[0]==='hebdo' ? 'Nouveau rituel hebdo' : 'Nouveau rituel du '+mo[2].toLowerCase();
-      inner+='<button class="rh-add" onclick="openRituelChemin(null,\''+mo[0]+'\')">+ '+lbl+'</button>';
+      if(!list.length) inner+='<div class="rh-empty" style="padding:6px 2px 14px;">Aucun rituel ici pour l\'instant. Touche le + en bas pour en créer un.</div>';
       panes+='<div class="rh-tabpane" id="rh-pane-'+mo[0]+'" style="display:'+(mo[0]===rhActiveTab?'block':'none')+';">'+inner+'</div>';
     });
     root.innerHTML=html + tabs + '<div class="rh-panes">'+panes+'</div>';
@@ -4996,7 +5045,7 @@
   }
   function cmProductsForPhase(key){ return (window.__cmProds||[]).filter(function(p){ return CM_CAT2PHASE[p.categorie]===key; }); }
 
-  async function openRituelChemin(id, presetMoment){
+  async function openRituelChemin(id, presetMoment, mode){
    try{
     const el=document.getElementById('rituel-chemin');
     if(!el) throw new Error('conteneur #rituel-chemin absent');
@@ -5013,7 +5062,7 @@
     if(r && Array.isArray(r.produits)){
       r.produits.forEach(function(pid){ const p=pmap[pid]; if(!p) return; const ph=CM_CAT2PHASE[p.categorie]; if(ph && set.indexOf(ph)>=0 && !filled[ph]) filled[ph]=pid; });
     }
-    chDraft={ id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:filled };
+    chDraft={ id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:filled, mode:(mode||(r?'view':'edit')) };
     cmRender();
     el.scrollTop=0; el.classList.add('show'); document.body.style.overflow='hidden';
    }catch(_e){ if(window.console)console.error('carte rituel:',_e); if(typeof showToast==='function') showToast('Oups, la carte n\'a pas pu s\'ouvrir'); }
@@ -5052,26 +5101,38 @@
       '<path d="'+d+'" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-dasharray="1 17" opacity="0.7"/></svg>';
 
     let nodes='<div class="cm-node" style="left:'+pts[0].x+'px;top:'+pts[0].y+'px;"><div class="cm-start">'+meta.start+'</div><div class="cm-lbl">Départ</div></div>';
+    const isEdit=(chDraft.mode==='edit');
     set.forEach(function(key,i){ const ph=CM_PHASES[key]; const pt=pts[i+1]; const pid=chDraft.filled[key]; const p=pid?pmap[pid]:null;
+      const pos='style="left:'+pt.x+'px;top:'+pt.y+'px;"';
       if(p){ const nm=(p.nom||'').split(' · ')[0];
-        nodes+='<div class="cm-node" style="left:'+pt.x+'px;top:'+pt.y+'px;" onclick="cmOpenCarousel(\''+key+'\','+pt.x+','+pt.y+')"><div class="cm-ring filled">'+(p.emoji||'🧴')+'</div><div class="cm-lbl">'+ph.nom+'</div><div class="cm-sub">'+escapeHtml(nm)+'</div></div>';
+        const act = isEdit ? 'onclick="cmOpenCarousel(\''+key+'\','+pt.x+','+pt.y+')"' : 'onclick="openProductBook(\''+pid+'\')"';
+        nodes+='<div class="cm-node" '+pos+' '+act+'><div class="cm-ring filled">'+(p.emoji||'🧴')+'</div><div class="cm-lbl">'+ph.nom+'</div><div class="cm-sub">'+escapeHtml(nm)+'</div></div>';
+      } else if(isEdit){
+        nodes+='<div class="cm-node" '+pos+' onclick="cmOpenCarousel(\''+key+'\','+pt.x+','+pt.y+')"><div class="cm-ring empty"><span class="cm-add">+</span></div><div class="cm-lbl">'+ph.nom+'</div><div class="cm-sub">facultatif</div></div>';
       } else {
-        nodes+='<div class="cm-node" style="left:'+pt.x+'px;top:'+pt.y+'px;" onclick="cmOpenCarousel(\''+key+'\','+pt.x+','+pt.y+')"><div class="cm-ring empty"><span class="cm-add">+</span></div><div class="cm-lbl">'+ph.nom+'</div><div class="cm-sub">facultatif</div></div>';
+        nodes+='<div class="cm-node cm-muted" '+pos+'><div class="cm-ring empty">'+ph.emoji+'</div><div class="cm-lbl">'+ph.nom+'</div></div>';
       }
     });
     const g=pts[pts.length-1];
     nodes+='<div class="cm-node" style="left:'+g.x+'px;top:'+g.y+'px;"><div class="cm-goal">✨</div><div class="cm-lbl">Objectif</div></div>';
 
     const title = escapeHtml(chDraft.nom || meta.ph);
+    const tools = isEdit
+      ? '<button class="cm-tool" title="Supprimer" onclick="cmDelete()">🗑️</button>'
+      : '<button class="cm-tool" title="Modifier" onclick="cmSetMode(\'edit\')">🔨</button>';
+    const bannerTxt = isEdit
+      ? '<div class="cm-banner-txt" onclick="cmRename()"><div class="cm-banner-t" style="color:'+col.t+';">'+title+'</div><div class="cm-banner-edit" style="color:'+col.e+';">✎ touche pour renommer</div></div>'
+      : '<div class="cm-banner-txt"><div class="cm-banner-t" style="color:'+col.t+';">'+title+'</div></div>';
+    const foot = isEdit
+      ? '<div class="cm-validate-wrap"><button class="cm-validate" onclick="cmValidate()"><span class="cm-shine"></span>✨ J\'ai fini mon rituel</button><div class="cm-validate-hint">Tu peux valider même si toutes les étapes ne sont pas remplies 🌸</div></div>'
+      : '<div class="cm-validate-wrap"><div class="cm-validate-hint">Touche 🔨 en haut pour modifier ce rituel</div></div>';
     const html='<div class="cm-wrap">'+
       '<div class="cm-banner">'+cmBannerSvg(moment)+
         '<button class="cm-back" onclick="closeRituelChemin()">‹</button>'+
-        '<div class="cm-tools"><button class="cm-tool" title="Renommer" onclick="cmRename()">🔨</button><button class="cm-tool" title="Supprimer" onclick="cmDelete()">🗑️</button></div>'+
-        '<div class="cm-banner-txt" onclick="cmRename()"><div class="cm-banner-k" style="color:'+col.k+';">'+meta.k+'</div><div class="cm-banner-t" style="color:'+col.t+';">'+title+'</div><div class="cm-banner-edit" style="color:'+col.e+';">✎ touche pour renommer</div></div>'+
+        '<div class="cm-tools">'+tools+'</div>'+ bannerTxt +
       '</div>'+
       '<div class="cm-map" style="height:'+H+'px;">'+bg+nodes+'</div>'+
-      '<div class="cm-validate-wrap"><button class="cm-validate" onclick="cmValidate()"><span class="cm-shine"></span>✨ J\'ai fini mon rituel</button>'+
-      '<div class="cm-validate-hint">Tu peux valider même si toutes les étapes ne sont pas remplies 🌸</div></div>'+
+      foot+
       '</div>';
     el.innerHTML=html;
     el.scrollTop=sc;
@@ -5098,6 +5159,7 @@
   function cmClosePop(){ const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show'); }
   function cmPick(key,pid){ chDraft.filled[key]=pid; cmClosePop(); cmRender(); }
   function cmClear(key){ delete chDraft.filled[key]; cmClosePop(); cmRender(); }
+  function cmSetMode(m){ if(!chDraft) return; chDraft.mode=m; cmRender(); }
   function cmRename(){ const n=prompt('Nom du rituel :', chDraft.nom||''); if(n!==null){ chDraft.nom=n.trim(); cmRender(); } }
 
   function cmWow(){
@@ -5125,6 +5187,7 @@
       if(chDraft.id){ await sb.from('rituels').update({ nom:nom, moment:chDraft.moment, produits:produits, actif:true }).eq('id', chDraft.id); }
       else { const { data } = await sb.from('rituels').insert({ user_id:currentUser.id, nom:nom, moment:chDraft.moment, produits:produits, position:0, actif:true, rappels:(chDraft.rappels||{on:false,days:[],hebdoDay:1}) }).select('id').maybeSingle(); if(data) chDraft.id=data.id; }
     }catch(e){}
+    chDraft.mode='view';
     window.__allRituels=null;
     if(typeof loadRituels==='function') loadRituels();
     if(typeof loadHomeRoutine==='function') loadHomeRoutine();
