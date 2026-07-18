@@ -918,6 +918,9 @@
   .sort-bar { position:relative; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
   .np-btn{margin-left:auto;background:var(--accent);color:#fff;border:none;border-radius:99px;padding:9px 15px;font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(201,90,63,0.28);white-space:nowrap;}
   .np-btn:active{transform:scale(0.97);}
+  .pf-pencil{position:absolute;bottom:-1px;right:-1px;width:27px;height:27px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 9px rgba(46,33,28,0.24);border:2px solid var(--surface);cursor:pointer;}
+  .pf-photo-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
+  .pf-photo-btn:active{transform:scale(0.95);}
   .sort-btn { display:inline-flex; align-items:center; gap:7px; padding:9px 14px; border:1px solid var(--line); border-radius:18px; background:var(--surface); font-family:inherit; font-size:13px; font-weight:500; color:var(--ink); cursor:pointer; box-shadow:0 2px 8px rgba(46,33,28,0.05); transition:all .15s; }
   .sort-btn svg { color:var(--muted); flex-shrink:0; }
   .sort-btn .chev { font-size:9px; color:var(--muted); }
@@ -1027,20 +1030,21 @@
   .cn-chapter{display:flex;align-items:center;gap:9px;margin:24px 2px 13px;}
   .cn-chapter:first-child{margin-top:4px;}
   .cn-chapter-ic{width:30px;height:30px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:var(--shadow);}
-  .cn-chapter-t{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);letter-spacing:.01em;white-space:nowrap;}
+  .cn-chapter-t{font-family:var(--sans);font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.13em;text-transform:uppercase;white-space:nowrap;}
   .cn-chapter-n{font-size:10.5px;font-weight:700;color:var(--muted);background:var(--bg-soft);border-radius:99px;padding:2px 8px;flex-shrink:0;}
   .cn-chapter-rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);min-width:12px;}
 
-  .cn-card{position:relative;display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:13px;margin-bottom:11px;box-shadow:var(--shadow);transition:transform .15s ease;cursor:pointer;}
+  .cn-card{position:relative;display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:9px 11px;margin-bottom:6px;box-shadow:var(--shadow);transition:transform .15s ease;cursor:pointer;}
   .cn-card:active{transform:scale(0.985);}
-  .cn-thumb{width:58px;height:58px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:27px;flex-shrink:0;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(46,33,28,0.05);}
+  .cn-thumb{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(46,33,28,0.05);}
   .cn-thumb img{width:100%;height:100%;object-fit:cover;}
   .cn-body{flex:1;min-width:0;padding-right:20px;}
-  .cn-name{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--ink);line-height:1.22;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cn-name{font-family:var(--serif);font-size:14.5px;font-weight:600;color:var(--ink);line-height:1.22;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .cn-brand{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .cn-meta{font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.4;}
   .cn-moment{display:inline-flex;gap:4px;align-items:center;font-size:11px;margin-top:6px;background:var(--surface-warm);border:1px solid var(--line);border-radius:99px;padding:2px 8px;letter-spacing:.5px;color:var(--ink-soft);}
-  .cn-fav{position:absolute;top:11px;right:11px;background:none;border:none;font-size:18px;cursor:pointer;line-height:1;padding:3px;}
+  .cn-fav{position:absolute;top:8px;right:9px;background:none;border:none;font-size:17px;cursor:pointer;line-height:1;padding:3px;color:var(--line);}
+  .cn-fav.on{color:var(--gold);}
 
   .cn-empty{text-align:center;padding:44px 26px;}
   .cn-empty-ic{font-size:34px;}
@@ -1116,7 +1120,8 @@
   .bk2-del{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-family:var(--serif);font-size:13px;font-weight:600;color:var(--accent-deep);cursor:pointer;}
   .bk2-foot{margin-top:9px;padding-top:0;display:flex;align-items:center;gap:9px;flex-shrink:0;}
   .bk2-folio{font-family:var(--serif);font-size:11px;color:var(--muted);letter-spacing:.1em;white-space:nowrap;}
-  .bk2-fav{position:absolute;top:12px;right:18px;z-index:4;background:none;border:none;font-size:19px;cursor:pointer;}
+  .bk2-fav{position:absolute;top:12px;right:18px;z-index:4;background:none;border:none;font-size:19px;cursor:pointer;color:var(--line);}
+  .bk2-fav.on{color:var(--gold);}
 
   /* Sommaire du livre */
   .bkt{padding:26px 26px 18px 30px;height:100%;display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:none;}
@@ -1164,7 +1169,25 @@
   .rh-card:active{transform:scale(0.99);}
   .rh-card-head{display:flex;align-items:center;gap:8px;margin-bottom:13px;}
   .rh-name{font-family:var(--serif);font-size:16.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .rh-bell{font-size:13px;}
+  .rh-bellbtn{background:none;border:none;font-size:15px;cursor:pointer;padding:2px 4px;line-height:1;opacity:.45;filter:grayscale(1);}
+  .rh-bellbtn.on{opacity:1;filter:none;}
+  .rap-overlay{position:fixed;inset:0;z-index:420;background:rgba(46,33,28,0.45);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:24px;}
+  .rap-overlay.show{display:flex;}
+  .rap-card{width:100%;max-width:330px;background:var(--surface);border-radius:22px;padding:20px 20px 18px;box-shadow:0 26px 60px rgba(46,33,28,0.32);}
+  .rap-head{display:flex;align-items:center;gap:9px;}
+  .rap-ic{font-size:19px;}
+  .rap-t{flex:1;font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink);}
+  .rap-x{background:none;border:none;font-size:21px;color:var(--muted);cursor:pointer;line-height:1;}
+  .rap-switch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;font-size:13.5px;font-weight:600;color:var(--ink-soft);background:var(--surface-warm);border:1px solid var(--line);border-radius:13px;padding:11px 13px;cursor:pointer;}
+  .rap-switch input{width:19px;height:19px;accent-color:var(--accent);cursor:pointer;}
+  .rap-body{margin-top:16px;transition:opacity .2s;}
+  .rap-body.off{opacity:.35;pointer-events:none;}
+  .rap-lbl{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;}
+  .rap-days{display:flex;gap:6px;}
+  .rap-day{flex:1;aspect-ratio:1;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);font-family:var(--sans);font-size:12.5px;font-weight:700;color:var(--ink-soft);cursor:pointer;padding:0;}
+  .rap-day.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .rap-time{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:13px;padding:12px;font-family:var(--sans);font-size:16px;font-weight:600;color:var(--ink);background:var(--surface-warm);text-align:center;}
+  .rap-save{width:100%;margin-top:18px;background:var(--accent);color:#fff;border:none;border-radius:14px;padding:14px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 8px 20px rgba(201,90,63,0.3);}
   .rh-tag{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--blush-soft);border-radius:99px;padding:3px 8px;white-space:nowrap;}
 
   .rh-trail{display:flex;align-items:center;flex-wrap:wrap;row-gap:6px;}
@@ -1812,7 +1835,7 @@
       </div>
     </div>
 
-    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 25.6<br><span class="italic serif">· ton carnet de peau ·</span></div>
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 26.0<br><span class="italic serif">· ton carnet de peau ·</span></div>
   </div>
 
  </div><!-- /scroll-host -->
@@ -2295,7 +2318,14 @@
       <div class="sheet-handle"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">
         <div class="sheet-title" id="product-sheet-title" style="margin:0;">Nouveau produit</div>
-        <button type="button" id="pf-icon-btn" onclick="pfToggleIconPicker()" style="width:54px;height:54px;border-radius:50%;border:2px solid var(--line);background:var(--surface-warm);font-size:26px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;">🧴</button>
+        <div style="display:flex;align-items:center;gap:9px;flex-shrink:0;">
+          <div style="position:relative;">
+            <button type="button" id="pf-icon-btn" onclick="pfToggleIconPicker()" style="width:78px;height:78px;border-radius:50%;border:2px solid var(--line);background:var(--surface-warm);font-size:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0;transition:all .15s;">🧴</button>
+            <span class="pf-pencil" onclick="pfToggleIconPicker()">✎</span>
+          </div>
+          <button type="button" class="pf-photo-btn" onclick="document.getElementById('pf-photo-input').click()" aria-label="Prendre une photo">📷</button>
+          <input type="file" id="pf-photo-input" accept="image/*" capture="environment" style="display:none;" onchange="pfPhotoPreview(this)">
+        </div>
       </div>
       <div id="pf-icon-picker" style="display:none;margin-top:12px;padding:12px;background:var(--surface-warm);border-radius:14px;"></div>
 
@@ -3870,13 +3900,7 @@
   // ===== Carnet de produits : teintes + rendu premium =====
   const CN_TINT = { demaquillant:'#F6E6E0', nettoyant:'#E6EFE4', toner:'#E7EDF0', serum:'#F7ECD9', yeux:'#ECE7F0', creme:'#EFEAE2', spf:'#FBEFD3', masque:'#F3E4EC', cible:'#F6E2DC', autre:'#EDE9E1' };
 
-  function cnMoment(p){
-    const m=p.in_matin, s=p.in_soir;
-    if(m&&s) return '<span class="cn-moment">☀️ 🌙</span>';
-    if(m) return '<span class="cn-moment">☀️ matin</span>';
-    if(s) return '<span class="cn-moment">🌙 soir</span>';
-    return '';
-  }
+  function cnMoment(p){ return ''; }
 
   async function cnCardHtml(p, favs){
     let thumb = p.emoji || '🧴';
@@ -3896,7 +3920,7 @@
         cnMoment(p)+
         productDateInfo(p)+
       '</div>'+
-      '<button class="pf-fav cn-fav" onclick="toggleFav(\''+p.id+'\', event)">'+(favs.has(p.id)?'⭐':'☆')+'</button>'+
+      '<button class="pf-fav cn-fav'+(favs.has(p.id)?' on':'')+'" onclick="toggleFav(\''+p.id+'\', event)">'+(favs.has(p.id)?'★':'☆')+'</button>'+
     '</div>';
   }
 
@@ -3986,10 +4010,10 @@
   async function pbDelete(id){ if(!confirm('Supprimer ce produit ?')) return; try{ await sb.from('products').delete().eq('id', id); }catch(e){} closeProductBook(); if(typeof showToast==='function') showToast('Produit supprimé'); loadProducts(); }
 
   // ===== Produits en livre : vue feuilletable =====
-  function getProdView(){ try{ return localStorage.getItem('rituel_prodview')||'book'; }catch(e){ return 'book'; } }
+  function getProdView(){ try{ return localStorage.getItem('rituel_prodview')||'list'; }catch(e){ return 'list'; } }
   function setProdView(v){ try{ localStorage.setItem('rituel_prodview', v); }catch(e){} }
   function toggleProductView(){ setProdView(getProdView()==='book'?'list':'book'); loadProducts(); }
-  function pbkToggleFav(id, el){ const s=favSet(); if(s.has(id)) s.delete(id); else s.add(id); favSave(s); if(el) el.textContent=s.has(id)?'⭐':'☆'; }
+  function pbkToggleFav(id, el){ const s=favSet(); if(s.has(id)) s.delete(id); else s.add(id); favSave(s); if(el){ el.textContent=s.has(id)?'★':'☆'; el.classList.toggle('on', s.has(id)); } }
 
   function pbkGoTo(i){ const l=document.getElementById('products-list'); if(!l) return; l.scrollTo({left:i*(l.clientWidth||1), behavior:'smooth'}); }
   function bkSommairePage(products){
@@ -4044,7 +4068,7 @@
     rows+=bkDateRows(p);
     const notes=p.effets?escapeHtml(p.effets):'—';
     return '<div class="pbk-page" data-pid="'+p.id+'">'+
-      '<button class="bk2-fav" onclick="pbkToggleFav(\''+p.id+'\',this)">'+(favs.has(p.id)?'⭐':'☆')+'</button>'+
+      '<button class="bk2-fav'+(favs.has(p.id)?' on':'')+'" onclick="pbkToggleFav(\''+p.id+'\',this)">'+(favs.has(p.id)?'★':'☆')+'</button>'+
       '<div class="bk2">'+
         '<div class="bk2-head"><span class="bk2-rule"></span><span class="bk2-plate-no">Fiche N° '+(idx+1)+'</span><span class="bk2-rule"></span></div>'+
         '<div class="bk2-plate"><div class="bk2-plate-in">'+
@@ -4116,7 +4140,7 @@
     } else {
       rt.classList.remove('book-mode');
       if(_tg) _tg.textContent='📖';
-      list.className=''; list.style.cssText='display:flex;flex-direction:column;gap:12px;';
+      list.className=''; list.style.cssText='display:flex;flex-direction:column;gap:0;';
       if(!products.length){ list.innerHTML = cnEmptyHtml(); }
       else if(productSort==='cat' && (!productCatFilter || productCatFilter==='all')){ list.innerHTML = await cnRenderChaptered(products, _favs); }
       else { list.innerHTML = await cnRenderFlat(products, _favs); }
@@ -4135,11 +4159,11 @@
 
   function renderEmojiPicker(){ var el=document.getElementById('pf-icon-picker'); if(!el) return; el.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">'+PRODUCT_EMOJIS.map(e=>`<button type="button" onclick="pickEmoji('${e}')" style="width:42px;height:42px;border-radius:12px;border:1px solid ${e===pfEmoji?'var(--accent)':'var(--line)'};background:${e===pfEmoji?'var(--accent)':'var(--surface)'};font-size:20px;cursor:pointer;">${e}</button>`).join('')+'</div>'; }
   function pfToggleIconPicker(){ var el=document.getElementById('pf-icon-picker'); if(!el) return; var open=el.style.display!=='none'; el.style.display=open?'none':'block'; if(!open) renderEmojiPicker(); }
-  function pickEmoji(e){ pfEmoji=e; var btn=document.getElementById('pf-icon-btn'); if(btn) btn.textContent=e; var pk=document.getElementById('pf-icon-picker'); if(pk) pk.style.display='none'; }
+  function pickEmoji(e){ pfEmoji=e; pfPhotoFile=null; var btn=document.getElementById('pf-icon-btn'); if(btn) btn.textContent=e; var pk=document.getElementById('pf-icon-picker'); if(pk) pk.style.display='none'; }
   function pfPhotoPreview(input){
     const f=input.files[0]; if(!f) return;
     pfPhotoFile=f;
-    const _t=document.getElementById('pf-photo-thumb'); if(!_t) return; const r=new FileReader(); r.onload=ev=>{ _t.innerHTML=`<img src="${ev.target.result}" alt="">`; }; r.readAsDataURL(f);
+    const _b=document.getElementById('pf-icon-btn'); if(!_b) return; const r=new FileReader(); r.onload=ev=>{ _b.innerHTML='<img src="'+ev.target.result+'" alt="" style="width:100%;height:100%;object-fit:cover;">'; }; r.readAsDataURL(f);
   }
   function closeProductSheet(){ document.getElementById('product-sheet').classList.remove('open'); }
 
@@ -4415,12 +4439,25 @@
     if(pfMois){ d_deb = '0001-01-' + (pfMois<10 ? '0'+pfMois : ''+pfMois); }
     err.textContent='';
     showToast('Enregistrement…');
+    let _photoPath=null;
+    if(pfPhotoFile){
+      try{
+        const _ext=((pfPhotoFile.name||'photo.jpg').split('.').pop()||'jpg').toLowerCase().slice(0,4);
+        const _path=currentUser.id+'/products/'+Date.now()+'.'+_ext;
+        const { error:_up } = await sb.storage.from('photos').upload(_path, pfPhotoFile, { upsert:true });
+        if(!_up) _photoPath=_path;
+      }catch(e){}
+    }
     if(editingProductId){
-      await sb.from('products').update({ nom, effets, categorie: pfCat, prix, emoji: pfEmoji, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per }).eq('id', editingProductId);
+      const _payload={ nom, effets, categorie: pfCat, prix, emoji: pfEmoji, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per };
+      if(_photoPath) _payload.photo_path=_photoPath;
+      await sb.from('products').update(_payload).eq('id', editingProductId);
     } else {
       const { data: existing } = await sb.from('products').select('id').eq('user_id', currentUser.id);
       const position = existing ? existing.length : 0;
-      await sb.from('products').insert({ user_id: currentUser.id, moment:'matin', position, nom, effets, categorie: pfCat, prix, emoji: pfEmoji, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per, in_matin:true, in_soir:true });
+      const _ins={ user_id: currentUser.id, moment:'matin', position, nom, effets, categorie: pfCat, prix, emoji: pfEmoji, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per, in_matin:true, in_soir:true };
+      if(_photoPath) _ins.photo_path=_photoPath;
+      await sb.from('products').insert(_ins);
     }
     closeProductSheet();
     showToast('Produit enregistré ✓');
@@ -4994,6 +5031,56 @@
     root.innerHTML = hero + '<div class="pc-track">'+steps+pcGoalHtml()+'</div>';
   }
 
+  // ===== Rappel d'un rituel (semainier + heure) =====
+  let rapDraft=null;
+  function rhOpenRappel(ev,id){
+    if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+    const r=(window.__rhRituels||[]).find(function(x){ return String(x.id)===String(id); });
+    if(!r) return;
+    const rap=r.rappels||{};
+    const mo=r.moment||'matin';
+    const heure = mo==='soir' ? (rap.soir||'21:00') : (mo==='hebdo' ? (rap.soir||'20:00') : (rap.matin||'08:00'));
+    const days = (rap.days&&rap.days.length) ? rap.days.slice() : (mo==='hebdo' ? [(rap.hebdoDay!=null?rap.hebdoDay:1)] : [1,2,3,4,5,6,0]);
+    rapDraft={ id:r.id, moment:mo, on:!!rap.on, days:days, heure:heure };
+    rapRender();
+  }
+  function rapRender(){
+    let el=document.getElementById('rap-overlay');
+    if(!el){ el=document.createElement('div'); el.id='rap-overlay'; el.className='rap-overlay';
+      el.addEventListener('click', function(e){ if(e.target===el) rapClose(); });
+      document.body.appendChild(el); }
+    const L=[['L',1],['M',2],['M',3],['J',4],['V',5],['S',6],['D',0]];
+    const days=L.map(function(d){ const on=rapDraft.days.indexOf(d[1])>=0; return '<button class="rap-day'+(on?' on':'')+'" onclick="rapToggleDay('+d[1]+')">'+d[0]+'</button>'; }).join('');
+    el.innerHTML='<div class="rap-card">'+
+      '<div class="rap-head"><span class="rap-ic">🔔</span><div class="rap-t">Rappel</div><button class="rap-x" onclick="rapClose()">×</button></div>'+
+      '<label class="rap-switch"><span>Recevoir un rappel</span><input type="checkbox" '+(rapDraft.on?'checked':'')+' onchange="rapToggleOn(this.checked)"></label>'+
+      '<div class="rap-body'+(rapDraft.on?'':' off')+'">'+
+        '<div class="rap-lbl">Jours</div><div class="rap-days">'+days+'</div>'+
+        '<div class="rap-lbl" style="margin-top:16px;">Heure</div><input class="rap-time" type="time" value="'+rapDraft.heure+'" onchange="rapSetHeure(this.value)">'+
+      '</div>'+
+      '<button class="rap-save" onclick="rapSave()">Enregistrer</button>'+
+      '</div>';
+    el.classList.add('show');
+  }
+  function rapToggleDay(d){ if(!rapDraft) return; const i=rapDraft.days.indexOf(d); if(i>=0) rapDraft.days.splice(i,1); else rapDraft.days.push(d); rapRender(); }
+  function rapToggleOn(v){ if(!rapDraft) return; rapDraft.on=!!v; rapRender(); }
+  function rapSetHeure(v){ if(rapDraft) rapDraft.heure=v||'08:00'; }
+  function rapClose(){ const el=document.getElementById('rap-overlay'); if(el) el.classList.remove('show'); rapDraft=null; }
+  async function rapSave(){
+    if(!rapDraft) return;
+    let rap;
+    if(!rapDraft.on || !rapDraft.days.length){ rap={ on:false, days:[], hebdoDay:1 }; }
+    else if(rapDraft.moment==='hebdo'){ rap={ on:true, days:rapDraft.days, hebdoDay:rapDraft.days[0], soir:rapDraft.heure }; }
+    else if(rapDraft.moment==='soir'){ rap={ on:true, days:rapDraft.days, soir:rapDraft.heure }; }
+    else { rap={ on:true, days:rapDraft.days, matin:rapDraft.heure }; }
+    const _on=rap.on;
+    try{ await sb.from('rituels').update({ rappels:rap }).eq('id', rapDraft.id); }catch(e){}
+    rapClose();
+    if(typeof showToast==='function') showToast(_on?'Rappel enregistré 🔔':'Rappel désactivé');
+    window.__allRituels=null;
+    if(typeof loadRituels==='function') loadRituels();
+  }
+
   // ===== Hub des rituels : regroupé par moment =====
   const RH_MOMENTS=[['matin','☀️','Matin'],['soir','🌙','Soir'],['hebdo','🧖‍♀️','Hebdo']];
   let rhActiveTab=(new Date().getHours()>=18)?'soir':'matin';
@@ -5011,7 +5098,8 @@
 
   function rhCard(r, pmap){
     const nb=(Array.isArray(r.produits)?r.produits.length:0);
-    const bell=(r.rappels&&r.rappels.on)?'<span class="rh-bell">🔔</span>':'';
+    const _on=!!(r.rappels&&r.rappels.on);
+    const bell='<button class="rh-bellbtn'+(_on?' on':'')+'" aria-label="Rappel" onclick="rhOpenRappel(event,\''+r.id+'\')">'+(_on?'🔔':'🔕')+'</button>';
     const tag=(r.moment==='both')?'<span class="rh-tag">Matin & soir</span>':'';
     return '<div class="rh-card" onclick="openRituelChemin(\''+r.id+'\')">'+
       '<div class="rh-card-head"><div class="rh-name">'+escapeHtml(r.nom||'Mon rituel')+'</div>'+tag+bell+'</div>'+
@@ -5031,11 +5119,12 @@
       prods=r2.data||[];
     }catch(e){}
     const pmap={}; prods.forEach(function(p){ pmap[p.id]=p; });
+    window.__rhRituels=rits;
     const groups={matin:[],soir:[],hebdo:[]};
     rits.forEach(function(r){ const m=r.moment||'matin'; if(m==='both'){ groups.matin.push(r); groups.soir.push(r); } else if(groups[m]) groups[m].push(r); else groups.matin.push(r); });
     if(!window.__rhAutoTab){ window.__rhAutoTab=true; if(!(groups[rhActiveTab]&&groups[rhActiveTab].length)){ const _ff=RH_MOMENTS.find(function(mo){ return groups[mo[0]]&&groups[mo[0]].length; }); if(_ff) rhActiveTab=_ff[0]; } }
 
-    let html='<div class="rh-hero"><div class="rh-hero-t">Mes <em>rituels</em> 🌸</div><div class="rh-hero-s">Tes routines, par moment. Touche un rituel pour l\'ouvrir, le modifier et y ajouter des produits.</div></div>';
+    let html='<div class="rh-hero"><div class="rh-hero-t">Mes <em>rituels</em> 🌸</div></div>';
 
     if(!rits.length){
       const presets=[['grasse','🫧','Peau grasse'],['seche','🏜️','Peau sèche'],['sensible','🌸','Sensible'],['simple','🌿','Ultra-simple']];
@@ -5052,7 +5141,6 @@
       const list=groups[mo[0]];
       let inner='';
       list.forEach(function(r){ inner+=rhCard(r, pmap); });
-      if(!list.length) inner+='<div class="rh-empty" style="padding:6px 2px 14px;">Aucun rituel ici pour l\'instant.</div>';
 
       panes+='<div class="rh-tabpane" id="rh-pane-'+mo[0]+'" style="display:'+(mo[0]===rhActiveTab?'block':'none')+';">'+inner+'</div>';
     });
@@ -5199,7 +5287,7 @@
       : '<div class="cm-banner-txt"><div class="cm-banner-t" style="color:'+col.t+';">'+title+'</div></div>';
     const foot = isEdit
       ? '<div class="cm-validate-wrap"><button class="cm-validate" onclick="cmValidate()"><span class="cm-shine"></span>✨ J\'ai fini mon rituel</button><div class="cm-validate-hint">Tu peux valider même si toutes les étapes ne sont pas remplies 🌸</div></div>'
-      : '<div class="cm-validate-wrap"><div class="cm-validate-hint">Touche 🔨 en haut pour modifier ce rituel</div></div>';
+      : '<div class="cm-validate-wrap"></div>';
     const html='<div class="cm-wrap">'+
       '<div class="cm-banner">'+cmBannerSvg(moment)+
         '<button class="cm-back" onclick="closeRituelChemin()">‹</button>'+
