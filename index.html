@@ -1261,12 +1261,17 @@
   .cm-scene{position:relative;flex:1 1 auto;min-height:0;width:100%;background-repeat:no-repeat;overflow:hidden;}
   .cm-scene::before{content:"";position:absolute;left:0;right:0;top:0;height:190px;pointer-events:none;z-index:2;background:linear-gradient(var(--cm-scrim) 0%,rgba(255,255,255,0) 100%);}
   .cm-scene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;pointer-events:none;z-index:2;background:linear-gradient(rgba(247,241,234,0) 0%,var(--bg) 96%);}
-  .cm-head{position:absolute;left:0;right:0;top:20px;z-index:4;text-align:center;padding:0 62px;}
+  .cm-head{position:absolute;left:0;right:0;top:18px;z-index:8;text-align:center;padding:0 62px;pointer-events:none;}
+  .cm-head .cm-title,.cm-head .cm-count,.cm-head .cm-validate-top{pointer-events:auto;}
   .cm-title{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1.15;color:var(--cm-ink);text-shadow:0 1px 14px var(--cm-glow);cursor:pointer;}
+  .cm-validate-top{display:inline-block;margin-top:10px;background:linear-gradient(135deg,var(--accent),#B0492B);color:#FFFDFA;
+    font-family:var(--sans);font-size:13px;font-weight:700;border:none;border-radius:99px;padding:10px 20px;
+    box-shadow:0 7px 20px rgba(201,90,63,0.45);cursor:pointer;transition:transform .15s ease;}
+  .cm-validate-top:active{transform:scale(0.96);}
   .cm-count{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--cm-ink);background:rgba(255,253,250,0.34);border:1px solid rgba(255,253,250,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:3px 11px;border-radius:99px;}
   .cm-title-edit{font-size:11px;margin-top:3px;color:var(--cm-ink);opacity:.8;cursor:pointer;}
-  .cm-back{position:absolute;top:14px;left:14px;z-index:5;width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:19px;color:#3A2418;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
-  .cm-tools{position:absolute;top:14px;right:14px;z-index:5;display:flex;gap:7px;}
+  .cm-back{position:absolute;top:14px;left:14px;z-index:9;width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:19px;color:#3A2418;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
+  .cm-tools{position:absolute;top:14px;right:14px;z-index:9;display:flex;gap:7px;}
   .cm-tool{width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
   .cm-tool.on{background:var(--accent) !important;box-shadow:0 4px 14px rgba(201,90,63,0.45) !important;}
 
@@ -1283,9 +1288,10 @@
     line-height:1;box-shadow:0 3px 9px rgba(46,33,28,0.34);}
   .cm-medal img{width:100%;height:100%;object-fit:cover;}
   .cm-node.cm-empty .cm-medal{background:rgba(255,253,250,0.86);border-style:dashed;color:var(--accent);}
+  .cm-node.tag-up .cm-tag{top:auto;bottom:calc(100% + 5px);}
   .cm-tag{position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none;text-align:center;}
-  .cm-lbl{font-family:var(--serif);font-size:13px;font-weight:600;color:#2E211C;background:rgba(255,253,250,0.95);padding:2px 10px;border-radius:99px;display:inline-block;box-shadow:0 2px 10px rgba(46,33,28,0.2);}
-  .cm-sub{font-size:10px;color:var(--ink-soft);margin-top:2px;background:rgba(255,253,250,0.88);padding:1px 8px;border-radius:99px;display:inline-block;max-width:118px;overflow:hidden;text-overflow:ellipsis;}
+  .cm-lbl{font-family:var(--serif);font-size:13px;font-weight:600;color:#2E211C;background:rgba(255,253,250,0.95);padding:2px 10px;border-radius:99px;display:inline-block;box-shadow:0 2px 10px rgba(46,33,28,0.2);max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;}
+  .cm-sub{font-size:10px;color:var(--ink-soft);margin-top:2px;background:rgba(255,253,250,0.88);padding:1px 8px;border-radius:99px;display:inline-block;max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;}
   .cm-scene.cm-compact .cm-lbl{font-size:11.5px;}
   .cm-scene.cm-compact .cm-sub{display:none;}
   .cm-scene.cm-soir .cm-bld{filter:saturate(0.78) brightness(0.8);}
@@ -5314,11 +5320,10 @@
   }
 
   // Place tous les bâtiments : à côté du chemin, sans se marcher dessus, sans sortir du cadre.
-  function cmPlaceNodes(scene,f,pts,poly){
+  function cmPlaceNodes(scene,f,pts,poly,topLim){
     const rib=cmRibbon(f,poly), sw=f.sw, placed=[];
     // aucun bâtiment ne doit passer sous le bloc titre
-    const hd=scene.querySelector('.cm-head');
-    const topLimit=(hd?(hd.offsetTop+hd.offsetHeight):86)+10;
+    const topLimit=topLim||96;
     scene.querySelectorAll('.cm-node').forEach(function(nd,i){
       const p=pts[i]||{x:sw/2,y:f.sh/2};
       const b=CM_BLD[nd.dataset.bld]||CM_BLD.preparer;
@@ -5349,6 +5354,15 @@
         }
       }
       if(!best) best={cx:p.x,by:p.y,k:kB,w:b.w*kB,h:b.h*kB,box:{x0:p.x,x1:p.x,y0:p.y,y1:p.y}};
+      nd.classList.toggle('tag-up', (best.by+30)>f.sh);
+      const tg=nd.querySelector('.cm-tag');
+      if(tg){
+        tg.style.transform='translateX(-50%)';
+        const tw=tg.offsetWidth||0, l=best.cx-tw/2, r=best.cx+tw/2;
+        let dx=0;
+        if(l<5) dx=5-l; else if(r>sw-5) dx=(sw-5)-r;
+        if(dx) tg.style.transform='translateX(calc(-50% + '+Math.round(dx)+'px))';
+      }
       const el=nd.querySelector('.cm-bld');
       if(el){ el.style.width=best.w+'px'; el.style.height=best.h+'px'; }
       nd.style.setProperty('--k',best.k.toFixed(3));
@@ -5417,12 +5431,12 @@
         const nm=(p.nom||'').split(' · ')[0];
         const url=(window.__cmPhotos||{})[pid];
         const medal=url?'<img src="'+url+'" alt="">':(p.emoji||'🧴');
-        const act=isEdit?'onclick="cmOpenCarousel(\''+key+'\','+idx+')"':'onclick="openProductBook(\''+pid+'\')"';
+        const act='data-i="'+idx+'" '+(isEdit?'onclick="cmOpenCarousel(\''+key+'\','+idx+')"':'onclick="openProductBook(\''+pid+'\')"');
         nodes+=cmNodeHtml(key,'',medal,ph.nom,escapeHtml(nm),act);
       } else if(isEdit){
-        nodes+=cmNodeHtml(key,'cm-empty','+',ph.nom,'facultatif','onclick="cmOpenCarousel(\''+key+'\','+idx+')"');
+        nodes+=cmNodeHtml(key,'cm-empty','+',ph.nom,'facultatif','data-i="'+idx+'" onclick="cmOpenCarousel(\''+key+'\','+idx+')"');
       } else {
-        nodes+=cmNodeHtml(key,'cm-empty cm-muted',ph.emoji,ph.nom,'');
+        nodes+=cmNodeHtml(key,'cm-empty cm-muted',ph.emoji,ph.nom,'','data-i="'+idx+'"');
       }
     });
     nodes+=cmNodeHtml('arrivee','cm-muted','','Objectif',moment==='soir'?'Peau réparée':(moment==='hebdo'?'Peau ressourcée':'Peau protégée'));
@@ -5434,11 +5448,10 @@
       ? '<button class="cm-tool on" title="Terminer la modification" onclick="cmCancelEdit()">🔨</button><button class="cm-tool" title="Supprimer" onclick="cmDelete()">🗑️</button>'
       : '<button class="cm-tool" title="Modifier" onclick="cmSetMode(\'edit\')">🔨</button>';
     const head=isEdit
-      ? '<div class="cm-head"><div class="cm-title" onclick="cmRename()">'+title+'</div>'+count+'<div class="cm-title-edit" onclick="cmRename()">✎ touche pour renommer</div></div>'
+      ? '<div class="cm-head"><div class="cm-title" onclick="cmRename()">'+title+' ✎</div>'+count+
+        '<button class="cm-validate-top" onclick="cmValidate()">✨ J\'ai fini mon rituel</button></div>'
       : '<div class="cm-head"><div class="cm-title">'+title+'</div>'+count+'</div>';
-    const foot=isEdit
-      ? '<div class="cm-validate-wrap"><button class="cm-validate" onclick="cmValidate()"><span class="cm-shine"></span>✨ J\'ai fini mon rituel</button><div class="cm-validate-hint">Tu peux valider même si toutes les étapes ne sont pas remplies 🌸</div></div>'
-      : '';
+    const foot='';
 
     el.innerHTML='<div class="cm-wrap">'+
       '<div class="cm-scene'+(moment==='soir'?' cm-soir':'')+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
@@ -5449,19 +5462,27 @@
   }
 
   // Cale l'illustration dans la zone dispo et renvoie la géométrie de rendu.
-  function cmFitScene(scene, yTopPct, yBotPct){
+  function cmFitScene(scene, yTopPct, yBotPct, tpMin){
     const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return null;
     const stretch=(sw/sh)/(CM_IMG_W/CM_IMG_H);
+    const yTopFull=Math.min(yTopPct,yBotPct)/100*sh;
     let rw,rh,offX,offY;
-    if(stretch>=0.87 && stretch<=1.14){
+    if(stretch>=0.87 && stretch<=1.14&& yTopFull>=(tpMin||0)*0.92){
       rw=sw; rh=sh; offX=0; offY=0;
       scene.classList.toggle('cm-compact', sh<780);
       scene.style.backgroundSize='100% 100%';
     } else {
-      const k=Math.max(sw/CM_IMG_W, sh/CM_IMG_H); rw=CM_IMG_W*k; rh=CM_IMG_H*k; offX=(sw-rw)/2;
+      let k=Math.max(sw/CM_IMG_W, sh/CM_IMG_H);
+      // Sans jeu vertical on ne peut pas descendre le chemin sous le titre : on zoome juste ce qu'il faut.
+      const yTf=Math.min(yTopPct,yBotPct)/100;
+      if(tpMin && yTf>0.02){
+        const kNeed=(tpMin/yTf)/CM_IMG_H;
+        k=Math.min(Math.max(k,kNeed), 1.6*sw/CM_IMG_W);
+      }
+      rw=CM_IMG_W*k; rh=CM_IMG_H*k; offX=(sw-rw)/2;
       const yT=Math.min(yTopPct,yBotPct)/100*rh, yB=Math.max(yTopPct,yBotPct)/100*rh;
       const compact=((yB-yT)+196>sh)||sh<780; scene.classList.toggle('cm-compact', compact);
-      const tp=compact?96:142, bp=compact?42:58;
+      const tp=Math.max(compact?96:142, tpMin||0), bp=compact?42:58;
       if((yB-yT)+tp+bp<=sh){
         offY=(sh-rh)/2;
         if(offY+yT<tp) offY=tp-yT;
@@ -5474,13 +5495,16 @@
     return {rw:rw,rh:rh,offX:offX,offY:offY,sw:sw,sh:sh};
   }
 
+  function cmHeadBottom(scene){ const h=scene.querySelector('.cm-head'); return (h?(h.offsetTop+h.offsetHeight):76)+10; }
+
   function cmLayout(){
     const scene=document.querySelector('#rituel-chemin .cm-scene'); if(!scene||!chDraft) return;
     const moment=chDraft.moment, A=cmAnchors(moment);
     const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return;
-    const f=cmFitScene(scene, A[0][1], A[A.length-1][1]); if(!f) return;
+    const tl=cmHeadBottom(scene);
+    const f=cmFitScene(scene, A[0][1], A[A.length-1][1], tl+58); if(!f) return;
     const rw=f.rw, rh=f.rh, offX=f.offX, offY=f.offY;
-    cmPlaceNodes(scene,f,A.map(function(a){ return {x:offX+a[0]/100*rw, y:offY+a[1]/100*rh}; }),VY_POLY[moment]||VY_POLY.matin);
+    cmPlaceNodes(scene,f,A.map(function(a){ return {x:offX+a[0]/100*rw, y:offY+a[1]/100*rh}; }),VY_POLY[moment]||VY_POLY.matin,tl);
 
 
   }
@@ -5580,7 +5604,8 @@
   function vyLayout(){
     const scene=document.querySelector('#voyage .cm-scene'); if(!scene||!vyState) return;
     const P=VY_POLY[vyState.moment]||VY_POLY.matin;
-    const f=cmFitScene(scene, P[0][1], P[P.length-1][1]); if(!f) return;
+    const tl=cmHeadBottom(scene);
+    const f=cmFitScene(scene, P[0][1], P[P.length-1][1], tl+58); if(!f) return;
     const g=vyGeom(f, vyState.moment);
     const done=vyDoneIds(), items=vyState.items, n=items.length;
     let last=-1; items.forEach(function(p,i){ if(done.indexOf(p.id)>=0) last=i; });
@@ -5601,7 +5626,7 @@
     scene.querySelectorAll('.cm-node').forEach(function(nd){
       const pt=vyAt(g,parseFloat(nd.dataset.t)); pl.push({x:pt[0],y:pt[1]});
     });
-    cmPlaceNodes(scene,f,pl,P);
+    cmPlaceNodes(scene,f,pl,P,tl);
 
 
     const w=document.getElementById('vy-walker');
