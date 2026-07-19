@@ -1169,6 +1169,15 @@
 
   .rh-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:15px 16px;margin-bottom:11px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s ease;}
   .rh-card:active{transform:scale(0.99);}
+  .rh-card.rh-off{opacity:.62;}
+  .rh-card.rh-off .rh-trail{filter:grayscale(.5);}
+  .rh-actif{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface-warm);
+    color:var(--muted);font-family:var(--sans);font-size:11.5px;font-weight:700;letter-spacing:.02em;
+    padding:6px 12px 6px 9px;border-radius:99px;cursor:pointer;transition:background .2s,color .2s,border-color .2s;}
+  .rh-actif-dot{width:9px;height:9px;border-radius:50%;background:var(--line);transition:background .2s,box-shadow .2s;}
+  .rh-actif.on{background:rgba(122,148,104,0.14);border-color:rgba(122,148,104,0.5);color:#4E6844;}
+  .rh-actif.on .rh-actif-dot{background:var(--sage);box-shadow:0 0 0 3px rgba(122,148,104,0.22);}
+  .rh-actif:active{transform:scale(0.96);}
   .rh-card-head{display:flex;align-items:center;gap:8px;margin-bottom:13px;}
   .rh-name{font-family:var(--serif);font-size:16.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .rh-bellbtn{background:none;border:none;font-size:15px;cursor:pointer;padding:2px 4px;line-height:1;opacity:.45;filter:grayscale(1);}
@@ -1247,7 +1256,7 @@
   .cm-overlay{position:fixed;inset:0;z-index:210;background:var(--bg);opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .28s ease,visibility .28s,transform .28s ease;overflow:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .cm-overlay::-webkit-scrollbar{display:none;}
   .cm-overlay.show{opacity:1;visibility:visible;transform:translateY(0);}
-  .cm-wrap{max-width:480px;margin:0 auto;position:relative;height:100dvh;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+  .cm-wrap{max-width:480px;margin:0 auto;position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
   /* ===== Chemin : illustration plein cadre ===== */
   .cm-scene{position:relative;flex:1 1 auto;min-height:0;width:100%;background-repeat:no-repeat;overflow:hidden;}
   .cm-scene::before{content:"";position:absolute;left:0;right:0;top:0;height:190px;pointer-events:none;z-index:2;background:linear-gradient(var(--cm-scrim) 0%,rgba(255,255,255,0) 100%);}
@@ -4036,7 +4045,6 @@
     else visual='<div class="pb-halo"></div><div class="pb-emoji">'+(p.emoji||'🧴')+'</div>';
     const isFav=favSet().has(p.id);
     let chips='';
-    if(p.in_matin||p.in_soir){ const t=(p.in_matin&&p.in_soir)?'☀️ Matin & soir':(p.in_matin?'☀️ Matin':'🌙 Soir'); chips+='<span class="pb-chip">'+t+'</span>'; }
     if(p.prix!=null&&p.prix!=='') chips+='<span class="pb-chip price">'+p.prix+'€</span>';
     const desc=p.effets?('<div class="pb-desc">'+escapeHtml(p.effets)+'</div>'):'';
     el.innerHTML='<div class="pb-wrap">'+
@@ -5156,15 +5164,49 @@
     return '<div class="rh-trail">'+html+'</div>';
   }
 
+  // Un seul rituel actif par créneau : activer celui-ci met les concurrents en pause.
+  function rhSyncActif(all){
+    (all||[]).forEach(function(r){
+      const b=document.querySelector('.rh-actif[data-rid="'+r.id+'"]');
+      if(b){ b.classList.toggle('on',!!r.actif); const t=b.querySelector('.rh-actif-t'); if(t) t.textContent=r.actif?'Actif':'En pause'; }
+      document.querySelectorAll('.rh-card[data-card="'+r.id+'"]').forEach(function(c){ c.classList.toggle('rh-off',!r.actif); });
+    });
+  }
+  async function rhToggleActif(ev,id){
+    ev.stopPropagation(); ev.preventDefault();
+    const all=window.__rhRituels||window.__allRituels||[];
+    const t=all.find(function(r){ return String(r.id)===String(id); }); if(!t) return;
+    const turnOn=!t.actif;
+    if(navigator.vibrate) navigator.vibrate(8);
+    let off=[];
+    if(turnOn && t.moment!=='hebdo'){
+      const tM=(t.moment==='matin'||t.moment==='both'), tS=(t.moment==='soir'||t.moment==='both');
+      off=all.filter(function(r){ return r.actif && String(r.id)!==String(t.id) && r.moment!=='hebdo' &&
+        ((tM&&(r.moment==='matin'||r.moment==='both'))||(tS&&(r.moment==='soir'||r.moment==='both'))); }).map(function(r){ return r.id; });
+      off.forEach(function(oid){ const o=all.find(function(r){ return r.id===oid; }); if(o) o.actif=false; });
+    }
+    t.actif=turnOn;
+    rhSyncActif(all);
+    try{
+      if(off.length) await sb.from('rituels').update({actif:false}).in('id',off);
+      await sb.from('rituels').update({actif:turnOn}).eq('id',id);
+    }catch(e){ if(typeof showToast==='function') showToast('Oups, réessaie 🌿'); }
+    window.__allRituels=null;
+    if(typeof loadHomeRoutine==='function') loadHomeRoutine();
+    if(typeof showToast==='function') showToast(turnOn?'Rituel activé ✨':'Rituel mis en pause 🌙');
+  }
+
   function rhCard(r, pmap){
     const nb=(Array.isArray(r.produits)?r.produits.length:0);
     const _on=!!(r.rappels&&r.rappels.on);
     const bell='<button class="rh-bellbtn'+(_on?' on':'')+'" aria-label="Rappel" onclick="rhOpenRappel(event,\''+r.id+'\')">'+(_on?'🔔':'🔕')+'</button>';
     const tag=(r.moment==='both')?'<span class="rh-tag">Matin & soir</span>':'';
-    return '<div class="rh-card" onclick="openRituelChemin(\''+r.id+'\')">'+
+    const act='<button class="rh-actif'+(r.actif?' on':'')+'" data-rid="'+r.id+'" onclick="rhToggleActif(event,\''+r.id+'\')">'+
+      '<span class="rh-actif-dot"></span><span class="rh-actif-t">'+(r.actif?'Actif':'En pause')+'</span></button>';
+    return '<div class="rh-card'+(r.actif?'':' rh-off')+'" data-card="'+r.id+'" onclick="openRituelChemin(\''+r.id+'\')">'+
       '<div class="rh-card-head"><div class="rh-name">'+escapeHtml(r.nom||'Mon rituel')+'</div>'+tag+bell+'</div>'+
       rhTrail(r, pmap)+
-      '<div class="rh-foot"><span>'+nb+' étape'+(nb>1?'s':'')+'</span></div>'+
+      '<div class="rh-foot"><span>'+nb+' étape'+(nb>1?'s':'')+'</span>'+act+'</div>'+
       '</div>';
   }
 
@@ -5274,12 +5316,15 @@
   // Place tous les bâtiments : à côté du chemin, sans se marcher dessus, sans sortir du cadre.
   function cmPlaceNodes(scene,f,pts,poly){
     const rib=cmRibbon(f,poly), sw=f.sw, placed=[];
+    // aucun bâtiment ne doit passer sous le bloc titre
+    const hd=scene.querySelector('.cm-head');
+    const topLimit=(hd?(hd.offsetTop+hd.offsetHeight):86)+10;
     scene.querySelectorAll('.cm-node').forEach(function(nd,i){
       const p=pts[i]||{x:sw/2,y:f.sh/2};
       const b=CM_BLD[nd.dataset.bld]||CM_BLD.preparer;
       const yF=(p.y-f.offY)/f.rh, kB=cmBldK(yF), onPath=(nd.dataset.center==='1');
       let best=null;
-      const scales = onPath ? [kB] : [kB,kB*0.88,kB*0.78,kB*0.68];
+      const scales = onPath ? [kB,kB*0.86,kB*0.72] : [kB,kB*0.88,kB*0.78,kB*0.68,kB*0.58];
       for(let si=0;si<scales.length;si++){
         const k=scales[si], w=b.w*k, h=b.h*k;
         const cands=[];
@@ -5287,21 +5332,23 @@
         else {
           const hw=cmPathHalf(yF,sw), s0=(i%2?1:-1);
           [s0,-s0].forEach(function(sg){
-            [0,12,26,44,66,92].forEach(function(ex){
+            [0,10,22,38,58].forEach(function(ex){
               [0,10,22].forEach(function(dy){ cands.push([p.x+sg*(hw+w/2+5+ex),dy]); });
             });
           });
         }
         for(let ci=0;ci<cands.length;ci++){
           const cx=Math.max(w/2+3,Math.min(sw-w/2-3,cands[ci][0])), by=p.y+cands[ci][1]*k;
-          if(by>f.sh-6) continue;
+          if(cands[ci][1]>0 && by>f.sh-6) continue;   // ne jamais écarter la position de base
           const box={x0:cx-w/2+w*0.07,x1:cx+w/2-w*0.07,y0:by-h+h*0.05,y1:by-h*0.05};
           let cost = onPath ? 0 : cmBoxCost(box,rib)*2.2;
+          if(by-h<topLimit) cost += (topLimit-(by-h))*40;
           for(let q=0;q<placed.length;q++) cost += cmBoxOverlap(box,placed[q])*0.05;
-          cost += Math.abs(cx-cands[ci][0])*0.6 + si*55 + Math.abs(cands[ci][0]-p.x)*0.05 + cands[ci][1]*1.2;
+          cost += Math.abs(cx-cands[ci][0])*0.6 + si*55 + Math.abs(cands[ci][0]-p.x)*0.30 + cands[ci][1]*1.2;
           if(!best||cost<best.cost) best={cost:cost,cx:cx,by:by,k:k,w:w,h:h,box:box};
         }
       }
+      if(!best) best={cx:p.x,by:p.y,k:kB,w:b.w*kB,h:b.h*kB,box:{x0:p.x,x1:p.x,y0:p.y,y1:p.y}};
       const el=nd.querySelector('.cm-bld');
       if(el){ el.style.width=best.w+'px'; el.style.height=best.h+'px'; }
       nd.style.setProperty('--k',best.k.toFixed(3));
@@ -5408,18 +5455,18 @@
     let rw,rh,offX,offY;
     if(stretch>=0.87 && stretch<=1.14){
       rw=sw; rh=sh; offX=0; offY=0;
-      scene.classList.remove('cm-compact');
+      scene.classList.toggle('cm-compact', sh<780);
       scene.style.backgroundSize='100% 100%';
     } else {
       const k=Math.max(sw/CM_IMG_W, sh/CM_IMG_H); rw=CM_IMG_W*k; rh=CM_IMG_H*k; offX=(sw-rw)/2;
       const yT=Math.min(yTopPct,yBotPct)/100*rh, yB=Math.max(yTopPct,yBotPct)/100*rh;
-      const compact=((yB-yT)+188>sh); scene.classList.toggle('cm-compact', compact);
-      const tp=compact?54:100, bp=compact?54:88;
+      const compact=((yB-yT)+196>sh)||sh<780; scene.classList.toggle('cm-compact', compact);
+      const tp=compact?96:142, bp=compact?42:58;
       if((yB-yT)+tp+bp<=sh){
         offY=(sh-rh)/2;
         if(offY+yT<tp) offY=tp-yT;
         if(offY+yB>sh-bp) offY=sh-bp-yB;
-      } else { offY=(sh-(yT+yB))/2; }
+      } else { offY=tp-yT; }   // place trop juste : on protège le titre, le bas déborde un peu
       offY=Math.max(sh-rh, Math.min(0, offY));
       scene.style.backgroundSize=rw+'px '+rh+'px';
     }
