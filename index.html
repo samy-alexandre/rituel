@@ -1219,16 +1219,45 @@
 
 
   /* ===== Carte de construction d'un rituel ===== */
-  .cm-overlay{position:fixed;inset:0;z-index:210;background:var(--bg);opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .28s ease,visibility .28s,transform .28s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  /* ===== Voyage du jour ===== */
+  .vy-hero{position:relative;border-radius:22px;overflow:hidden;cursor:pointer;margin-bottom:14px;box-shadow:0 14px 34px rgba(142,60,38,0.16);background:#EFE6D8;}
+  .vy-hero-img{height:172px;background-size:cover;background-position:center 42%;position:relative;}
+  .vy-hero-img::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,250,242,0.10) 0%,rgba(46,33,28,0.05) 42%,rgba(46,33,28,0.62) 100%);}
+  .vy-hero-body{position:absolute;left:0;right:0;bottom:0;padding:14px 16px 15px;z-index:2;display:flex;align-items:flex-end;gap:12px;}
+  .vy-hero-txt{flex:1;min-width:0;}
+  .vy-hero-t{font-family:var(--serif);font-size:19px;font-weight:600;color:#FFFDFA;line-height:1.2;text-shadow:0 2px 10px rgba(46,33,28,0.5);}
+  .vy-hero-s{font-size:12px;color:rgba(255,253,250,0.9);margin-top:3px;text-shadow:0 1px 8px rgba(46,33,28,0.5);}
+  .vy-hero-cta{flex-shrink:0;background:rgba(255,253,250,0.95);color:#8E3C26;font-family:var(--sans);font-size:12.5px;font-weight:700;border:none;border-radius:99px;padding:9px 15px;box-shadow:0 4px 14px rgba(46,33,28,0.28);}
+  .vy-hero-bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,253,250,0.28);z-index:3;}
+  .vy-hero-fill{height:100%;background:linear-gradient(90deg,#E3B96A,#C9A24F);transition:width .5s ease;}
+  .vy-hero-plant{position:absolute;font-size:22px;z-index:2;transform:translate(-50%,-70%);filter:drop-shadow(0 2px 5px rgba(46,33,28,0.4));}
+  .hr-listtoggle{display:block;width:100%;background:transparent;border:none;color:var(--muted);font-family:var(--sans);font-size:12px;font-weight:600;padding:9px 0 2px;cursor:pointer;}
+
+  .vy-trail{position:absolute;inset:0;z-index:3;pointer-events:none;}
+  .vy-trail path{fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke-dashoffset .75s cubic-bezier(.4,0,.2,1);}
+  .vy-trail .vy-glow{stroke:rgba(243,206,124,0.42);}
+  .vy-trail .vy-core{stroke:rgba(255,236,181,0.92);}
+  .vy-walker{position:absolute;z-index:8;font-size:27px;transform:translate(-50%,-78%);transition:left .7s cubic-bezier(.4,0,.2,1),top .7s cubic-bezier(.4,0,.2,1);pointer-events:none;filter:drop-shadow(0 3px 6px rgba(46,33,28,0.4));will-change:left,top;}
+  .vy-walker.hop{animation:vyHop .7s ease;}
+  @keyframes vyHop{0%,100%{transform:translate(-50%,-78%) scale(1);}45%{transform:translate(-50%,-96%) scale(1.14);}}
+  .cm-node.vy-done .cm-ring{border-color:#C9A24F;background:linear-gradient(160deg,#FFF6E2,#F3DFAE);box-shadow:0 0 0 5px rgba(243,206,124,0.35),0 8px 20px rgba(142,60,38,0.3);}
+  .cm-node.vy-done .cm-lbl{background:rgba(255,246,226,0.96);color:#7A5A22;}
+  .cm-node.vy-next .cm-ring{animation:vyPulse 2.4s ease-in-out infinite;}
+  @keyframes vyPulse{0%,100%{box-shadow:0 0 0 5px rgba(255,253,250,0.42),0 8px 18px rgba(46,33,28,0.28);}50%{box-shadow:0 0 0 12px rgba(255,253,250,0.16),0 8px 18px rgba(46,33,28,0.28);}}
+  .vy-check{position:absolute;right:-2px;bottom:-2px;width:21px;height:21px;border-radius:50%;background:#C9A24F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(46,33,28,0.3);}
+  .vy-petal{position:fixed;z-index:400;pointer-events:none;font-size:15px;animation:vyFall 2.6s linear forwards;}
+  @keyframes vyFall{0%{opacity:0;transform:translateY(-10px) rotate(0);}12%{opacity:1;}100%{opacity:0;transform:translateY(78vh) rotate(320deg);}}
+  .cm-overlay{position:fixed;inset:0;z-index:210;background:var(--bg);opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .28s ease,visibility .28s,transform .28s ease;overflow:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .cm-overlay::-webkit-scrollbar{display:none;}
   .cm-overlay.show{opacity:1;visibility:visible;transform:translateY(0);}
-  .cm-wrap{max-width:480px;margin:0 auto;position:relative;}
+  .cm-wrap{max-width:480px;margin:0 auto;position:relative;height:100dvh;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
   /* ===== Chemin : illustration plein cadre ===== */
-  .cm-scene{position:relative;width:100%;aspect-ratio:720/1530;background-size:cover;background-position:center top;overflow:hidden;}
+  .cm-scene{position:relative;flex:1 1 auto;min-height:0;width:100%;background-repeat:no-repeat;overflow:hidden;}
   .cm-scene::before{content:"";position:absolute;left:0;right:0;top:0;height:190px;pointer-events:none;z-index:2;background:linear-gradient(var(--cm-scrim) 0%,rgba(255,255,255,0) 100%);}
   .cm-scene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;pointer-events:none;z-index:2;background:linear-gradient(rgba(247,241,234,0) 0%,var(--bg) 96%);}
   .cm-head{position:absolute;left:0;right:0;top:20px;z-index:4;text-align:center;padding:0 62px;}
   .cm-title{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1.15;color:var(--cm-ink);text-shadow:0 1px 14px var(--cm-glow);cursor:pointer;}
+  .cm-count{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--cm-ink);background:rgba(255,253,250,0.34);border:1px solid rgba(255,253,250,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:3px 11px;border-radius:99px;}
   .cm-title-edit{font-size:11px;margin-top:3px;color:var(--cm-ink);opacity:.8;cursor:pointer;}
   .cm-back{position:absolute;top:14px;left:14px;z-index:5;width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:19px;color:#3A2418;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
   .cm-tools{position:absolute;top:14px;right:14px;z-index:5;display:flex;gap:7px;}
@@ -1236,25 +1265,33 @@
   .cm-tool.on{background:var(--accent) !important;box-shadow:0 4px 14px rgba(201,90,63,0.45) !important;}
 
   .cm-node{position:absolute;transform:translate(-50%,-50%);z-index:6;cursor:pointer;}
-  .cm-ring{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:23px;transition:transform .16s ease;overflow:hidden;}
+  .cm-ring{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:23px;transition:transform .16s ease;overflow:hidden;}
   .cm-ring img{width:100%;height:100%;object-fit:cover;}
   .cm-node:active .cm-ring{transform:scale(0.92);}
   .cm-ring.empty{background:rgba(255,253,250,0.78);border:2.5px dashed var(--accent-soft);color:var(--accent);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
   .cm-ring.filled{background:var(--surface);border:2.5px solid var(--accent);box-shadow:0 0 0 5px rgba(255,253,250,0.42),0 8px 18px rgba(46,33,28,0.28);}
   .cm-ring .cm-add{font-size:25px;font-weight:300;color:var(--accent);}
-  .cm-start{width:44px;height:44px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 0 5px rgba(255,253,250,0.4),0 6px 16px rgba(122,148,104,0.45);}
-  .cm-goal{width:66px;height:66px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#F4D98A,var(--gold) 60%,var(--accent));display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 0 7px rgba(255,253,250,0.32),0 14px 30px rgba(189,154,82,0.45);}
+  .cm-start{width:46px;height:46px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 0 5px rgba(255,253,250,0.4),0 6px 16px rgba(122,148,104,0.45);}
+  .cm-goal{width:70px;height:70px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#F4D98A,var(--gold) 60%,var(--accent));display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 0 7px rgba(255,253,250,0.32),0 14px 30px rgba(189,154,82,0.45);}
 
+  .cm-scene.cm-compact .cm-head{top:11px;}
+  .cm-scene.cm-compact .cm-title{font-size:21px;}
+  .cm-scene.cm-compact .cm-count{display:none;}
+  .cm-scene.cm-compact .cm-ring{width:46px;height:46px;font-size:20px;}
+  .cm-scene.cm-compact .cm-start{width:38px;height:38px;font-size:15px;}
+  .cm-scene.cm-compact .cm-goal{width:54px;height:54px;font-size:25px;}
+  .cm-scene.cm-compact .cm-lbl{font-size:11.5px;}
+  .cm-scene.cm-compact .cm-sub{font-size:9px;}
   .cm-tag{position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;pointer-events:none;}
-  .cm-node.tl .cm-tag{left:calc(100% + 9px);}
-  .cm-node.tr .cm-tag{right:calc(100% + 9px);text-align:right;}
-  .cm-node.tc .cm-tag{top:calc(100% + 8px);left:50%;transform:translateX(-50%);text-align:center;}
-  .cm-lbl{font-family:var(--serif);font-size:12.5px;font-weight:600;color:#3A2418;background:rgba(255,253,250,0.82);padding:2px 9px;border-radius:99px;display:inline-block;box-shadow:0 2px 8px rgba(46,33,28,0.12);}
-  .cm-sub{font-size:10px;color:var(--ink-soft);margin-top:3px;background:rgba(255,253,250,0.7);padding:1px 8px;border-radius:99px;display:inline-block;max-width:112px;overflow:hidden;text-overflow:ellipsis;}
+  .cm-node.tl .cm-tag{left:calc(100% + 9px);transform-origin:left center;}
+  .cm-node.tr .cm-tag{right:calc(100% + 9px);text-align:right;transform-origin:right center;}
+  .cm-node.tc .cm-tag{top:calc(100% + 8px);left:50%;transform:translateX(-50%);text-align:center;transform-origin:top center;}
+  .cm-lbl{font-family:var(--serif);font-size:13.5px;font-weight:600;color:#2E211C;background:rgba(255,253,250,0.95);padding:3px 11px;border-radius:99px;display:inline-block;box-shadow:0 2px 10px rgba(46,33,28,0.18);}
+  .cm-sub{font-size:10.5px;color:var(--ink-soft);margin-top:3px;background:rgba(255,253,250,0.88);padding:2px 9px;border-radius:99px;display:inline-block;max-width:112px;overflow:hidden;text-overflow:ellipsis;}
   .cm-node.cm-muted{cursor:default;opacity:.6;}
   .cm-node.cm-muted .cm-ring.empty{border-style:solid;border-color:rgba(255,253,250,0.75);}
 
-  .cm-validate-wrap{padding:0 26px 34px;margin-top:-46px;position:relative;z-index:7;}
+  .cm-validate-wrap{flex:0 0 auto;padding:0 26px calc(18px + env(safe-area-inset-bottom));margin-top:-52px;position:relative;z-index:7;}
   .cm-validate{width:100%;border:none;border-radius:18px;padding:17px;font-family:var(--sans);font-size:15.5px;font-weight:700;color:#fff;cursor:pointer;background:linear-gradient(135deg,#E0A756,var(--accent) 55%,#A83E27);box-shadow:0 10px 26px rgba(201,90,63,0.4),inset 0 1px 0 rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;gap:9px;position:relative;overflow:hidden;transition:transform .15s ease;}
   .cm-validate:active{transform:translateY(1px) scale(0.99);}
   .cm-validate .cm-shine{position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.35),transparent);animation:cmShine 3.4s ease-in-out infinite;}
@@ -1263,6 +1300,8 @@
 
   .cm-pop{position:absolute;z-index:20;width:272px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 44px rgba(46,33,28,0.28);padding:12px 12px 14px;opacity:0;transform:scale(0.9);transform-origin:top center;transition:opacity .16s ease,transform .16s ease;pointer-events:none;}
   .cm-pop.show{opacity:1;transform:scale(1);pointer-events:auto;}
+  .cm-pop.up{transform-origin:bottom center;}
+  .cm-pop.up .cm-pop-arrow{top:auto;bottom:-7px;border-left:none;border-top:none;border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
   .cm-pop-arrow{position:absolute;top:-7px;left:50%;transform:translateX(-50%) rotate(45deg);width:14px;height:14px;background:var(--surface);border-left:1px solid var(--line);border-top:1px solid var(--line);}
   .cm-pop-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;padding:0 2px;}
   .cm-pop-t{font-size:12px;font-weight:700;color:var(--ink);}
@@ -1549,6 +1588,7 @@
           <button class="hr-empty-btn" onclick="navTo('ritual')">Créer mon rituel</button>
         </div>
       </div>
+      <div class="vy-hero" id="vy-hero" style="display:none;" onclick="openVoyage()"></div>
       <div class="hr-card" id="hr-card">
         <div class="hr-head">
           <div class="hr-title-wrap">
@@ -1564,8 +1604,11 @@
           </div>
         </div>
         <div class="hr-bar"><div class="hr-bar-fill" id="hr-bar-fill"></div></div>
-        <div class="routine-list" id="routine-matin"></div>
-        <div class="routine-list hidden" id="routine-soir"></div>
+        <div id="hr-lists" style="display:none;">
+          <div class="routine-list" id="routine-matin"></div>
+          <div class="routine-list hidden" id="routine-soir"></div>
+        </div>
+        <button class="hr-listtoggle" id="hr-listtoggle" onclick="toggleHrList()">Voir en liste</button>
       </div>
     </div>
 
@@ -3095,6 +3138,7 @@
     document.getElementById('routine-matin').classList.toggle('hidden', p!=='matin');
     document.getElementById('routine-soir').classList.toggle('hidden', p!=='soir');
     updateRoutineCount();
+    if(typeof renderHomeVoyage==='function') renderHomeVoyage();
   }
   function listStats(period){
     const list=document.getElementById('routine-'+period);
@@ -3131,6 +3175,7 @@
     catch(e){ await updateTodayEntry(period==='soir' ? { routine_soir: complete } : { routine_matin: complete }); }
     bustStreak();
     renderStreak();
+    if(typeof renderHomeVoyage==='function') renderHomeVoyage();
   }
   function applyRoutineState(period, complete){
     const list=document.getElementById('routine-'+period);
@@ -3521,7 +3566,7 @@
         if(allDone) gi2.textContent='Ton rituel du jour est fait, bravo 🌸';
       }
     }catch(e){}
-    const { data: prods } = await sb.from('products').select('id,nom,effets,emoji,categorie').eq('user_id', currentUser.id);
+    const { data: prods } = await sb.from('products').select('id,nom,effets,emoji,categorie,photo_path').eq('user_id', currentUser.id);
     const pmap={}; (prods||[]).forEach(p=>{ pmap[p.id]=p; });
     // Étapes déjà cochées aujourd'hui (mémorisées en base)
     window.__homeSteps = { matin:[], soir:[] };
@@ -3551,6 +3596,7 @@
         }).join('');
       }
     }
+    if(typeof renderHomeVoyage==='function') renderHomeVoyage();
   }
 
   // ===== Ma journée (sommeil / hydratation / alimentation) =====
@@ -5193,11 +5239,13 @@
   const CM_CAT2PHASE = {demaquillant:'preparer',nettoyant:'nettoyer',toner:'equilibrer',serum:'traiter',cible:'traiter',yeux:'yeux',creme:'hydrater',spf:'proteger',masque:'masque'};
   let chDraft=null;
 
+  const CM_IMG_W=760, CM_IMG_H=1460;
   const CM_ANCHORS = {
-    matin:[[31.14,14.18],[62.96,23.94],[44.28,33.70],[84.01,43.46],[32.66,53.22],[60.27,62.98],[74.08,72.74],[42.93,82.50]],
-    soir: [[42.93,16.17],[64.31,25.47],[46.80,34.78],[75.26,44.09],[39.39,53.39],[45.12,62.70],[76.43,72.00],[34.51,81.31]],
-    hebdo:[[69.36,17.76],[72.39,36.03],[20.53,54.30],[72.39,72.57],[58.08,90.84]]
+    matin:[[32.91,14.17],[61.75,23.93],[44.81,33.68],[80.82,43.44],[34.28,53.19],[59.31,62.95],[71.82,72.70],[43.59,82.45]],
+    soir: [[43.59,16.16],[62.97,25.46],[47.10,34.76],[72.89,44.06],[40.39,53.36],[45.57,62.66],[73.96,71.96],[35.96,81.26]],
+    hebdo:[[61.90,20.92],[73.80,37.20],[25.59,53.47],[68.16,69.75],[46.19,86.03]]
   };
+
   const CM_THEME = {
     matin:{img:'img/chemin-matin.jpg',ink:'#3A2418',scrim:'rgba(255,244,228,0.88)',glow:'rgba(255,246,228,0.95)'},
     soir: {img:'img/chemin-soir.jpg', ink:'#FCEDDC',scrim:'rgba(48,28,58,0.62)',  glow:'rgba(48,28,58,0.9)'},
@@ -5240,7 +5288,6 @@
 
   function cmRender(){
     const el=document.getElementById('rituel-chemin'); if(!el||!chDraft) return;
-    const sc=el.scrollTop;
     const moment=chDraft.moment, meta=cmMomentMeta(moment), th=cmTheme(moment), A=cmAnchors(moment);
     const set=CM_SETS[moment]||CM_SETS.matin;
     const pmap={}; (window.__cmProds||[]).forEach(function(p){ pmap[p.id]=p; });
@@ -5248,7 +5295,7 @@
 
     function node(i,cls,inner,lbl,sub,attr){
       const a=A[i]||[50,50];
-      return '<div class="cm-node '+cls+'" style="left:'+a[0]+'%;top:'+a[1]+'%;" '+(attr||'')+'>'+inner+
+      return '<div class="cm-node '+cls+'" data-i="'+i+'" data-ax="'+a[0]+'" data-ay="'+a[1]+'" '+(attr||'')+'>'+inner+
              '<div class="cm-tag"><div class="cm-lbl">'+lbl+'</div>'+(sub?'<div class="cm-sub">'+sub+'</div>':'')+'</div></div>';
     }
     let nodes=node(0,'tc','<div class="cm-start">'+meta.start+'</div>','Départ','');
@@ -5271,23 +5318,281 @@
     nodes+=node(set.length+1,'tc','<div class="cm-goal">✨</div>','Objectif','');
 
     const title=escapeHtml(chDraft.nom||meta.ph);
+    const nOk=set.filter(function(k){ return chDraft.filled[k]; }).length;
+    const count='<div class="cm-count">'+nOk+' étape'+(nOk>1?'s':'')+' sur '+set.length+'</div>';
     const tools=isEdit
       ? '<button class="cm-tool on" title="Terminer la modification" onclick="cmCancelEdit()">🔨</button><button class="cm-tool" title="Supprimer" onclick="cmDelete()">🗑️</button>'
       : '<button class="cm-tool" title="Modifier" onclick="cmSetMode(\'edit\')">🔨</button>';
     const head=isEdit
-      ? '<div class="cm-head"><div class="cm-title" onclick="cmRename()">'+title+'</div><div class="cm-title-edit" onclick="cmRename()">✎ touche pour renommer</div></div>'
-      : '<div class="cm-head"><div class="cm-title">'+title+'</div></div>';
+      ? '<div class="cm-head"><div class="cm-title" onclick="cmRename()">'+title+'</div>'+count+'<div class="cm-title-edit" onclick="cmRename()">✎ touche pour renommer</div></div>'
+      : '<div class="cm-head"><div class="cm-title">'+title+'</div>'+count+'</div>';
     const foot=isEdit
       ? '<div class="cm-validate-wrap"><button class="cm-validate" onclick="cmValidate()"><span class="cm-shine"></span>✨ J\'ai fini mon rituel</button><div class="cm-validate-hint">Tu peux valider même si toutes les étapes ne sont pas remplies 🌸</div></div>'
-      : '<div class="cm-validate-wrap"></div>';
+      : '';
 
     el.innerHTML='<div class="cm-wrap">'+
       '<div class="cm-scene" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
         '<button class="cm-back" onclick="closeRituelChemin()">‹</button>'+
         '<div class="cm-tools">'+tools+'</div>'+head+nodes+
       '</div>'+foot+'</div>';
-    el.scrollTop=sc;
+    cmLayout();
   }
+
+  // Cale l'illustration dans la zone dispo et renvoie la géométrie de rendu.
+  function cmFitScene(scene, yTopPct, yBotPct){
+    const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return null;
+    const stretch=(sw/sh)/(CM_IMG_W/CM_IMG_H);
+    let rw,rh,offX,offY;
+    if(stretch>=0.87 && stretch<=1.14){
+      rw=sw; rh=sh; offX=0; offY=0;
+      scene.classList.remove('cm-compact');
+      scene.style.backgroundSize='100% 100%';
+    } else {
+      const k=Math.max(sw/CM_IMG_W, sh/CM_IMG_H); rw=CM_IMG_W*k; rh=CM_IMG_H*k; offX=(sw-rw)/2;
+      const yT=yTopPct/100*rh, yB=yBotPct/100*rh;
+      const compact=((yB-yT)+188>sh); scene.classList.toggle('cm-compact', compact);
+      const tp=compact?54:100, bp=compact?54:88;
+      if((yB-yT)+tp+bp<=sh){
+        offY=(sh-rh)/2;
+        if(offY+yT<tp) offY=tp-yT;
+        if(offY+yB>sh-bp) offY=sh-bp-yB;
+      } else { offY=(sh-(yT+yB))/2; }
+      offY=Math.max(sh-rh, Math.min(0, offY));
+      scene.style.backgroundSize=rw+'px '+rh+'px';
+    }
+    scene.style.backgroundPosition=offX+'px '+offY+'px';
+    return {rw:rw,rh:rh,offX:offX,offY:offY,sw:sw,sh:sh};
+  }
+
+  function cmLayout(){
+    const scene=document.querySelector('#rituel-chemin .cm-scene'); if(!scene||!chDraft) return;
+    const A=cmAnchors(chDraft.moment);
+    const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return;
+    const f=cmFitScene(scene, A[0][1], A[A.length-1][1]); if(!f) return;
+    const rw=f.rw, rh=f.rh, offX=f.offX, offY=f.offY;
+    scene.querySelectorAll('.cm-node').forEach(function(n){
+      const ay=parseFloat(n.dataset.ay);
+      n.style.left=(offX+parseFloat(n.dataset.ax)/100*rw)+'px';
+      n.style.top =(offY+ay/100*rh)+'px';
+      // le chemin est 2x plus large en bas qu'en haut : les pastilles suivent la perspective
+      const k=Math.max(0.80,Math.min(1.18, 0.80+(ay/100)*0.42));
+      n.style.transform='translate(-50%,-50%) scale('+k.toFixed(3)+')';
+      const tag=n.querySelector('.cm-tag');
+      if(tag) tag.style.transform=(n.classList.contains('tc')?'translateX(-50%)':'translateY(-50%)')+' scale('+(1/k).toFixed(3)+')';
+    });
+  }
+
+  // ===================== VOYAGE DU JOUR =====================
+  const VY_POLY = {"matin":[[32.9,14.2],[36.5,16.2],[33.6,18.3],[34.0,20.4],[46.7,22.5],[63.5,24.5],[72.7,26.6],[72.0,28.7],[62.3,30.7],[48.8,32.8],[40.4,34.9],[41.9,36.9],[53.1,39.0],[67.1,41.1],[74.7,43.1],[74.6,45.2],[68.8,47.3],[57.6,49.3],[45.8,51.4],[37.6,53.5],[32.2,55.6],[30.1,57.6],[34.0,59.7],[44.7,61.8],[56.8,63.8],[66.7,65.9],[72.7,68.0],[73.9,70.0],[72.2,72.1],[65.8,74.2],[55.5,76.2],[46.1,78.3],[41.5,80.4],[43.6,82.5]],"soir":[[43.6,16.2],[44.3,18.1],[37.7,20.1],[34.9,22.1],[45.3,24.0],[62.6,26.0],[72.7,28.0],[73.4,30.0],[67.2,31.9],[55.3,33.9],[44.6,35.9],[41.2,37.9],[47.1,39.8],[58.8,41.8],[69.0,43.8],[73.5,45.8],[72.0,47.7],[65.2,49.7],[53.7,51.7],[40.8,53.6],[32.9,55.6],[30.9,57.6],[32.5,59.6],[39.5,61.5],[52.8,63.5],[66.9,65.5],[74.5,67.5],[75.0,69.4],[72.4,71.4],[65.7,73.4],[54.7,75.3],[45.4,77.3],[40.4,79.3],[36.0,81.3]],"hebdo":[[61.9,20.9],[48.1,22.9],[37.3,24.9],[31.0,26.8],[31.0,28.8],[39.0,30.8],[52.3,32.8],[64.2,34.7],[72.4,36.7],[76.0,38.7],[71.6,40.7],[61.8,42.6],[50.0,44.6],[36.9,46.6],[27.4,48.5],[22.4,50.5],[19.9,52.5],[22.0,54.5],[29.1,56.4],[39.4,58.4],[48.8,60.4],[53.8,62.4],[56.9,64.3],[61.2,66.3],[65.8,68.3],[69.8,70.2],[71.4,72.2],[69.2,74.2],[65.5,76.2],[61.7,78.1],[56.4,80.1],[55.6,82.1],[56.2,84.1],[46.2,86.0]]};
+  let vyState=null;
+
+  // Polyligne du chemin en pixels écran + longueurs cumulées (pour marcher dessus)
+  function vyGeom(f, moment){
+    const raw=VY_POLY[moment]||VY_POLY.matin;
+    const pts=raw.map(function(q){ return [f.offX+q[0]/100*f.rw, f.offY+q[1]/100*f.rh]; });
+    const cum=[0];
+    for(let i=1;i<pts.length;i++){
+      const dx=pts[i][0]-pts[i-1][0], dy=pts[i][1]-pts[i-1][1];
+      cum.push(cum[i-1]+Math.sqrt(dx*dx+dy*dy));
+    }
+    return {pts:pts, cum:cum, total:cum[cum.length-1]};
+  }
+  function vyAt(g,t){
+    const d=Math.max(0,Math.min(1,t))*g.total;
+    let i=1; while(i<g.cum.length-1 && g.cum[i]<d) i++;
+    const seg=g.cum[i]-g.cum[i-1]||1, r=(d-g.cum[i-1])/seg;
+    return [g.pts[i-1][0]+(g.pts[i][0]-g.pts[i-1][0])*r, g.pts[i-1][1]+(g.pts[i][1]-g.pts[i-1][1])*r];
+  }
+  function vyDoneIds(){
+    const list=document.getElementById('routine-'+(vyState?vyState.moment:'matin'));
+    if(!list) return [];
+    return [].slice.call(list.querySelectorAll('.routine-item.done')).map(function(x){ return x.dataset.pid; }).filter(Boolean);
+  }
+  function vyT(i,n){ return (i+1)/(n+1); }
+
+  function openVoyage(moment){
+    const m=moment||(typeof currentPeriod!=='undefined'?currentPeriod:'matin');
+    const items=((window.__homeRoutine||{})[m])||[];
+    if(!items.length){ if(typeof showToast==='function') showToast('Aucune étape pour ce créneau'); return; }
+    vyState={moment:m, items:items};
+    try{ (new Image()).src=cmTheme(m).img; }catch(e){}
+    vyRender();
+    const el=document.getElementById('voyage');
+    el.classList.add('show'); document.body.style.overflow='hidden';
+    vyPhotos();
+  }
+  function closeVoyage(){
+    const el=document.getElementById('voyage');
+    if(el) el.classList.remove('show');
+    document.body.style.overflow='';
+    vyState=null;
+    if(typeof renderHomeVoyage==='function') renderHomeVoyage();
+  }
+
+  // Charge les photos produits en tâche de fond puis rafraîchit les pastilles
+  async function vyPhotos(){
+    if(!vyState) return;
+    window.__cmPhotos=window.__cmPhotos||{};
+    let changed=false;
+    for(const p of vyState.items){
+      if(!p.photo_path || window.__cmPhotos[p.id]) continue;
+      try{ const u=await signedPhoto(p.photo_path); if(u){ window.__cmPhotos[p.id]=u; changed=true; } }catch(e){}
+    }
+    if(changed && vyState) vyRender();
+  }
+
+  function vyRender(){
+    const el=document.getElementById('voyage'); if(!el||!vyState) return;
+    const m=vyState.moment, th=cmTheme(m), meta=cmMomentMeta(m), items=vyState.items;
+    const done=vyDoneIds(), n=items.length;
+    const nOk=items.filter(function(p){ return done.indexOf(p.id)>=0; }).length;
+    const nextIdx=items.findIndex(function(p){ return done.indexOf(p.id)<0; });
+
+    let nodes='<div class="cm-node tc" data-t="0"><div class="cm-start">'+meta.start+'</div>'+
+      '<div class="cm-tag"><div class="cm-lbl">Départ</div></div></div>';
+    items.forEach(function(p,i){
+      const isDone=done.indexOf(p.id)>=0;
+      const nm=(p.nom||'').split(' \u00b7 ');
+      const url=(window.__cmPhotos||{})[p.id];
+      const inner=url?'<img src="'+url+'" alt="">':(p.emoji||'\ud83e\uddf4');
+      nodes+='<div class="cm-node '+(i%2?'tr':'tl')+(isDone?' vy-done':'')+(i===nextIdx?' vy-next':'')+'" data-t="'+vyT(i,n)+'" data-pid="'+p.id+'" onclick="vyTap(\''+p.id+'\')">'+
+        '<div class="cm-ring filled">'+inner+(isDone?'<div class="vy-check">\u2713</div>':'')+'</div>'+
+        '<div class="cm-tag"><div class="cm-lbl">'+escapeHtml(nm[0]||'')+'</div>'+(nm[1]?'<div class="cm-sub">'+escapeHtml(nm[1])+'</div>':'')+'</div></div>';
+    });
+    nodes+='<div class="cm-node tc" data-t="1"><div class="cm-goal">\u2728</div>'+
+      '<div class="cm-tag"><div class="cm-lbl">'+(nOk===n?'Voyage termin\u00e9 !':'Arriv\u00e9e')+'</div></div></div>';
+
+    el.innerHTML='<div class="cm-wrap">'+
+      '<div class="cm-scene" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
+        '<button class="cm-back" onclick="closeVoyage()">\u2039</button>'+
+        '<div class="cm-head"><div class="cm-title">'+escapeHtml(meta.ph)+'</div>'+
+          '<div class="cm-count">'+nOk+' \u00e9tape'+(nOk>1?'s':'')+' sur '+n+'</div></div>'+
+        '<svg class="vy-trail" preserveAspectRatio="none"><path class="vy-glow" stroke-width="13"></path><path class="vy-core" stroke-width="5"></path></svg>'+
+        '<div class="vy-walker" id="vy-walker">\ud83c\udf31</div>'+
+        nodes+
+      '</div></div>';
+    vyLayout();
+  }
+
+  function vyLayout(){
+    const scene=document.querySelector('#voyage .cm-scene'); if(!scene||!vyState) return;
+    const P=VY_POLY[vyState.moment]||VY_POLY.matin;
+    const f=cmFitScene(scene, P[0][1], P[P.length-1][1]); if(!f) return;
+    const g=vyGeom(f, vyState.moment);
+    const done=vyDoneIds(), items=vyState.items, n=items.length;
+    let last=-1; items.forEach(function(p,i){ if(done.indexOf(p.id)>=0) last=i; });
+    const allDone=(last===n-1 && n>0);
+    const tCur = allDone ? 1 : (last<0 ? 0 : vyT(last,n));
+
+    const svg=scene.querySelector('.vy-trail');
+    svg.setAttribute('viewBox','0 0 '+f.sw+' '+f.sh);
+    svg.setAttribute('width',f.sw); svg.setAttribute('height',f.sh);
+    const d=g.pts.map(function(q,i){ return (i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1); }).join(' ');
+    scene.querySelectorAll('.vy-trail path').forEach(function(pa){
+      pa.setAttribute('d',d);
+      pa.style.strokeDasharray=g.total;
+      pa.style.strokeDashoffset=g.total*(1-tCur);
+    });
+
+    scene.querySelectorAll('.cm-node').forEach(function(nd){
+      const t=parseFloat(nd.dataset.t), pt=vyAt(g,t);
+      nd.style.left=pt[0]+'px'; nd.style.top=pt[1]+'px';
+      const k=Math.max(0.80,Math.min(1.18, 0.80+t*0.40));
+      nd.style.transform='translate(-50%,-50%) scale('+k.toFixed(3)+')';
+      const tag=nd.querySelector('.cm-tag');
+      if(tag) tag.style.transform=(nd.classList.contains('tc')?'translateX(-50%)':'translateY(-50%)')+' scale('+(1/k).toFixed(3)+')';
+    });
+    const w=document.getElementById('vy-walker');
+    if(w){ const pt=vyAt(g,tCur); w.style.left=pt[0]+'px'; w.style.top=pt[1]+'px'; }
+  }
+
+  async function vyTap(pid){
+    if(!vyState) return;
+    const list=document.getElementById('routine-'+vyState.moment);
+    const item=list?list.querySelector('.routine-item[data-pid="'+pid+'"]'):null;
+    if(!item) return;
+    const wasDone=item.classList.contains('done');
+    const node=document.querySelector('#voyage .cm-node[data-pid="'+pid+'"]');
+    if(node){
+      node.classList.toggle('vy-done', !wasDone);
+      const ring=node.querySelector('.cm-ring');
+      if(ring){ const c=ring.querySelector('.vy-check'); if(!wasDone && !c){ const b=document.createElement('div'); b.className='vy-check'; b.textContent='\u2713'; ring.appendChild(b); } else if(wasDone && c){ c.remove(); } }
+    }
+    const w=document.getElementById('vy-walker');
+    if(w && !wasDone){ w.classList.remove('hop'); void w.offsetWidth; w.classList.add('hop'); }
+    vyLayout();
+    if(!wasDone) vyPetals(6);
+    const items=vyState.items;
+    await toggleRoutine(item);
+    vyRender();
+    const done=vyDoneIds();
+    if(!wasDone && items.length && items.every(function(p){ return done.indexOf(p.id)>=0; })) vyCelebrate();
+  }
+
+  function vyPetals(n){
+    const spk=['\ud83c\udf38','\u2728','\ud83c\udf3f'];
+    for(let i=0;i<n;i++){
+      const s=document.createElement('div'); s.className='vy-petal'; s.textContent=spk[i%spk.length];
+      s.style.left=(12+Math.random()*76)+'%'; s.style.top=(12+Math.random()*20)+'%';
+      s.style.animationDelay=(Math.random()*0.35)+'s';
+      document.body.appendChild(s); setTimeout(function(){ s.remove(); },3000);
+    }
+  }
+  function vyCelebrate(){
+    if(navigator.vibrate) navigator.vibrate([14,60,24]);
+    vyPetals(14);
+    const spk=['\u2726','\u2727','\ud83c\udf1f','\ud83d\udcab'];
+    for(let i=0;i<14;i++){ const s=document.createElement('div'); s.className='cm-spark'; s.textContent=spk[i%spk.length];
+      s.style.left='50%'; s.style.top='62%'; const a=Math.random()*Math.PI*2, dd=80+Math.random()*160;
+      s.style.setProperty('--dx',(Math.cos(a)*dd)+'px'); s.style.setProperty('--dy',(Math.sin(a)*dd-50)+'px');
+      document.body.appendChild(s); setTimeout(function(){ s.remove(); },1200); }
+    let w=document.getElementById('cm-wow');
+    if(!w){ w=document.createElement('div'); w.id='cm-wow'; w.className='cm-wow'; document.body.appendChild(w); }
+    const meta=cmMomentMeta(vyState?vyState.moment:'matin');
+    w.innerHTML='<div class="cm-wow-card"><div class="cm-wow-badge">\ud83c\udf3f</div><div class="cm-wow-t">Tu es arriv\u00e9e au bout \u2728</div>'+
+      '<div class="cm-wow-s">'+escapeHtml(meta.ph)+' termin\u00e9. Ta plante a fait tout le chemin avec toi \ud83c\udf38</div>'+
+      '<button class="cm-wow-btn" onclick="vyWowClose()">Parfait</button></div>';
+    setTimeout(function(){ w.classList.add('show'); },260);
+  }
+  function vyWowClose(){ const w=document.getElementById('cm-wow'); if(w) w.classList.remove('show'); closeVoyage(); }
+
+  // --- carte d'accroche sur l'accueil ---
+  function renderHomeVoyage(){
+    const hero=document.getElementById('vy-hero'); if(!hero) return;
+    const m=(typeof currentPeriod!=='undefined'&&currentPeriod)?currentPeriod:'matin';
+    const items=((window.__homeRoutine||{})[m])||[];
+    if(!items.length){ hero.style.display='none'; return; }
+    const list=document.getElementById('routine-'+m);
+    const done=list?[].slice.call(list.querySelectorAll('.routine-item.done')).map(function(x){return x.dataset.pid;}):[];
+    const n=items.length, nOk=items.filter(function(p){ return done.indexOf(p.id)>=0; }).length;
+    let last=-1; items.forEach(function(p,i){ if(done.indexOf(p.id)>=0) last=i; });
+    const allDone=(nOk===n);
+    const t=allDone?1:(last<0?0:(last+1)/(n+1));
+    const P=VY_POLY[m]||VY_POLY.matin;
+    // position de la plante sur la bande visible de la carte (fenêtre 30%→80% de l'image)
+    const q=P[Math.round(t*(P.length-1))];
+    const vx=q[0], vy=Math.max(6,Math.min(94,(q[1]-30)/50*100));
+    const meta=cmMomentMeta(m);
+    const sub=allDone?'Voyage termin\u00e9 \u00b7 bravo \ud83c\udf38':(nOk?nOk+' \u00e9tape'+(nOk>1?'s':'')+' sur '+n+' \u00b7 continue':'Ta plante t\'attend au d\u00e9part');
+    hero.style.display='block';
+    hero.innerHTML='<div class="vy-hero-img" style="background-image:url(\''+cmTheme(m).img+'\');">'+
+      '<div class="vy-hero-plant" style="left:'+vx+'%;top:'+vy+'%;">'+(allDone?'\ud83c\udf3f':'\ud83c\udf31')+'</div></div>'+
+      '<div class="vy-hero-body"><div class="vy-hero-txt"><div class="vy-hero-t">'+escapeHtml(meta.ph)+'</div>'+
+      '<div class="vy-hero-s">'+sub+'</div></div>'+
+      '<span class="vy-hero-cta">'+(allDone?'Revoir':(nOk?'Continuer':'Commencer'))+'</span></div>'+
+      '<div class="vy-hero-bar"><div class="vy-hero-fill" style="width:'+Math.round(nOk/n*100)+'%;"></div></div>';
+  }
+  function toggleHrList(){
+    const l=document.getElementById('hr-lists'), b=document.getElementById('hr-listtoggle');
+    if(!l||!b) return;
+    const open=(l.style.display!=='none');
+    l.style.display=open?'none':'block';
+    b.textContent=open?'Voir en liste':'Masquer la liste';
+  }
+  window.addEventListener('resize', function(){ if(vyState) vyLayout(); });
+
+  window.addEventListener('resize', function(){ cmLayout(); });
+  window.addEventListener('orientationchange', function(){ setTimeout(cmLayout,180); });
 
   function cmOpenCarousel(key,idx){
     const scroll=document.getElementById('rituel-chemin');
@@ -5301,14 +5606,18 @@
     const pop=document.getElementById('cm-pop');
     pop.innerHTML='<div class="cm-pop-arrow"></div><div class="cm-pop-h"><div class="cm-pop-t">'+ph.emoji+'  '+ph.nom+'</div><button class="cm-pop-x" onclick="cmClosePop()">×</button></div><div class="cm-car">'+cards+'</div>'+removeBtn+'<button class="cm-pop-skip" onclick="cmClosePop()">Fermer</button>';
 
-    const an=(cmAnchors(chDraft.moment)[idx])||[50,50];
-    const sr=scene.getBoundingClientRect(), or_=scroll.getBoundingClientRect();
-    const x=(sr.left-or_.left)+an[0]/100*sr.width;
-    const y=(sr.top-or_.top)+scroll.scrollTop+an[1]/100*sr.height;
-    let px=x-136; px=Math.max(10,Math.min(px,or_.width-282));
-    pop.style.left=px+'px';
-    pop.style.top=(y+42)+'px';
-    pop.querySelector('.cm-pop-arrow').style.left=Math.max(14,Math.min(x-px,258))+'px';
+    const nEl=scene.querySelector('.cm-node[data-i="'+idx+'"]');
+    const or_=scroll.getBoundingClientRect();
+    const nr=nEl?nEl.getBoundingClientRect():or_;
+    const cx=(nr.left-or_.left)+nr.width/2, cy=(nr.top-or_.top)+nr.height/2;
+    pop.classList.remove('up');
+    pop.style.visibility='hidden'; pop.style.left='0px'; pop.style.top='0px';
+    const ph2=pop.offsetHeight;
+    let top=cy+nr.height/2+12;
+    if(top+ph2 > or_.height-12){ const up=cy-nr.height/2-12-ph2; if(up>=12){ top=up; pop.classList.add('up'); } else { top=Math.max(12,or_.height-ph2-12); } }
+    let px=cx-136; px=Math.max(10,Math.min(px,or_.width-282));
+    pop.style.left=px+'px'; pop.style.top=top+'px'; pop.style.visibility='';
+    pop.querySelector('.cm-pop-arrow').style.left=Math.max(14,Math.min(cx-px,258))+'px';
     requestAnimationFrame(function(){ pop.classList.add('show'); });
   }
   function cmClosePop(){ const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show'); }
@@ -7633,6 +7942,7 @@
 
   <div id="product-book" class="pb-overlay"></div>
   <div id="rituel-chemin" class="cm-overlay"></div>
+  <div id="voyage" class="cm-overlay"></div>
 
   <!-- Datepicker custom -->
   <div class="dp-overlay" id="dp-overlay" onclick="if(event.target===this)dpClose()">
