@@ -1288,8 +1288,8 @@
     line-height:1;box-shadow:0 3px 9px rgba(46,33,28,0.34);}
   .cm-medal img{width:100%;height:100%;object-fit:cover;}
   .cm-node.cm-empty .cm-medal{background:rgba(255,253,250,0.86);border-style:dashed;color:var(--accent);}
-  .cm-node.tag-up .cm-tag{top:auto;bottom:calc(100% + 5px);}
-  .cm-tag{position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none;text-align:center;}
+  .cm-tag{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none;text-align:center;}
+  .cm-node.tag-down .cm-tag{bottom:auto;top:calc(100% + 5px);}
   .cm-lbl{font-family:var(--serif);font-size:13px;font-weight:600;color:#2E211C;background:rgba(255,253,250,0.95);padding:2px 10px;border-radius:99px;display:inline-block;box-shadow:0 2px 10px rgba(46,33,28,0.2);max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;}
   .cm-sub{font-size:10px;color:var(--ink-soft);margin-top:2px;background:rgba(255,253,250,0.88);padding:1px 8px;border-radius:99px;display:inline-block;max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;}
   .cm-scene.cm-compact .cm-lbl{font-size:11.5px;}
@@ -5291,7 +5291,7 @@
       '<div class="cm-tag"><div class="cm-lbl">'+lbl+'</div>'+(sub?'<div class="cm-sub">'+sub+'</div>':'')+'</div></div>';
   }
   // Demi-largeur peinte du chemin à une profondeur donnée (0 = haut, 1 = bas).
-  function cmPathHalf(yFrac,sw){ return sw*(0.035+0.105*Math.max(0,Math.min(1,yFrac))); }
+  function cmPathHalf(yFrac,sw){ return sw*(0.030+0.155*Math.max(0,Math.min(1,yFrac))); }
 
   // Ruban du chemin échantillonné : sert à tester si un bâtiment mord dessus.
   function cmRibbon(f,poly){
@@ -5316,6 +5316,12 @@
       if(d<hw) c+=(hw-d);
     }
     return c;
+  }
+  // distance bord à bord entre deux rectangles (0 s'ils se touchent)
+  function cmBoxGap(a,b){
+    const dx=Math.max(0,Math.max(a.x0,b.x0)-Math.min(a.x1,b.x1));
+    const dy=Math.max(0,Math.max(a.y0,b.y0)-Math.min(a.y1,b.y1));
+    return Math.sqrt(dx*dx+dy*dy);
   }
   function cmBoxOverlap(a,b){
     return Math.max(0,Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0))*Math.max(0,Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0));
@@ -5348,15 +5354,19 @@
           const cx=Math.max(w/2+3,Math.min(sw-w/2-3,cands[ci][0])), by=p.y+cands[ci][1]*k;
           if(cands[ci][1]>0 && by>f.sh-6) continue;   // ne jamais écarter la position de base
           const box={x0:cx-w/2+w*0.07,x1:cx+w/2-w*0.07,y0:by-h+h*0.05,y1:by-h*0.05};
+          const obox={x0:box.x0-5,x1:box.x1+5,y0:box.y0-32,y1:box.y1};
           let cost = onPath ? 0 : cmBoxCost(box,rib)*2.2;
-          if(by-h<topLimit) cost += (topLimit-(by-h))*40;
-          for(let q=0;q<placed.length;q++) cost += cmBoxOverlap(box,placed[q])*0.05;
+          if(by-h-32<topLimit) cost += (topLimit-(by-h-32))*40;
+          for(let q=0;q<placed.length;q++){
+            cost += cmBoxOverlap(obox,placed[q])*0.05;
+            cost += Math.max(0, 30-cmBoxGap(box,placed[q]))*1.8;   // les stations ne doivent pas se frôler
+          }
           cost += Math.abs(cx-cands[ci][0])*0.6 + si*55 + Math.abs(cands[ci][0]-p.x)*0.30 + cands[ci][1]*1.2;
-          if(!best||cost<best.cost) best={cost:cost,cx:cx,by:by,k:k,w:w,h:h,box:box};
+          if(!best||cost<best.cost) best={cost:cost,cx:cx,by:by,k:k,w:w,h:h,box:obox};
         }
       }
       if(!best) best={cx:p.x,by:p.y,k:kB,w:b.w*kB,h:b.h*kB,box:{x0:p.x,x1:p.x,y0:p.y,y1:p.y}};
-      nd.classList.toggle('tag-up', (best.by+30)>f.sh);
+      nd.classList.toggle('tag-down', (best.by-best.h-34)<topLimit);
       const tg=nd.querySelector('.cm-tag');
       if(tg){
         tg.style.transform='translateX(-50%)';
@@ -5374,10 +5384,11 @@
     });
   }
   const CM_ANCHORS = {
-    matin:[[43.59,82.45],[71.97,73.21],[56.56,63.97],[35.05,54.72],[75.33,45.48],[34.89,36.23],[75.02,26.99],[33.67,17.75]],
-    soir: [[35.96,81.26],[73.96,71.96],[45.57,62.66],[40.39,53.36],[72.89,44.06],[47.1,34.76],[62.97,25.46],[43.59,16.16]],
-    hebdo:[[46.19,86.03],[68.16,69.75],[25.59,53.47],[73.8,37.2],[61.9,20.92]]
+    matin:[[38.49,95.45],[49.01,84.68],[49.29,73.9],[66.91,63.12],[32.94,52.34],[66.77,41.56],[61.37,30.78],[57.25,20.0]],
+    soir:[[26.69,95.45],[30.39,84.68],[59.38,73.9],[46.16,63.12],[66.35,52.34],[46.45,41.56],[50.43,30.78],[45.88,20.0]],
+    hebdo:[[59.24,95.45],[41.61,76.59],[65.49,57.73],[71.04,38.86],[56.11,20.0]]
   };
+
 
   const CM_THEME = {
     matin:{img:'img/chemin-matin.jpg',ink:'#3A2418',scrim:'rgba(255,244,228,0.88)',glow:'rgba(255,246,228,0.95)'},
@@ -5512,7 +5523,8 @@
   }
 
   // ===================== VOYAGE DU JOUR =====================
-  const VY_POLY = {"matin":[[43.6,82.5],[42.5,80.5],[46.0,78.5],[53.6,76.6],[63.3,74.6],[70.8,72.7],[74.1,70.7],[73.8,68.7],[69.1,66.8],[62.7,64.8],[52.9,62.9],[38.1,60.9],[27.3,58.9],[27.1,57.0],[32.0,55.0],[36.9,53.0],[47.9,51.1],[62.7,49.1],[71.2,47.2],[75.6,45.2],[76.5,43.2],[68.9,41.3],[54.7,39.3],[42.8,37.4],[39.6,35.4],[45.3,33.4],[58.2,31.5],[71.0,29.5],[75.7,27.6],[71.2,25.6],[56.3,23.6],[38.4,21.7],[31.0,19.7],[33.7,17.8]],"soir":[[36.0,81.3],[40.4,79.3],[45.4,77.3],[54.7,75.3],[65.7,73.4],[72.4,71.4],[75.0,69.4],[74.5,67.5],[66.9,65.5],[52.8,63.5],[39.5,61.5],[32.5,59.6],[30.9,57.6],[32.9,55.6],[40.8,53.6],[53.7,51.7],[65.2,49.7],[72.0,47.7],[73.5,45.8],[69.0,43.8],[58.8,41.8],[47.1,39.8],[41.2,37.9],[44.6,35.9],[55.3,33.9],[67.2,31.9],[73.4,30.0],[72.7,28.0],[62.6,26.0],[45.3,24.0],[34.9,22.1],[37.7,20.1],[44.3,18.1],[43.6,16.2]],"hebdo":[[46.2,86.0],[56.2,84.1],[55.6,82.1],[56.4,80.1],[61.7,78.1],[65.5,76.2],[69.2,74.2],[71.4,72.2],[69.8,70.2],[65.8,68.3],[61.2,66.3],[56.9,64.3],[53.8,62.4],[48.8,60.4],[39.4,58.4],[29.1,56.4],[22.0,54.5],[19.9,52.5],[22.4,50.5],[27.4,48.5],[36.9,46.6],[50.0,44.6],[61.8,42.6],[71.6,40.7],[76.0,38.7],[72.4,36.7],[64.2,34.7],[52.3,32.8],[39.0,30.8],[31.0,28.8],[31.0,26.8],[37.3,24.9],[48.1,22.9],[61.9,20.9]]};
+  const VY_POLY = {"matin":[[38.5,95.5],[39.3,93.2],[37.4,90.9],[37.9,88.6],[40.6,86.3],[39.1,84.0],[36.8,81.7],[40.6,79.5],[44.5,77.2],[45.2,74.9],[49.2,72.6],[54.2,70.3],[55.9,68.0],[57.4,65.7],[60.3,63.4],[60.7,61.2],[58.6,58.9],[52.7,56.6],[42.1,54.3],[34.2,52.0],[35.8,49.7],[46.8,47.4],[59.9,45.1],[65.2,42.9],[59.5,40.6],[47.7,38.3],[40.9,36.0],[45.8,33.7],[54.5,31.4],[52.9,29.1],[47.0,26.9],[48.5,24.6],[52.5,22.3],[57.2,20.0]],"soir":[[26.7,95.5],[31.4,93.2],[31.5,90.9],[31.4,88.6],[33.2,86.3],[35.1,84.0],[38.5,81.7],[47.6,79.5],[57.1,77.2],[62.0,74.9],[65.5,72.6],[65.7,70.3],[60.1,68.0],[52.1,65.7],[44.1,63.4],[36.4,61.2],[32.7,58.9],[40.2,56.6],[54.8,54.3],[64.2,52.0],[62.5,49.7],[51.4,47.4],[41.4,45.1],[42.4,42.9],[51.4,40.6],[54.5,38.3],[48.2,36.0],[46.7,33.7],[51.5,31.4],[53.4,29.1],[53.8,26.9],[54.7,24.6],[52.7,22.3],[45.9,20.0]],"hebdo":[[59.2,95.5],[56.9,93.2],[52.4,90.9],[50.4,88.6],[47.0,86.3],[41.4,84.0],[39.2,81.7],[39.3,79.5],[40.7,77.2],[45.4,74.9],[52.4,72.6],[59.0,70.3],[64.4,68.0],[68.3,65.7],[69.0,63.4],[66.8,61.2],[64.1,58.9],[59.9,56.6],[50.3,54.3],[39.1,52.0],[33.0,49.7],[33.6,47.4],[38.7,45.1],[47.7,42.9],[60.2,40.6],[70.5,38.3],[69.8,36.0],[57.7,33.7],[43.4,31.4],[38.7,29.1],[45.9,26.9],[52.8,24.6],[53.6,22.3],[56.1,20.0]]};
+
   let vyState=null;
 
   // Polyligne du chemin en pixels écran + longueurs cumulées (pour marcher dessus)
