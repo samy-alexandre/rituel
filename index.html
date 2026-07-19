@@ -1275,9 +1275,18 @@
   .cm-tool{width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
   .cm-tool.on{background:var(--accent) !important;box-shadow:0 4px 14px rgba(201,90,63,0.45) !important;}
 
+  .cm-links{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible;}
+  .cm-links path{fill:none;stroke-linecap:round;}
+  .cm-links .lk-base{stroke:rgba(120,92,58,0.20);}
+  .cm-links .lk-top{stroke:rgba(247,232,201,0.92);}
+  .cm-scene.cm-soir .cm-links .lk-top{stroke:rgba(238,196,158,0.85);}
   .cm-node{position:absolute;transform:translate(-50%,-100%);z-index:6;cursor:pointer;-webkit-tap-highlight-color:transparent;}
   .cm-bld{position:relative;display:block;line-height:0;transition:transform .16s ease,filter .3s ease;}
-  .cm-bld img{display:block;width:100%;height:100%;-webkit-user-drag:none;}
+  .cm-bld::after{content:"";position:absolute;left:5%;right:5%;bottom:-2px;height:11px;border-radius:50%;
+    background:radial-gradient(50% 50% at 50% 50%,rgba(74,52,32,0.40),rgba(74,52,32,0) 72%);}
+  .cm-bld img{display:block;width:100%;height:100%;-webkit-user-drag:none;position:relative;z-index:1;
+    filter:drop-shadow(0 2px 2px rgba(74,52,32,0.32));}
+  .cm-scene.cm-soir .cm-bld::after{background:radial-gradient(50% 50% at 50% 50%,rgba(38,22,44,0.5),rgba(38,22,44,0) 72%);}
   .cm-node:active .cm-bld{transform:scale(0.94);}
   .cm-node.cm-empty .cm-bld{filter:grayscale(0.55) brightness(1.04) opacity(0.6);}
   .cm-node.cm-muted{cursor:default;}
@@ -1290,7 +1299,17 @@
   .cm-node.cm-empty .cm-medal{background:rgba(255,253,250,0.86);border-style:dashed;color:var(--accent);}
   .cm-tag{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:3px;}
   .cm-node.tag-down .cm-tag{bottom:auto;top:calc(100% + 5px);}
-  .cm-lbl{font-family:var(--serif);font-size:13px;font-weight:600;color:#2E211C;background:rgba(255,253,250,0.95);padding:2px 10px;border-radius:99px;display:inline-block;box-shadow:0 2px 10px rgba(46,33,28,0.2);max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;}
+  .cm-lbl{position:relative;font-family:var(--serif);font-size:13px;font-weight:600;color:#5B3B22;
+    background:linear-gradient(180deg,#FCF3E0 0%,#F5E7CA 55%,#EEDCB6 100%);
+    border:1px solid #C4A175;border-radius:3px;padding:3px 14px;display:inline-block;
+    box-shadow:0 3px 7px rgba(46,33,28,0.26),inset 0 1px 0 rgba(255,255,255,0.7);
+    max-width:136px;overflow:visible;white-space:nowrap;letter-spacing:.01em;}
+  .cm-lbl::before,.cm-lbl::after{content:"";position:absolute;top:-2px;bottom:-2px;width:6px;
+    background:linear-gradient(180deg,#E9D5AC,#D2B685);border:1px solid #B08F63;border-radius:2px;
+    box-shadow:0 1px 3px rgba(46,33,28,0.22);}
+  .cm-lbl::before{left:-4px;}
+  .cm-lbl::after{right:-4px;}
+  .cm-scene.cm-soir .cm-lbl{color:#4A2F1B;}
   .cm-sub{font-size:10px;color:var(--ink-soft);margin-top:2px;background:rgba(255,253,250,0.88);padding:1px 8px;border-radius:99px;display:inline-block;max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;}
   .cm-scene.cm-compact .cm-lbl{font-size:11.5px;}
   .cm-scene.cm-compact .cm-sub{display:none;}
@@ -5329,7 +5348,7 @@
 
   // Place tous les bâtiments : à côté du chemin, sans se marcher dessus, sans sortir du cadre.
   function cmPlaceNodes(scene,f,pts,poly,topLim){
-    const rib=cmRibbon(f,poly), sw=f.sw, placed=[];
+    const rib=cmRibbon(f,poly), sw=f.sw, placed=[], links=[];
     // aucun bâtiment ne doit passer sous le bloc titre
     const topLimit=topLim||96;
     scene.querySelectorAll('.cm-node').forEach(function(nd,i){
@@ -5381,7 +5400,34 @@
       nd.style.left=best.cx+'px';
       nd.style.top=(best.by!=null?best.by:p.y)+'px';
       placed.push(best.box);
+      if(!onPath){
+        const near=cmNearest(rib,best.cx,best.by);
+        if(near){
+          const vx=best.cx-near[0], vy=best.by-near[1], L=Math.hypot(vx,vy)||1;
+          const sx=near[0]+vx/L*near[2]*0.92, sy=near[1]+vy/L*near[2]*0.92;
+          const ex=best.cx, ey=best.by-2;
+          const mx=(sx+ex)/2+(sy-ey)*0.10, my=(sy+ey)/2+(ex-sx)*0.10;
+          links.push('M'+sx.toFixed(1)+' '+sy.toFixed(1)+'Q'+mx.toFixed(1)+' '+my.toFixed(1)+' '+ex.toFixed(1)+' '+ey.toFixed(1));
+        }
+      }
     });
+    const svg=scene.querySelector('.cm-links');
+    if(svg){
+      svg.setAttribute('viewBox','0 0 '+f.sw+' '+f.sh);
+      svg.setAttribute('width',f.sw); svg.setAttribute('height',f.sh);
+      const d=links.join(' ');
+      svg.innerHTML='<path class="lk-base" stroke-width="11" d="'+d+'"></path><path class="lk-top" stroke-width="5" d="'+d+'"></path>';
+    }
+  }
+
+  // point du ruban le plus proche d'un bâtiment : [x, y, demi-largeur]
+  function cmNearest(rib,x,y){
+    let best=null, bd=1e12;
+    for(let i=0;i<rib.length;i++){
+      const dx=rib[i][0]-x, dy=rib[i][1]-y, d=dx*dx+dy*dy;
+      if(d<bd){ bd=d; best=rib[i]; }
+    }
+    return best;
   }
   const CM_ANCHORS = {
     matin:[[38.49,95.45],[49.01,84.68],[49.29,73.9],[66.91,63.12],[32.94,52.34],[66.77,41.56],[61.37,30.78],[57.25,20.0]],
@@ -5469,7 +5515,7 @@
     el.innerHTML='<div class="cm-wrap">'+
       '<div class="cm-scene'+(moment==='soir'?' cm-soir':'')+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
         '<button class="cm-back" onclick="closeRituelChemin()">‹</button>'+
-        '<div class="cm-tools">'+tools+'</div>'+head+nodes+
+        '<div class="cm-tools">'+tools+'</div>'+head+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+
       '</div>'+foot+'</div>';
     cmLayout();
   }
@@ -5609,6 +5655,7 @@
         '<div class="cm-head"><div class="cm-title">'+escapeHtml(meta.ph)+'</div>'+
           '<div class="cm-count">'+nOk+' \u00e9tape'+(nOk>1?'s':'')+' sur '+n+'</div></div>'+
         '<svg class="vy-trail" preserveAspectRatio="none"><path class="vy-glow" stroke-width="13"></path><path class="vy-core" stroke-width="5"></path></svg>'+
+        '<svg class="cm-links" preserveAspectRatio="none"></svg>'+
         '<div class="vy-walker" id="vy-walker">\ud83c\udf31</div>'+
         nodes+
       '</div></div>';
