@@ -5304,7 +5304,7 @@
   let chDraft=null;
 
   const CM_IMG_W=760, CM_IMG_H=1460;
-  const CM_BLD = {"depart":{"w":94.5,"h":74},"preparer":{"w":78.6,"h":84},"nettoyer":{"w":99.1,"h":80},"equilibrer":{"w":75.0,"h":96},"traiter":{"w":94.1,"h":86},"yeux":{"w":56.8,"h":104},"hydrater":{"w":92.9,"h":88},"proteger":{"w":59.8,"h":110},"masque":{"w":97.8,"h":88},"arrivee":{"w":113.0,"h":94}};
+  const CM_BLD = {"depart":{"w":126.2,"h":74,"op":0.634,"oc":0.463},"preparer":{"w":98.8,"h":84},"nettoyer":{"w":91.8,"h":80},"equilibrer":{"w":79.7,"h":96},"traiter":{"w":88.7,"h":86},"yeux":{"w":62.7,"h":104},"hydrater":{"w":103.5,"h":88},"proteger":{"w":66.9,"h":110},"masque":{"w":114.9,"h":88},"arrivee":{"w":122.7,"h":94}};
   const CM_BLD_SCALE = 0.66;
   function cmBldK(yFrac){ return CM_BLD_SCALE*(0.78+Math.max(0,Math.min(1,yFrac))*0.50); }
   function cmNodeHtml(key,cls,medal,lbl,sub,attr,extra){
@@ -5362,10 +5362,11 @@
       let best=null;
       let scales;
       if(onPath){
-        // Le portail enjambe le chemin : sa largeur suit celle du chemin à cette profondeur.
-        const hw=cmPathHalf(yF,sw);
-        let kw=(2*hw*1.12)/b.w;
-        kw=Math.min(kw,(0.16*f.sh)/b.h,(0.66*sw)/b.w);
+        // Le portail enjambe le chemin : c'est son entre-poteaux, pas son bord, qui doit
+        // couvrir la largeur du chemin. b.op = ouverture, b.oc = centre de l'ouverture.
+        const hw=cmPathHalf(yF,sw), op=b.op||1;
+        let kw=(2*hw*1.06)/(b.w*op);
+        kw=Math.min(kw,(0.21*f.sh)/b.h,(0.72*sw)/b.w);
         kw=Math.max(kw,kB);
         scales=[kw,kw*0.9,kB];
       } else {
@@ -5374,7 +5375,7 @@
       for(let si=0;si<scales.length;si++){
         const k=scales[si], w=b.w*k, h=b.h*k;
         const cands=[];
-        if(onPath){ cands.push([p.x,0]); }
+        if(onPath){ cands.push([p.x-((b.oc||0.5)-0.5)*w,0]); }
         else {
           const hw=cmPathHalf(yF,sw), s0=(i%2?1:-1);
           [s0,-s0].forEach(function(sg){
@@ -5445,10 +5446,11 @@
     return best;
   }
   const CM_ANCHORS = {
-    matin:[[38.49,95.45],[49.01,84.68],[49.29,73.9],[66.91,63.12],[32.94,52.34],[66.77,41.56],[61.37,30.78],[57.25,20.0]],
-    soir:[[26.69,95.45],[30.39,84.68],[59.38,73.9],[46.16,63.12],[66.35,52.34],[46.45,41.56],[50.43,30.78],[45.88,20.0]],
-    hebdo:[[59.24,95.45],[41.61,76.59],[65.49,57.73],[71.04,38.86],[56.11,20.0]]
+    matin:[[37.63,95.45],[43.04,76],[55.69,66.8],[59.95,57.6],[39.77,48.4],[52.42,39.2],[60.52,30],[57.25,20]],
+    soir:[[27.12,95.45],[54.26,76],[63.5,66.8],[32.52,57.6],[60.94,48.4],[60.94,39.2],[46.73,30],[45.88,20]],
+    hebdo:[[59.1,95.45],[44.17,74],[64.78,57],[63.93,40],[56.11,20]]
   };
+
 
 
   const CM_THEME = {
