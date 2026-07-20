@@ -5360,7 +5360,17 @@
       const b=CM_BLD[nd.dataset.bld]||CM_BLD.preparer;
       const yF=(p.y-f.offY)/f.rh, kB=cmBldK(yF), onPath=(nd.dataset.center==='1');
       let best=null;
-      const scales = onPath ? [kB,kB*0.86,kB*0.72] : [kB,kB*0.88,kB*0.78,kB*0.68,kB*0.58];
+      let scales;
+      if(onPath){
+        // Le portail enjambe le chemin : sa largeur suit celle du chemin à cette profondeur.
+        const hw=cmPathHalf(yF,sw);
+        let kw=(2*hw*1.12)/b.w;
+        kw=Math.min(kw,(0.16*f.sh)/b.h,(0.66*sw)/b.w);
+        kw=Math.max(kw,kB);
+        scales=[kw,kw*0.9,kB];
+      } else {
+        scales=[kB,kB*0.88,kB*0.78,kB*0.68,kB*0.58,kB*0.48];
+      }
       for(let si=0;si<scales.length;si++){
         const k=scales[si], w=b.w*k, h=b.h*k;
         const cands=[];
@@ -5381,7 +5391,7 @@
           let cost = onPath ? 0 : cmBoxCost(box,rib)*2.2;
           if(by-h-32<topLimit) cost += (topLimit-(by-h-32))*40;
           for(let q=0;q<placed.length;q++){
-            cost += cmBoxOverlap(obox,placed[q])*0.05;
+            cost += cmBoxOverlap(obox,placed[q])*0.08;
             cost += Math.max(0, 30-cmBoxGap(box,placed[q]))*1.8;   // les stations ne doivent pas se frôler
           }
           cost += Math.abs(cx-cands[ci][0])*0.6 + si*55 + Math.abs(cands[ci][0]-p.x)*0.48 + cands[ci][1]*1.2;
@@ -5401,6 +5411,7 @@
       const el=nd.querySelector('.cm-bld');
       if(el){ el.style.width=best.w+'px'; el.style.height=best.h+'px'; }
       nd.style.setProperty('--k',best.k.toFixed(3));
+      nd.style.zIndex=6+Math.round((best.by/Math.max(1,f.sh))*60);
       nd.style.left=best.cx+'px';
       nd.style.top=(best.by!=null?best.by:p.y)+'px';
       placed.push(best.box);
