@@ -1325,6 +1325,10 @@
     width:calc(23px * var(--k,1));height:calc(23px * var(--k,1));border-radius:50%;background:#C9A24F;color:#fff;
     font-size:calc(12px * var(--k,1));font-weight:800;display:flex;align-items:center;justify-content:center;
     box-shadow:0 2px 6px rgba(46,33,28,0.3);}
+  .cm-tip{background:linear-gradient(180deg,#FCF3E0,#F5E8CC);border:1px solid #DCC59B;border-radius:12px;padding:10px 12px;margin-bottom:11px;}
+  .cm-tip-q{font-size:11.5px;color:#6B4A2A;line-height:1.5;}
+  .cm-tip-l{display:flex;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(176,143,99,0.55);font-size:11.5px;color:#5B3B22;line-height:1.5;}
+  .cm-tip-l span{flex-shrink:0;}
   .cm-pop{position:absolute;z-index:20;width:272px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 44px rgba(46,33,28,0.28);padding:12px 12px 14px;opacity:0;transform:scale(0.9);transform-origin:top center;transition:opacity .16s ease,transform .16s ease;pointer-events:none;}
   .cm-pop.show{opacity:1;transform:scale(1);pointer-events:auto;}
   .cm-pop.up{transform-origin:bottom center;}
@@ -2414,7 +2418,7 @@
         <div class="pf-grid">
           <div class="field" style="margin:0;min-width:0;"><label>Nom *</label><input id="pf-nom" placeholder="Sérum vitamine C" style="width:100%;box-sizing:border-box;"></div>
           <div class="field" style="margin:0;min-width:0;"><label>Marque</label><input id="pf-marque" placeholder="La Roche-Posay" style="width:100%;box-sizing:border-box;"></div>
-          <div class="field" style="margin:0;min-width:0;"><label>Effets</label><input id="pf-effets" placeholder="éclaircit" style="width:100%;box-sizing:border-box;"></div>
+          <div class="field" style="margin:0;min-width:0;"><label>Effets</label><select id="pf-effets-sel" onchange="pfEffetsChange()" style="width:100%;box-sizing:border-box;"><option value="">—</option><option>Hydrate</option><option>Nourrit</option><option>Apaise</option><option>Répare</option><option>Purifie</option><option>Matifie</option><option>Exfolie</option><option>Démaquille</option><option>Illumine</option><option>Unifie le teint</option><option>Anti-imperfections</option><option>Anti-âge</option><option>Anti-rougeurs</option><option>Anti-taches</option><option>Anti-cernes</option><option>Raffermit</option><option>Resserre les pores</option><option>Protège du soleil</option><option value="__autre">Autre…</option></select><input id="pf-effets" maxlength="34" placeholder="ton effet" style="width:100%;box-sizing:border-box;margin-top:7px;display:none;"></div>
           <div class="field" style="margin:0;min-width:0;"><label>Prix en €</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="15" style="width:100%;box-sizing:border-box;"></div>
         </div>
       </div>
@@ -4461,7 +4465,7 @@
     document.getElementById('pf-error').textContent='';
     document.getElementById('pf-nom').value='';
     document.getElementById('pf-marque').value='';
-    document.getElementById('pf-effets').value='';
+    pfEffetsSet('');
     document.getElementById('pf-prix').value='';
     document.getElementById('pf-ouverture').value='';
     document.getElementById('pf-peremption').value='';
@@ -4485,7 +4489,7 @@
           document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.toggle('sel', parseInt(b.dataset.mois,10)===pfMois));
           pfRefreshPerem();
         },10);
-        document.getElementById('pf-effets').value = p.effets||'';
+        pfEffetsSet(p.effets||'');
         pfCat = p.categorie || 'autre';
         document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.toggle('selected', b.dataset.cat===pfCat));
         document.getElementById('pf-prix').value = (p.prix!=null?p.prix:'');
@@ -4509,7 +4513,7 @@
     const err = document.getElementById('pf-error');
     if(!nomRaw){ err.textContent='Donne au moins un nom au produit.'; return; }
     const nom = marqueRaw ? (cap(nomRaw)+' · '+cap(marqueRaw)) : cap(nomRaw);
-    const _effRaw = document.getElementById('pf-effets').value.trim();
+    const _effRaw = pfEffetsGet();
     const effets = _effRaw ? (_effRaw.charAt(0).toUpperCase() + _effRaw.slice(1)) : '';
     const prixRaw = document.getElementById('pf-prix').value.trim();
     const prix = prixRaw==='' ? null : parseFloat(prixRaw.replace(',','.'));
@@ -5442,12 +5446,61 @@
     hebdo:{img:'img/chemin-hebdo.jpg',ink:'#33402F',scrim:'rgba(246,246,234,0.9)',glow:'rgba(246,246,234,0.95)'}
   };
   function cmTheme(m){ return CM_THEME[m]||CM_THEME.matin; }
+
+  // ===== Effets produit : liste fermée + saisie libre =====
+  const PF_EFFETS=[["Hydrate", "Nourrit", "Apaise", "Répare", "Purifie", "Matifie", "Exfolie", "Démaquille", "Illumine", "Unifie le teint", "Anti-imperfections", "Anti-âge", "Anti-rougeurs", "Anti-taches", "Anti-cernes", "Raffermit", "Resserre les pores", "Protège du soleil"]];
+  function pfEffetsChange(){
+    const sel=document.getElementById('pf-effets-sel'), inp=document.getElementById('pf-effets');
+    if(!sel||!inp) return;
+    const other=(sel.value==='__autre');
+    inp.style.display=other?'block':'none';
+    if(other){ setTimeout(function(){ inp.focus(); },30); } else { inp.value=''; }
+  }
+  function pfEffetsGet(){
+    const sel=document.getElementById('pf-effets-sel'), inp=document.getElementById('pf-effets');
+    if(!sel) return inp?inp.value.trim():'';
+    return sel.value==='__autre' ? (inp?inp.value.trim():'') : sel.value;
+  }
+  function pfEffetsSet(v){
+    const sel=document.getElementById('pf-effets-sel'), inp=document.getElementById('pf-effets');
+    if(!sel||!inp) return;
+    v=(v||'').trim();
+    if(!v){ sel.value=''; inp.value=''; inp.style.display='none'; return; }
+    const hit=PF_EFFETS.find(function(e){ return e.toLowerCase()===v.toLowerCase(); });
+    if(hit){ sel.value=hit; inp.value=''; inp.style.display='none'; }
+    else { sel.value='__autre'; inp.value=v; inp.style.display='block'; }
+  }
   function cmAnchors(m){ return CM_ANCHORS[m]||CM_ANCHORS.matin; }
   function cmMomentMeta(m){
     if(m==='soir') return {k:'Ton rituel · Soir',ph:'Rituel du soir',start:'🌙'};
     if(m==='hebdo') return {k:'Ton rituel · Semaine',ph:'Soins de la semaine',start:'🧖‍♀️'};
     return {k:'Ton rituel · Matin',ph:'Rituel du matin',start:'🌱'};
   }
+  // Pourquoi cette étape + le mot de Léa, affichés dans la fiche de station.
+  const CM_TIPS = {
+    preparer:{q:"Le démaquillant dissout le maquillage, le SPF et la pollution, que l'eau seule ne retire pas.",
+              t:"Masse à sec 30 secondes avant d'ajouter l'eau : c'est là que l'huile fait tout son travail."},
+    nettoyer:{q:"Le nettoyant retire le sébum et les résidus de la journée sans décaper ta barrière cutanée.",
+              t:"Eau tiède, jamais chaude, et 30 secondes suffisent. Si ça tiraille après, le produit est trop fort."},
+    equilibrer:{q:"La lotion réhydrate juste après le nettoyage et prépare la peau à absorber la suite.",
+              t:"Applique-la sur peau encore humide, à la main : elle retient l'eau au lieu de l'évaporer."},
+    traiter:{q:"Le sérum est la formule la plus concentrée du rituel, celle qui cible vraiment ton besoin.",
+              t:"Une seule nouveauté à la fois, pendant deux semaines. Sinon tu ne sauras jamais ce qui marche."},
+    yeux:{q:"La peau du contour est très fine et bouge en permanence : elle marque avant le reste du visage.",
+              t:"Tapote avec l'annulaire, sur l'os autour de l'œil, jamais au ras des cils."},
+    hydrater:{q:"La crème scelle tout ce que tu viens d'appliquer et limite la perte en eau pendant la nuit.",
+              t:"Couche fine mais partout, cou compris. C'est souvent lui qu'on oublie."},
+    proteger:{q:"Le SPF est le geste anti-âge le plus efficace du rituel, même quand le ciel est couvert.",
+              t:"Deux doigts de produit pour le visage et le cou. On renouvelle si tu restes dehors longtemps."},
+    masque:{q:"Le masque est un coup de pouce ponctuel, pas un soin quotidien : il agit fort et vite.",
+              t:"Une à deux fois par semaine maximum, et jamais sur une peau irritée ou qui pèle."}
+  };
+  function cmTipHtml(key){
+    const t=CM_TIPS[key]; if(!t) return '';
+    return '<div class="cm-tip"><div class="cm-tip-q">'+t.q+'</div>'+
+      '<div class="cm-tip-l"><span>🌸</span><div><b>Léa</b> — '+t.t+'</div></div></div>';
+  }
+
   function cmProductsForPhase(key){ return (window.__cmProds||[]).filter(function(p){ return CM_CAT2PHASE[p.categorie]===key; }); }
 
   async function openRituelChemin(id, presetMoment, mode){
@@ -5495,7 +5548,7 @@
       } else if(isEdit){
         nodes+=cmNodeHtml(key,'cm-empty','+',ph.nom,'','data-i="'+idx+'" onclick="cmOpenCarousel(\''+key+'\','+idx+')"');
       } else {
-        nodes+=cmNodeHtml(key,'cm-empty cm-muted',ph.emoji,ph.nom,'','data-i="'+idx+'"');
+        nodes+=cmNodeHtml(key,'cm-empty',ph.emoji,ph.nom,'','data-i="'+idx+'" onclick="cmInfo(\''+key+'\','+idx+')"');
       }
     });
     nodes+=cmNodeHtml('arrivee','cm-muted','','Objectif','');
@@ -5782,17 +5835,19 @@
   window.addEventListener('resize', function(){ cmLayout(); });
   window.addEventListener('orientationchange', function(){ setTimeout(cmLayout,180); });
 
-  function cmOpenCarousel(key,idx){
+  function cmInfo(key,idx){ cmOpenCarousel(key,idx,true); }
+  function cmOpenCarousel(key,idx,infoOnly){
     const scroll=document.getElementById('rituel-chemin');
     const scene=scroll.querySelector('.cm-scene'); if(!scene) return;
     if(!document.getElementById('cm-pop')){ const d=document.createElement('div'); d.id='cm-pop'; d.className='cm-pop'; scroll.appendChild(d); }
     const ph=CM_PHASES[key], list=cmProductsForPhase(key), cur=chDraft.filled[key];
     let cards;
-    if(list.length){ cards=list.map(function(p){ const parts=(p.nom||'').split(' · '); const u=(window.__cmPhotos||{})[p.id]; const e=u?'<img src="'+u+'" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">':(p.emoji||'🧴'); return '<div class="cm-pcard'+(cur===p.id?' sel':'')+'" onclick="cmPick(\''+key+'\',\''+p.id+'\')"><div class="cm-pcard-e">'+e+'</div><div class="cm-pcard-n">'+escapeHtml(parts[0]||'')+'</div><div class="cm-pcard-b">'+escapeHtml(parts[1]||'')+'</div></div>'; }).join(''); }
+    if(infoOnly){ cards=''; }
+    else if(list.length){ cards=list.map(function(p){ const parts=(p.nom||'').split(' · '); const u=(window.__cmPhotos||{})[p.id]; const e=u?'<img src="'+u+'" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">':(p.emoji||'🧴'); return '<div class="cm-pcard'+(cur===p.id?' sel':'')+'" onclick="cmPick(\''+key+'\',\''+p.id+'\')"><div class="cm-pcard-e">'+e+'</div><div class="cm-pcard-n">'+escapeHtml(parts[0]||'')+'</div><div class="cm-pcard-b">'+escapeHtml(parts[1]||'')+'</div></div>'; }).join(''); }
     else { cards='<div class="cm-pop-none">Aucun produit dans cette catégorie.<br>Ajoute-en un depuis l\'onglet Produits.</div>'; }
-    const removeBtn = cur ? '<button class="cm-pop-remove" onclick="cmClear(\''+key+'\')">Retirer de cette étape</button>' : '';
+    const removeBtn = (cur && !infoOnly) ? '<button class="cm-pop-remove" onclick="cmClear(\''+key+'\')">Retirer de cette étape</button>' : '';
     const pop=document.getElementById('cm-pop');
-    pop.innerHTML='<div class="cm-pop-arrow"></div><div class="cm-pop-h"><div class="cm-pop-t">'+ph.emoji+'  '+ph.nom+'</div><button class="cm-pop-x" onclick="cmClosePop()">×</button></div><div class="cm-car">'+cards+'</div>'+removeBtn+'<button class="cm-pop-skip" onclick="cmClosePop()">Fermer</button>';
+    pop.innerHTML='<div class="cm-pop-arrow"></div><div class="cm-pop-h"><div class="cm-pop-t">'+ph.emoji+'  '+ph.nom+'</div><button class="cm-pop-x" onclick="cmClosePop()">×</button></div>'+cmTipHtml(key)+(cards?'<div class="cm-car">'+cards+'</div>':'')+removeBtn+'<button class="cm-pop-skip" onclick="cmClosePop()">Fermer</button>';
 
     const nEl=scene.querySelector('.cm-node[data-i="'+idx+'"]');
     const or_=scroll.getBoundingClientRect();
@@ -7364,8 +7419,7 @@
       const cap=function(s){ if(!s) return ''; s=s.trim(); return s.charAt(0).toUpperCase()+s.slice(1); };
       const nomEl=document.getElementById('pf-nom'); if(nomEl && d.nom) nomEl.value=cap(d.nom);
       const mqEl=document.getElementById('pf-marque'); if(mqEl && d.marque) mqEl.value=cap(d.marque);
-      const efEl=document.getElementById('pf-effets');
-      if(efEl && d.effets){ efEl.value = d.effets.charAt(0).toUpperCase()+d.effets.slice(1); }
+      if(d.effets) pfEffetsSet(d.effets.charAt(0).toUpperCase()+d.effets.slice(1));
       // Catégorie devinée
       if(d.categorie){
         const catBtn=document.querySelector('#pf-cats .rj-chip[data-cat="'+d.categorie+'"]');
