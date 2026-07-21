@@ -240,6 +240,11 @@
   .plant-card .streak { margin: 14px 0 0; box-shadow: none; border: 1px solid var(--line); background: var(--surface-warm); padding: 12px 14px; }
   .rj-chip { padding: 10px 14px; border-radius: 100px; border: 1.5px solid var(--line); background: var(--surface); font-size: 13px; color: var(--ink-soft); cursor: pointer; transition: all .15s ease; }
   .rj-chip.selected { border-color: var(--accent); background: var(--blush-soft); color: var(--accent-deep); font-weight: 600; }
+  .pf-eff-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 7px; }
+  .pf-eff { padding: 7px 12px; font-size: 12.5px; }
+  .pf-eff.selected::before { content: '✓ '; }
+  .pf-eff-add { display: flex; gap: 8px; margin-top: 9px; }
+  .pf-eff-addbtn { flex-shrink: 0; padding: 0 16px; border-radius: 100px; border: 1.5px solid var(--accent); background: var(--blush-soft); color: var(--accent-deep); font-weight: 600; font-size: 13px; font-family: inherit; cursor: pointer; }
   .rj-item { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; }
   .rj-item .rj-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent; transition: all .15s ease; }
   .rj-item.done .rj-check { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -2483,8 +2488,16 @@
         <div class="pf-grid">
           <div class="field" style="margin:0;min-width:0;"><label>Nom *</label><input id="pf-nom" placeholder="Sérum vitamine C" style="width:100%;box-sizing:border-box;"></div>
           <div class="field" style="margin:0;min-width:0;"><label>Marque</label><input id="pf-marque" placeholder="La Roche-Posay" style="width:100%;box-sizing:border-box;"></div>
-          <div class="field" style="margin:0;min-width:0;"><label>Effets</label><select id="pf-effets-sel" onchange="pfEffetsChange()" style="width:100%;box-sizing:border-box;"><option value="">—</option><option>Hydrate</option><option>Nourrit</option><option>Apaise</option><option>Répare</option><option>Purifie</option><option>Matifie</option><option>Exfolie</option><option>Démaquille</option><option>Illumine</option><option>Unifie le teint</option><option>Anti-imperfections</option><option>Anti-âge</option><option>Anti-rougeurs</option><option>Anti-taches</option><option>Anti-cernes</option><option>Raffermit</option><option>Resserre les pores</option><option>Protège du soleil</option><option value="__autre">Autre…</option></select><input id="pf-effets" maxlength="34" placeholder="ton effet" style="width:100%;box-sizing:border-box;margin-top:7px;display:none;"></div>
           <div class="field" style="margin:0;min-width:0;"><label>Prix en €</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="15" style="width:100%;box-sizing:border-box;"></div>
+        </div>
+      </div>
+
+      <!-- Effets : sélection multiple par pastilles + effet personnalisé -->
+      <div class="field" style="margin-top:12px;"><label>Effets <span style="color:var(--muted);font-weight:400;">· plusieurs possibles</span></label>
+        <div id="pf-effets-chips" class="pf-eff-chips"></div>
+        <div class="pf-eff-add">
+          <input id="pf-effets" maxlength="34" placeholder="Ajouter un effet…" style="flex:1;min-width:0;box-sizing:border-box;" onkeydown="pfEffKeydown(event)">
+          <button type="button" class="pf-eff-addbtn" onclick="pfEffAddCustom()">Ajouter</button>
         </div>
       </div>
 
@@ -4127,7 +4140,7 @@
     return rows ? '<div class="pb-section"><div class="pb-sec-t">Suivi</div>'+rows+'</div>' : '';
   }
 
-  async function openProductBook(id){
+  async function openProductBook(id, minimal){
     const p=(window.__allProducts||[]).find(x=>String(x.id)===String(id));
     if(!p) return;
     const el=document.getElementById('product-book'); if(!el) return;
@@ -4141,17 +4154,19 @@
     else visual='<div class="pb-halo"></div><div class="pb-emoji">'+(p.emoji||'🧴')+'</div>';
     const isFav=favSet().has(p.id);
     let chips='';
-    if(p.prix!=null&&p.prix!=='') chips+='<span class="pb-chip price">'+p.prix+'€</span>';
+    if(!minimal && p.prix!=null&&p.prix!=='') chips+='<span class="pb-chip price">'+p.prix+'€</span>';
     const desc=p.effets?('<div class="pb-desc">'+escapeHtml(p.effets)+'</div>'):'';
+    // En mode minimal (clic depuis l'aperçu d'un rituel) : catégorie, nom, marque, effets — rien d'autre.
     el.innerHTML='<div class="pb-wrap">'+
       '<button class="pb-close" onclick="closeProductBook()">‹</button>'+
-      '<button class="pb-fav'+(isFav?' on':'')+'" id="pb-fav-btn" onclick="pbToggleFav(\''+p.id+'\')">'+(isFav?'★':'☆')+'</button>'+
+      (minimal?'':'<button class="pb-fav'+(isFav?' on':'')+'" id="pb-fav-btn" onclick="pbToggleFav(\''+p.id+'\')">'+(isFav?'★':'☆')+'</button>')+
       '<div class="pb-visual" style="background:linear-gradient(150deg,'+g[0]+','+g[1]+');">'+visual+'</div>'+
       '<div class="pb-card"><div class="pb-cat">'+catL+'</div><div class="pb-name">'+name+'</div>'+
       (brand?'<div class="pb-brand">'+brand+'</div>':'')+desc+
-      (chips?'<div class="pb-chips">'+chips+'</div>':'')+
-      pbDates(p)+
-      '<div class="pb-actions"><button class="pb-edit" onclick="pbEdit(\''+p.id+'\')">Modifier</button><button class="pb-del" onclick="pbDelete(\''+p.id+'\')">Supprimer</button></div>'+
+      (minimal?'':(
+        (chips?'<div class="pb-chips">'+chips+'</div>':'')+
+        pbDates(p)+
+        '<div class="pb-actions"><button class="pb-edit" onclick="pbEdit(\''+p.id+'\')">Modifier</button><button class="pb-del" onclick="pbDelete(\''+p.id+'\')">Supprimer</button></div>'))+
       '</div></div>';
     el.scrollTop=0;
     el.classList.add('show');
@@ -5069,24 +5084,15 @@
     { key:'nettoyer', cats:['nettoyant','demaquillant'], emoji:'🫧', nom:'Nettoyer', moment:'both', optionnel:false,
       why:"On repart d'une peau nette, matin et soir — sans jamais la décaper. Le soir, si tu portes du SPF ou du maquillage, une huile ou un baume d'abord : l'eau seule ne les dissout pas.",
       lea:"Le matin, un nettoyage tout doux suffit. Le soir, masse l'huile à sec 30 secondes avant d'ajouter l'eau, puis enchaîne avec ton nettoyant 🌸" },
-    { key:'equilibrer', cats:['toner'], emoji:'💦', nom:'Équilibrer', moment:'both', optionnel:true,
-      why:"Une lotion rééquilibre la peau et la prépare à mieux absorber les soins qui suivent.",
-      lea:"Pas obligatoire — mais un vrai plus si ta peau tiraille juste après le nettoyage." },
-    { key:'traiter', cats:['serum','cible'], emoji:'🎯', nom:'Traiter tes besoins', moment:'both', optionnel:false,
-      why:"Le cœur du soin : les actifs qui répondent à <b>tes besoins spécifiques</b>.",
-      lea:"C'est ici que se joue le travail de fond. La régularité compte plus que la quantité 🌸" },
-    { key:'yeux', cats:['yeux'], emoji:'👁️', nom:'Contour des yeux', moment:'both', optionnel:true,
-      why:"La peau la plus fine du visage — elle mérite un soin doux et dédié.",
-      lea:"Applique du bout de l'annulaire, en tapotant : c'est le doigt le plus léger 👁️" },
+    { key:'traiter', cats:['toner','serum','cible','yeux','masque'], emoji:'🎯', nom:'Traiter', moment:'both', optionnel:false,
+      why:"Le cœur du soin : les actifs qui répondent à <b>tes besoins spécifiques</b> — lotions, sérums, soins ciblés, contour des yeux et masques.",
+      lea:"C'est ici que se joue le travail de fond. Une nouveauté à la fois, et la régularité compte plus que la quantité 🌸" },
     { key:'hydrater', cats:['creme'], emoji:'💧', nom:'Hydrater', moment:'both', optionnel:false,
       why:"On scelle l'hydratation et on renforce la barrière protectrice de la peau.",
       lea:"Même les peaux grasses ont besoin d'hydratation — sinon elles produisent plus de sébum pour compenser." },
     { key:'proteger', cats:['spf'], emoji:'☀️', nom:'Protéger', moment:'matin', optionnel:false,
-      why:"L'étape anti-âge n°1. Le matin, toujours — même quand il fait gris.",
-      lea:"Le SPF, c'est LE geste qui change tout sur le long terme. Renouvelle-le si tu restes longtemps dehors ☀️" },
-    { key:'semaine', cats:['masque'], emoji:'🧖‍♀️', nom:'Le rendez-vous de la semaine', moment:'hebdo', optionnel:true,
-      why:"Une fois par semaine : masque ou gommage, pour un coup d'éclat en profondeur.",
-      lea:"Une fois par semaine suffit largement — trop exfolier fragilise la barrière de la peau 🌿" }
+      why:"L'étape anti-âge n°1. Le matin, toujours — même quand il fait gris. Le soir, pas de soleil : on saute cette étape.",
+      lea:"Le SPF, c'est LE geste qui change tout sur le long terme. Renouvelle-le si tu restes longtemps dehors ☀️" }
   ];
 
   function pcMomentBadge(m){
@@ -5355,20 +5361,34 @@
   // ===== Carte de construction d'un rituel =====
   const CM_PHASES = {
     nettoyer:{emoji:'🫧',nom:'Nettoyer',cat:'nettoyant'},
-    equilibrer:{emoji:'💦',nom:'Équilibrer',cat:'toner'},
     traiter:{emoji:'🎯',nom:'Traiter',cat:'serum'},
-    yeux:{emoji:'👁️',nom:'Contour des yeux',cat:'yeux'},
     hydrater:{emoji:'💧',nom:'Hydrater',cat:'creme'},
     proteger:{emoji:'☀️',nom:'Protéger',cat:'spf'},
     masque:{emoji:'🧖‍♀️',nom:'Masque / soin',cat:'masque'}
   };
   const CM_SETS = {
     matin:['nettoyer','traiter','hydrater','proteger'],
-    soir:['nettoyer','equilibrer','traiter','yeux','hydrater'],
+    soir:['nettoyer','traiter','hydrater'],
     both:['nettoyer','traiter','hydrater','proteger'],
     hebdo:['nettoyer','masque','hydrater']
   };
-  const CM_CAT2PHASE = {demaquillant:'nettoyer',nettoyant:'nettoyer',toner:'equilibrer',serum:'traiter',cible:'traiter',yeux:'yeux',creme:'hydrater',spf:'proteger',masque:'masque'};
+  // Catégories rangées dans chaque station. « Traiter » regroupe lotion, sérum,
+  // soin ciblé, contour des yeux et masque. La station « masque » ne sert qu'à
+  // la scène peinte du rendez-vous hebdo.
+  const CM_PHASE_CATS = {
+    nettoyer:['demaquillant','nettoyant'],
+    traiter :['toner','serum','cible','yeux','masque'],
+    hydrater:['creme'],
+    proteger:['spf'],
+    masque  :['masque']
+  };
+  // Station d'accueil d'une catégorie pour un créneau donné (selon les stations
+  // réellement présentes). « autre » n'a pas de station fixe : dispo partout.
+  function cmCat2Phase(cat, moment){
+    const set = CM_SETS[moment] || CM_SETS.matin;
+    for(let i=0;i<set.length;i++){ const cats=CM_PHASE_CATS[set[i]]; if(cats && cats.indexOf(cat)>=0) return set[i]; }
+    return null;
+  }
   let chDraft=null;
 
   const CM_IMG_W=760, CM_IMG_H=1460;
@@ -5622,27 +5642,39 @@
   function cmTheme(m){ return CM_THEME[m]||CM_THEME.matin; }
 
   // ===== Effets produit : liste fermée + saisie libre =====
-  const PF_EFFETS=[["Hydrate", "Nourrit", "Apaise", "Répare", "Purifie", "Matifie", "Exfolie", "Démaquille", "Illumine", "Unifie le teint", "Anti-imperfections", "Anti-âge", "Anti-rougeurs", "Anti-taches", "Anti-cernes", "Raffermit", "Resserre les pores", "Protège du soleil"]];
-  function pfEffetsChange(){
-    const sel=document.getElementById('pf-effets-sel'), inp=document.getElementById('pf-effets');
-    if(!sel||!inp) return;
-    const other=(sel.value==='__autre');
-    inp.style.display=other?'block':'none';
-    if(other){ setTimeout(function(){ inp.focus(); },30); } else { inp.value=''; }
+  const PF_EFFETS=["Hydrate", "Nourrit", "Apaise", "Répare", "Purifie", "Matifie", "Exfolie", "Démaquille", "Illumine", "Unifie le teint", "Anti-imperfections", "Anti-âge", "Anti-rougeurs", "Anti-taches", "Anti-cernes", "Raffermit", "Resserre les pores", "Protège du soleil"];
+  // Effets d'un produit : sélection multiple par pastilles, stockée dans « effets »
+  // sous la forme « Hydrate · Apaise ». Un effet personnalisé peut être ajouté.
+  let pfEffSel=[];        // effets choisis, dans l'ordre
+  let pfEffKnown=[];      // liste affichée au dernier rendu (index -> libellé)
+  function pfEffKey(s){ return (s||'').trim().toLowerCase(); }
+  function pfEffetsRender(){
+    const wrap=document.getElementById('pf-effets-chips'); if(!wrap) return;
+    pfEffKnown=PF_EFFETS.slice();
+    pfEffSel.forEach(function(e){ if(!pfEffKnown.some(function(k){ return pfEffKey(k)===pfEffKey(e); })) pfEffKnown.push(e); });
+    wrap.innerHTML=pfEffKnown.map(function(e,i){
+      const on=pfEffSel.some(function(s){ return pfEffKey(s)===pfEffKey(e); });
+      return '<button type="button" class="rj-chip pf-eff'+(on?' selected':'')+'" onclick="pfEffToggle('+i+',this)">'+escapeHtml(e)+'</button>';
+    }).join('');
   }
-  function pfEffetsGet(){
-    const sel=document.getElementById('pf-effets-sel'), inp=document.getElementById('pf-effets');
-    if(!sel) return inp?inp.value.trim():'';
-    return sel.value==='__autre' ? (inp?inp.value.trim():'') : sel.value;
+  function pfEffToggle(i,el){
+    const e=pfEffKnown[i]; if(e==null) return;
+    const k=pfEffKey(e), idx=pfEffSel.findIndex(function(s){ return pfEffKey(s)===k; });
+    if(idx>=0){ pfEffSel.splice(idx,1); if(el) el.classList.remove('selected'); }
+    else { pfEffSel.push(e); if(el) el.classList.add('selected'); }
   }
+  function pfEffAddCustom(){
+    const inp=document.getElementById('pf-effets'); if(!inp) return;
+    const v=(inp.value||'').trim(); if(!v) return;
+    if(!pfEffSel.some(function(s){ return pfEffKey(s)===pfEffKey(v); })) pfEffSel.push(v);
+    inp.value=''; pfEffetsRender();
+  }
+  function pfEffKeydown(ev){ if(ev && ev.key==='Enter'){ ev.preventDefault(); pfEffAddCustom(); } }
+  function pfEffetsGet(){ return pfEffSel.join(' · '); }
   function pfEffetsSet(v){
-    const sel=document.getElementById('pf-effets-sel'), inp=document.getElementById('pf-effets');
-    if(!sel||!inp) return;
-    v=(v||'').trim();
-    if(!v){ sel.value=''; inp.value=''; inp.style.display='none'; return; }
-    const hit=PF_EFFETS.find(function(e){ return e.toLowerCase()===v.toLowerCase(); });
-    if(hit){ sel.value=hit; inp.value=''; inp.style.display='none'; }
-    else { sel.value='__autre'; inp.value=v; inp.style.display='block'; }
+    pfEffSel=[];
+    (v||'').split(/\s*·\s*|\s*,\s*/).forEach(function(part){ const t=part.trim(); if(t) pfEffSel.push(t); });
+    pfEffetsRender();
   }
   function cmAnchors(m){ return CM_ANCHORS[m]||CM_ANCHORS.matin; }
   function cmMomentMeta(m){
@@ -5673,7 +5705,7 @@
       '<div class="cm-tip-l"><span>🌸</span><div><b>Léa</b> — '+t.t+'</div></div></div>';
   }
 
-  function cmProductsForPhase(key){ return (window.__cmProds||[]).filter(function(p){ return CM_CAT2PHASE[p.categorie]===key; }); }
+  function cmProductsForPhase(key){ const cats=CM_PHASE_CATS[key]||[]; return (window.__cmProds||[]).filter(function(p){ return cats.indexOf(p.categorie)>=0 || p.categorie==='autre'; }); }
 
   async function openRituelChemin(id, presetMoment, mode){
    try{
@@ -5681,7 +5713,7 @@
     if(!el) throw new Error('conteneur #rituel-chemin absent');
     if(!currentUser) throw new Error('pas connecte (currentUser null)');
     let prods=[];
-    try{ const r=await sb.from('products').select('id,nom,emoji,categorie,photo_path').eq('user_id',currentUser.id); prods=r.data||[]; }catch(e){}
+    try{ const r=await sb.from('products').select('id,nom,emoji,categorie,photo_path,effets,prix').eq('user_id',currentUser.id); prods=r.data||[]; }catch(e){}
     window.__cmPhotos={};
     for(const _p of prods){ if(_p.photo_path){ try{ const _u=await signedPhoto(_p.photo_path); if(_u) window.__cmPhotos[_p.id]=_u; }catch(e){} } }
     window.__cmProds=prods; window.__allProducts=prods;
@@ -5692,7 +5724,7 @@
     const set=CM_SETS[moment]||CM_SETS.matin;
     const filled={};
     if(r && Array.isArray(r.produits)){
-      r.produits.forEach(function(pid){ const p=pmap[pid]; if(!p) return; const ph=CM_CAT2PHASE[p.categorie]; if(ph && set.indexOf(ph)>=0 && !filled[ph]) filled[ph]=pid; });
+      r.produits.forEach(function(pid){ const p=pmap[pid]; if(!p) return; let ph=cmCat2Phase(p.categorie,moment); if(!ph || filled[ph]){ ph=set.find(function(k){ return !filled[k]; }); } if(ph && set.indexOf(ph)>=0 && !filled[ph]) filled[ph]=pid; });
     }
     try{ (new Image()).src=cmTheme(moment).img; }catch(e){}
     chDraft={ id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:filled, mode:(mode||(r?'view':'edit')) };
@@ -5716,10 +5748,10 @@
         const nm=(p.nom||'').split(' · ')[0];
         const url=(window.__cmPhotos||{})[pid];
         const medal=url?'<img src="'+url+'" alt="">':(p.emoji||'🧴');
-        // En lecture, la carte est un aperçu : on montre le produit rangé,
-        // et rien ne se passe au tap. C'est en édition qu'on agit.
-        const act='data-i="'+idx+'"'+(isEdit?' onclick="cmOpenCarousel(\''+key+'\','+idx+')"':'');
-        const lbl=isEdit?ph.nom:escapeHtml(nm);
+        // La station porte toujours son nom (Nettoyer, Traiter…). En édition, le
+        // tap ouvre le carrousel ; en aperçu, il ouvre la fiche du produit rangé.
+        const act='data-i="'+idx+'"'+(isEdit?' onclick="cmOpenCarousel(\''+key+'\','+idx+')"':' onclick="cmShowProduct(\''+pid+'\')"');
+        const lbl=ph.nom;
         nodes+=(paint?cmPaintHtml(key,(isEdit?'':'cm-fige'),medal,lbl,act):cmNodeHtml(key,(isEdit?'':'cm-fige'),medal,lbl,'',act));
       } else if(isEdit){
         nodes+=(paint?cmPaintHtml(key,'cm-empty','+',ph.nom,'data-i="'+idx+'" onclick="cmOpenCarousel(\''+key+'\','+idx+')"')
@@ -5878,7 +5910,7 @@
   function vyTList(def,poly,items){
     let prev=0.06;
     return items.map(function(p){
-      const t=vyTPaint(def,poly,CM_CAT2PHASE[p.categorie]);
+      const t=vyTPaint(def,poly,cmCat2Phase(p.categorie, vyState?vyState.moment:'matin'));
       const v=Math.max(t==null?prev+0.12:t, prev+0.05);
       prev=v; return Math.min(v,0.94);
     });
@@ -5929,7 +5961,7 @@
       const nm=(p.nom||'').split(' \u00b7 ');
       const url=(window.__cmPhotos||{})[p.id];
       const medal=url?'<img src="'+url+'" alt="">':(p.emoji||'\ud83e\uddf4');
-      const key=CM_CAT2PHASE[p.categorie]||'traiter';
+      const key=cmCat2Phase(p.categorie, m)||(m==='hebdo'?'masque':'traiter');
       const cls=(isDone?'vy-done ':'')+(i===nextIdx?'vy-next':'');
       const at='data-t="'+vyT(i,n)+'" data-pid="'+p.id+'" onclick="vyTap(\''+p.id+'\')"';
       const ck=isDone?'<span class="vy-check">\u2713</span>':'';
@@ -6215,6 +6247,9 @@
     closeRituelChemin();
   }
   function closeRituelChemin(){ const el=document.getElementById('rituel-chemin'); if(el) el.classList.remove('show'); document.body.style.overflow=''; const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show'); }
+  // Depuis l'aperçu d'un rituel : ouvrir la fiche produit en mode minimal
+  // (catégorie, nom, marque, effets). __allProducts est déjà chargé (avec effets).
+  function cmShowProduct(pid){ if(pid) openProductBook(pid, true); }
 
   async function loadRituels(){
     renderRituelCout();
