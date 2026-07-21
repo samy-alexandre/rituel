@@ -1264,9 +1264,12 @@
   .cm-head{position:absolute;left:0;right:0;top:18px;z-index:8;text-align:center;padding:0 62px;pointer-events:none;}
   .cm-head .cm-title,.cm-head .cm-count,.cm-head .cm-validate-top{pointer-events:auto;}
   .cm-title{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1.15;color:var(--cm-ink);text-shadow:0 1px 14px var(--cm-glow);cursor:pointer;}
-  .cm-validate-top{display:inline-block;margin-top:10px;background:linear-gradient(135deg,var(--accent),#B0492B);color:#FFFDFA;
-    font-family:var(--sans);font-size:13px;font-weight:700;border:none;border-radius:99px;padding:10px 20px;
-    box-shadow:0 7px 20px rgba(201,90,63,0.45);cursor:pointer;transition:transform .15s ease;}
+  .cm-validate-top{display:inline-block;margin-top:9px;background:rgba(255,253,250,0.90);color:#8A3F27;
+    font-family:var(--sans);font-size:12px;font-weight:700;border:1px solid rgba(201,90,63,0.34);
+    border-radius:99px;padding:7px 16px;box-shadow:0 3px 12px rgba(46,33,28,0.14);
+    cursor:pointer;transition:transform .15s ease,background .2s ease;}
+  .cm-validate-top.cm-pret{background:linear-gradient(135deg,var(--accent),#B0492B);color:#FFFDFA;
+    border-color:transparent;box-shadow:0 7px 20px rgba(201,90,63,0.42);}
   .cm-validate-top:active{transform:scale(0.96);}
   .cm-count{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--cm-ink);background:rgba(255,253,250,0.34);border:1px solid rgba(255,253,250,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:3px 11px;border-radius:99px;}
   .cm-title-edit{font-size:11px;margin-top:3px;color:var(--cm-ink);opacity:.8;cursor:pointer;}
@@ -1277,6 +1280,8 @@
 
   /* Clairière : les bâtiments sont peints dans le décor, on ne pose que la zone sensible. */
   .cm-node.cm-paint .cm-medal{position:absolute;right:-8px;bottom:-8px;}
+  @keyframes cmPose{0%{transform:scale(1)}38%{transform:scale(1.16)}100%{transform:scale(1)}}
+  .cm-node.cm-pose .cm-medal{animation:cmPose .52s cubic-bezier(.3,1.4,.5,1);}
   .cm-node.cm-paint::before{content:"";position:absolute;inset:-6px;border-radius:16px;
     background:radial-gradient(50% 50% at 50% 60%,rgba(255,240,200,0.30),rgba(255,240,200,0) 72%);
     opacity:0;transition:opacity .3s ease;}
@@ -1306,12 +1311,12 @@
   .cm-node.cm-empty .cm-medal{background:rgba(255,253,250,0.86);border-style:dashed;color:var(--accent);}
   .cm-tag{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:3px;}
   .cm-node.tag-down .cm-tag{bottom:auto;top:calc(100% + 5px);}
-  .cm-lbl{position:relative;font-family:var(--serif);font-size:13px;font-weight:600;color:#5B3B22;
+  .cm-lbl{position:relative;font-family:var(--serif);font-size:11.5px;font-weight:600;color:#5B3B22;
     background:linear-gradient(180deg,#FCF3E0 0%,#F5E7CA 55%,#EEDCB6 100%);
-    border:1px solid #C4A175;border-radius:3px;padding:3px 14px;display:inline-block;
-    box-shadow:0 3px 7px rgba(46,33,28,0.26),inset 0 1px 0 rgba(255,255,255,0.7);
-    max-width:136px;overflow:visible;white-space:nowrap;letter-spacing:.01em;}
-  .cm-lbl::before,.cm-lbl::after{content:"";position:absolute;top:-2px;bottom:-2px;width:6px;
+    border:1px solid rgba(196,161,117,0.75);border-radius:3px;padding:2px 11px;display:inline-block;opacity:0.94;
+    box-shadow:0 2px 5px rgba(46,33,28,0.20),inset 0 1px 0 rgba(255,255,255,0.7);
+    max-width:118px;overflow:visible;white-space:nowrap;letter-spacing:.01em;}
+  .cm-lbl::before,.cm-lbl::after{content:"";position:absolute;top:-1.5px;bottom:-1.5px;width:5px;
     background:linear-gradient(180deg,#E9D5AC,#D2B685);border:1px solid #B08F63;border-radius:2px;
     box-shadow:0 1px 3px rgba(46,33,28,0.22);}
   .cm-lbl::before{left:-4px;}
@@ -1336,11 +1341,29 @@
   .cm-tip-q{font-size:11.5px;color:#6B4A2A;line-height:1.5;}
   .cm-tip-l{display:flex;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(176,143,99,0.55);font-size:11.5px;color:#5B3B22;line-height:1.5;}
   .cm-tip-l span{flex-shrink:0;}
-  .cm-pop{position:absolute;z-index:20;width:272px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 44px rgba(46,33,28,0.28);padding:12px 12px 14px;opacity:0;transform:scale(0.9);transform-origin:top center;transition:opacity .16s ease,transform .16s ease;pointer-events:none;}
-  .cm-pop.show{opacity:1;transform:scale(1);pointer-events:auto;}
-  .cm-pop.up{transform-origin:bottom center;}
+  .cm-pop-grip{width:38px;height:4px;border-radius:99px;background:var(--line);
+    margin:0 auto 10px;flex-shrink:0;}
+  .cm-sheet-img{position:relative;height:132px;border-radius:16px 16px 0 0;overflow:hidden;
+    background-repeat:no-repeat;background-color:#EDE4D6;margin:-14px -14px 0;}
+  .cm-sheet-img::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(rgba(46,33,28,0) 42%,rgba(46,33,28,0.62) 100%);}
+  .cm-sheet-t{position:absolute;left:16px;right:52px;bottom:11px;z-index:2;
+    font-family:var(--serif);font-size:19px;font-weight:600;color:#FFFDFA;
+    text-shadow:0 2px 10px rgba(46,33,28,0.55);}
+  .cm-pop{position:fixed;z-index:60;left:50%;bottom:0;width:min(440px,100%);
+    transform:translate(-50%,100%);background:var(--surface);
+    border-radius:22px 22px 0 0;box-shadow:0 -14px 44px rgba(46,33,28,0.30);
+    padding:14px 14px calc(18px + env(safe-area-inset-bottom));
+    max-height:82dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    transition:transform .34s cubic-bezier(.22,.9,.3,1),opacity .2s ease;
+    opacity:0;pointer-events:none;}
+  .cm-pop.show{transform:translate(-50%,0);opacity:1;pointer-events:auto;}
+  .cm-pop-veil{position:fixed;inset:0;z-index:59;background:rgba(46,33,28,0.34);
+    opacity:0;pointer-events:none;transition:opacity .3s ease;}
+  .cm-pop-veil.show{opacity:1;pointer-events:auto;}
+
   .cm-pop.up .cm-pop-arrow{top:auto;bottom:-7px;border-left:none;border-top:none;border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
-  .cm-pop-arrow{position:absolute;top:-7px;left:50%;transform:translateX(-50%) rotate(45deg);width:14px;height:14px;background:var(--surface);border-left:1px solid var(--line);border-top:1px solid var(--line);}
+
   .cm-pop-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;padding:0 2px;}
   .cm-pop-t{font-size:12px;font-weight:700;color:var(--ink);}
   .cm-pop-x{background:none;border:none;font-size:17px;color:var(--muted);cursor:pointer;line-height:1;}
@@ -5605,7 +5628,7 @@
     const isEdit=(chDraft.mode==='edit');
 
     const paint=!!CM_PAINT[moment];
-    let nodes = paint ? cmPaintHtml('depart','cm-muted','','Départ','') : cmNodeHtml('depart','cm-muted','','Départ','','data-center="1"');
+    let nodes = paint ? '' : cmNodeHtml('depart','cm-muted','','Départ','','data-center="1"');
     set.forEach(function(key,i){
       const ph=CM_PHASES[key], idx=i+1, pid=chDraft.filled[key], p=pid?pmap[pid]:null;
       if(p){
@@ -5622,7 +5645,7 @@
                      :cmNodeHtml(key,'cm-empty',ph.emoji,ph.nom,'','data-i="'+idx+'" onclick="cmInfo(\''+key+'\','+idx+')"'));
       }
     });
-    nodes+=(paint?cmPaintHtml('arrivee','cm-muted','','Objectif',''):cmNodeHtml('arrivee','cm-muted','','Objectif',''));
+    if(!paint) nodes+=cmNodeHtml('arrivee','cm-muted','','Objectif','');
 
     const title=escapeHtml(chDraft.nom||meta.ph);
     const nOk=set.filter(function(k){ return chDraft.filled[k]; }).length;
@@ -5632,7 +5655,7 @@
       : '<button class="cm-tool" title="Modifier" onclick="cmSetMode(\'edit\')">🔨</button>';
     const head=isEdit
       ? '<div class="cm-head"><div class="cm-title" onclick="cmRename()">'+title+' ✎</div>'+count+
-        '<button class="cm-validate-top" onclick="cmValidate()">✨ J\'ai fini mon rituel</button></div>'
+        '<button class="cm-validate-top'+(nOk>=set.length?' cm-pret':'')+'" onclick="cmValidate()">'+(nOk>=set.length?'✨ ':'')+'J\'ai fini mon rituel</button></div>'
       : '<div class="cm-head"><div class="cm-title">'+title+'</div>'+count+'</div>';
     const foot='';
 
@@ -5933,6 +5956,24 @@
   window.addEventListener('orientationchange', function(){ setTimeout(cmLayout,180); });
 
   function cmInfo(key,idx){ cmOpenCarousel(key,idx,true); }
+  // En-tête de la fiche : un gros plan du lieu, découpé dans la scène peinte
+  // grâce aux coordonnées du calibrage. Aucune image supplémentaire à charger.
+  function cmSheetHead(key,ph){
+    const def=chDraft&&CM_PAINT[chDraft.moment];
+    if(!def||!def.pos[key]) return '';
+    return '<div class="cm-sheet-img" id="cm-sheet-img"><div class="cm-sheet-t">'+ph.nom+'</div></div>';
+  }
+  function cmSheetZoom(pop,key){
+    const el=pop.querySelector('#cm-sheet-img'); if(!el) return;
+    const def=CM_PAINT[chDraft.moment], st=def.pos[key];
+    const W=el.offsetWidth||300, H=el.offsetHeight||132;
+    const largeurVue=Math.max(st.h*st.r*2.2, 22);          // largeur du cadrage, en % de l'image
+    const iw=W/(largeurVue/100), ih=iw*def.h/def.w;
+    el.style.backgroundImage="url('"+def.img+"')";
+    el.style.backgroundSize=Math.round(iw)+'px '+Math.round(ih)+'px';
+    el.style.backgroundPosition=Math.round(W/2-st.x/100*iw)+'px '+Math.round(H/2-(st.y-st.h*0.52)/100*ih)+'px';
+  }
+
   function cmOpenCarousel(key,idx,infoOnly){
     const scroll=document.getElementById('rituel-chemin');
     const scene=scroll.querySelector('.cm-scene'); if(!scene) return;
@@ -5944,24 +5985,31 @@
     else { cards='<div class="cm-pop-none">Aucun produit dans cette catégorie.<br>Ajoute-en un depuis l\'onglet Produits.</div>'; }
     const removeBtn = (cur && !infoOnly) ? '<button class="cm-pop-remove" onclick="cmClear(\''+key+'\')">Retirer de cette étape</button>' : '';
     const pop=document.getElementById('cm-pop');
-    pop.innerHTML='<div class="cm-pop-arrow"></div><div class="cm-pop-h"><div class="cm-pop-t">'+ph.emoji+'  '+ph.nom+'</div><button class="cm-pop-x" onclick="cmClosePop()">×</button></div>'+cmTipHtml(key)+(cards?'<div class="cm-car">'+cards+'</div>':'')+removeBtn+'<button class="cm-pop-skip" onclick="cmClosePop()">Fermer</button>';
+    const head=cmSheetHead(key,ph);
+    pop.innerHTML='<div class="cm-pop-grip"></div>'+head+
+      (head?'':'<div class="cm-pop-h"><div class="cm-pop-t">'+ph.emoji+'  '+ph.nom+'</div></div>')+
+      '<button class="cm-pop-x" onclick="cmClosePop()">×</button>'+
+      cmTipHtml(key)+(cards?'<div class="cm-car">'+cards+'</div>':'')+removeBtn+
+      '<button class="cm-pop-skip" onclick="cmClosePop()">Fermer</button>';
 
-    const nEl=scene.querySelector('.cm-node[data-i="'+idx+'"]');
-    const or_=scroll.getBoundingClientRect();
-    const nr=nEl?nEl.getBoundingClientRect():or_;
-    const cx=(nr.left-or_.left)+nr.width/2, cy=(nr.top-or_.top)+nr.height/2;
-    pop.classList.remove('up');
-    pop.style.visibility='hidden'; pop.style.left='0px'; pop.style.top='0px';
-    const ph2=pop.offsetHeight;
-    let top=cy+nr.height/2+12;
-    if(top+ph2 > or_.height-12){ const up=cy-nr.height/2-12-ph2; if(up>=12){ top=up; pop.classList.add('up'); } else { top=Math.max(12,or_.height-ph2-12); } }
-    let px=cx-136; px=Math.max(10,Math.min(px,or_.width-282));
-    pop.style.left=px+'px'; pop.style.top=top+'px'; pop.style.visibility='';
-    pop.querySelector('.cm-pop-arrow').style.left=Math.max(14,Math.min(cx-px,258))+'px';
-    requestAnimationFrame(function(){ pop.classList.add('show'); });
+    let veil=document.getElementById('cm-veil');
+    if(!veil){ veil=document.createElement('div'); veil.id='cm-veil'; veil.className='cm-pop-veil';
+      veil.onclick=cmClosePop; scroll.appendChild(veil); }
+    cmSheetZoom(pop,key);
+    requestAnimationFrame(function(){ pop.classList.add('show'); const v=document.getElementById('cm-veil'); if(v) v.classList.add('show'); });
   }
-  function cmClosePop(){ const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show'); }
-  function cmPick(key,pid){ chDraft.filled[key]=pid; cmClosePop(); cmRender(); }
+  function cmClosePop(){ const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show');
+    const v=document.getElementById('cm-veil'); if(v) v.classList.remove('show'); }
+  function cmPick(key,pid){
+    chDraft.filled[key]=pid; cmClosePop(); cmRender();
+    // La station se réveille : brève pulsation du médaillon.
+    requestAnimationFrame(function(){
+      const nd=document.querySelector('#rituel-chemin .cm-node[data-bld="'+key+'"]');
+      if(!nd) return;
+      nd.classList.add('cm-pose');
+      setTimeout(function(){ nd.classList.remove('cm-pose'); },560);
+    });
+  }
   function cmClear(key){ delete chDraft.filled[key]; cmClosePop(); cmRender(); }
   function cmSetMode(m){ if(!chDraft) return;
     if(m==='edit'){ chDraft._bak={ nom:chDraft.nom, filled:Object.assign({}, chDraft.filled) }; }
