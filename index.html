@@ -5298,9 +5298,9 @@
     masque:{emoji:'🧖‍♀️',nom:'Masque / soin',cat:'masque'}
   };
   const CM_SETS = {
-    matin:['nettoyer','equilibrer','traiter','hydrater','proteger'],
+    matin:[[37.63,95.45],[43.04,76],[66.2,63],[31.38,50],[41.19,37],[57.25,20]],
     soir:['nettoyer','equilibrer','traiter','yeux','hydrater'],
-    both:['nettoyer','equilibrer','traiter','hydrater','proteger'],
+    both:['nettoyer','traiter','hydrater','proteger'],
     hebdo:['nettoyer','masque','hydrater']
   };
   const CM_CAT2PHASE = {demaquillant:'nettoyer',nettoyant:'nettoyer',toner:'equilibrer',serum:'traiter',cible:'traiter',yeux:'yeux',creme:'hydrater',spf:'proteger',masque:'masque'};
@@ -5363,9 +5363,9 @@
   // Place tous les bâtiments : à côté du chemin, sans se marcher dessus, sans sortir du cadre.
   // Cadrage de la clairière : on couvre la scène, et on zoome juste ce qu'il faut
   // pour que le bâtiment le plus haut passe sous le titre.
-  function cmFitClairiere(scene, tpMin){
+  function cmFitPaint(scene, def, tpMin){
     const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return null;
-    const CW=CM_CLAIRIERE.w, CH=CM_CLAIRIERE.h, yT=CM_CLAIRIERE.top/100;
+    const CW=def.w, CH=def.h, yT=def.top/100;
     // Une clairière est un lieu : mieux vaut un peu de vide en bas, absorbé par le fondu,
     // que rogner les bâtiments latéraux. On ne perd jamais plus de 12% de la largeur.
     const k=Math.min(Math.max(sw/CW, sh/CH), 1.14*sw/CW);
@@ -5381,16 +5381,17 @@
     return {rw:rw, rh:rh, offX:(sw-rw)/2, offY:offY, sw:sw, sh:sh};
   }
 
-  function cmPlaceClairiere(scene, f, topLimit){
-    scene.style.backgroundImage="url('img/clairiere.jpg')";
+  function cmPlacePaint(scene, def, f, topLimit){
+    scene.style.backgroundImage="url('"+def.img+"')";
     scene.style.backgroundSize=f.rw+'px '+f.rh+'px';
     scene.style.backgroundPosition=f.offX+'px '+f.offY+'px';
     const nodes=scene.querySelectorAll('.cm-node');
     for(let i=0;i<nodes.length;i++){
-      const nd=nodes[i], st=CM_CLAIRIERE.stations[i]; if(!st) continue;
-      const h=st.h/100*f.rh, w=h*st.r;
+      const nd=nodes[i], st=def.pos[nd.dataset.bld];
+      if(!st){ nd.style.display='none'; continue; }
+      const h=st.h/100*f.rh, w=Math.max(h*st.r, 54);
       const cx=f.offX+st.x/100*f.rw, by=f.offY+st.y/100*f.rh;
-      nd.style.width=Math.round(w)+'px'; nd.style.height=Math.round(h)+'px';
+      nd.style.display=''; nd.style.width=Math.round(w)+'px'; nd.style.height=Math.round(Math.max(h,42))+'px';
       nd.style.left=Math.round(cx)+'px'; nd.style.top=Math.round(by)+'px';
       nd.style.zIndex=6+Math.round((by/Math.max(1,f.sh))*60);
       nd.classList.toggle('tag-down', (by-h-34)<topLimit);
@@ -5404,6 +5405,7 @@
       }
     }
   }
+
 
   function cmPlaceNodes(scene,f,pts,poly,topLim){
     const rib=cmRibbon(f,poly), sw=f.sw, placed=[], links=[];
@@ -5602,8 +5604,8 @@
     const pmap={}; (window.__cmProds||[]).forEach(function(p){ pmap[p.id]=p; });
     const isEdit=(chDraft.mode==='edit');
 
-    const paint=(moment==='hebdo');
-    let nodes = paint ? '' : cmNodeHtml('depart','cm-muted','','Départ','','data-center="1"');
+    const paint=!!CM_PAINT[moment];
+    let nodes = paint ? cmPaintHtml('depart','cm-muted','','Départ','') : cmNodeHtml('depart','cm-muted','','Départ','','data-center="1"');
     set.forEach(function(key,i){
       const ph=CM_PHASES[key], idx=i+1, pid=chDraft.filled[key], p=pid?pmap[pid]:null;
       if(p){
@@ -5620,7 +5622,7 @@
                      :cmNodeHtml(key,'cm-empty',ph.emoji,ph.nom,'','data-i="'+idx+'" onclick="cmInfo(\''+key+'\','+idx+')"'));
       }
     });
-    if(!paint) nodes+=cmNodeHtml('arrivee','cm-muted','','Objectif','');
+    nodes+=(paint?cmPaintHtml('arrivee','cm-muted','','Objectif',''):cmNodeHtml('arrivee','cm-muted','','Objectif',''));
 
     const title=escapeHtml(chDraft.nom||meta.ph);
     const nOk=set.filter(function(k){ return chDraft.filled[k]; }).length;
@@ -5683,8 +5685,9 @@
     const moment=chDraft.moment;
     const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return;
     const tl=cmHeadBottom(scene);
-    if(moment==='hebdo'){
-      const fc=cmFitClairiere(scene, tl+46); if(fc) cmPlaceClairiere(scene, fc, tl);
+    const def=CM_PAINT[moment];
+    if(def){
+      const fp=cmFitPaint(scene, def, tl+58); if(fp) cmPlacePaint(scene, def, fp, tl);
       return;
     }
     const A=cmAnchors(moment);
@@ -5696,16 +5699,25 @@
   }
 
   // ===================== VOYAGE DU JOUR =====================
-  // Clairière de l'hebdo : pas de parcours, un lieu. Positions relevées au calibrage,
-  // base du bâtiment en % de l'image, hauteur en % aussi. r = largeur / hauteur.
-  const CM_CLAIRIERE = {
-    w:760, h:1140, top:27.41,
-    stations:[
-      {key:'nettoyer', x:14.57, y:58.57, h:13.29, r:1.15},
-      {key:'masque',   x:79.69, y:54.53, h:17.76, r:1.31},
-      {key:'hydrater', x:34.34, y:45.59, h:18.18, r:1.18}
-    ]
+  // Scènes peintes : les bâtiments font partie du décor, le code ne pose que
+  // les zones sensibles. Positions relevées au calibrage, en % de l'image.
+  // x = centre, y = base au sol, h = hauteur, r = largeur / hauteur.
+  const CM_PAINT = {
+    matin:{ img:'img/jardin-matin.jpg', w:760, h:1350, top:25.45, pos:{
+      depart  :{x:45.35, y:95.49, h:21.78, r:1.30},
+      nettoyer:{x:23.82, y:66.23, h:13.85, r:1.50},
+      traiter :{x:71.82, y:65.03, h:18.31, r:1.40},
+      hydrater:{x:31.84, y:38.52, h:11.97, r:1.50},
+      proteger:{x:69.96, y:40.53, h:12.87, r:1.60},
+      arrivee :{x:56.14, y:28.62, h:3.17,  r:1.60}
+    }},
+    hebdo:{ img:'img/clairiere.jpg', w:760, h:1140, top:27.41, pos:{
+      nettoyer:{x:14.57, y:58.57, h:13.29, r:1.15},
+      masque  :{x:79.69, y:54.53, h:17.76, r:1.31},
+      hydrater:{x:34.34, y:45.59, h:18.18, r:1.18}
+    }}
   };
+
 
   const VY_POLY = {"matin":[[38.5,95.5],[39.3,93.2],[37.4,90.9],[37.9,88.6],[40.6,86.3],[39.1,84.0],[36.8,81.7],[40.6,79.5],[44.5,77.2],[45.2,74.9],[49.2,72.6],[54.2,70.3],[55.9,68.0],[57.4,65.7],[60.3,63.4],[60.7,61.2],[58.6,58.9],[52.7,56.6],[42.1,54.3],[34.2,52.0],[35.8,49.7],[46.8,47.4],[59.9,45.1],[65.2,42.9],[59.5,40.6],[47.7,38.3],[40.9,36.0],[45.8,33.7],[54.5,31.4],[52.9,29.1],[47.0,26.9],[48.5,24.6],[52.5,22.3],[57.2,20.0]],"soir":[[26.7,95.5],[31.4,93.2],[31.5,90.9],[31.4,88.6],[33.2,86.3],[35.1,84.0],[38.5,81.7],[47.6,79.5],[57.1,77.2],[62.0,74.9],[65.5,72.6],[65.7,70.3],[60.1,68.0],[52.1,65.7],[44.1,63.4],[36.4,61.2],[32.7,58.9],[40.2,56.6],[54.8,54.3],[64.2,52.0],[62.5,49.7],[51.4,47.4],[41.4,45.1],[42.4,42.9],[51.4,40.6],[54.5,38.3],[48.2,36.0],[46.7,33.7],[51.5,31.4],[53.4,29.1],[53.8,26.9],[54.7,24.6],[52.7,22.3],[45.9,20.0]],"hebdo":[[59.2,95.5],[56.9,93.2],[52.4,90.9],[50.4,88.6],[47.0,86.3],[41.4,84.0],[39.2,81.7],[39.3,79.5],[40.7,77.2],[45.4,74.9],[52.4,72.6],[59.0,70.3],[64.4,68.0],[68.3,65.7],[69.0,63.4],[66.8,61.2],[64.1,58.9],[59.9,56.6],[50.3,54.3],[39.1,52.0],[33.0,49.7],[33.6,47.4],[38.7,45.1],[47.7,42.9],[60.2,40.6],[70.5,38.3],[69.8,36.0],[57.7,33.7],[43.4,31.4],[38.7,29.1],[45.9,26.9],[52.8,24.6],[53.6,22.3],[56.1,20.0]]};
 
