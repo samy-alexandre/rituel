@@ -1264,6 +1264,24 @@
   .cm-head{position:absolute;left:0;right:0;top:18px;z-index:8;text-align:center;padding:0 62px;pointer-events:none;}
   .cm-head .cm-title,.cm-head .cm-count,.cm-head .cm-validate-top{pointer-events:auto;}
   .cm-title{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1.15;color:var(--cm-ink);text-shadow:0 1px 14px var(--cm-glow);cursor:pointer;}
+  .cm-modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
+    padding:22px;background:rgba(46,33,28,0.44);opacity:0;pointer-events:none;transition:opacity .22s ease;}
+  .cm-modal.show{opacity:1;pointer-events:auto;}
+  .cm-modal-box{width:100%;max-width:330px;background:var(--surface);border:1px solid var(--line);
+    border-radius:20px;padding:20px 18px 16px;box-shadow:0 22px 60px rgba(46,33,28,0.34);
+    transform:scale(0.93) translateY(8px);transition:transform .26s cubic-bezier(.2,1,.3,1);}
+  .cm-modal.show .cm-modal-box{transform:scale(1) translateY(0);}
+  .cm-modal-t{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);}
+  .cm-modal-s{font-family:var(--sans);font-size:13px;color:var(--muted);line-height:1.5;margin-top:6px;}
+  .cm-modal-in{width:100%;box-sizing:border-box;font-family:var(--sans);font-size:15px;color:var(--ink);
+    border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--bg);margin-top:14px;}
+  .cm-modal-in:focus{outline:none;border-color:var(--accent);}
+  .cm-modal-b{display:flex;gap:9px;margin-top:16px;}
+  .cm-modal-b button{flex:1;font-family:var(--sans);font-size:14px;font-weight:600;border-radius:99px;
+    padding:12px 10px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);}
+  .cm-modal-b button:active{transform:scale(0.97);}
+  .cm-modal-b .go{background:var(--accent);border-color:var(--accent);color:#FFFDFA;}
+  .cm-modal-b .danger{background:#A93B25;border-color:#A93B25;color:#FFFDFA;}
   .cm-build{position:absolute;right:8px;bottom:6px;z-index:12;font-family:var(--sans);
     font-size:9px;letter-spacing:.08em;color:var(--cm-ink);opacity:0.34;pointer-events:none;}
   .cm-hint{display:block;margin-top:6px;font-family:var(--sans);font-size:11.5px;
@@ -1323,14 +1341,14 @@
   .cm-node.tag-down .cm-tag{bottom:auto;top:calc(100% + 5px);}
   .cm-lbl{position:relative;font-family:var(--serif);font-size:11.5px;font-weight:600;color:#5B3B22;
     background:linear-gradient(180deg,#FCF3E0 0%,#F5E7CA 55%,#EEDCB6 100%);
-    border:1px solid rgba(196,161,117,0.75);border-radius:3px;padding:2px 11px;display:inline-block;opacity:0.94;
+    border:1px solid rgba(196,161,117,0.75);border-radius:3px;padding:2px 14px;display:inline-block;opacity:0.94;
     box-shadow:0 2px 5px rgba(46,33,28,0.20),inset 0 1px 0 rgba(255,255,255,0.7);
-    max-width:118px;overflow:visible;white-space:nowrap;letter-spacing:.01em;}
+    max-width:min(146px,44vw);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.01em;}
   .cm-lbl::before,.cm-lbl::after{content:"";position:absolute;top:-1.5px;bottom:-1.5px;width:5px;
     background:linear-gradient(180deg,#E9D5AC,#D2B685);border:1px solid #B08F63;border-radius:2px;
     box-shadow:0 1px 3px rgba(46,33,28,0.22);}
-  .cm-lbl::before{left:-4px;}
-  .cm-lbl::after{right:-4px;}
+  .cm-lbl::before{left:1px;}
+  .cm-lbl::after{right:1px;}
   .cm-scene.cm-soir .cm-lbl{color:#4A2F1B;}
   .cm-sub{font-size:10px;color:var(--ink-soft);margin-top:2px;background:rgba(255,253,250,0.88);padding:1px 8px;border-radius:99px;display:inline-block;max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;}
   .cm-scene.cm-compact .cm-lbl{font-size:11.5px;}
@@ -2865,7 +2883,7 @@
 
   async function deleteAccount(){
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
-    if(!confirm('Supprimer ton compte ?\n\nTes photos, ton journal, ton profil ET ton compte seront définitivement effacés. Cette action est irréversible.')) return;
+    if(!await cmAsk({titre:'Supprimer ton compte ?',texte:'Tes photos, ton journal, ton profil et ton compte seront définitivement effacés. Cette action est irréversible.',ok:'Supprimer mon compte',annuler:'Annuler',danger:true})) return;
     showToast('Suppression en cours…');
     try{
       const { data:{ session } } = await sb.auth.getSession();
@@ -4142,7 +4160,7 @@
   function closeProductBook(){ const el=document.getElementById('product-book'); if(el) el.classList.remove('show'); document.body.style.overflow=''; }
   function pbEdit(id){ closeProductBook(); setTimeout(function(){ openProductForm(id); }, 260); }
   function pbToggleFav(id){ const s=favSet(); if(s.has(id)) s.delete(id); else s.add(id); favSave(s); const b=document.getElementById('pb-fav-btn'); if(b){ b.textContent=s.has(id)?'★':'☆'; b.classList.toggle('on', s.has(id)); } }
-  async function pbDelete(id){ if(!confirm('Supprimer ce produit ?')) return; try{ await sb.from('products').delete().eq('id', id); }catch(e){} closeProductBook(); if(typeof showToast==='function') showToast('Produit supprimé'); loadProducts(); }
+  async function pbDelete(id){ if(!await cmAsk({titre:'Supprimer ce produit ?',texte:'Il sera retiré de ton carnet et de tous tes rituels.',ok:'Supprimer',annuler:'Annuler',danger:true})) return; try{ await sb.from('products').delete().eq('id', id); }catch(e){} closeProductBook(); if(typeof showToast==='function') showToast('Produit supprimé'); loadProducts(); }
 
   // ===== Produits en livre : vue feuilletable =====
   function getProdView(){ try{ return localStorage.getItem('rituel_prodview')||'list'; }catch(e){ return 'list'; } }
@@ -4602,7 +4620,7 @@
 
   async function deleteProduct(){
     if(!editingProductId) return;
-    if(!confirm('Supprimer ce produit ?')) return;
+    if(!await cmAsk({titre:'Supprimer ce produit ?',texte:'Il sera retiré de ton carnet et de tous tes rituels.',ok:'Supprimer',annuler:'Annuler',danger:true})) return;
     await sb.from('products').delete().eq('id', editingProductId);
     closeProductSheet();
     showToast('Produit supprimé');
@@ -4811,7 +4829,7 @@
   async function ractSupprimer(){
     const id = ractId;
     closeRituelActions();
-    if(!confirm('Supprimer ce rituel ?')) return;
+    if(!await cmAsk({titre:'Supprimer ce rituel ?',texte:'Le rituel et son parcours seront effacés. Tes produits, eux, ne bougent pas.',ok:'Supprimer',annuler:'Annuler',danger:true})) return;
     try{
       await sb.from('rituels').delete().eq('id', id);
       window.__allRituels = null;
@@ -5317,7 +5335,14 @@
     tabs+='</div>';
     let panes='';
     RH_MOMENTS.forEach(function(mo){
-      const list=groups[mo[0]];
+      // Le rituel actif d'abord : c'est celui qu'on ouvre le plus souvent.
+      // Tri stable, l'ordre choisi par l'utilisateur est conservé à l'intérieur
+      // de chaque groupe.
+      const list=groups[mo[0]].map(function(r,i){ return {r:r,i:i}; })
+        .sort(function(a,b){
+          const d=(b.r.actif?1:0)-(a.r.actif?1:0);
+          return d!==0?d:a.i-b.i;
+        }).map(function(x){ return x.r; });
       let inner='';
       list.forEach(function(r){ inner+=rhCard(r, pmap); });
 
@@ -5787,7 +5812,7 @@
   // Scènes peintes : les bâtiments font partie du décor, le code ne pose que
   // les zones sensibles. Positions relevées au calibrage, en % de l'image.
   // x = centre, y = base au sol, h = hauteur, r = largeur / hauteur.
-  const CM_BUILD = 'b27';
+  const CM_BUILD = 'b30';
 
   const CM_PAINT = {
     matin:{ img:'img/jardin-matin.jpg', w:760, h:1350, top:25.45, pos:{
@@ -6120,7 +6145,32 @@
     if(!chDraft.id){ closeRituelChemin(); return; }
     if(chDraft._bak){ chDraft.nom=chDraft._bak.nom; chDraft.filled=Object.assign({}, chDraft._bak.filled); chDraft._bak=null; }
     cmClosePop(); chDraft.mode='view'; cmRender(); }
-  function cmRename(){ const n=prompt('Nom du rituel :', chDraft.nom||''); if(n!==null){ chDraft.nom=n.trim(); cmRender(); } }
+  // Boîte de dialogue maison : les fenêtres du navigateur cassent l'ambiance.
+  function cmAsk(o){
+    return new Promise(function(res){
+      let m=document.getElementById('cm-modal');
+      if(!m){ m=document.createElement('div'); m.id='cm-modal'; m.className='cm-modal'; document.body.appendChild(m); }
+      const val=(o.valeur||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+      m.innerHTML='<div class="cm-modal-box"><div class="cm-modal-t">'+o.titre+'</div>'+
+        (o.texte?'<div class="cm-modal-s">'+o.texte+'</div>':'')+
+        (o.champ?'<input class="cm-modal-in" id="cm-modal-in" maxlength="40" value="'+val+'" placeholder="'+(o.placeholder||'')+'">':'')+
+        '<div class="cm-modal-b"><button id="cm-modal-no">'+(o.annuler||'Annuler')+'</button>'+
+        '<button class="'+(o.danger?'danger':'go')+'" id="cm-modal-ok">'+(o.ok||'Valider')+'</button></div></div>';
+      const fin=function(v){ m.classList.remove('show'); setTimeout(function(){ m.innerHTML=''; },260); res(v); };
+      m.querySelector('#cm-modal-no').onclick=function(){ fin(null); };
+      m.querySelector('#cm-modal-ok').onclick=function(){ const i=m.querySelector('#cm-modal-in'); fin(i?i.value.trim():true); };
+      m.onclick=function(e){ if(e.target===m) fin(null); };
+      const inp=m.querySelector('#cm-modal-in');
+      if(inp) inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); fin(inp.value.trim()); } };
+      requestAnimationFrame(function(){ m.classList.add('show'); if(inp){ inp.focus(); inp.select(); } });
+    });
+  }
+
+  async function cmRename(){
+    const n=await cmAsk({titre:'Nom du rituel', champ:true, valeur:chDraft.nom||'',
+      placeholder:'Rituel du matin', ok:'Enregistrer'});
+    if(n!==null){ chDraft.nom=n; cmRender(); }
+  }
 
   function cmWow(){
     const spk=['✦','✧','🌟','⭐','💫','🌸'];
@@ -6156,7 +6206,7 @@
   async function cmDelete(){
     if(!chDraft) return;
     if(!chDraft.id){ closeRituelChemin(); return; }
-    if(!confirm('Supprimer ce rituel ?')) return;
+    if(!await cmAsk({titre:'Supprimer ce rituel ?',texte:'Le rituel et son parcours seront effacés. Tes produits, eux, ne bougent pas.',ok:'Supprimer',annuler:'Annuler',danger:true})) return;
     try{ await sb.from('rituels').delete().eq('id', chDraft.id); }catch(e){}
     if(typeof showToast==='function') showToast('Rituel supprimé');
     window.__allRituels=null;
@@ -6695,7 +6745,7 @@
   }
   async function deleteHabit(){
     if(!editingHabitId) return;
-    if(!confirm('Supprimer cette habitude et tout son historique ?')) return;
+    if(!await cmAsk({titre:'Supprimer cette habitude ?',texte:'Son historique complet sera effacé.',ok:'Supprimer',annuler:'Annuler',danger:true})) return;
     await sb.from('habits').delete().eq('id', editingHabitId);
     closeHabitSheet();
     showToast('Habitude supprimée');
@@ -7117,7 +7167,9 @@
   function openEclatSheet(){ renderEclatSheet(); document.getElementById('eclat-sheet').classList.add('open'); }
   function closeEclatSheet(){ document.getElementById('eclat-sheet').classList.remove('open'); }
   function startEclat(){ try{ localStorage.setItem(eclatKey(), JSON.stringify({ start: todayStr(), done: [] })); }catch(e){} renderEclatSheet(); loadEclatProgram(); showToast('C\'est parti pour 30 jours ✨'); }
-  function eclatRestart(){ if(confirm('Recommencer le programme depuis le jour 1 ?')) startEclat(); }
+  async function eclatRestart(){
+    if(await cmAsk({titre:'Recommencer le programme ?',texte:'Tu repartiras du jour 1. Ta progression actuelle sera perdue.',ok:'Recommencer',annuler:'Annuler'})) startEclat();
+  }
   function eclatDone(){ const st=eclatState(); if(!st) return; const d=eclatDay(st); if(!st.done.includes(d)) st.done.push(d); try{ localStorage.setItem(eclatKey(), JSON.stringify(st)); }catch(e){} renderEclatSheet(); loadEclatProgram(); showToast('Bravo 🌸'); }
   function renderEclatSheet(){
     const b=document.getElementById('eclat-body'); if(!b) return;
