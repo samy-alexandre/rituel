@@ -1264,7 +1264,7 @@
   .cm-head{position:absolute;left:0;right:0;top:18px;z-index:8;text-align:center;padding:0 62px;pointer-events:none;}
   .cm-head .cm-title,.cm-head .cm-count,.cm-head .cm-validate-top{pointer-events:auto;}
   .cm-title{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1.15;color:var(--cm-ink);text-shadow:0 1px 14px var(--cm-glow);cursor:pointer;}
-  .cm-modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
+  .cm-modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;
     padding:22px;background:rgba(46,33,28,0.44);opacity:0;pointer-events:none;transition:opacity .22s ease;}
   .cm-modal.show{opacity:1;pointer-events:auto;}
   .cm-modal-box{width:100%;max-width:330px;background:var(--surface);border:1px solid var(--line);
@@ -5812,7 +5812,7 @@
   // Scènes peintes : les bâtiments font partie du décor, le code ne pose que
   // les zones sensibles. Positions relevées au calibrage, en % de l'image.
   // x = centre, y = base au sol, h = hauteur, r = largeur / hauteur.
-  const CM_BUILD = 'b30';
+  const CM_BUILD = 'b31';
 
   const CM_PAINT = {
     matin:{ img:'img/jardin-matin.jpg', w:760, h:1350, top:25.45, pos:{
