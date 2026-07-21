@@ -1264,6 +1264,8 @@
   .cm-head{position:absolute;left:0;right:0;top:18px;z-index:8;text-align:center;padding:0 62px;pointer-events:none;}
   .cm-head .cm-title,.cm-head .cm-count,.cm-head .cm-validate-top{pointer-events:auto;}
   .cm-title{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1.15;color:var(--cm-ink);text-shadow:0 1px 14px var(--cm-glow);cursor:pointer;}
+  .cm-build{position:absolute;right:8px;bottom:6px;z-index:12;font-family:var(--sans);
+    font-size:9px;letter-spacing:.08em;color:var(--cm-ink);opacity:0.34;pointer-events:none;}
   .cm-hint{display:block;margin-top:6px;font-family:var(--sans);font-size:11.5px;
     color:var(--cm-ink);opacity:0.72;letter-spacing:.01em;}
   @keyframes cmAppel{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.13);opacity:.95}}
@@ -1348,12 +1350,19 @@
   .cm-tip-l span{flex-shrink:0;}
   .cm-pop-grip{width:38px;height:4px;border-radius:99px;background:var(--line);
     margin:0 auto 10px;flex-shrink:0;}
-  .cm-sheet-img{position:relative;height:132px;border-radius:16px 16px 0 0;overflow:hidden;
-    background-repeat:no-repeat;background-color:#EDE4D6;margin:-14px -14px 0;}
+  .cm-sheet-img{position:relative;height:158px;border-radius:22px 22px 0 0;overflow:hidden;
+    background-repeat:no-repeat;background-color:#EDE4D6;margin:-14px -14px 14px;}
+  .cm-sheet-img .cm-pop-grip{position:absolute;top:9px;left:50%;transform:translateX(-50%);
+    margin:0;z-index:3;background:rgba(255,253,250,0.70);box-shadow:0 1px 4px rgba(46,33,28,0.25);}
+  .cm-sheet-img .cm-pop-x{position:absolute;top:9px;right:9px;z-index:3;width:34px;height:34px;
+    border-radius:50%;border:none;background:rgba(28,19,13,0.44);color:#FFFDFA;
+    font-size:21px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+  .cm-sheet-img .cm-pop-x:active{transform:scale(0.92);}
   .cm-sheet-img::after{content:"";position:absolute;inset:0;
     background:linear-gradient(rgba(46,33,28,0) 42%,rgba(46,33,28,0.62) 100%);}
-  .cm-sheet-t{position:absolute;left:16px;right:52px;bottom:11px;z-index:2;
-    font-family:var(--serif);font-size:19px;font-weight:600;color:#FFFDFA;
+  .cm-sheet-t{position:absolute;left:16px;right:56px;bottom:12px;z-index:2;
+    font-family:var(--serif);font-size:20px;font-weight:600;color:#FFFDFA;
     text-shadow:0 2px 10px rgba(46,33,28,0.55);}
   .cm-pop{position:fixed;z-index:60;left:50%;bottom:0;width:min(440px,100%);
     transform:translate(-50%,100%);background:var(--surface);
@@ -5680,7 +5689,7 @@
     el.innerHTML='<div class="cm-wrap">'+
       '<div class="cm-scene'+(moment==='soir'?' cm-soir':'')+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
         '<button class="cm-back" onclick="closeRituelChemin()">‹</button>'+
-        '<div class="cm-tools">'+tools+'</div>'+head+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+
+        '<div class="cm-tools">'+tools+'</div>'+head+'<div class="cm-build">'+CM_BUILD+'</div>'+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+
       '</div>'+foot+'</div>';
     cmLayout();
   }
@@ -5743,6 +5752,8 @@
   // Scènes peintes : les bâtiments font partie du décor, le code ne pose que
   // les zones sensibles. Positions relevées au calibrage, en % de l'image.
   // x = centre, y = base au sol, h = hauteur, r = largeur / hauteur.
+  const CM_BUILD = 'b25';
+
   const CM_PAINT = {
     matin:{ img:'img/jardin-matin.jpg', w:760, h:1350, top:25.45, pos:{
       depart  :{x:45.35, y:95.49, h:21.78, r:1.30},
@@ -6014,12 +6025,15 @@
   function cmSheetHead(key,ph){
     const def=chDraft&&CM_PAINT[chDraft.moment];
     if(!def||!def.pos[key]) return '';
-    return '<div class="cm-sheet-img" id="cm-sheet-img"><div class="cm-sheet-t">'+ph.nom+'</div></div>';
+    return '<div class="cm-sheet-img" id="cm-sheet-img">'+
+      '<div class="cm-pop-grip"></div>'+
+      '<button class="cm-pop-x" onclick="cmClosePop()" aria-label="Fermer">\u00d7</button>'+
+      '<div class="cm-sheet-t">'+ph.nom+'</div></div>';
   }
   function cmSheetZoom(pop,key){
     const el=pop.querySelector('#cm-sheet-img'); if(!el) return;
     const def=CM_PAINT[chDraft.moment], st=def.pos[key];
-    const W=el.offsetWidth||300, H=el.offsetHeight||132;
+    const W=el.offsetWidth||300, H=el.offsetHeight||158;
     const largeurVue=Math.max(st.h*st.r*2.2, 22);          // largeur du cadrage, en % de l'image
     const iw=W/(largeurVue/100), ih=iw*def.h/def.w;
     el.style.backgroundImage="url('"+def.img+"')";
@@ -6039,9 +6053,9 @@
     const removeBtn = (cur && !infoOnly) ? '<button class="cm-pop-remove" onclick="cmClear(\''+key+'\')">Retirer de cette étape</button>' : '';
     const pop=document.getElementById('cm-pop');
     const head=cmSheetHead(key,ph);
-    pop.innerHTML='<div class="cm-pop-grip"></div>'+head+
-      (head?'':'<div class="cm-pop-h"><div class="cm-pop-t">'+ph.emoji+'  '+ph.nom+'</div></div>')+
-      '<button class="cm-pop-x" onclick="cmClosePop()">×</button>'+
+    pop.innerHTML=head+
+      (head?'':'<div class="cm-pop-grip"></div><div class="cm-pop-h"><div class="cm-pop-t">'+ph.emoji+'  '+ph.nom+
+             '</div><button class="cm-pop-x" onclick="cmClosePop()">\u00d7</button></div>')+
       cmTipHtml(key)+(cards?'<div class="cm-car">'+cards+'</div>':'')+removeBtn+
       '<button class="cm-pop-skip" onclick="cmClosePop()">Fermer</button>';
 
