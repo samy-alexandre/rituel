@@ -1,0 +1,140 @@
+/* ------------------------------------------------------------------
+   village.css
+   ------------------------------------------------------------------
+   Aucune couleur de thème en dur. Tout vient des variables --vlg-*
+   posées par le moteur depuis la palette du monde.
+   ------------------------------------------------------------------ */
+
+.vlg-stage{
+  position:relative;
+  width:100%;
+  max-width:520px;
+  margin:0 auto;
+  overflow:hidden;
+  background:var(--vlg-cielBas,#F7F1EA);
+  isolation:isolate;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.vlg-layer{ position:absolute; inset:0; }
+.vlg-bg,.vlg-path,.vlg-decor{ pointer-events:none; }
+.vlg-panels{ pointer-events:none; }
+
+.vlg-bg-img{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+}
+
+.vlg-path svg{ width:100%; height:100%; display:block; opacity:.9; }
+
+/* ---------- bâtiments ---------- */
+
+.vlg-slot{
+  position:absolute;
+  transform:translate(var(--tx,-50%),var(--ty,-100%)) rotate(var(--rot,0deg));
+  transform-origin:50% 100%;
+}
+
+.vlg-art{
+  position:relative;
+  width:100%; height:100%;
+  object-fit:contain;
+  object-position:50% 100%;
+  display:block;
+}
+
+/* Ombre de contact : ce qui décolle le bâtiment du fond. */
+.vlg-shadow{
+  position:absolute;
+  left:50%; bottom:-1.5%;
+  width:82%; height:9%;
+  transform:translateX(-50%);
+  background:rgba(60,44,28,.26);
+  filter:blur(5px);
+  border-radius:50%;
+  pointer-events:none;
+}
+.vlg-light-nuit .vlg-shadow{ background:rgba(20,12,30,.42); }
+
+/* Halo des fenêtres allumées. */
+.vlg-glow{
+  position:absolute; inset:0;
+  transform-origin:50% 62%;
+  pointer-events:none;
+  mix-blend-mode:screen;
+}
+
+/* ---------- bloc de substitution ---------- */
+/* Visible tant que l'illustration n'est pas branchée.
+   Sert à valider la composition, pas l'esthétique. */
+
+.vlg-slot.is-absent{
+  background:linear-gradient(180deg,
+    color-mix(in srgb, var(--tint) 82%, #fff) 0 18%,
+    var(--tint) 18% 100%);
+  border-radius:6px 6px 3px 3px;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.10);
+}
+.vlg-slot.is-absent::after{
+  content:attr(data-building);
+  position:absolute; inset:auto 0 6% 0;
+  font:500 8px/1.2 ui-sans-serif,system-ui,sans-serif;
+  letter-spacing:.04em;
+  text-align:center;
+  color:rgba(255,255,255,.82);
+  text-transform:uppercase;
+}
+
+/* ---------- panneaux ---------- */
+
+.vlg-panel{
+  position:absolute;
+  transform:translate(-50%,-100%);
+  padding:2px 9px;
+  font:italic 500 12px/1.35 ui-serif,Georgia,"Times New Roman",serif;
+  color:var(--vlg-encre,#6B5B45);
+  background:linear-gradient(180deg,#FBF3E4,#F0E2C8);
+  border:1px solid rgba(122,92,58,.42);
+  border-radius:2px;
+  box-shadow:0 1px 3px rgba(60,44,28,.18);
+  white-space:nowrap;
+}
+.vlg-light-nuit .vlg-panel{
+  background:linear-gradient(180deg,#F3E6D2,#E2CDAE);
+  box-shadow:0 1px 4px rgba(0,0,0,.35);
+}
+
+/* ---------- états ---------- */
+/* Pilotés par la donnée utilisateur, jamais écrits dans le monde. */
+
+.vlg-slot.is-vide    { opacity:.62; filter:saturate(.55); }
+.vlg-slot.is-rempli  { opacity:1; }
+.vlg-slot.is-termine { opacity:1; }
+.vlg-slot.is-termine .vlg-art{ filter:brightness(1.05); }
+.vlg-slot.is-repere  { opacity:1; filter:none; }
+
+/* ---------- interaction ---------- */
+
+.vlg-slot[role="button"]{ cursor:pointer; transition:transform .18s ease; }
+.vlg-slot[role="button"]:focus-visible{
+  outline:2px solid var(--vlg-encre,#6B5B45);
+  outline-offset:3px;
+  border-radius:4px;
+}
+
+@media (hover:hover){
+  .vlg-slot[role="button"]:hover{
+    transform:translate(var(--tx,-50%),var(--ty,-100%)) rotate(var(--rot,0deg)) scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .vlg-slot[role="button"]{ transition:none; }
+}
+
+/* ---------- décor ---------- */
+
+.vlg-prop{ position:absolute; transform:translate(-50%,-100%); }
+.vlg-prop img{ width:100%; height:100%; object-fit:contain; }
+.vlg-prop.is-absent img{ display:none; }
