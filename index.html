@@ -1289,6 +1289,9 @@
   .cm-node.cm-paint .cm-medal{position:absolute;right:-8px;bottom:-8px;}
   @keyframes cmPose{0%{transform:scale(1)}38%{transform:scale(1.16)}100%{transform:scale(1)}}
   .cm-node.cm-pose .cm-medal{animation:cmPose .52s cubic-bezier(.3,1.4,.5,1);}
+  .cm-node.cm-fige{cursor:default;}
+  .cm-node{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+  .cm-node.cm-fige .cm-medal{animation:none;}
   .cm-node.cm-paint::before{content:"";position:absolute;inset:-6px;border-radius:16px;
     background:radial-gradient(50% 50% at 50% 60%,rgba(255,240,200,0.30),rgba(255,240,200,0) 72%);
     opacity:0;transition:opacity .3s ease;}
@@ -5418,6 +5421,33 @@
     return {rw:rw, rh:rh, offX:(sw-rw)/2, offY:offY, sw:sw, sh:sh};
   }
 
+  // En lecture, le tap ne fait rien : c'est un aperçu. Mais un appui long
+  // ouvre le conseil de l'étape, sans quitter la carte.
+  function cmBindLongPress(scene){
+    if(scene.__lp) return; scene.__lp=true;
+    let timer=null, bouge=false;
+    const start=function(e){
+      const cible=e.target && e.target.closest && e.target.closest('.cm-node.cm-fige');
+      if(!cible) return;
+      const key=cible.dataset.bld;
+      if(!key||!CM_PHASES[key]||!CM_TIPS[key]) return;
+      bouge=false;
+      timer=setTimeout(function(){
+        timer=null; if(bouge) return;
+        if(navigator.vibrate){ try{ navigator.vibrate(12); }catch(_e){} }
+        cmInfo(key, parseInt(cible.dataset.i||'0',10));
+      },480);
+    };
+    const stop=function(){ if(timer){ clearTimeout(timer); timer=null; } };
+    scene.addEventListener('touchstart',start,{passive:true});
+    scene.addEventListener('touchmove',function(){ bouge=true; stop(); },{passive:true});
+    scene.addEventListener('touchend',stop);
+    scene.addEventListener('touchcancel',stop);
+    scene.addEventListener('mousedown',start);
+    scene.addEventListener('mouseup',stop);
+    scene.addEventListener('mouseleave',stop);
+  }
+
   function cmPlacePaint(scene, def, f, topLimit){
     scene.style.backgroundImage="url('"+def.img+"')";
     scene.style.backgroundSize=f.rw+'px '+f.rh+'px';
@@ -5661,14 +5691,17 @@
         const nm=(p.nom||'').split(' · ')[0];
         const url=(window.__cmPhotos||{})[pid];
         const medal=url?'<img src="'+url+'" alt="">':(p.emoji||'🧴');
-        const act='data-i="'+idx+'" '+(isEdit?'onclick="cmOpenCarousel(\''+key+'\','+idx+')"':'onclick="openProductBook(\''+pid+'\')"');
-        nodes+=(paint?cmPaintHtml(key,'',medal,ph.nom,act):cmNodeHtml(key,'',medal,ph.nom,'',act));
+        // En lecture, la carte est un aperçu : on montre le produit rangé,
+        // et rien ne se passe au tap. C'est en édition qu'on agit.
+        const act='data-i="'+idx+'"'+(isEdit?' onclick="cmOpenCarousel(\''+key+'\','+idx+')"':'');
+        const lbl=isEdit?ph.nom:escapeHtml(nm);
+        nodes+=(paint?cmPaintHtml(key,(isEdit?'':'cm-fige'),medal,lbl,act):cmNodeHtml(key,(isEdit?'':'cm-fige'),medal,lbl,'',act));
       } else if(isEdit){
         nodes+=(paint?cmPaintHtml(key,'cm-empty','+',ph.nom,'data-i="'+idx+'" onclick="cmOpenCarousel(\''+key+'\','+idx+')"')
                      :cmNodeHtml(key,'cm-empty','+',ph.nom,'','data-i="'+idx+'" onclick="cmOpenCarousel(\''+key+'\','+idx+')"'));
       } else {
-        nodes+=(paint?cmPaintHtml(key,'cm-empty',ph.emoji,ph.nom,'data-i="'+idx+'" onclick="cmInfo(\''+key+'\','+idx+')"')
-                     :cmNodeHtml(key,'cm-empty',ph.emoji,ph.nom,'','data-i="'+idx+'" onclick="cmInfo(\''+key+'\','+idx+')"'));
+        nodes+=(paint?cmPaintHtml(key,'cm-empty cm-fige',ph.emoji,ph.nom,'data-i="'+idx+'"')
+                     :cmNodeHtml(key,'cm-empty cm-fige',ph.emoji,ph.nom,'','data-i="'+idx+'"'));
       }
     });
     if(!paint) nodes+=cmNodeHtml('arrivee','cm-muted','','Objectif','');
@@ -5683,7 +5716,8 @@
       ? '<div class="cm-head"><div class="cm-title" onclick="cmRename()">'+title+' ✎</div>'+count+
         '<div class="cm-hint">'+(nOk>=set.length?'Touche un lieu pour changer son produit':'Touche un lieu pour y ranger un produit')+'</div>'+
         '<button class="cm-validate-top'+(nOk>=set.length?' cm-pret':'')+'" onclick="cmValidate()">'+(nOk>=set.length?'✨ ':'')+'J\'ai fini mon rituel</button></div>'
-      : '<div class="cm-head"><div class="cm-title">'+title+'</div>'+count+'</div>';
+      : '<div class="cm-head"><div class="cm-title">'+title+'</div>'+count+
+        '<div class="cm-hint">Appui long sur un lieu pour le conseil de Léa</div></div>';
     const foot='';
 
     el.innerHTML='<div class="cm-wrap">'+
@@ -5735,6 +5769,7 @@
     const moment=chDraft.moment;
     const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return;
     const tl=cmHeadBottom(scene);
+    cmBindLongPress(scene);
     const def=CM_PAINT[moment];
     if(def){
       const fp=cmFitPaint(scene, def, tl+58); if(fp) cmPlacePaint(scene, def, fp, tl);
@@ -5752,7 +5787,7 @@
   // Scènes peintes : les bâtiments font partie du décor, le code ne pose que
   // les zones sensibles. Positions relevées au calibrage, en % de l'image.
   // x = centre, y = base au sol, h = hauteur, r = largeur / hauteur.
-  const CM_BUILD = 'b25';
+  const CM_BUILD = 'b27';
 
   const CM_PAINT = {
     matin:{ img:'img/jardin-matin.jpg', w:760, h:1350, top:25.45, pos:{
