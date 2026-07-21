@@ -1264,6 +1264,11 @@
   .cm-head{position:absolute;left:0;right:0;top:18px;z-index:8;text-align:center;padding:0 62px;pointer-events:none;}
   .cm-head .cm-title,.cm-head .cm-count,.cm-head .cm-validate-top{pointer-events:auto;}
   .cm-title{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1.15;color:var(--cm-ink);text-shadow:0 1px 14px var(--cm-glow);cursor:pointer;}
+  .cm-hint{display:block;margin-top:6px;font-family:var(--sans);font-size:11.5px;
+    color:var(--cm-ink);opacity:0.72;letter-spacing:.01em;}
+  @keyframes cmAppel{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.13);opacity:.95}}
+  .cm-node.cm-empty .cm-medal{animation:cmAppel 2.4s ease-in-out infinite;}
+  .cm-node.cm-paint.cm-empty::before{opacity:.55;}
   .cm-validate-top{display:inline-block;margin-top:9px;background:rgba(255,253,250,0.90);color:#8A3F27;
     font-family:var(--sans);font-size:12px;font-weight:700;border:1px solid rgba(201,90,63,0.34);
     border-radius:99px;padding:7px 16px;box-shadow:0 3px 12px rgba(46,33,28,0.14);
@@ -1274,7 +1279,7 @@
   .cm-count{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--cm-ink);background:rgba(255,253,250,0.34);border:1px solid rgba(255,253,250,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:3px 11px;border-radius:99px;}
   .cm-title-edit{font-size:11px;margin-top:3px;color:var(--cm-ink);opacity:.8;cursor:pointer;}
   .cm-back{position:absolute;top:14px;left:14px;z-index:9;width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:19px;color:#3A2418;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
-  .cm-tools{position:absolute;top:14px;right:14px;z-index:9;display:flex;gap:7px;}
+  .cm-tools{position:absolute;top:14px;right:14px;z-index:9;display:flex;flex-direction:column;gap:7px;align-items:flex-end;}
   .cm-tool{width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
   .cm-tool.on{background:var(--accent) !important;box-shadow:0 4px 14px rgba(201,90,63,0.45) !important;}
 
@@ -5426,6 +5431,18 @@
         if(l<5) dx=5-l; else if(r>f.sw-5) dx=(f.sw-5)-r;
         if(dx) tg.style.transform='translateX(calc(-50% + '+Math.round(dx)+'px))';
       }
+      // Le médaillon déborde du bord de l'écran quand la station est latérale :
+      // on le repousse vers l'intérieur au lieu de le laisser sortir du cadre.
+      const md=nd.querySelector('.cm-medal');
+      if(md){
+        md.style.right=''; md.style.left='';
+        const mw=md.offsetWidth||44;
+        const bordD=cx+w/2+8, bordG=bordD-mw;
+        let off=-8;
+        if(bordD>f.sw-6) off+=(bordD-(f.sw-6));
+        else if(bordG<6) off-=(6-bordG);
+        md.style.right=Math.round(off)+'px';
+      }
     }
   }
 
@@ -5655,6 +5672,7 @@
       : '<button class="cm-tool" title="Modifier" onclick="cmSetMode(\'edit\')">🔨</button>';
     const head=isEdit
       ? '<div class="cm-head"><div class="cm-title" onclick="cmRename()">'+title+' ✎</div>'+count+
+        '<div class="cm-hint">'+(nOk>=set.length?'Touche un lieu pour changer son produit':'Touche un lieu pour y ranger un produit')+'</div>'+
         '<button class="cm-validate-top'+(nOk>=set.length?' cm-pret':'')+'" onclick="cmValidate()">'+(nOk>=set.length?'✨ ':'')+'J\'ai fini mon rituel</button></div>'
       : '<div class="cm-head"><div class="cm-title">'+title+'</div>'+count+'</div>';
     const foot='';
