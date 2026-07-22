@@ -1263,7 +1263,11 @@
   .cm-overlay.show{opacity:1;visibility:visible;transform:translateY(0);}
   .cm-wrap{max-width:480px;margin:0 auto;position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
   /* ===== Chemin : illustration plein cadre ===== */
-  .cm-scene{position:relative;flex:1 1 auto;min-height:0;width:100%;background-repeat:no-repeat;overflow:hidden;will-change:transform;}
+  /* Piste à 3 volets collés bord à bord (prev/cur/next) : on ne traduit que .cm-track
+     pendant le swipe, si bien que le rituel voisin, jamais le fond de l'appli, apparaît. */
+  .cm-track{position:relative;flex:1 1 auto;min-height:0;display:flex;will-change:transform;}
+  .cm-slide{flex:0 0 100%;width:100%;position:relative;overflow:hidden;}
+  .cm-scene{position:relative;height:100%;width:100%;background-repeat:no-repeat;overflow:hidden;}
   .cm-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;animation:cmPulse 1.1s ease-in-out infinite;}
   @keyframes cmPulse{0%,100%{opacity:.35;transform:scale(.92);}50%{opacity:1;transform:scale(1);}}
   .cm-scene::before{content:"";position:absolute;left:0;right:0;top:0;height:190px;pointer-events:none;z-index:2;background:linear-gradient(var(--cm-scrim) 0%,rgba(255,255,255,0) 100%);}
@@ -4652,8 +4656,10 @@
   async function loadRitual(){
     if(!currentUser) return;
     if(window.__allRituels){
-      // Déjà chargé cette session : l'aperçu est déjà affiché (cmEnterRitual), rien d'autre à faire.
-      renderRituelActuel(window.__allRituels);
+      // Déjà chargé cette session : l'aperçu est déjà affiché (cmEnterRitual).
+      // On rafraîchit quand même le hub "Mes rituels" derrière (sinon il reste bloqué
+      // sur son tout premier rendu, ou pire, sur le message de chargement initial).
+      renderRituelsHub();
       return;
     }
     const n = await computeStreak();
@@ -5337,9 +5343,15 @@
       prods=r2.data||[];
       window.__rhPhotos={};
       for(const _p of prods){ if(_p.photo_path){ try{ const _u=await signedPhoto(_p.photo_path); if(_u) window.__rhPhotos[_p.id]=_u; }catch(e){} } }
-    }catch(e){}
+    }catch(e){
+      // Ne jamais laisser le message "Chargement…" bloqué à l'écran.
+      root.innerHTML='<div class="rh-hero"><div class="rh-hero-t">Mes <em>rituels</em> 🌸</div><div class="rh-hero-s">Oups, on n\'arrive pas à charger tes rituels.</div></div>'+
+        '<div class="rh-newwrap"><button class="rh-new" onclick="renderRituelsHub()">Réessayer</button></div>';
+      return;
+    }
     const pmap={}; prods.forEach(function(p){ pmap[p.id]=p; });
     window.__rhRituels=rits;
+    try{
     const groups={matin:[],soir:[],hebdo:[]};
     rits.forEach(function(r){ const m=r.moment||'matin'; if(m==='both'){ groups.matin.push(r); groups.soir.push(r); } else if(groups[m]) groups[m].push(r); else groups.matin.push(r); });
     if(!window.__rhAutoTab){ window.__rhAutoTab=true; if(!(groups[rhActiveTab]&&groups[rhActiveTab].length)){ const _ff=RH_MOMENTS.find(function(mo){ return groups[mo[0]]&&groups[mo[0]].length; }); if(_ff) rhActiveTab=_ff[0]; } }
@@ -5372,6 +5384,10 @@
       panes+='<div class="rh-tabpane" id="rh-pane-'+mo[0]+'" style="display:'+(mo[0]===rhActiveTab?'block':'none')+';">'+inner+'</div>';
     });
     root.innerHTML=html + tabs + '<div class="rh-newwrap"><button class="rh-new" onclick="rhNewRituel()">＋ Nouveau rituel</button></div>' + '<div class="rh-panes">'+panes+'</div>';
+    }catch(e){
+      root.innerHTML='<div class="rh-hero"><div class="rh-hero-t">Mes <em>rituels</em> 🌸</div><div class="rh-hero-s">Un souci est survenu.</div></div>'+
+        '<div class="rh-newwrap"><button class="rh-new" onclick="renderRituelsHub()">Réessayer</button></div>';
+    }
   }
 
   // ===== Chemin d'un rituel : carte sinueuse de ses étapes =====
@@ -5407,7 +5423,6 @@
     return null;
   }
   let chDraft=null;
-  let cmEnterDir=0; // -1/1 pendant un swipe committé : fait glisser le nouveau contenu depuis le bon côté
 
   const CM_IMG_W=760, CM_IMG_H=1460;
   const CM_BLD = {"depart":{"w":126.2,"h":74,"op":0.634,"oc":0.463},"nettoyer":{"w":91.8,"h":80},"equilibrer":{"w":79.7,"h":96},"traiter":{"w":88.7,"h":86},"yeux":{"w":62.7,"h":104},"hydrater":{"w":103.5,"h":88},"proteger":{"w":66.9,"h":110},"masque":{"w":114.9,"h":88},"arrivee":{"w":122.7,"h":94}};
@@ -5758,12 +5773,16 @@
     return filled;
   }
 
+  // Construit un "draft" de rituel pour un créneau à partir du cache mémoire (aucune requête réseau).
+  function cmDraftFor(moment){
+    const rits=window.__allRituels||[];
+    const r = moment==='hebdo' ? (rits.find(function(x){ return x.moment==='hebdo' && x.actif; })||null) : pickActive(rits)[moment];
+    return { id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:cmComputeFilled(r,moment), mode:(r?'view':'edit') };
+  }
   // Affiche un rituel/créneau instantanément depuis le cache mémoire (aucune requête réseau).
   // Utilisé à l'entrée dans l'onglet Rituel (si déjà chargé cette session) et pendant le swipe.
   function cmShowSlot(moment){
-    const rits=window.__allRituels||[];
-    const r = moment==='hebdo' ? (rits.find(function(x){ return x.moment==='hebdo' && x.actif; })||null) : pickActive(rits)[moment];
-    chDraft={ id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:cmComputeFilled(r,moment), mode:(r?'view':'edit') };
+    chDraft=cmDraftFor(moment);
     cmRender();
   }
 
@@ -5777,19 +5796,19 @@
     document.body.style.overflow='hidden';
   }
 
-  function cmRender(){
-    const el=document.getElementById('rituel-chemin'); if(!el||!chDraft) return;
-    const moment=chDraft.moment, meta=cmMomentMeta(moment), th=cmTheme(moment), A=cmAnchors(moment);
+  // Construit le HTML complet d'un volet (scène + stations + tête). Utilisé pour le volet
+  // central (interactif) et pour les volets voisins (prev/next), collés dessus pendant le swipe.
+  function cmSceneHtml(d){
+    const moment=d.moment, meta=cmMomentMeta(moment), th=cmTheme(moment);
     const set=CM_SETS[moment]||CM_SETS.matin;
     const pmap={}; (window.__cmProds||[]).forEach(function(p){ pmap[p.id]=p; });
-    const isEdit=(chDraft.mode==='edit');
+    const isEdit=(d.mode==='edit');
 
     const paint=!!CM_PAINT[moment];
     let nodes = paint ? '' : cmNodeHtml('depart','cm-muted','','Départ','','data-center="1"');
     set.forEach(function(key,i){
-      const ph=CM_PHASES[key], idx=i+1, pid=chDraft.filled[key], p=pid?pmap[pid]:null;
+      const ph=CM_PHASES[key], idx=i+1, pid=d.filled[key], p=pid?pmap[pid]:null;
       if(p){
-        const nm=(p.nom||'').split(' · ')[0];
         const url=(window.__cmPhotos||{})[pid];
         const medal=url?'<img src="'+url+'" alt="">':(p.emoji||'🧴');
         // La station porte toujours son nom (Nettoyer, Traiter…). En édition, le
@@ -5807,8 +5826,8 @@
     });
     if(!paint) nodes+=cmNodeHtml('arrivee','cm-muted','','Objectif','');
 
-    const title=escapeHtml(chDraft.nom||meta.ph);
-    const nOk=set.filter(function(k){ return chDraft.filled[k]; }).length;
+    const title=escapeHtml(d.nom||meta.ph);
+    const nOk=set.filter(function(k){ return d.filled[k]; }).length;
     const count='<div class="cm-count">'+nOk+' étape'+(nOk>1?'s':'')+' sur '+set.length+'</div>';
     const tools='<button class="cm-tool" title="Menu" onclick="cmOpenMenu()">⚙️</button>'+
       (isEdit ? '<button class="cm-tool" title="Supprimer" onclick="cmDelete()">🗑️</button>' : '');
@@ -5818,25 +5837,29 @@
         '<button class="cm-validate-top'+(nOk>=set.length?' cm-pret':'')+'" onclick="cmValidate()">'+(nOk>=set.length?'✨ ':'')+'J\'ai fini mon rituel</button></div>'
       : '<div class="cm-head"><div class="cm-title">'+title+'</div>'+count+
         '<div class="cm-hint">Appui long sur un lieu pour le conseil de Léa</div></div>';
-    const foot='';
 
-    el.innerHTML='<div class="cm-wrap">'+
-      '<div class="cm-scene'+(moment==='soir'?' cm-soir':'')+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
+    return '<div class="cm-scene'+(moment==='soir'?' cm-soir':'')+'" data-moment="'+moment+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
         '<button class="cm-back" onclick="closeRituelChemin()">‹</button>'+
         '<div class="cm-tools">'+tools+'</div>'+head+'<div class="cm-build">'+CM_BUILD+'</div>'+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+
-      '</div>'+foot+'</div>';
-    const _scene=el.querySelector('.cm-scene');
-    if(_scene && cmEnterDir){
-      const w=el.clientWidth||window.innerWidth;
-      _scene.style.transition='none';
-      _scene.style.transform='translateX('+(cmEnterDir>0? w : -w)+'px)';
-      void _scene.offsetWidth;
-      requestAnimationFrame(function(){
-        _scene.style.transition='transform .26s cubic-bezier(.22,.61,.36,1)';
-        _scene.style.transform='translateX(0px)';
-      });
-    }
-    cmEnterDir=0;
+      '</div>';
+  }
+
+  // Piste à 3 volets (précédent / actuel / suivant) collés bord à bord : pendant le swipe,
+  // on ne voit jamais le fond de l'appli, seulement le rituel voisin qui arrive.
+  function cmRender(){
+    const el=document.getElementById('rituel-chemin'); if(!el||!chDraft) return;
+    const i=CM_ORDER.indexOf(chDraft.moment);
+    const prevD=cmDraftFor(CM_ORDER[(i+CM_ORDER.length-1)%CM_ORDER.length]);
+    const nextD=cmDraftFor(CM_ORDER[(i+1)%CM_ORDER.length]);
+    el.innerHTML='<div class="cm-wrap"><div class="cm-track" id="cm-track">'+
+        '<div class="cm-slide">'+cmSceneHtml(prevD)+'</div>'+
+        '<div class="cm-slide">'+cmSceneHtml(chDraft)+'</div>'+
+        '<div class="cm-slide">'+cmSceneHtml(nextD)+'</div>'+
+      '</div></div>';
+    const track=document.getElementById('cm-track');
+    const w=track.clientWidth||window.innerWidth; // largeur du volet (.cm-wrap, capé à 480px), pas celle de l'overlay plein écran
+    track.style.transition='none';
+    track.style.transform='translateX('+(-w)+'px)';
     cmLayout();
   }
 
@@ -5876,13 +5899,10 @@
 
   function cmHeadBottom(scene){ const h=scene.querySelector('.cm-head'); return (h?(h.offsetTop+h.offsetHeight):76)+10; }
 
-  function cmLayout(){
-    const scene=document.querySelector('#rituel-chemin .cm-scene'); if(!scene||!chDraft) return;
-    const moment=chDraft.moment;
+  // Positionne les stations d'un volet donné (utilisé pour les 3 volets de la piste).
+  function cmLayoutScene(scene, moment){
     const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return;
     const tl=cmHeadBottom(scene);
-    cmBindLongPress(scene);
-    cmBindSwipe(scene);
     const def=CM_PAINT[moment];
     if(def){
       const fp=cmFitPaint(scene, def, tl+58); if(fp) cmPlacePaint(scene, def, fp, tl);
@@ -5892,8 +5912,14 @@
     const f=cmFitScene(scene, A[0][1], A[A.length-1][1], tl+58); if(!f) return;
     const rw=f.rw, rh=f.rh, offX=f.offX, offY=f.offY;
     cmPlaceNodes(scene,f,A.map(function(a){ return {x:offX+a[0]/100*rw, y:offY+a[1]/100*rh}; }),VY_POLY[moment]||VY_POLY.matin,tl);
-
-
+  }
+  function cmLayout(){
+    const wrap=document.getElementById('rituel-chemin'); if(!wrap||!chDraft) return;
+    const track=document.getElementById('cm-track'); if(!track) return;
+    cmBindSwipe(track);
+    const scenes=track.querySelectorAll('.cm-scene');
+    scenes.forEach(function(scene){ cmLayoutScene(scene, scene.dataset.moment); });
+    if(scenes[1]) cmBindLongPress(scenes[1]); // seul le volet central (visible) réagit à l'appui long
   }
 
   // ===================== VOYAGE DU JOUR =====================
@@ -6236,27 +6262,29 @@
   }
 
   // ===== Swipe horizontal matin ↔ soir ↔ hebdo =====
-  // Rendu depuis le cache mémoire (cmShowSlot) : instantané, sans aller-retour réseau,
-  // pour que le contenu suive le doigt sans latence.
+  // La piste (#cm-track) porte déjà les 3 volets collés bord à bord (cf. cmRender) : on
+  // ne fait que la traduire pendant le geste, le rituel voisin est donc toujours visible
+  // à la place du fond de l'appli, jamais un blanc entre deux rituels.
   const CM_ORDER=['matin','soir','hebdo'];
   function cmSwipeMoment(dir){
     if(!chDraft) return;
     const i=CM_ORDER.indexOf(chDraft.moment);
     const next=CM_ORDER[(i+dir+CM_ORDER.length)%CM_ORDER.length];
     rpSlotView=next;
-    cmEnterDir=dir;
-    cmShowSlot(next);
+    chDraft=cmDraftFor(next);
+    cmRender(); // reconstruit la piste, déjà repositionnée pile où l'animation de fin de geste l'a laissée
   }
-  function cmBindSwipe(scene){
-    if(scene.__sw) return; scene.__sw=true;
-    let x0=0,y0=0,dx=0,axis=null,vx=0,lastX=0,lastT=0;
-    scene.addEventListener('touchstart',function(e){
+  function cmBindSwipe(track){
+    if(track.__sw) return; track.__sw=true;
+    let x0=0,y0=0,dx=0,axis=null,vx=0,lastX=0,lastT=0,w=0;
+    track.addEventListener('touchstart',function(e){
       if(e.touches.length!==1) return;
       const t=e.touches[0];
       x0=lastX=t.clientX; y0=t.clientY; lastT=Date.now(); dx=0; axis=null; vx=0;
-      scene.style.transition='none';
+      w=track.clientWidth||window.innerWidth; // largeur du volet (.cm-wrap), pas de l'overlay plein écran
+      track.style.transition='none';
     },{passive:true});
-    scene.addEventListener('touchmove',function(e){
+    track.addEventListener('touchmove',function(e){
       if(e.touches.length!==1 || (axis&&axis!=='x')) return;
       const t=e.touches[0];
       const ddx=t.clientX-x0, ddy=t.clientY-y0;
@@ -6270,24 +6298,23 @@
       const now=Date.now();
       if(now>lastT) vx=(t.clientX-lastX)/(now-lastT);
       lastX=t.clientX; lastT=now;
-      scene.style.transform='translateX('+dx+'px)';
+      track.style.transform='translateX('+(-w+dx)+'px)';
     },{passive:false});
-    scene.addEventListener('touchend',function(){
+    track.addEventListener('touchend',function(){
       if(axis!=='x'){ axis=null; return; }
       axis=null;
-      const w=scene.clientWidth||window.innerWidth;
-      const commit = Math.abs(dx)>w*0.28 || Math.abs(vx)>0.5;
-      scene.style.transition='transform .24s cubic-bezier(.22,.61,.36,1)';
+      const commit = Math.abs(dx)>w*0.22 || Math.abs(vx)>0.42;
+      track.style.transition='transform .32s cubic-bezier(.16,.68,.28,1)';
       if(commit){
         const dir=dx<0?1:-1;
-        scene.style.transform='translateX('+(-dir*w)+'px)';
-        setTimeout(function(){ cmSwipeMoment(dir); },230);
+        track.style.transform='translateX('+(-w-dir*w)+'px)';
+        setTimeout(function(){ cmSwipeMoment(dir); },320);
       } else {
-        scene.style.transform='translateX(0px)';
+        track.style.transform='translateX('+(-w)+'px)';
       }
     });
-    scene.addEventListener('touchcancel',function(){
-      if(axis==='x'){ scene.style.transition='transform .2s ease'; scene.style.transform='translateX(0px)'; }
+    track.addEventListener('touchcancel',function(){
+      if(axis==='x'){ track.style.transition='transform .26s ease'; track.style.transform='translateX('+(-w)+'px)'; }
       axis=null;
     });
   }
