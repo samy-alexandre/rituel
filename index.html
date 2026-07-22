@@ -1263,7 +1263,9 @@
   .cm-overlay.show{opacity:1;visibility:visible;transform:translateY(0);}
   .cm-wrap{max-width:480px;margin:0 auto;position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
   /* ===== Chemin : illustration plein cadre ===== */
-  .cm-scene{position:relative;flex:1 1 auto;min-height:0;width:100%;background-repeat:no-repeat;overflow:hidden;}
+  .cm-scene{position:relative;flex:1 1 auto;min-height:0;width:100%;background-repeat:no-repeat;overflow:hidden;will-change:transform;}
+  .cm-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;animation:cmPulse 1.1s ease-in-out infinite;}
+  @keyframes cmPulse{0%,100%{opacity:.35;transform:scale(.92);}50%{opacity:1;transform:scale(1);}}
   .cm-scene::before{content:"";position:absolute;left:0;right:0;top:0;height:190px;pointer-events:none;z-index:2;background:linear-gradient(var(--cm-scrim) 0%,rgba(255,255,255,0) 100%);}
   .cm-scene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;pointer-events:none;z-index:2;background:linear-gradient(rgba(247,241,234,0) 0%,var(--bg) 96%);}
   .cm-head{position:absolute;left:0;right:0;top:18px;z-index:8;text-align:center;padding:0 62px;pointer-events:none;}
@@ -3159,6 +3161,7 @@
     function navTo(screen){
     const prev = document.getElementById('app').getAttribute('data-screen');
     if(prev && prev!=='chat') window._lastScreen = prev;
+    if(prev==='ritual' && screen!=='ritual') closeRituelChemin(); // sinon l'aperçu reste affiché par-dessus les autres onglets
     document.querySelectorAll('.screen, .chat-screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(screen).classList.add('active');
     if(screen==='chat'){ try{ leaInjectDaily(); }catch(e){} try{ refreshChatLock(); }catch(e){} }
@@ -3175,6 +3178,7 @@
       const h=new Date().getHours();
       rpSlotView = (h >= 12) ? 'soir' : 'matin';
       document.querySelectorAll('.rt-tab').forEach(b=>b.classList.toggle('sel', b.dataset.m===rpSlotView));
+      if(currentUser) cmEnterRitual(); // affichage immédiat (cache ou léger fondu), jamais la liste derrière
     }
     if(currentUser){
       if(screen==='home'){ loadHomeData(); loadTodayPhoto(); }
@@ -4647,6 +4651,11 @@
   // ===== Écran Rituel (choix matin/soir/les deux + aperçu) =====
   async function loadRitual(){
     if(!currentUser) return;
+    if(window.__allRituels){
+      // Déjà chargé cette session : l'aperçu est déjà affiché (cmEnterRitual), rien d'autre à faire.
+      renderRituelActuel(window.__allRituels);
+      return;
+    }
     const n = await computeStreak();
     const t = state.rituelType || 'both';
     const typeLabel = t==='matin' ? 'le matin' : (t==='soir' ? 'le soir' : 'matin et soir');
@@ -5398,6 +5407,7 @@
     return null;
   }
   let chDraft=null;
+  let cmEnterDir=0; // -1/1 pendant un swipe committé : fait glisser le nouveau contenu depuis le bon côté
 
   const CM_IMG_W=760, CM_IMG_H=1460;
   const CM_BLD = {"depart":{"w":126.2,"h":74,"op":0.634,"oc":0.463},"nettoyer":{"w":91.8,"h":80},"equilibrer":{"w":79.7,"h":96},"traiter":{"w":88.7,"h":86},"yeux":{"w":62.7,"h":104},"hydrater":{"w":103.5,"h":88},"proteger":{"w":66.9,"h":110},"masque":{"w":114.9,"h":88},"arrivee":{"w":122.7,"h":94}};
@@ -5729,16 +5739,42 @@
     let r=null;
     if(id){ try{ const rr=await sb.from('rituels').select('*').eq('id',id); r=(rr.data&&rr.data[0])||null; }catch(e){} }
     const moment=r?(r.moment||'matin'):(presetMoment||'matin');
+    try{ (new Image()).src=cmTheme(moment).img; }catch(e){}
+    chDraft={ id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:cmComputeFilled(r,moment), mode:(mode||(r?'view':'edit')) };
+    cmRender();
+    el.scrollTop=0; el.classList.add('show'); document.body.style.overflow='hidden';
+   }catch(_e){ if(window.console)console.error('carte rituel:',_e); if(typeof showToast==='function') showToast('Oups, la carte n\'a pas pu s\'ouvrir'); }
+  }
+
+  // Calcule quel produit occupe chaque étape du chemin, à partir des données déjà en mémoire
+  // (pmap = window.__cmProds) : réutilisé pour l'ouverture initiale et pour le swipe instantané.
+  function cmComputeFilled(r, moment){
+    const pmap={}; (window.__cmProds||[]).forEach(function(p){ pmap[p.id]=p; });
     const set=CM_SETS[moment]||CM_SETS.matin;
     const filled={};
     if(r && Array.isArray(r.produits)){
       r.produits.forEach(function(pid){ const p=pmap[pid]; if(!p) return; let ph=cmCat2Phase(p.categorie,moment); if(!ph || filled[ph]){ ph=set.find(function(k){ return !filled[k]; }); } if(ph && set.indexOf(ph)>=0 && !filled[ph]) filled[ph]=pid; });
     }
-    try{ (new Image()).src=cmTheme(moment).img; }catch(e){}
-    chDraft={ id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:filled, mode:(mode||(r?'view':'edit')) };
+    return filled;
+  }
+
+  // Affiche un rituel/créneau instantanément depuis le cache mémoire (aucune requête réseau).
+  // Utilisé à l'entrée dans l'onglet Rituel (si déjà chargé cette session) et pendant le swipe.
+  function cmShowSlot(moment){
+    const rits=window.__allRituels||[];
+    const r = moment==='hebdo' ? (rits.find(function(x){ return x.moment==='hebdo' && x.actif; })||null) : pickActive(rits)[moment];
+    chDraft={ id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:cmComputeFilled(r,moment), mode:(r?'view':'edit') };
     cmRender();
-    el.scrollTop=0; el.classList.add('show'); document.body.style.overflow='hidden';
-   }catch(_e){ if(window.console)console.error('carte rituel:',_e); if(typeof showToast==='function') showToast('Oups, la carte n\'a pas pu s\'ouvrir'); }
+  }
+
+  // Ouvre l'overlay du rituel sans délai perceptible : contenu en cache = instantané,
+  // sinon un léger fondu (déjà géré par .cm-overlay) le temps du premier chargement.
+  function cmEnterRitual(){
+    const el=document.getElementById('rituel-chemin'); if(!el) return;
+    if(window.__allRituels) cmShowSlot(rpSlotView);
+    else el.innerHTML='<div class="cm-loading"><span>🌸</span></div>';
+    el.classList.add('show');
+    document.body.style.overflow='hidden';
   }
 
   function cmRender(){
@@ -5774,9 +5810,8 @@
     const title=escapeHtml(chDraft.nom||meta.ph);
     const nOk=set.filter(function(k){ return chDraft.filled[k]; }).length;
     const count='<div class="cm-count">'+nOk+' étape'+(nOk>1?'s':'')+' sur '+set.length+'</div>';
-    const tools=isEdit
-      ? '<button class="cm-tool on" title="Terminer la modification" onclick="cmCancelEdit()">🔨</button><button class="cm-tool" title="Supprimer" onclick="cmDelete()">🗑️</button>'
-      : '<button class="cm-tool" title="Menu" onclick="cmOpenMenu()">⚙️</button>';
+    const tools='<button class="cm-tool" title="Menu" onclick="cmOpenMenu()">⚙️</button>'+
+      (isEdit ? '<button class="cm-tool" title="Supprimer" onclick="cmDelete()">🗑️</button>' : '');
     const head=isEdit
       ? '<div class="cm-head"><div class="cm-title" onclick="cmRename()">'+title+' ✎</div>'+count+
         '<div class="cm-hint">'+(nOk>=set.length?'Touche un lieu pour changer son produit':'Touche un lieu pour y ranger un produit')+'</div>'+
@@ -5790,6 +5825,18 @@
         '<button class="cm-back" onclick="closeRituelChemin()">‹</button>'+
         '<div class="cm-tools">'+tools+'</div>'+head+'<div class="cm-build">'+CM_BUILD+'</div>'+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+
       '</div>'+foot+'</div>';
+    const _scene=el.querySelector('.cm-scene');
+    if(_scene && cmEnterDir){
+      const w=el.clientWidth||window.innerWidth;
+      _scene.style.transition='none';
+      _scene.style.transform='translateX('+(cmEnterDir>0? w : -w)+'px)';
+      void _scene.offsetWidth;
+      requestAnimationFrame(function(){
+        _scene.style.transition='transform .26s cubic-bezier(.22,.61,.36,1)';
+        _scene.style.transform='translateX(0px)';
+      });
+    }
+    cmEnterDir=0;
     cmLayout();
   }
 
@@ -6169,14 +6216,19 @@
   function cmClosePop(){ const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show');
     const v=document.getElementById('cm-veil'); if(v) v.classList.remove('show'); }
 
-  // ===== Menu du rituel (⚙️) : modifier, accéder à la liste, futures options =====
+  // ===== Menu du rituel (⚙️) : modifier/terminer, accéder à la liste, futures options.
+  // Icône et position identiques en consultation et en édition, seul le contenu change.
   function cmOpenMenu(){
     const scroll=document.getElementById('rituel-chemin');
     if(!document.getElementById('cm-pop')){ const d=document.createElement('div'); d.id='cm-pop'; d.className='cm-pop'; scroll.appendChild(d); }
     const pop=document.getElementById('cm-pop');
+    const isEdit = chDraft && chDraft.mode==='edit';
+    const editItem = isEdit
+      ? '<button class="cm-menu-btn" onclick="cmClosePop();cmCancelEdit()">✓ Terminer la modification</button>'
+      : '<button class="cm-menu-btn" onclick="cmClosePop();cmSetMode(\'edit\')">✎ Modifier le rituel</button>';
     pop.innerHTML='<div class="cm-pop-grip"></div>'+
       '<div class="cm-pop-h"><div class="cm-pop-t">Options</div><button class="cm-pop-x" onclick="cmClosePop()">×</button></div>'+
-      '<button class="cm-menu-btn" onclick="cmClosePop();cmSetMode(\'edit\')">✎ Modifier le rituel</button>'+
+      editItem+
       '<button class="cm-menu-btn" onclick="cmClosePop();closeRituelChemin()">📋 Voir tous mes rituels</button>';
     let veil=document.getElementById('cm-veil');
     if(!veil){ veil=document.createElement('div'); veil.id='cm-veil'; veil.className='cm-pop-veil'; veil.onclick=cmClosePop; scroll.appendChild(veil); }
@@ -6184,28 +6236,60 @@
   }
 
   // ===== Swipe horizontal matin ↔ soir ↔ hebdo =====
+  // Rendu depuis le cache mémoire (cmShowSlot) : instantané, sans aller-retour réseau,
+  // pour que le contenu suive le doigt sans latence.
   const CM_ORDER=['matin','soir','hebdo'];
   function cmSwipeMoment(dir){
     if(!chDraft) return;
     const i=CM_ORDER.indexOf(chDraft.moment);
     const next=CM_ORDER[(i+dir+CM_ORDER.length)%CM_ORDER.length];
     rpSlotView=next;
-    const rits=window.__allRituels||[];
-    const r = next==='hebdo' ? (rits.find(function(x){ return x.moment==='hebdo' && x.actif; })||null) : pickActive(rits)[next];
-    openRituelChemin(r?r.id:null, next, r?chDraft.mode:'edit');
+    cmEnterDir=dir;
+    cmShowSlot(next);
   }
   function cmBindSwipe(scene){
     if(scene.__sw) return; scene.__sw=true;
-    let x0=0,y0=0,t0=0;
+    let x0=0,y0=0,dx=0,axis=null,vx=0,lastX=0,lastT=0;
     scene.addEventListener('touchstart',function(e){
       if(e.touches.length!==1) return;
-      x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now();
+      const t=e.touches[0];
+      x0=lastX=t.clientX; y0=t.clientY; lastT=Date.now(); dx=0; axis=null; vx=0;
+      scene.style.transition='none';
     },{passive:true});
-    scene.addEventListener('touchend',function(e){
-      const t=e.changedTouches&&e.changedTouches[0]; if(!t||Date.now()-t0>600) return;
-      const dx=t.clientX-x0, dy=t.clientY-y0;
-      if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5) cmSwipeMoment(dx<0?1:-1);
-    },{passive:true});
+    scene.addEventListener('touchmove',function(e){
+      if(e.touches.length!==1 || (axis&&axis!=='x')) return;
+      const t=e.touches[0];
+      const ddx=t.clientX-x0, ddy=t.clientY-y0;
+      if(!axis){
+        if(Math.abs(ddx)<8 && Math.abs(ddy)<8) return;
+        axis = Math.abs(ddx)>Math.abs(ddy) ? 'x' : 'y';
+        if(axis!=='x') return;
+      }
+      e.preventDefault();
+      dx=ddx;
+      const now=Date.now();
+      if(now>lastT) vx=(t.clientX-lastX)/(now-lastT);
+      lastX=t.clientX; lastT=now;
+      scene.style.transform='translateX('+dx+'px)';
+    },{passive:false});
+    scene.addEventListener('touchend',function(){
+      if(axis!=='x'){ axis=null; return; }
+      axis=null;
+      const w=scene.clientWidth||window.innerWidth;
+      const commit = Math.abs(dx)>w*0.28 || Math.abs(vx)>0.5;
+      scene.style.transition='transform .24s cubic-bezier(.22,.61,.36,1)';
+      if(commit){
+        const dir=dx<0?1:-1;
+        scene.style.transform='translateX('+(-dir*w)+'px)';
+        setTimeout(function(){ cmSwipeMoment(dir); },230);
+      } else {
+        scene.style.transform='translateX(0px)';
+      }
+    });
+    scene.addEventListener('touchcancel',function(){
+      if(axis==='x'){ scene.style.transition='transform .2s ease'; scene.style.transform='translateX(0px)'; }
+      axis=null;
+    });
   }
   function cmPick(key,pid){
     chDraft.filled[key]=pid; cmClosePop(); cmRender();
