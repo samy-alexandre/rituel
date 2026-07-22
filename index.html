@@ -4648,7 +4648,12 @@
     const n = await computeStreak();
     const t = state.rituelType || 'both';
     const typeLabel = t==='matin' ? 'le matin' : (t==='soir' ? 'le soir' : 'matin et soir');
-    loadRituels();
+    await loadRituels();
+    // On rentre directement dans l'aperçu du rituel actif du créneau en cours ;
+    // la page d'accueil de rituel de base reste juste derrière (bouton ‹ pour la revoir).
+    const slot = (rpSlotView==='hebdo') ? 'matin' : (rpSlotView || 'matin');
+    const active = pickActive(window.__allRituels||[])[slot];
+    if(active) openRituelChemin(active.id, slot, 'view');
   }
 
   // ===== Rituels nommés =====
