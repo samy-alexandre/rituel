@@ -1418,6 +1418,8 @@
   .cm-pop-none{font-size:11.5px;color:var(--muted);text-align:center;padding:8px 4px;line-height:1.5;}
   .cm-pop-skip{margin-top:10px;width:100%;background:none;border:1px dashed var(--line);border-radius:11px;padding:8px;font-size:11.5px;font-weight:600;color:var(--muted);cursor:pointer;}
   .cm-pop-remove{margin-top:8px;width:100%;background:none;border:none;padding:4px;font-size:11.5px;font-weight:600;color:var(--accent-deep);cursor:pointer;}
+  .cm-menu-btn{display:block;width:100%;text-align:left;background:none;border:none;border-top:1px solid var(--line);padding:13px 4px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;}
+  .cm-menu-btn:first-of-type{border-top:none;}
 
   .cm-wow{position:fixed;inset:0;z-index:240;display:none;align-items:center;justify-content:center;background:rgba(46,33,28,0.3);backdrop-filter:blur(3px);}
   .cm-wow.show{display:flex;}
@@ -4654,6 +4656,7 @@
     const slot = (rpSlotView==='hebdo') ? 'matin' : (rpSlotView || 'matin');
     const active = pickActive(window.__allRituels||[])[slot];
     if(active) openRituelChemin(active.id, slot, 'view');
+    else openRituelChemin(null, slot, 'edit'); // pas de rituel pour ce créneau : on ouvre direct la création
   }
 
   // ===== Rituels nommés =====
@@ -5773,7 +5776,7 @@
     const count='<div class="cm-count">'+nOk+' étape'+(nOk>1?'s':'')+' sur '+set.length+'</div>';
     const tools=isEdit
       ? '<button class="cm-tool on" title="Terminer la modification" onclick="cmCancelEdit()">🔨</button><button class="cm-tool" title="Supprimer" onclick="cmDelete()">🗑️</button>'
-      : '<button class="cm-tool" title="Modifier" onclick="cmSetMode(\'edit\')">🔨</button>';
+      : '<button class="cm-tool" title="Menu" onclick="cmOpenMenu()">⚙️</button>';
     const head=isEdit
       ? '<div class="cm-head"><div class="cm-title" onclick="cmRename()">'+title+' ✎</div>'+count+
         '<div class="cm-hint">'+(nOk>=set.length?'Touche un lieu pour changer son produit':'Touche un lieu pour y ranger un produit')+'</div>'+
@@ -5832,6 +5835,7 @@
     const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return;
     const tl=cmHeadBottom(scene);
     cmBindLongPress(scene);
+    cmBindSwipe(scene);
     const def=CM_PAINT[moment];
     if(def){
       const fp=cmFitPaint(scene, def, tl+58); if(fp) cmPlacePaint(scene, def, fp, tl);
@@ -6164,6 +6168,45 @@
   }
   function cmClosePop(){ const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show');
     const v=document.getElementById('cm-veil'); if(v) v.classList.remove('show'); }
+
+  // ===== Menu du rituel (⚙️) : modifier, accéder à la liste, futures options =====
+  function cmOpenMenu(){
+    const scroll=document.getElementById('rituel-chemin');
+    if(!document.getElementById('cm-pop')){ const d=document.createElement('div'); d.id='cm-pop'; d.className='cm-pop'; scroll.appendChild(d); }
+    const pop=document.getElementById('cm-pop');
+    pop.innerHTML='<div class="cm-pop-grip"></div>'+
+      '<div class="cm-pop-h"><div class="cm-pop-t">Options</div><button class="cm-pop-x" onclick="cmClosePop()">×</button></div>'+
+      '<button class="cm-menu-btn" onclick="cmClosePop();cmSetMode(\'edit\')">✎ Modifier le rituel</button>'+
+      '<button class="cm-menu-btn" onclick="cmClosePop();closeRituelChemin()">📋 Voir tous mes rituels</button>';
+    let veil=document.getElementById('cm-veil');
+    if(!veil){ veil=document.createElement('div'); veil.id='cm-veil'; veil.className='cm-pop-veil'; veil.onclick=cmClosePop; scroll.appendChild(veil); }
+    requestAnimationFrame(function(){ pop.classList.add('show'); const v=document.getElementById('cm-veil'); if(v) v.classList.add('show'); });
+  }
+
+  // ===== Swipe horizontal matin ↔ soir ↔ hebdo =====
+  const CM_ORDER=['matin','soir','hebdo'];
+  function cmSwipeMoment(dir){
+    if(!chDraft) return;
+    const i=CM_ORDER.indexOf(chDraft.moment);
+    const next=CM_ORDER[(i+dir+CM_ORDER.length)%CM_ORDER.length];
+    rpSlotView=next;
+    const rits=window.__allRituels||[];
+    const r = next==='hebdo' ? (rits.find(function(x){ return x.moment==='hebdo' && x.actif; })||null) : pickActive(rits)[next];
+    openRituelChemin(r?r.id:null, next, r?chDraft.mode:'edit');
+  }
+  function cmBindSwipe(scene){
+    if(scene.__sw) return; scene.__sw=true;
+    let x0=0,y0=0,t0=0;
+    scene.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1) return;
+      x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now();
+    },{passive:true});
+    scene.addEventListener('touchend',function(e){
+      const t=e.changedTouches&&e.changedTouches[0]; if(!t||Date.now()-t0>600) return;
+      const dx=t.clientX-x0, dy=t.clientY-y0;
+      if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5) cmSwipeMoment(dx<0?1:-1);
+    },{passive:true});
+  }
   function cmPick(key,pid){
     chDraft.filled[key]=pid; cmClosePop(); cmRender();
     // La station se réveille : brève pulsation du médaillon.
