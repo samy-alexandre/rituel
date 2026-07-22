@@ -1263,10 +1263,16 @@
   .cm-overlay.show{opacity:1;visibility:visible;transform:translateY(0);}
   .cm-wrap{max-width:480px;margin:0 auto;position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
   /* ===== Chemin : illustration plein cadre ===== */
-  /* Piste à 3 volets collés bord à bord (prev/cur/next) : on ne traduit que .cm-track
-     pendant le swipe, si bien que le rituel voisin, jamais le fond de l'appli, apparaît. */
-  .cm-track{position:relative;flex:1 1 auto;min-height:0;display:flex;will-change:transform;}
-  .cm-slide{flex:0 0 100%;width:100%;position:relative;overflow:hidden;}
+  /* Calques empilés (prev/cur/next). Au repos, seul le calque courant est visible ;
+     les voisins attendent hors champ, transparents. Pendant le swipe, le voisin arrive
+     PAR-DESSUS en fondu (crossfade) tandis que le courant recule un peu (parallaxe) :
+     la coupure disparaît, et un calque plein couvre toujours l'écran → jamais de vide. */
+  .cm-stage{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;}
+  .cm-layer{position:absolute;inset:0;will-change:transform,opacity;backface-visibility:hidden;}
+  .cm-layer.cm-side{opacity:0;z-index:3;pointer-events:none;}
+  .cm-layer[data-role="prev"]{transform:translateX(-100%);}
+  .cm-layer[data-role="next"]{transform:translateX(100%);}
+  .cm-layer.cm-cur{z-index:1;}
   .cm-scene{position:relative;height:100%;width:100%;background-repeat:no-repeat;overflow:hidden;}
   .cm-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;animation:cmPulse 1.1s ease-in-out infinite;}
   @keyframes cmPulse{0%,100%{opacity:.35;transform:scale(.92);}50%{opacity:1;transform:scale(1);}}
@@ -5844,22 +5850,18 @@
       '</div>';
   }
 
-  // Piste à 3 volets (précédent / actuel / suivant) collés bord à bord : pendant le swipe,
-  // on ne voit jamais le fond de l'appli, seulement le rituel voisin qui arrive.
+  // Trois calques superposés : le courant au centre, ses deux voisins hors champ.
+  // Le swipe (cmBindSwipe) les anime en fondu + parallaxe pour une transition continue.
   function cmRender(){
     const el=document.getElementById('rituel-chemin'); if(!el||!chDraft) return;
     const i=CM_ORDER.indexOf(chDraft.moment);
     const prevD=cmDraftFor(CM_ORDER[(i+CM_ORDER.length-1)%CM_ORDER.length]);
     const nextD=cmDraftFor(CM_ORDER[(i+1)%CM_ORDER.length]);
-    el.innerHTML='<div class="cm-wrap"><div class="cm-track" id="cm-track">'+
-        '<div class="cm-slide">'+cmSceneHtml(prevD)+'</div>'+
-        '<div class="cm-slide">'+cmSceneHtml(chDraft)+'</div>'+
-        '<div class="cm-slide">'+cmSceneHtml(nextD)+'</div>'+
+    el.innerHTML='<div class="cm-wrap"><div class="cm-stage" id="cm-stage">'+
+        '<div class="cm-layer cm-side" data-role="prev">'+cmSceneHtml(prevD)+'</div>'+
+        '<div class="cm-layer cm-cur" data-role="cur">'+cmSceneHtml(chDraft)+'</div>'+
+        '<div class="cm-layer cm-side" data-role="next">'+cmSceneHtml(nextD)+'</div>'+
       '</div></div>';
-    const track=document.getElementById('cm-track');
-    const w=track.clientWidth||window.innerWidth; // largeur du volet (.cm-wrap, capé à 480px), pas celle de l'overlay plein écran
-    track.style.transition='none';
-    track.style.transform='translateX('+(-w)+'px)';
     cmLayout();
   }
 
@@ -5914,12 +5916,12 @@
     cmPlaceNodes(scene,f,A.map(function(a){ return {x:offX+a[0]/100*rw, y:offY+a[1]/100*rh}; }),VY_POLY[moment]||VY_POLY.matin,tl);
   }
   function cmLayout(){
-    const wrap=document.getElementById('rituel-chemin'); if(!wrap||!chDraft) return;
-    const track=document.getElementById('cm-track'); if(!track) return;
-    cmBindSwipe(track);
-    const scenes=track.querySelectorAll('.cm-scene');
-    scenes.forEach(function(scene){ cmLayoutScene(scene, scene.dataset.moment); });
-    if(scenes[1]) cmBindLongPress(scenes[1]); // seul le volet central (visible) réagit à l'appui long
+    const stage=document.getElementById('cm-stage'); if(!stage||!chDraft) return;
+    cmBindSwipe(stage);
+    stage.querySelectorAll('.cm-layer').forEach(function(layer){
+      const scene=layer.querySelector('.cm-scene'); if(scene) cmLayoutScene(scene, scene.dataset.moment);
+    });
+    const cur=stage.querySelector('.cm-cur .cm-scene'); if(cur) cmBindLongPress(cur); // seul le calque courant réagit à l'appui long
   }
 
   // ===================== VOYAGE DU JOUR =====================
@@ -6262,30 +6264,59 @@
   }
 
   // ===== Swipe horizontal matin ↔ soir ↔ hebdo =====
-  // La piste (#cm-track) porte déjà les 3 volets collés bord à bord (cf. cmRender) : on
-  // ne fait que la traduire pendant le geste, le rituel voisin est donc toujours visible
-  // à la place du fond de l'appli, jamais un blanc entre deux rituels.
+  // Transition en calques : le voisin arrive par-dessus le courant en fondu (crossfade),
+  // le courant recule légèrement et s'estompe (parallaxe). Deux plans qui se fondent → une
+  // sensation d'univers continu plutôt qu'un changement de page. Le calque courant couvre
+  // toujours l'écran, donc aucun vide, à n'importe quelle vitesse de geste.
   const CM_ORDER=['matin','soir','hebdo'];
+  let cmAnim=false; // vrai pendant l'animation de fin de geste : bloque un nouveau geste tant qu'on n'a pas fini (anti-désync du swipe rapide)
+
   function cmSwipeMoment(dir){
     if(!chDraft) return;
     const i=CM_ORDER.indexOf(chDraft.moment);
     const next=CM_ORDER[(i+dir+CM_ORDER.length)%CM_ORDER.length];
     rpSlotView=next;
     chDraft=cmDraftFor(next);
-    cmRender(); // reconstruit la piste, déjà repositionnée pile où l'animation de fin de geste l'a laissée
+    cmRender();   // le nouveau courant reprend exactement là où le voisin venait de se poser → raccord invisible
+    cmAnim=false;
   }
-  function cmBindSwipe(track){
-    if(track.__sw) return; track.__sw=true;
+  // Exécute cb une fois la transition de `el` terminée (avec filet de sécurité si l'événement ne part pas).
+  function cmAfter(el, cb){
+    let done=false;
+    const fin=function(e){ if(e && e.target!==el) return; if(done) return; done=true; el.removeEventListener('transitionend',fin); cb(); };
+    el.addEventListener('transitionend',fin);
+    setTimeout(fin, 460);
+  }
+
+  function cmBindSwipe(stage){
+    if(stage.__sw) return; stage.__sw=true;
+    const cur=stage.querySelector('[data-role="cur"]');
+    const prev=stage.querySelector('[data-role="prev"]');
+    const next=stage.querySelector('[data-role="next"]');
     let x0=0,y0=0,dx=0,axis=null,vx=0,lastX=0,lastT=0,w=0;
-    track.addEventListener('touchstart',function(e){
-      if(e.touches.length!==1) return;
+
+    const TR='transform .3s cubic-bezier(.22,.61,.36,1),opacity .3s ease';
+    function setTr(on){ [cur,prev,next].forEach(function(l){ if(l) l.style.transition = on?TR:'none'; }); }
+    function rest(l,side){ if(!l) return; l.style.transform='translateX('+(side<0?'-100%':'100%')+')'; l.style.opacity=0; }
+    // Peint l'état pour un déplacement dx : le courant dérive/s'estompe, le voisin visé se révèle en fondu.
+    function paint(dxv){
+      const p=Math.min(Math.abs(dxv)/w,1);
+      cur.style.transform='translateX('+(dxv*0.16)+'px) scale('+(1-0.02*p).toFixed(4)+')';
+      cur.style.opacity=(1-0.15*p).toFixed(3); // le courant reste quasi opaque (pas de fond qui transparaît) ; le fondu vient du voisin qui monte par-dessus
+      if(dxv>0){ prev.style.transform='translateX('+(dxv-w)+'px)'; prev.style.opacity=p.toFixed(3); rest(next,1); }
+      else if(dxv<0){ next.style.transform='translateX('+(w+dxv)+'px)'; next.style.opacity=p.toFixed(3); rest(prev,-1); }
+      else { rest(prev,-1); rest(next,1); }
+    }
+
+    stage.addEventListener('touchstart',function(e){
+      if(cmAnim || e.touches.length!==1) return;
       const t=e.touches[0];
       x0=lastX=t.clientX; y0=t.clientY; lastT=Date.now(); dx=0; axis=null; vx=0;
-      w=track.clientWidth||window.innerWidth; // largeur du volet (.cm-wrap), pas de l'overlay plein écran
-      track.style.transition='none';
+      w=stage.clientWidth||window.innerWidth;
+      setTr(false);
     },{passive:true});
-    track.addEventListener('touchmove',function(e){
-      if(e.touches.length!==1 || (axis&&axis!=='x')) return;
+    stage.addEventListener('touchmove',function(e){
+      if(cmAnim || e.touches.length!==1 || (axis&&axis!=='x')) return;
       const t=e.touches[0];
       const ddx=t.clientX-x0, ddy=t.clientY-y0;
       if(!axis){
@@ -6298,23 +6329,29 @@
       const now=Date.now();
       if(now>lastT) vx=(t.clientX-lastX)/(now-lastT);
       lastX=t.clientX; lastT=now;
-      track.style.transform='translateX('+(-w+dx)+'px)';
+      paint(dx);
     },{passive:false});
-    track.addEventListener('touchend',function(){
+    stage.addEventListener('touchend',function(){
       if(axis!=='x'){ axis=null; return; }
       axis=null;
-      const commit = Math.abs(dx)>w*0.22 || Math.abs(vx)>0.42;
-      track.style.transition='transform .32s cubic-bezier(.16,.68,.28,1)';
+      const p=Math.abs(dx)/w;
+      const commit = dx!==0 && (p>0.3 || Math.abs(vx)>0.4);
+      setTr(true);
       if(commit){
-        const dir=dx<0?1:-1;
-        track.style.transform='translateX('+(-w-dir*w)+'px)';
-        setTimeout(function(){ cmSwipeMoment(dir); },320);
+        const dir=dx<0?1:-1, rev=dir>0?next:prev;
+        cmAnim=true;
+        cur.style.transform='translateX('+(-dir*w*0.16)+'px) scale(.98)'; cur.style.opacity=0;
+        rev.style.transform='translateX(0)'; rev.style.opacity=1;
+        cmAfter(rev, function(){ cmSwipeMoment(dir); });
       } else {
-        track.style.transform='translateX('+(-w)+'px)';
+        cmAnim=true;
+        cur.style.transform='translateX(0) scale(1)'; cur.style.opacity=1;
+        rest(prev,-1); rest(next,1);
+        cmAfter(cur, function(){ cmAnim=false; setTr(false); });
       }
     });
-    track.addEventListener('touchcancel',function(){
-      if(axis==='x'){ track.style.transition='transform .26s ease'; track.style.transform='translateX('+(-w)+'px)'; }
+    stage.addEventListener('touchcancel',function(){
+      if(axis==='x'){ setTr(true); cur.style.transform='translateX(0) scale(1)'; cur.style.opacity=1; rest(prev,-1); rest(next,1); cmAnim=true; cmAfter(cur,function(){ cmAnim=false; setTr(false); }); }
       axis=null;
     });
   }
@@ -6322,7 +6359,7 @@
     chDraft.filled[key]=pid; cmClosePop(); cmRender();
     // La station se réveille : brève pulsation du médaillon.
     requestAnimationFrame(function(){
-      const nd=document.querySelector('#rituel-chemin .cm-node[data-bld="'+key+'"]');
+      const nd=document.querySelector('#rituel-chemin .cm-cur .cm-node[data-bld="'+key+'"]');
       if(!nd) return;
       nd.classList.add('cm-pose');
       setTimeout(function(){ nd.classList.remove('cm-pose'); },560);
