@@ -1342,39 +1342,50 @@
     opacity:0;transition:opacity .3s ease;}
   .cm-node.cm-paint:active::before{opacity:1;}
   .cm-node.cm-paint.cm-fait::before{opacity:1;background:radial-gradient(50% 50% at 50% 60%,rgba(243,206,124,0.55),rgba(243,206,124,0) 70%);}
-  /* ===== Panneaux posés sur les supports du décor (le lieu EST la station) ===== */
-  .cm-node.cm-panel{position:absolute;transform:translate(-50%,-50%) rotate(var(--rot,0deg));z-index:6;cursor:pointer;}
+  /* ===== Stations = éléments superposés SUR les supports déjà peints (aucune plaque HTML/CSS) =====
+     On ne pose que : le halo, le nom, le numéro et l'icône produit — directement sur l'enseigne. */
+  .cm-node.cm-panel{position:absolute;transform:translate(-50%,-50%) rotate(var(--rot,0deg));z-index:6;cursor:pointer;background:none;}
   .cm-node.cm-panel::before{display:none;}
   .cm-node.cm-panel.cm-fige{cursor:pointer;}
-  .cm-panel-in{position:relative;width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
-    padding:5% 9%;border-radius:9px;
-    background:linear-gradient(180deg,rgba(252,243,224,0.90),rgba(238,220,182,0.90));
-    border:1px solid rgba(150,110,60,0.5);
-    box-shadow:0 4px 12px rgba(46,33,28,0.26),inset 0 1px 0 rgba(255,255,255,0.55);
-    transition:transform .14s ease,box-shadow .45s ease,background .3s ease;}
-  .cm-panel-name{font-family:var(--serif);font-weight:600;color:#5B3B22;text-align:center;line-height:1.06;
-    letter-spacing:.005em;word-break:break-word;text-shadow:0 1px 0 rgba(255,255,255,0.35);}
-  .cm-panel-num{position:absolute;top:2px;left:5px;font-family:var(--sans);font-size:8.5px;font-weight:700;color:#8A6A3A;opacity:.62;line-height:1;}
-  .cm-panel-thumb{position:absolute;right:-9px;bottom:-9px;width:26px;height:26px;border-radius:50%;overflow:hidden;
-    background:var(--surface);border:2px solid rgba(201,90,63,0.85);display:flex;align-items:center;justify-content:center;
-    font-size:13px;line-height:1;box-shadow:0 2px 6px rgba(46,33,28,0.32);}
+  /* Zone du support : transparente, juste cliquable. */
+  .cm-panel-in{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6% 9%;box-sizing:border-box;
+    transition:transform .14s ease;}
+  /* Nom écrit directement sur le support (pas de cartouche), lisibilité par ombre douce. */
+  .cm-panel-name{position:relative;z-index:2;font-family:var(--serif);font-weight:600;color:#4A3016;text-align:center;line-height:1.04;
+    letter-spacing:.01em;word-break:break-word;
+    text-shadow:0 1px 2px rgba(255,248,230,0.6),0 0 7px rgba(255,246,224,0.5);}
+  .cm-scene.cm-soir .cm-panel-name{color:#F4E6CF;text-shadow:0 1px 3px rgba(20,10,26,0.75),0 0 8px rgba(20,10,26,0.5);}
+  /* Numéro : petit repère rond discret, posé sur le haut du support. */
+  .cm-panel-num{position:absolute;top:0;left:50%;transform:translate(-50%,-58%);z-index:3;
+    min-width:17px;height:17px;padding:0 3px;box-sizing:border-box;border-radius:99px;
+    background:rgba(250,244,232,0.94);border:1px solid rgba(150,110,60,0.6);
+    font-family:var(--serif);font-size:10px;font-weight:700;color:#6B4A24;line-height:15px;text-align:center;
+    box-shadow:0 1px 3px rgba(46,33,28,0.3);}
+  /* Icône du produit : petite pastille discrète, posée sur le bas du support. */
+  .cm-panel-thumb{position:absolute;left:50%;bottom:0;transform:translate(-50%,42%);z-index:3;
+    width:22px;height:22px;border-radius:50%;overflow:hidden;background:var(--surface);
+    border:1.5px solid rgba(201,90,63,0.85);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;
+    box-shadow:0 2px 5px rgba(46,33,28,0.32);}
   .cm-panel-thumb img{width:100%;height:100%;object-fit:cover;}
-  .cm-panel-check{position:absolute;right:-8px;top:-8px;width:21px;height:21px;border-radius:50%;
-    background:linear-gradient(135deg,#9DB389,#788F5F);color:#FFFDFA;font-size:11px;line-height:21px;text-align:center;
-    box-shadow:0 2px 6px rgba(46,33,28,0.3);opacity:0;transform:scale(.6);transition:opacity .4s ease,transform .4s cubic-bezier(.3,1.5,.5,1);}
-  /* État NON CONFIGURÉ : neutre, discret, aucun halo. */
-  .cm-node.cm-panel.cm-empty .cm-panel-in{background:linear-gradient(180deg,rgba(252,247,238,0.55),rgba(238,228,212,0.55));border-style:dashed;box-shadow:0 3px 9px rgba(46,33,28,0.16),inset 0 1px 0 rgba(255,255,255,0.4);}
-  .cm-node.cm-panel.cm-empty .cm-panel-name{opacity:.82;}
+  /* Coche « terminé » : discrète, en bas du support. */
+  .cm-panel-check{position:absolute;left:50%;bottom:0;transform:translate(-50%,42%) scale(.6);z-index:3;opacity:0;
+    width:19px;height:19px;border-radius:50%;background:linear-gradient(135deg,#9DB389,#788F5F);color:#FFFDFA;
+    font-size:10px;line-height:19px;text-align:center;box-shadow:0 2px 5px rgba(46,33,28,0.3);
+    transition:opacity .4s ease,transform .4s cubic-bezier(.3,1.5,.5,1);}
+  /* Halo chaud, autour du support (aucun cadre), éteint par défaut. */
+  .cm-panel-halo{position:absolute;inset:-16%;z-index:1;pointer-events:none;opacity:0;border-radius:20px;
+    background:radial-gradient(58% 58% at 50% 50%,rgba(247,214,150,0.65),rgba(247,214,150,0) 72%);
+    transition:opacity .5s ease;}
+  /* NON CONFIGURÉ : aucun halo, nom légèrement estompé. */
+  .cm-node.cm-panel.cm-empty .cm-panel-name{opacity:.8;}
   .cm-node.cm-panel.cm-empty .cm-panel-thumb{display:none;}
-  /* État CONFIGURÉ : halo chaud qui respire lentement, comme émanant du jardin. */
-  @keyframes cmHalo{
-    0%,100%{box-shadow:0 4px 12px rgba(46,33,28,0.26),0 0 0 0 rgba(247,214,150,0),inset 0 1px 0 rgba(255,255,255,0.55);}
-    50%{box-shadow:0 4px 14px rgba(46,33,28,0.26),0 0 20px 5px rgba(247,214,150,0.55),inset 0 1px 0 rgba(255,255,255,0.55);}}
-  .cm-node.cm-panel:not(.cm-empty):not(.cm-muted):not(.vy-done):not(.cm-fait) .cm-panel-in{animation:cmHalo 3.6s ease-in-out infinite;}
-  /* État TERMINÉ : le halo s'éteint, une coche discrète apparaît. */
-  .cm-node.cm-panel.vy-done .cm-panel-in,.cm-node.cm-panel.cm-fait .cm-panel-in{animation:none;box-shadow:0 4px 12px rgba(46,33,28,0.22),inset 0 1px 0 rgba(255,255,255,0.5);}
-  .cm-node.cm-panel.vy-done .cm-panel-check,.cm-node.cm-panel.cm-fait .cm-panel-check{opacity:1;transform:scale(1);}
-  .cm-node.cm-panel.vy-done .cm-panel-thumb{display:none;}
+  /* CONFIGURÉ : le halo respire lentement, comme émanant du jardin. */
+  @keyframes cmHalo{0%,100%{opacity:.4;transform:scale(.98)}50%{opacity:.9;transform:scale(1.03)}}
+  .cm-node.cm-panel:not(.cm-empty):not(.cm-muted):not(.vy-done):not(.cm-fait) .cm-panel-halo{opacity:.6;animation:cmHalo 3.6s ease-in-out infinite;}
+  /* TERMINÉ : le halo s'éteint, une coche discrète apparaît. */
+  .cm-node.cm-panel.vy-done .cm-panel-halo,.cm-node.cm-panel.cm-fait .cm-panel-halo{opacity:0;animation:none;}
+  .cm-node.cm-panel.vy-done .cm-panel-thumb,.cm-node.cm-panel.cm-fait .cm-panel-thumb{display:none;}
+  .cm-node.cm-panel.vy-done .cm-panel-check,.cm-node.cm-panel.cm-fait .cm-panel-check{opacity:1;transform:translate(-50%,42%) scale(1);}
   /* Réaction discrète au toucher. */
   .cm-node.cm-panel:active .cm-panel-in{transform:scale(0.955);}
   .cm-links{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible;}
@@ -5494,12 +5505,12 @@
     // par les états. Activé via la classe 'cm-usepanel' (chemin des scènes peintes).
     if(/cm-usepanel/.test(cls)){
       return '<div class="cm-node cm-paint cm-panel '+cls+'" data-bld="'+key+'" '+(attr||'')+'>'+
-        '<div class="cm-panel-in">'+
-          '<span class="cm-panel-num"></span>'+
-          (medal?'<span class="cm-panel-thumb">'+medal+'</span>':'')+
-          '<span class="cm-panel-name">'+lbl+'</span>'+
-          '<span class="cm-panel-check">✓</span>'+
-        '</div></div>';
+        '<span class="cm-panel-halo"></span>'+
+        '<div class="cm-panel-in"><span class="cm-panel-name">'+lbl+'</span></div>'+
+        '<span class="cm-panel-num"></span>'+
+        (medal?'<span class="cm-panel-thumb">'+medal+'</span>':'')+
+        '<span class="cm-panel-check">✓</span>'+
+      '</div>';
     }
     return '<div class="cm-node cm-paint '+cls+'" data-bld="'+key+'" '+(attr||'')+'>'+
       (medal?'<span class="cm-medal">'+medal+'</span>':'')+
