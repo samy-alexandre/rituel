@@ -1342,50 +1342,46 @@
     opacity:0;transition:opacity .3s ease;}
   .cm-node.cm-paint:active::before{opacity:1;}
   .cm-node.cm-paint.cm-fait::before{opacity:1;background:radial-gradient(50% 50% at 50% 60%,rgba(243,206,124,0.55),rgba(243,206,124,0) 70%);}
-  /* ===== Stations = éléments superposés SUR les supports déjà peints (aucune plaque HTML/CSS) =====
-     On ne pose que : le halo, le nom, le numéro et l'icône produit — directement sur l'enseigne. */
+  /* ===== Station = UN SEUL composant, posé pile sur la pancarte peinte (aucune plaque HTML) =====
+     Conteneur transparent de la taille de la pancarte ; à l'intérieur, numéro + nom + icône
+     centrés (flex), le tout réduit automatiquement pour ne jamais dépasser de la pancarte. */
   .cm-node.cm-panel{position:absolute;transform:translate(-50%,-50%) rotate(var(--rot,0deg));z-index:6;cursor:pointer;background:none;}
   .cm-node.cm-panel::before{display:none;}
   .cm-node.cm-panel.cm-fige{cursor:pointer;}
-  /* Zone du support : transparente, juste cliquable. */
-  .cm-panel-in{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6% 9%;box-sizing:border-box;
-    transition:transform .14s ease;}
-  /* Nom écrit directement sur le support (pas de cartouche), lisibilité par ombre douce. */
-  .cm-panel-name{position:relative;z-index:2;font-family:var(--serif);font-weight:600;color:#4A3016;text-align:center;line-height:1.04;
-    letter-spacing:.01em;word-break:break-word;
-    text-shadow:0 1px 2px rgba(255,248,230,0.6),0 0 7px rgba(255,246,224,0.5);}
-  .cm-scene.cm-soir .cm-panel-name{color:#F4E6CF;text-shadow:0 1px 3px rgba(20,10,26,0.75),0 0 8px rgba(20,10,26,0.5);}
-  /* Numéro : petit repère rond discret, posé sur le haut du support. */
-  .cm-panel-num{position:absolute;top:0;left:50%;transform:translate(-50%,-58%);z-index:3;
-    min-width:17px;height:17px;padding:0 3px;box-sizing:border-box;border-radius:99px;
-    background:rgba(250,244,232,0.94);border:1px solid rgba(150,110,60,0.6);
-    font-family:var(--serif);font-size:10px;font-weight:700;color:#6B4A24;line-height:15px;text-align:center;
-    box-shadow:0 1px 3px rgba(46,33,28,0.3);}
-  /* Icône du produit : petite pastille discrète, posée sur le bas du support. */
-  .cm-panel-thumb{position:absolute;left:50%;bottom:0;transform:translate(-50%,42%);z-index:3;
-    width:22px;height:22px;border-radius:50%;overflow:hidden;background:var(--surface);
-    border:1.5px solid rgba(201,90,63,0.85);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;
-    box-shadow:0 2px 5px rgba(46,33,28,0.32);}
+  .cm-panel-in{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;padding:4% 6%;box-sizing:border-box;overflow:hidden;transition:transform .14s ease;}
+  /* Numéro : petit repère rond, dans le flux, au-dessus du nom. */
+  .cm-panel-num{flex:0 0 auto;display:flex;align-items:center;justify-content:center;min-width:14px;height:14px;padding:0 3px;box-sizing:border-box;
+    border-radius:99px;background:rgba(250,244,232,0.92);border:1px solid rgba(150,110,60,0.55);
+    font-family:var(--serif);font-size:9px;font-weight:700;color:#6B4A24;line-height:1;box-shadow:0 1px 2px rgba(46,33,28,0.22);}
+  /* Nom : écrit directement sur la pancarte, jamais coupé en plein mot (on réduit la police). */
+  .cm-panel-name{flex:0 1 auto;max-width:100%;font-family:var(--serif);font-weight:600;color:#4A3016;text-align:center;line-height:1.02;
+    letter-spacing:.01em;overflow-wrap:normal;word-break:normal;white-space:normal;
+    text-shadow:0 1px 2px rgba(255,248,230,0.6),0 0 6px rgba(255,246,224,0.5);}
+  .cm-scene.cm-soir .cm-panel-name{color:#F4E6CF;text-shadow:0 1px 3px rgba(20,10,26,0.8),0 0 8px rgba(20,10,26,0.55);}
+  .cm-scene.cm-soir .cm-panel-num{background:rgba(38,26,18,0.72);border-color:rgba(238,216,176,0.5);color:#F0DEB9;}
+  /* Icône du produit : petite pastille, dans le flux, sous le nom. */
+  .cm-panel-thumb{flex:0 0 auto;width:15px;height:15px;border-radius:50%;overflow:hidden;background:var(--surface);
+    border:1.5px solid rgba(201,90,63,0.8);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;
+    box-shadow:0 1px 3px rgba(46,33,28,0.28);}
   .cm-panel-thumb img{width:100%;height:100%;object-fit:cover;}
-  /* Coche « terminé » : discrète, en bas du support. */
-  .cm-panel-check{position:absolute;left:50%;bottom:0;transform:translate(-50%,42%) scale(.6);z-index:3;opacity:0;
-    width:19px;height:19px;border-radius:50%;background:linear-gradient(135deg,#9DB389,#788F5F);color:#FFFDFA;
-    font-size:10px;line-height:19px;text-align:center;box-shadow:0 2px 5px rgba(46,33,28,0.3);
-    transition:opacity .4s ease,transform .4s cubic-bezier(.3,1.5,.5,1);}
-  /* Halo chaud, autour du support (aucun cadre), éteint par défaut. */
+  /* Coche « terminé » : discrète. */
+  .cm-panel-check{flex:0 0 auto;width:15px;height:15px;border-radius:50%;background:linear-gradient(135deg,#9DB389,#788F5F);
+    color:#FFFDFA;font-size:9px;line-height:15px;text-align:center;box-shadow:0 1px 3px rgba(46,33,28,0.3);display:none;}
+  /* Halo chaud autour de la pancarte (aucun cadre), éteint par défaut. */
   .cm-panel-halo{position:absolute;inset:-16%;z-index:1;pointer-events:none;opacity:0;border-radius:20px;
     background:radial-gradient(58% 58% at 50% 50%,rgba(247,214,150,0.65),rgba(247,214,150,0) 72%);
     transition:opacity .5s ease;}
-  /* NON CONFIGURÉ : aucun halo, nom légèrement estompé. */
+  /* NON CONFIGURÉ : aucun halo, nom légèrement estompé, pas d'icône. */
   .cm-node.cm-panel.cm-empty .cm-panel-name{opacity:.8;}
   .cm-node.cm-panel.cm-empty .cm-panel-thumb{display:none;}
   /* CONFIGURÉ : le halo respire lentement, comme émanant du jardin. */
   @keyframes cmHalo{0%,100%{opacity:.4;transform:scale(.98)}50%{opacity:.9;transform:scale(1.03)}}
   .cm-node.cm-panel:not(.cm-empty):not(.cm-muted):not(.vy-done):not(.cm-fait) .cm-panel-halo{opacity:.6;animation:cmHalo 3.6s ease-in-out infinite;}
-  /* TERMINÉ : le halo s'éteint, une coche discrète apparaît. */
+  /* TERMINÉ : le halo s'éteint, une coche discrète remplace l'icône. */
   .cm-node.cm-panel.vy-done .cm-panel-halo,.cm-node.cm-panel.cm-fait .cm-panel-halo{opacity:0;animation:none;}
   .cm-node.cm-panel.vy-done .cm-panel-thumb,.cm-node.cm-panel.cm-fait .cm-panel-thumb{display:none;}
-  .cm-node.cm-panel.vy-done .cm-panel-check,.cm-node.cm-panel.cm-fait .cm-panel-check{opacity:1;transform:translate(-50%,42%) scale(1);}
+  .cm-node.cm-panel.vy-done .cm-panel-check,.cm-node.cm-panel.cm-fait .cm-panel-check{display:block;}
   /* Réaction discrète au toucher. */
   .cm-node.cm-panel:active .cm-panel-in{transform:scale(0.955);}
   .cm-links{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible;}
@@ -5504,13 +5500,15 @@
     // dessus, un numéro discret + une miniature du produit s'y intègrent, halo et coche gérés
     // par les états. Activé via la classe 'cm-usepanel' (chemin des scènes peintes).
     if(/cm-usepanel/.test(cls)){
+      // Un seul composant centré sur la pancarte : numéro + nom + icône (+ coche) dans le flux.
       return '<div class="cm-node cm-paint cm-panel '+cls+'" data-bld="'+key+'" '+(attr||'')+'>'+
         '<span class="cm-panel-halo"></span>'+
-        '<div class="cm-panel-in"><span class="cm-panel-name">'+lbl+'</span></div>'+
-        '<span class="cm-panel-num"></span>'+
-        (medal?'<span class="cm-panel-thumb">'+medal+'</span>':'')+
-        '<span class="cm-panel-check">✓</span>'+
-      '</div>';
+        '<div class="cm-panel-in">'+
+          '<span class="cm-panel-num"></span>'+
+          '<span class="cm-panel-name">'+lbl+'</span>'+
+          (medal?'<span class="cm-panel-thumb">'+medal+'</span>':'')+
+          '<span class="cm-panel-check">✓</span>'+
+        '</div></div>';
     }
     return '<div class="cm-node cm-paint '+cls+'" data-bld="'+key+'" '+(attr||'')+'>'+
       (medal?'<span class="cm-medal">'+medal+'</span>':'')+
@@ -5660,16 +5658,17 @@
     const ne=nd.querySelector('.cm-panel-num'); if(ne) ne.textContent=nd.dataset.i||'';
     cmFitPanelText(nd);
   }
-  // Ajuste la taille du nom pour qu'il tienne dans le panneau (jusqu'à 2 lignes, sans déborder).
+  // Réduit la police du nom jusqu'à ce que TOUT le contenu (numéro + nom + icône) tienne
+  // dans la pancarte, en hauteur comme en largeur. Le mot n'est jamais coupé : on rapetisse.
   function cmFitPanelText(nd){
     const box=nd.querySelector('.cm-panel-in'), t=nd.querySelector('.cm-panel-name');
     if(!box||!t) return;
-    const maxH=box.clientHeight-2, maxW=box.clientWidth-2;
-    if(maxH<=0||maxW<=0) return;
-    let fs=Math.max(9, Math.min(19, Math.round(box.clientHeight*0.5)));
+    const bw=box.clientWidth, bh=box.clientHeight;
+    if(bw<=0||bh<=0) return;
+    let fs=Math.max(8, Math.min(17, Math.round(bh*0.36)));
     t.style.fontSize=fs+'px';
-    let guard=20;
-    while(guard-- > 0 && (t.scrollHeight>maxH || t.scrollWidth>maxW) && fs>8){ fs-=1; t.style.fontSize=fs+'px'; }
+    let guard=24;
+    while(guard-- > 0 && (box.scrollHeight>bh+1 || box.scrollWidth>bw+1) && fs>6){ fs-=1; t.style.fontSize=fs+'px'; }
   }
 
   function cmPlaceNodes(scene,f,pts,poly,topLim){
@@ -6043,17 +6042,17 @@
     matin:{ img:'img/jardin-matin.jpg', w:853, h:1844, top:22, panels:true, pos:{
       // x,y,h,r = médaillon (utilisé par le Voyage) ; cx,cy,pw,ph,rot = panneau posé sur le support (Chemin).
       depart  :{x:40, y:93, h:21.78, r:1.30},
-      nettoyer:{x:20, y:64, h:13.85, r:1.50, cx:17.5, cy:40,   pw:18, ph:7,   rot:0},   // 1 → plaque ovale de la fontaine
-      traiter :{x:73, y:65, h:18.31, r:1.40, cx:80,   cy:72,   pw:14, ph:8,   rot:-3},  // 2 → ardoise de l'apothicaire
-      hydrater:{x:30, y:35, h:11.97, r:1.50, cx:27,   cy:37.5, pw:12, ph:5,   rot:0},   // 3 → panonceau près de la verrière
-      proteger:{x:72, y:37, h:12.87, r:1.60, cx:72,   cy:31.5, pw:16, ph:5.5, rot:0},   // 4 → enseigne suspendue de la pergola
+      nettoyer:{x:20, y:64, h:13.85, r:1.50, cx:17.5, cy:51,   pw:15,   ph:5.2, rot:0},   // 1 → plaque ovale de la fontaine
+      traiter :{x:73, y:65, h:18.31, r:1.40, cx:84,   cy:65.5, pw:12.5, ph:7.5, rot:-2},  // 2 → ardoise de l'apothicaire
+      hydrater:{x:30, y:35, h:11.97, r:1.50, cx:26,   cy:36,   pw:13.5, ph:4.6, rot:0},   // 3 → panonceau près de la verrière
+      proteger:{x:72, y:37, h:12.87, r:1.60, cx:72,   cy:31.5, pw:17,   ph:5,   rot:0},   // 4 → enseigne suspendue de la pergola
       arrivee :{x:52, y:22, h:3.17,  r:1.60}
     }},
     soir:{ img:'img/jardin-soir.jpg', w:853, h:1844, top:22, panels:true, pos:{
       // Même jardin (de nuit) que le matin, enseignes vides → mêmes supports, même calage.
-      nettoyer:{x:20, y:64, h:13.85, r:1.50, cx:17.5, cy:40, pw:18, ph:7,  rot:0},   // 1 → plaque ovale de la fontaine
-      traiter :{x:73, y:65, h:18.31, r:1.40, cx:80,   cy:72, pw:14, ph:8,  rot:-3},  // 2 → ardoise de l'apothicaire
-      hydrater:{x:30, y:35, h:11.97, r:1.50, cx:27,   cy:37.5, pw:12, ph:5, rot:0}   // 3 → panonceau près de la verrière
+      nettoyer:{x:20, y:64, h:13.85, r:1.50, cx:17.5, cy:51,   pw:15,   ph:5.2, rot:0},   // 1 → plaque ovale de la fontaine
+      traiter :{x:73, y:65, h:18.31, r:1.40, cx:84,   cy:65.5, pw:12.5, ph:7.5, rot:-2},  // 2 → ardoise de l'apothicaire
+      hydrater:{x:30, y:35, h:11.97, r:1.50, cx:26,   cy:36,   pw:13.5, ph:4.6, rot:0}    // 3 → panonceau près de la verrière
     }},
     hebdo:{ img:'img/clairiere.jpg', w:760, h:1140, top:27.41, pos:{
       nettoyer:{x:14.57, y:58.57, h:13.29, r:1.15},
