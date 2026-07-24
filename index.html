@@ -1318,8 +1318,6 @@
   .cm-modal-b .danger{background:#A93B25;border-color:#A93B25;color:#FFFDFA;}
   .cm-build{position:absolute;right:8px;bottom:6px;z-index:12;font-family:var(--sans);
     font-size:9px;letter-spacing:.08em;color:var(--cm-ink);opacity:0.34;pointer-events:none;}
-  .cm-hint{display:block;margin-top:6px;font-family:var(--sans);font-size:11.5px;
-    color:var(--cm-ink);opacity:0.72;letter-spacing:.01em;}
   @keyframes cmAppel{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.13);opacity:.95}}
   .cm-node.cm-empty .cm-medal{animation:cmAppel 2.4s ease-in-out infinite;}
   .cm-node.cm-paint.cm-empty::before{opacity:.55;}
@@ -5975,7 +5973,6 @@
     // Un seul titre = le nom du rituel (modifiable). Aucun sous-titre ni texte en double.
     const head=isEdit
       ? '<div class="cm-head">'+sun+'<div class="cm-title" onclick="cmRename()">'+title+' ✎</div>'+count+
-        '<div class="cm-hint">'+(nOk>=set.length?'Touche un lieu pour changer son produit':'Touche un lieu pour y ranger un produit')+'</div>'+
         '<div class="cm-autosave">✓ Enregistré automatiquement</div></div>'
       : '<div class="cm-head">'+sun+'<div class="cm-title">'+title+'</div></div>';
 
