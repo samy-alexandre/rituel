@@ -571,9 +571,16 @@
 
   /* Footer d'origine, identique sur tous les écrans. */
   .nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background: rgba(247,241,234,0.92); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(5, 1fr); z-index: 100; transition: transform .3s cubic-bezier(.22,.61,.36,1), opacity .26s ease; }
-  /* Uniquement sur le chemin du Rituel : même barre (position/taille/forme), on rend
-     seulement le fond translucide (verre dépoli) et on la remonte au-dessus du décor. */
-  .nav.nav-glass { background: rgba(250,245,238,0.40); backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5); border-top: 1px solid rgba(255,255,255,0.32); box-shadow: 0 -6px 22px rgba(46,33,28,0.10); z-index: 215; }
+  /* Sur le chemin du Rituel : la barre flotte au-dessus du paysage. Fond très translucide
+     (les couleurs de l'illustration transparaissent), flou prononcé, aucun rectangle sombre. */
+  .nav.nav-glass { background: rgba(250,246,240,0.16); backdrop-filter: blur(30px) saturate(1.8); -webkit-backdrop-filter: blur(30px) saturate(1.8); border-top: 1px solid rgba(255,255,255,0.18); box-shadow: none; z-index: 215; }
+  /* Icônes & libellés plus lumineux, halo discret → parfaitement lisibles sur toute illustration (matin clair comme soir sombre). */
+  .nav.nav-glass .nav-item { color: rgba(255,251,246,0.86); }
+  .nav.nav-glass .nav-item .nav-label { text-shadow: 0 1px 4px rgba(28,16,8,0.55), 0 0 10px rgba(28,16,8,0.30); }
+  .nav.nav-glass .nav-item svg { filter: drop-shadow(0 1px 3px rgba(28,16,8,0.5)); }
+  .nav.nav-glass .nav-item.active { color: #FFFFFF; }
+  .nav.nav-glass .nav-item.active .nav-label { text-shadow: 0 1px 4px rgba(28,16,8,0.55), 0 0 12px rgba(255,196,140,0.55); }
+  .nav.nav-glass .nav-item.active svg { filter: drop-shadow(0 1px 4px rgba(28,16,8,0.5)) drop-shadow(0 0 7px rgba(255,196,140,0.6)); }
   .nav.nav-tucked { transform: translateY(160%); opacity: 0; pointer-events: none; }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; cursor: pointer; transition: opacity .2s; color: var(--muted); }
   .nav-item.active { color: var(--accent); }
@@ -1287,7 +1294,7 @@
   /* En-tête intégré au décor : motif soleil, grand titre serif, sur-titre en capitales,
      une ligne d'introduction. Aucun cartouche : le texte respire directement sur le paysage. */
   .cm-head{position:absolute;left:0;right:0;top:calc(20px + env(safe-area-inset-top));z-index:8;text-align:center;padding:0 52px;pointer-events:none;}
-  .cm-head .cm-title,.cm-head .cm-count,.cm-head .cm-validate-top{pointer-events:auto;}
+  .cm-head .cm-title,.cm-head .cm-count{pointer-events:auto;}
   .cm-sun{display:block;margin:0 auto 8px;width:44px;height:18px;color:var(--cm-ink);opacity:.68;}
   .cm-sun svg{width:100%;height:100%;display:block;}
   .cm-title{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.12;letter-spacing:.005em;color:var(--cm-ink);text-shadow:0 1px 16px var(--cm-glow);cursor:pointer;}
@@ -1316,13 +1323,6 @@
   @keyframes cmAppel{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.13);opacity:.95}}
   .cm-node.cm-empty .cm-medal{animation:cmAppel 2.4s ease-in-out infinite;}
   .cm-node.cm-paint.cm-empty::before{opacity:.55;}
-  .cm-validate-top{display:inline-block;margin-top:9px;background:rgba(255,253,250,0.90);color:#8A3F27;
-    font-family:var(--sans);font-size:12px;font-weight:700;border:1px solid rgba(201,90,63,0.34);
-    border-radius:99px;padding:7px 16px;box-shadow:0 3px 12px rgba(46,33,28,0.14);
-    cursor:pointer;transition:transform .15s ease,background .2s ease;}
-  .cm-validate-top.cm-pret{background:linear-gradient(135deg,var(--accent),#B0492B);color:#FFFDFA;
-    border-color:transparent;box-shadow:0 7px 20px rgba(201,90,63,0.42);}
-  .cm-validate-top:active{transform:scale(0.96);}
   .cm-count{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--cm-ink);background:rgba(255,253,250,0.34);border:1px solid rgba(255,253,250,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:3px 11px;border-radius:99px;}
   .cm-title-edit{font-size:11px;margin-top:3px;color:var(--cm-ink);opacity:.8;cursor:pointer;}
   .cm-back{position:absolute;top:14px;left:14px;z-index:9;width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:19px;color:#3A2418;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
@@ -1484,6 +1484,34 @@
   .cm-pop-remove{margin-top:8px;width:100%;background:none;border:none;padding:4px;font-size:11.5px;font-weight:600;color:var(--accent-deep);cursor:pointer;}
   .cm-menu-btn{display:block;width:100%;text-align:left;background:none;border:none;border-top:1px solid var(--line);padding:13px 4px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;}
   .cm-menu-btn:first-of-type{border-top:none;}
+  /* ===== Menu de l'engrenage : dropdown en verre dépoli, ancré en haut à droite =====
+     Ouverture en fondu + léger glissé/échelle depuis le coin ; fermeture au clic extérieur. */
+  .cm-menu{position:absolute;z-index:64;top:60px;right:14px;width:min(232px,74vw);
+    background:rgba(252,247,240,0.55);
+    backdrop-filter:blur(26px) saturate(1.7);-webkit-backdrop-filter:blur(26px) saturate(1.7);
+    border:1px solid rgba(255,255,255,0.55);border-radius:20px;padding:7px;
+    box-shadow:0 18px 46px rgba(46,33,28,0.28),0 2px 8px rgba(46,33,28,0.14),inset 0 1px 0 rgba(255,255,255,0.6);
+    transform-origin:top right;transform:translateY(-8px) scale(0.94);opacity:0;pointer-events:none;
+    transition:transform .26s cubic-bezier(.2,.9,.3,1.05),opacity .2s ease;}
+  .cm-menu.show{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}
+  .cm-menu-item{display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+    background:none;border:none;border-radius:13px;padding:12px 12px;
+    font-family:inherit;font-size:14px;font-weight:600;color:#3A2418;cursor:pointer;
+    transition:background .15s ease,transform .1s ease;}
+  .cm-menu-item:active{transform:scale(0.97);}
+  @media(hover:hover){.cm-menu-item:hover{background:rgba(255,255,255,0.42);}}
+  .cm-menu-item .cm-menu-ic{font-size:17px;line-height:1;width:22px;text-align:center;flex:0 0 auto;}
+  .cm-menu-item.danger{color:#B23A22;}
+  @media(hover:hover){.cm-menu-item.danger:hover{background:rgba(201,90,63,0.12);}}
+  .cm-menu-sep{height:1px;background:rgba(90,60,40,0.14);margin:5px 8px;}
+  /* Voile transparent : capte le clic extérieur sans assombrir le paysage. */
+  .cm-veil-clear{background:transparent !important;}
+  /* Indicateur d'enregistrement automatique (mode édition). */
+  .cm-autosave{display:inline-flex;align-items:center;gap:5px;margin-top:9px;
+    font-family:var(--sans);font-size:10.5px;font-weight:600;letter-spacing:.02em;
+    color:var(--cm-ink);opacity:.72;background:rgba(255,253,250,0.22);
+    border:1px solid rgba(255,253,250,0.34);border-radius:99px;padding:4px 11px;
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
   /* Fiche station (lecture seule) : reprend la carte d'édition, sans les actions. */
   .cm-fiche{padding:2px 2px 2px;}
   .cm-fiche-top{display:flex;gap:13px;align-items:center;}
@@ -5941,19 +5969,18 @@
     const title=escapeHtml(d.nom||meta.ph);
     const nOk=set.filter(function(k){ return d.filled[k]; }).length;
     const count='<div class="cm-count">'+nOk+' étape'+(nOk>1?'s':'')+' sur '+set.length+'</div>';
-    const tools='<button class="cm-tool" title="Menu" onclick="cmOpenMenu()">⚙️</button>'+
-      (isEdit ? '<button class="cm-tool" title="Supprimer" onclick="cmDelete()">🗑️</button>' : '');
+    const tools='<button class="cm-tool" title="Menu" onclick="cmOpenMenu()">⚙️</button>';
     // Motif « lever de soleil » dessiné au trait, teinté à l'encre du décor.
     const sun='<div class="cm-sun" aria-hidden="true"><svg viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15.2h30"/><path d="M15 15.2a7 7 0 0 1 14 0"/><path d="M22 2.5v3M13.2 6.2l1.9 1.9M30.8 6.2l-1.9 1.9M5.6 11h2.6M35.8 11h2.6"/></svg></div>';
     // Un seul titre = le nom du rituel (modifiable). Aucun sous-titre ni texte en double.
     const head=isEdit
       ? '<div class="cm-head">'+sun+'<div class="cm-title" onclick="cmRename()">'+title+' ✎</div>'+count+
         '<div class="cm-hint">'+(nOk>=set.length?'Touche un lieu pour changer son produit':'Touche un lieu pour y ranger un produit')+'</div>'+
-        '<button class="cm-validate-top'+(nOk>=set.length?' cm-pret':'')+'" onclick="cmValidate()">'+(nOk>=set.length?'✨ ':'')+'J\'ai fini mon rituel</button></div>'
+        '<div class="cm-autosave">✓ Enregistré automatiquement</div></div>'
       : '<div class="cm-head">'+sun+'<div class="cm-title">'+title+'</div></div>';
 
     return '<div class="cm-scene'+(moment==='soir'?' cm-soir':'')+'" data-moment="'+moment+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
-        '<button class="cm-back" onclick="cmBackToList()">‹</button>'+
+        '<button class="cm-back" onclick="cmBack()">‹</button>'+
         '<div class="cm-tools">'+tools+'</div>'+head+'<div class="cm-build">'+CM_BUILD+'</div>'+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+
       '</div>';
   }
@@ -6360,25 +6387,26 @@
   function cmClosePop(){ const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show');
     const v=document.getElementById('cm-veil'); if(v) v.classList.remove('show'); cmNavTuck(false); }
 
-  // ===== Menu du rituel (⚙️) : modifier/terminer, accéder à la liste, futures options.
-  // Icône et position identiques en consultation et en édition, seul le contenu change.
+  // ===== Menu du rituel (⚙️) : dropdown en verre dépoli, ancré sous l'engrenage.
+  // La page Rituel sert à admirer / consulter / modifier / gérer — jamais à exécuter.
+  // En consultation : Modifier · Mes rituels · Supprimer. En édition : on retire « Modifier »
+  // (on y est déjà), la sortie se fait par la flèche ‹ avec enregistrement automatique.
   function cmOpenMenu(){
     const scroll=document.getElementById('rituel-chemin');
-    if(!document.getElementById('cm-pop')){ const d=document.createElement('div'); d.id='cm-pop'; d.className='cm-pop'; scroll.appendChild(d); }
-    const pop=document.getElementById('cm-pop');
+    let menu=document.getElementById('cm-menu');
+    if(!menu){ menu=document.createElement('div'); menu.id='cm-menu'; menu.className='cm-menu'; scroll.appendChild(menu); }
     const isEdit = chDraft && chDraft.mode==='edit';
-    const editItem = isEdit
-      ? '<button class="cm-menu-btn" onclick="cmClosePop();cmCancelEdit()">✓ Terminer la modification</button>'
-      : '<button class="cm-menu-btn" onclick="cmClosePop();cmSetMode(\'edit\')">✎ Modifier le rituel</button>';
-    pop.innerHTML='<div class="cm-pop-grip"></div>'+
-      '<div class="cm-pop-h"><div class="cm-pop-t">Options</div><button class="cm-pop-x" onclick="cmClosePop()">×</button></div>'+
-      editItem+
-      '<button class="cm-menu-btn" onclick="cmClosePop();cmBackToList()">📋 Voir tous mes rituels</button>';
-    let veil=document.getElementById('cm-veil');
-    if(!veil){ veil=document.createElement('div'); veil.id='cm-veil'; veil.className='cm-pop-veil'; veil.onclick=cmClosePop; scroll.appendChild(veil); }
-    cmNavTuck(true);
-    requestAnimationFrame(function(){ pop.classList.add('show'); const v=document.getElementById('cm-veil'); if(v) v.classList.add('show'); });
+    const editItem = isEdit ? '' :
+      '<button class="cm-menu-item" onclick="cmCloseMenu();cmSetMode(\'edit\')"><span class="cm-menu-ic">✏️</span>Modifier ce rituel</button>';
+    menu.innerHTML=editItem+
+      '<button class="cm-menu-item" onclick="cmCloseMenu();cmBackToList()"><span class="cm-menu-ic">📚</span>Mes rituels</button>'+
+      '<div class="cm-menu-sep"></div>'+
+      '<button class="cm-menu-item danger" onclick="cmCloseMenu();cmDelete()"><span class="cm-menu-ic">🗑️</span>Supprimer ce rituel</button>';
+    let veil=document.getElementById('cm-menu-veil');
+    if(!veil){ veil=document.createElement('div'); veil.id='cm-menu-veil'; veil.className='cm-pop-veil cm-veil-clear'; veil.onclick=cmCloseMenu; scroll.appendChild(veil); }
+    requestAnimationFrame(function(){ menu.classList.add('show'); veil.classList.add('show'); });
   }
+  function cmCloseMenu(){ const m=document.getElementById('cm-menu'); if(m) m.classList.remove('show'); const v=document.getElementById('cm-menu-veil'); if(v) v.classList.remove('show'); }
 
   // ===== Swipe horizontal matin ↔ soir ↔ hebdo =====
   // Transition en calques : le voisin arrive par-dessus le courant en fondu (crossfade),
@@ -6472,7 +6500,7 @@
     });
   }
   function cmPick(key,pid){
-    chDraft.filled[key]=pid; cmClosePop(); cmRender();
+    chDraft.filled[key]=pid; cmClosePop(); cmRender(); cmAutoSave();
     // La station se réveille : brève pulsation du médaillon.
     requestAnimationFrame(function(){
       const nd=document.querySelector('#rituel-chemin .cm-cur .cm-node[data-bld="'+key+'"]');
@@ -6481,14 +6509,8 @@
       setTimeout(function(){ nd.classList.remove('cm-pose'); },560);
     });
   }
-  function cmClear(key){ delete chDraft.filled[key]; cmClosePop(); cmRender(); }
-  function cmSetMode(m){ if(!chDraft) return;
-    if(m==='edit'){ chDraft._bak={ nom:chDraft.nom, filled:Object.assign({}, chDraft.filled) }; }
-    chDraft.mode=m; cmRender(); }
-  function cmCancelEdit(){ if(!chDraft) return;
-    if(!chDraft.id){ cmBackToList(); return; }
-    if(chDraft._bak){ chDraft.nom=chDraft._bak.nom; chDraft.filled=Object.assign({}, chDraft._bak.filled); chDraft._bak=null; }
-    cmClosePop(); chDraft.mode='view'; cmRender(); }
+  function cmClear(key){ delete chDraft.filled[key]; cmClosePop(); cmRender(); cmAutoSave(); }
+  function cmSetMode(m){ if(!chDraft) return; chDraft.mode=m; cmRender(); }
   // Boîte de dialogue maison : les fenêtres du navigateur cassent l'ambiance.
   function cmAsk(o){
     return new Promise(function(res){
@@ -6513,7 +6535,7 @@
   async function cmRename(){
     const n=await cmAsk({titre:'Nom du rituel', champ:true, valeur:chDraft.nom||'',
       placeholder:'Rituel du matin', ok:'Enregistrer'});
-    if(n!==null){ chDraft.nom=n; cmRender(); }
+    if(n!==null){ chDraft.nom=n; cmRender(); cmAutoSave(); }
   }
 
   function cmWow(){
@@ -6530,21 +6552,55 @@
   }
   function cmWowClose(){ const w=document.getElementById('cm-wow'); if(w) w.classList.remove('show'); cmBackToList(); }
 
-  async function cmValidate(){
+  // Enregistre le rituel courant (création ou mise à jour). Silencieux : aucune célébration,
+  // aucun changement de mode. C'est la brique de l'enregistrement automatique.
+  async function cmPersist(){
     if(!chDraft) return;
     const set=CM_SETS[chDraft.moment]||CM_SETS.matin;
     const produits=set.map(function(k){ return chDraft.filled[k]; }).filter(Boolean);
     const meta=cmMomentMeta(chDraft.moment);
     const nom=(chDraft.nom||'').trim()||meta.ph;
-    cmWow();
     try{
       if(chDraft.id){ await sb.from('rituels').update({ nom:nom, moment:chDraft.moment, produits:produits, actif:true }).eq('id', chDraft.id); }
-      else { const { data } = await sb.from('rituels').insert({ user_id:currentUser.id, nom:nom, moment:chDraft.moment, produits:produits, position:0, actif:true, rappels:(chDraft.rappels||{on:false,days:[],hebdoDay:1}) }).select('id').maybeSingle(); if(data) chDraft.id=data.id; }
+      else { const { data } = await sb.from('rituels').insert({ user_id:currentUser.id, nom:nom, moment:chDraft.moment, produits:produits, position:0, actif:true, rappels:(chDraft.rappels||{on:false,days:[],hebdoDay:1}) }).select('id').maybeSingle(); if(data){ chDraft.id=data.id; chDraft._created=true; } }
     }catch(e){}
-    chDraft.mode='view'; chDraft._bak=null;
     window.__allRituels=null;
     if(typeof loadRituels==='function') loadRituels();
     if(typeof loadHomeRoutine==='function') loadHomeRoutine();
+  }
+
+  // Enregistrement automatique (mode édition), légèrement différé pour regrouper les gestes.
+  // On ne crée jamais un rituel vide tant qu'aucun produit n'a été posé.
+  let cmSaveTimer=null;
+  function cmAutoSave(){
+    if(!chDraft || chDraft.mode!=='edit') return;
+    const set=CM_SETS[chDraft.moment]||CM_SETS.matin;
+    const has=set.some(function(k){ return chDraft.filled[k]; });
+    if(!chDraft.id && !has) return;
+    clearTimeout(cmSaveTimer);
+    cmSaveTimer=setTimeout(function(){ cmPersist(); },700);
+  }
+
+  // Sortie du mode édition (flèche ‹) : on enregistre puis on revient à la consultation du
+  // même rituel. Un rituel neuf resté vide est abandonné ; une toute 1re création est fêtée.
+  async function cmFinishEdit(){
+    clearTimeout(cmSaveTimer);
+    if(!chDraft){ cmBackToList(); return; }
+    cmCloseMenu();
+    const set=CM_SETS[chDraft.moment]||CM_SETS.matin;
+    const has=set.some(function(k){ return chDraft.filled[k]; });
+    if(!chDraft.id && !has){ cmBackToList(); return; } // rituel neuf resté vide → on abandonne
+    await cmPersist();
+    const created=chDraft._created; chDraft._created=false;
+    chDraft.mode='view'; chDraft._bak=null;
+    if(created){ cmWow(); return; } // toute 1re création (fût-elle déjà auto-enregistrée) : petit moment de joie, puis retour au hub
+    cmRender();
+  }
+
+  // Flèche ‹ : en édition → termine l'édition (auto-save) ; en consultation → liste « Mes rituels ».
+  function cmBack(){
+    if(chDraft && chDraft.mode==='edit'){ cmFinishEdit(); return; }
+    cmBackToList();
   }
 
   async function cmDelete(){
@@ -6558,7 +6614,14 @@
     if(typeof loadHomeRoutine==='function') loadHomeRoutine();
     cmBackToList();
   }
-  function closeRituelChemin(){ const el=document.getElementById('rituel-chemin'); if(el) el.classList.remove('show'); document.body.style.overflow=''; const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show'); cmNavTuck(false); cmNavGlass(false); }
+  function closeRituelChemin(){
+    clearTimeout(cmSaveTimer);
+    // Filet de sécurité : si on quitte le chemin en pleine édition, on enregistre avant de fermer.
+    if(chDraft && chDraft.mode==='edit'){ const set=CM_SETS[chDraft.moment]||CM_SETS.matin; const has=set.some(function(k){ return chDraft.filled[k]; }); if(chDraft.id || has) cmPersist(); }
+    const el=document.getElementById('rituel-chemin'); if(el) el.classList.remove('show'); document.body.style.overflow='';
+    const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show');
+    cmCloseMenu(); cmNavTuck(false); cmNavGlass(false);
+  }
   // Escamote la barre pendant les feuilles plein écran du rituel (sinon elle passerait au-dessus).
   function cmNavTuck(on){ const n=document.getElementById('nav'); if(n) n.classList.toggle('nav-tucked', !!on); }
   // Passe le footer en verre dépoli — réservé au chemin du Rituel (ailleurs : footer d'origine).
