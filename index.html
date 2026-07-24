@@ -1349,10 +1349,12 @@
   .cm-panel-in{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:2px;padding:4% 6%;box-sizing:border-box;overflow:hidden;transition:transform .14s ease;}
   /* Numéro : petit repère rond, dans le flux, au-dessus du nom. */
-  /* Numéro : cercle parfait (15×15), chiffre serif recentré (léger nudge vers le bas). */
-  .cm-panel-num{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:15px;height:15px;padding-top:0.5px;box-sizing:border-box;
-    border-radius:50%;background:rgba(250,244,232,0.94);border:1px solid rgba(150,110,60,0.55);
-    font-family:var(--serif);font-size:9px;font-weight:700;color:#6B4A24;line-height:1;box-shadow:0 1px 2px rgba(46,33,28,0.22);}
+  /* Numéro : pastille ronde posée AU-DESSUS de la pancarte, centrée. Chiffre serif recentré
+     (léger nudge vers le bas). Hors de .cm-panel-in → jamais rogné par son overflow. */
+  .cm-panel-num{position:absolute;left:50%;top:0;transform:translate(-50%,-118%);z-index:7;
+    display:flex;align-items:center;justify-content:center;width:16px;height:16px;padding-top:0.5px;box-sizing:border-box;
+    border-radius:50%;background:rgba(250,244,232,0.96);border:1px solid rgba(150,110,60,0.6);
+    font-family:var(--serif);font-size:9.5px;font-weight:700;color:#6B4A24;line-height:1;box-shadow:0 1px 3px rgba(46,33,28,0.28);}
   /* Nom : encré DANS la pancarte via mix-blend-mode (fusion avec le grain du bois),
      plus de halo blanc « autocollant ». Scènes claires (matin/hebdo) : multiply. */
   .cm-panel-name{flex:0 1 auto;max-width:100%;font-family:var(--serif);font-weight:600;color:#3A2410;text-align:center;line-height:1.02;
@@ -5532,8 +5534,8 @@
       // Un seul composant centré sur la pancarte : numéro + nom + icône (+ coche) dans le flux.
       return '<div class="cm-node cm-paint cm-panel '+cls+'" data-bld="'+key+'" '+(attr||'')+'>'+
         '<span class="cm-panel-halo"></span>'+
+        '<span class="cm-panel-num"></span>'+
         '<div class="cm-panel-in">'+
-          '<span class="cm-panel-num"></span>'+
           '<span class="cm-panel-name">'+lbl+'</span>'+
           (medal?'<span class="cm-panel-thumb">'+medal+'</span>':'')+
           '<span class="cm-panel-check">✓</span>'+
@@ -5687,14 +5689,15 @@
     const ne=nd.querySelector('.cm-panel-num'); if(ne) ne.textContent=nd.dataset.i||'';
     cmFitPanelText(nd);
   }
-  // Réduit la police du nom jusqu'à ce que TOUT le contenu (numéro + nom + icône) tienne
-  // dans la pancarte, en hauteur comme en largeur. Le mot n'est jamais coupé : on rapetisse.
+  // Réduit la police du nom jusqu'à ce que le contenu de la pancarte (nom + icône ; le numéro
+  // est désormais AU-DESSUS, hors de la boîte) tienne en hauteur comme en largeur. Le mot
+  // n'est jamais coupé : on rapetisse. Le nom occupe davantage la pancarte qu'avant.
   function cmFitPanelText(nd){
     const box=nd.querySelector('.cm-panel-in'), t=nd.querySelector('.cm-panel-name');
     if(!box||!t) return;
     const bw=box.clientWidth, bh=box.clientHeight;
     if(bw<=0||bh<=0) return;
-    let fs=Math.max(8, Math.min(17, Math.round(bh*0.36)));
+    let fs=Math.max(8, Math.min(20, Math.round(bh*0.44)));
     t.style.fontSize=fs+'px';
     let guard=24;
     while(guard-- > 0 && (box.scrollHeight>bh+1 || box.scrollWidth>bw+1) && fs>6){ fs-=1; t.style.fontSize=fs+'px'; }
