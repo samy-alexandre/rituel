@@ -1349,14 +1349,17 @@
   .cm-panel-in{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:2px;padding:4% 6%;box-sizing:border-box;overflow:hidden;transition:transform .14s ease;}
   /* Numéro : petit repère rond, dans le flux, au-dessus du nom. */
-  .cm-panel-num{flex:0 0 auto;display:flex;align-items:center;justify-content:center;min-width:14px;height:14px;padding:0 3px;box-sizing:border-box;
-    border-radius:99px;background:rgba(250,244,232,0.92);border:1px solid rgba(150,110,60,0.55);
+  /* Numéro : cercle parfait (15×15), chiffre serif recentré (léger nudge vers le bas). */
+  .cm-panel-num{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:15px;height:15px;padding-top:0.5px;box-sizing:border-box;
+    border-radius:50%;background:rgba(250,244,232,0.94);border:1px solid rgba(150,110,60,0.55);
     font-family:var(--serif);font-size:9px;font-weight:700;color:#6B4A24;line-height:1;box-shadow:0 1px 2px rgba(46,33,28,0.22);}
-  /* Nom : écrit directement sur la pancarte, jamais coupé en plein mot (on réduit la police). */
-  .cm-panel-name{flex:0 1 auto;max-width:100%;font-family:var(--serif);font-weight:600;color:#4A3016;text-align:center;line-height:1.02;
+  /* Nom : encré DANS la pancarte via mix-blend-mode (fusion avec le grain du bois),
+     plus de halo blanc « autocollant ». Scènes claires (matin/hebdo) : multiply. */
+  .cm-panel-name{flex:0 1 auto;max-width:100%;font-family:var(--serif);font-weight:600;color:#3A2410;text-align:center;line-height:1.02;
     letter-spacing:.01em;overflow-wrap:normal;word-break:normal;white-space:normal;
-    text-shadow:0 1px 2px rgba(255,248,230,0.6),0 0 6px rgba(255,246,224,0.5);}
-  .cm-scene.cm-soir .cm-panel-name{color:#F4E6CF;text-shadow:0 1px 3px rgba(20,10,26,0.8),0 0 8px rgba(20,10,26,0.55);}
+    mix-blend-mode:multiply;}
+  /* Scène sombre (soir) : lettrage clair posé sur bois sombre, ombre courte, sans halo. */
+  .cm-scene.cm-soir .cm-panel-name{color:#F2E4C8;mix-blend-mode:normal;text-shadow:0 1px 2px rgba(15,8,22,0.55);}
   .cm-scene.cm-soir .cm-panel-num{background:rgba(38,26,18,0.72);border-color:rgba(238,216,176,0.5);color:#F0DEB9;}
   /* Icône du produit : petite pastille, dans le flux, sous le nom. */
   .cm-panel-thumb{flex:0 0 auto;width:15px;height:15px;border-radius:50%;overflow:hidden;background:var(--surface);
@@ -5977,7 +5980,7 @@
       : '<div class="cm-head">'+sun+'<div class="cm-title">'+title+'</div></div>';
 
     return '<div class="cm-scene'+(moment==='soir'?' cm-soir':'')+'" data-moment="'+moment+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
-        '<button class="cm-back" onclick="cmBack()">‹</button>'+
+        (isEdit?'<button class="cm-back" onclick="cmBack()">‹</button>':'')+
         '<div class="cm-tools">'+tools+'</div>'+head+'<div class="cm-build">'+CM_BUILD+'</div>'+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+
       '</div>';
   }
