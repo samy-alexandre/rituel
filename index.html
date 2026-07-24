@@ -1393,9 +1393,15 @@
      nouveau placement des produits). Soir/hebdo gardent leurs overlays. */
   .cm-scene[data-moment="matin"] .cm-panel-num,
   .cm-scene[data-moment="matin"] .cm-panel-name,
-  .cm-scene[data-moment="matin"] .cm-panel-thumb,
   .cm-scene[data-moment="matin"] .cm-panel-check,
   .cm-scene[data-moment="matin"] .cm-panel-halo{display:none !important;}
+  /* Matin : on n'affiche QUE le produit — un médaillon posé AU-DESSUS de chaque panneau,
+     centré. Les stations vides n'affichent rien (règle .cm-empty existante). */
+  .cm-scene[data-moment="matin"] .cm-panel-in{overflow:visible;}
+  .cm-scene[data-moment="matin"] .cm-panel-thumb{position:absolute;left:50%;top:0;
+    transform:translate(-50%,-118%);z-index:8;width:42px;height:42px;font-size:23px;
+    border:2.5px solid rgba(255,253,250,0.96);background:var(--surface);
+    box-shadow:0 3px 12px rgba(28,16,6,0.45);}
   .cm-links{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible;}
   .cm-links path{fill:none;stroke-linecap:round;}
   .cm-links .lk-base{stroke:rgba(120,92,58,0.20);}
