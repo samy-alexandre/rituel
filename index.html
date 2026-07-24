@@ -571,16 +571,16 @@
 
   /* Footer d'origine, identique sur tous les écrans. */
   .nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; background: rgba(247,241,234,0.92); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(5, 1fr); z-index: 100; transition: transform .3s cubic-bezier(.22,.61,.36,1), opacity .26s ease; }
-  /* Sur le chemin du Rituel : la barre flotte au-dessus du paysage. Fond très translucide
-     (les couleurs de l'illustration transparaissent), flou prononcé, aucun rectangle sombre. */
-  .nav.nav-glass { background: rgba(250,246,240,0.16); backdrop-filter: blur(30px) saturate(1.8); -webkit-backdrop-filter: blur(30px) saturate(1.8); border-top: 1px solid rgba(255,255,255,0.18); box-shadow: none; z-index: 215; }
-  /* Icônes & libellés plus lumineux, halo discret → parfaitement lisibles sur toute illustration (matin clair comme soir sombre). */
-  .nav.nav-glass .nav-item { color: rgba(255,251,246,0.86); }
-  .nav.nav-glass .nav-item .nav-label { text-shadow: 0 1px 4px rgba(28,16,8,0.55), 0 0 10px rgba(28,16,8,0.30); }
-  .nav.nav-glass .nav-item svg { filter: drop-shadow(0 1px 3px rgba(28,16,8,0.5)); }
+  /* Sur le chemin du Rituel : PLUS de verre dépoli. La barre est totalement transparente,
+     seuls les onglets flottent sur le paysage. Halo renforcé → toujours bien lisibles. */
+  .nav.nav-glass { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-top: none; box-shadow: none; z-index: 215; }
+  .nav.nav-glass .nav-item { color: #FFFFFF; }
+  .nav.nav-glass .nav-item .nav-label { text-shadow: 0 1px 3px rgba(18,10,3,0.85), 0 0 8px rgba(18,10,3,0.6); }
+  .nav.nav-glass .nav-item svg { filter: drop-shadow(0 1px 3px rgba(18,10,3,0.85)) drop-shadow(0 0 5px rgba(18,10,3,0.5)); }
+  .nav.nav-glass .nav-item:not(.active) { color: rgba(255,252,248,0.9); }
   .nav.nav-glass .nav-item.active { color: #FFFFFF; }
-  .nav.nav-glass .nav-item.active .nav-label { text-shadow: 0 1px 4px rgba(28,16,8,0.55), 0 0 12px rgba(255,196,140,0.55); }
-  .nav.nav-glass .nav-item.active svg { filter: drop-shadow(0 1px 4px rgba(28,16,8,0.5)) drop-shadow(0 0 7px rgba(255,196,140,0.6)); }
+  .nav.nav-glass .nav-item.active .nav-label { text-shadow: 0 1px 3px rgba(18,10,3,0.85), 0 0 12px rgba(255,196,140,0.6); }
+  .nav.nav-glass .nav-item.active svg { filter: drop-shadow(0 1px 3px rgba(18,10,3,0.85)) drop-shadow(0 0 7px rgba(255,196,140,0.7)); }
   .nav.nav-tucked { transform: translateY(160%); opacity: 0; pointer-events: none; }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; cursor: pointer; transition: opacity .2s; color: var(--muted); }
   .nav-item.active { color: var(--accent); }
@@ -1296,6 +1296,9 @@
   .cm-sun{display:block;margin:0 auto 8px;width:44px;height:18px;color:var(--cm-ink);opacity:.68;}
   .cm-sun svg{width:100%;height:100%;display:block;}
   .cm-title{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.12;letter-spacing:.005em;color:var(--cm-ink);text-shadow:0 1px 16px var(--cm-glow);cursor:pointer;}
+  /* Matin : ciel pâle et sans brume → titre & soleil renforcés (encre foncée + aura sombre) pour bien ressortir. */
+  .cm-scene[data-moment="matin"] .cm-title{color:#2A1808;font-weight:700;text-shadow:0 1px 2px rgba(24,14,4,0.55),0 2px 18px rgba(24,14,4,0.45);}
+  .cm-scene[data-moment="matin"] .cm-sun{opacity:0.95;filter:drop-shadow(0 1px 3px rgba(24,14,4,0.5));}
   .cm-modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;
     padding:22px;background:rgba(46,33,28,0.44);opacity:0;pointer-events:none;transition:opacity .22s ease;}
   .cm-modal.show{opacity:1;pointer-events:auto;}
