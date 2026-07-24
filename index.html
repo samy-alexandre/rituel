@@ -1385,6 +1385,14 @@
   .cm-node.cm-panel.vy-done .cm-panel-check,.cm-node.cm-panel.cm-fait .cm-panel-check{display:block;}
   /* Réaction discrète au toucher. */
   .cm-node.cm-panel:active .cm-panel-in{transform:scale(0.955);}
+  /* Matin : noms, numéros et produits sont désormais DESSINÉS dans l'illustration.
+     On masque donc les overlays HTML correspondants (provisoire, en attendant le
+     nouveau placement des produits). Soir/hebdo gardent leurs overlays. */
+  .cm-scene[data-moment="matin"] .cm-panel-num,
+  .cm-scene[data-moment="matin"] .cm-panel-name,
+  .cm-scene[data-moment="matin"] .cm-panel-thumb,
+  .cm-scene[data-moment="matin"] .cm-panel-check,
+  .cm-scene[data-moment="matin"] .cm-panel-halo{display:none !important;}
   .cm-links{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible;}
   .cm-links path{fill:none;stroke-linecap:round;}
   .cm-links .lk-base{stroke:rgba(120,92,58,0.20);}
