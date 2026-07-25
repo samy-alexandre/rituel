@@ -1413,6 +1413,10 @@
     transform:translate(-50%,-118%);z-index:8;width:42px;height:42px;font-size:23px;
     border:2.5px solid rgba(255,253,250,0.96);background:var(--surface);
     box-shadow:0 3px 12px rgba(28,16,6,0.45);}
+  /* Emplacement VIDE : on le montre quand même (repère cliquable pointillé) → la personne voit
+     où poser/toucher un produit, en aperçu comme en édition. Produit posé = médaillon plein. */
+  .cm-scene[data-moment="matin"] .cm-node.cm-empty .cm-panel-thumb, .cm-scene[data-moment="soir"] .cm-node.cm-empty .cm-panel-thumb, .cm-scene[data-moment="hebdo"] .cm-node.cm-empty .cm-panel-thumb{
+    display:flex !important;background:rgba(255,251,244,0.5);border-style:dashed;border-color:rgba(201,90,63,0.9);color:var(--accent);font-weight:700;box-shadow:0 2px 8px rgba(28,16,6,0.3);}
   .cm-links{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible;}
   .cm-links path{fill:none;stroke-linecap:round;}
   .cm-links .lk-base{stroke:rgba(120,92,58,0.20);}
@@ -5663,7 +5667,27 @@
     scene.addEventListener('mouseleave',stop);
   }
 
+  // ===== Mode calage (dev) : ajoute #calib à l'URL, puis touche un point de la scène.
+  // Affiche les coordonnées image (x%, y%) du tap → pour caler cx,cy de chaque station.
+  let cmCalibOn = /calib/i.test(location.hash);
+  window.addEventListener('hashchange', function(){ cmCalibOn = /calib/i.test(location.hash); });
+  function cmBindCalib(scene){
+    if(!cmCalibOn || scene.__calib) return; scene.__calib=true;
+    scene.addEventListener('click', function(e){
+      const f=scene.__cmf; if(!f) return;
+      const r=scene.getBoundingClientRect();
+      const x=((e.clientX - r.left - f.offX)/f.rw*100);
+      const y=((e.clientY - r.top  - f.offY)/f.rh*100);
+      let box=document.getElementById('cm-calib');
+      if(!box){ box=document.createElement('div'); box.id='cm-calib';
+        box.style.cssText='position:fixed;left:8px;bottom:76px;z-index:99999;background:rgba(0,0,0,0.82);color:#fff;font:600 13px/1.4 monospace;padding:9px 12px;border-radius:9px;max-width:92vw;white-space:pre;pointer-events:none;';
+        document.body.appendChild(box); }
+      box.textContent='CALAGE — dernier tap :\ncx:'+x.toFixed(1)+'  cy:'+y.toFixed(1)+'\n(dis-moi : station + ces valeurs)';
+    }, true);
+  }
+
   function cmPlacePaint(scene, def, f, topLimit){
+    scene.__cmf=f; // mémorise le calage (rw,rh,offX,offY) pour le mode calage
     scene.style.backgroundImage="url('"+def.img+"')";
     scene.style.backgroundSize=f.rw+'px '+f.rh+'px';
     scene.style.backgroundPosition=f.offX+'px '+f.offY+'px';
@@ -6106,7 +6130,7 @@
     stage.querySelectorAll('.cm-layer').forEach(function(layer){
       const scene=layer.querySelector('.cm-scene'); if(scene) cmLayoutScene(scene, scene.dataset.moment);
     });
-    const cur=stage.querySelector('.cm-cur .cm-scene'); if(cur) cmBindLongPress(cur); // seul le calque courant réagit à l'appui long
+    const cur=stage.querySelector('.cm-cur .cm-scene'); if(cur){ cmBindLongPress(cur); cmBindCalib(cur); } // seul le calque courant réagit à l'appui long
   }
 
   // ===================== VOYAGE DU JOUR =====================
