@@ -1293,12 +1293,24 @@
      une ligne d'introduction. Aucun cartouche : le texte respire directement sur le paysage. */
   .cm-head{position:absolute;left:0;right:0;top:calc(20px + env(safe-area-inset-top));z-index:8;text-align:center;padding:0 52px;pointer-events:none;}
   .cm-head .cm-title,.cm-head .cm-count{pointer-events:auto;}
-  .cm-sun{display:block;margin:0 auto 8px;width:44px;height:18px;color:var(--cm-ink);opacity:.68;}
-  .cm-sun svg{width:100%;height:100%;display:block;}
-  .cm-title{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.12;letter-spacing:.005em;color:var(--cm-ink);text-shadow:0 1px 16px var(--cm-glow);cursor:pointer;}
-  /* Matin : ciel pâle et sans brume → titre & soleil renforcés (encre foncée + aura sombre) pour bien ressortir. */
-  .cm-scene[data-moment="matin"] .cm-title{color:#2A1808;font-weight:700;text-shadow:0 1px 2px rgba(24,14,4,0.55),0 2px 18px rgba(24,14,4,0.45);}
-  .cm-scene[data-moment="matin"] .cm-sun{opacity:0.95;filter:drop-shadow(0 1px 3px rgba(24,14,4,0.5));}
+  /* Voile vignette très doux DERRIÈRE le header uniquement (pas de bandeau, pas de carte,
+     pas de verre) : rend le titre lisible sur un ciel lumineux, tout en restant fondu au paysage. */
+  .cm-head::before{content:"";position:absolute;left:50%;top:-30px;transform:translateX(-50%);
+    width:150%;max-width:560px;height:184px;z-index:-1;pointer-events:none;
+    background:radial-gradient(68% 100% at 50% 22%, rgba(0,0,0,0.34), rgba(0,0,0,0.16) 46%, rgba(0,0,0,0) 72%);}
+  /* Icône du moment (soleil levant le matin, croissant de lune le soir). Lueur discrète.
+     Le passage matin↔soir se fait en fondu via le crossfade de scène (~320ms). */
+  .cm-sun{display:block;margin:0 auto 8px;width:42px;height:26px;opacity:1;
+    transition:opacity .32s ease, transform .32s ease;}
+  .cm-sun svg{width:100%;height:100%;display:block;overflow:visible;}
+  .cm-scene[data-moment="matin"] .cm-sun{filter:drop-shadow(0 0 7px rgba(244,201,93,0.55));}
+  .cm-scene[data-moment="hebdo"] .cm-sun{filter:drop-shadow(0 0 6px rgba(244,201,93,0.45));}
+  .cm-scene[data-moment="soir"]  .cm-sun{filter:drop-shadow(0 0 7px rgba(243,228,196,0.55));}
+  /* Titre : chaud, un peu plus épais, ombre douce → lisible sans cartouche. */
+  .cm-title{font-family:var(--serif);font-size:31px;font-weight:700;line-height:1.12;letter-spacing:.006em;
+    color:#FDEFD9;text-shadow:0 1px 2px rgba(12,7,2,0.55),0 2px 15px rgba(12,7,2,0.42);cursor:pointer;}
+  .cm-scene[data-moment="matin"] .cm-title{color:#FFF1DB;}   /* lumière un peu plus chaude */
+  .cm-scene[data-moment="soir"]  .cm-title{color:#FBEBCF;}   /* ivoire chaud */
   .cm-modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;
     padding:22px;background:rgba(46,33,28,0.44);opacity:0;pointer-events:none;transition:opacity .22s ease;}
   .cm-modal.show{opacity:1;pointer-events:auto;}
@@ -5883,6 +5895,23 @@
     if(m==='hebdo') return {k:'Ton rituel · Semaine',ph:'Soins de la semaine',start:'🧖‍♀️'};
     return {k:'Ton rituel · Matin',ph:'Rituel du matin',start:'🌱'};
   }
+  // Icône du header, propre à chaque moment. Soir : croissant de lune + étoile, ton ivoire
+  // chaud (l'instant où l'on clôt sa journée). Matin/hebdo : soleil levant doré (nouveau départ).
+  function cmMomentIcon(moment){
+    if(moment==='soir'){
+      return '<div class="cm-sun" aria-hidden="true"><svg viewBox="0 0 44 26" fill="none">'+
+        '<path d="M23 4.4a9.6 9.6 0 1 0 0 17.2 7.5 7.5 0 0 1 0-17.2z" fill="#F3E4C4"/>'+
+        '<path d="M32 4.6l.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8z" fill="#F7EDD6"/>'+
+        '</svg></div>';
+    }
+    return '<div class="cm-sun" aria-hidden="true"><svg viewBox="0 0 44 26" fill="none">'+
+      '<g stroke="#F4C95D" stroke-width="1.8" stroke-linecap="round">'+
+        '<path d="M22 3.2v3.4"/><path d="M11.4 7.4l2.1 2.1"/><path d="M32.6 7.4l-2.1 2.1"/><path d="M4.4 17h3.1"/><path d="M36.5 17h3.1"/>'+
+      '</g>'+
+      '<path d="M13 17.6a9 9 0 0 1 18 0z" fill="#F4C95D"/>'+
+      '<path d="M6.5 17.6h31" stroke="#F4C95D" stroke-width="1.8" stroke-linecap="round"/>'+
+      '</svg></div>';
+  }
   // Pourquoi cette étape + le mot de Léa, affichés dans la fiche de station.
   const CM_TIPS = {
     nettoyer:{q:"Le nettoyant retire le sébum et les résidus sans décaper ta barrière cutanée. Le soir, si tu portes du SPF ou du maquillage, passe d'abord une huile ou un baume : l'eau seule ne les dissout pas.",
@@ -6003,8 +6032,8 @@
     const nOk=set.filter(function(k){ return d.filled[k]; }).length;
     const count='<div class="cm-count">'+nOk+' étape'+(nOk>1?'s':'')+' sur '+set.length+'</div>';
     const tools='<button class="cm-tool" title="Menu" onclick="cmOpenMenu()">⚙️</button>';
-    // Motif « lever de soleil » dessiné au trait, teinté à l'encre du décor.
-    const sun='<div class="cm-sun" aria-hidden="true"><svg viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15.2h30"/><path d="M15 15.2a7 7 0 0 1 14 0"/><path d="M22 2.5v3M13.2 6.2l1.9 1.9M30.8 6.2l-1.9 1.9M5.6 11h2.6M35.8 11h2.6"/></svg></div>';
+    // Icône du moment : soleil levant (matin/hebdo) ou croissant de lune (soir).
+    const sun=cmMomentIcon(moment);
     // Un seul titre = le nom du rituel (modifiable). Aucun sous-titre ni texte en double.
     const head=isEdit
       ? '<div class="cm-head">'+sun+'<div class="cm-title" onclick="cmRename()">'+title+' ✎</div>'+count+
