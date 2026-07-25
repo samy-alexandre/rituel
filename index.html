@@ -6035,8 +6035,9 @@
         nodes+=(paint?cmPaintHtml(key,'cm-empty'+pcls,'+',ph.nom,'data-i="'+idx+'" onclick="cmOpenCarousel(\''+key+'\','+idx+')"')
                      :cmNodeHtml(key,'cm-empty','+',ph.nom,'','data-i="'+idx+'" onclick="cmOpenCarousel(\''+key+'\','+idx+')"'));
       } else {
-        nodes+=(paint?cmPaintHtml(key,'cm-empty cm-fige'+pcls,ph.emoji,ph.nom,'data-i="'+idx+'"')
-                     :cmNodeHtml(key,'cm-empty cm-fige',ph.emoji,ph.nom,'','data-i="'+idx+'"'));
+        // Aperçu, station vide : le tap ouvre quand même une carte (fiche de l'étape en lecture seule).
+        nodes+=(paint?cmPaintHtml(key,'cm-empty cm-fige'+pcls,ph.emoji,ph.nom,'data-i="'+idx+'" onclick="cmInfo(\''+key+'\','+idx+')"')
+                     :cmNodeHtml(key,'cm-empty cm-fige',ph.emoji,ph.nom,'','data-i="'+idx+'" onclick="cmInfo(\''+key+'\','+idx+')"'));
       }
     });
     if(!paint) nodes+=cmNodeHtml('arrivee','cm-muted','','Objectif','');
