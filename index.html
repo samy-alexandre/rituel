@@ -1402,29 +1402,17 @@
   .cm-node.cm-panel.vy-done .cm-panel-check,.cm-node.cm-panel.cm-fait .cm-panel-check{display:block;}
   /* Réaction discrète au toucher. */
   .cm-node.cm-panel:active .cm-panel-in{transform:scale(0.955);}
-  /* Matin ET soir : noms, numéros et produits sont désormais DESSINÉS dans l'illustration.
-     On masque les overlays HTML correspondants. Hebdo (ancienne image) garde ses overlays. */
-  .cm-scene[data-moment="matin"] .cm-panel-num,
-  .cm-scene[data-moment="matin"] .cm-panel-name,
-  .cm-scene[data-moment="matin"] .cm-panel-check,
-  .cm-scene[data-moment="matin"] .cm-panel-halo,
-  .cm-scene[data-moment="soir"] .cm-panel-num,
-  .cm-scene[data-moment="soir"] .cm-panel-name,
-  .cm-scene[data-moment="soir"] .cm-panel-check,
-  .cm-scene[data-moment="soir"] .cm-panel-halo{display:none !important;}
-  /* On n'affiche QUE le produit — un médaillon posé AU-DESSUS de chaque panneau, centré.
-     Les stations vides n'affichent rien (règle .cm-empty existante). */
-  .cm-scene[data-moment="matin"] .cm-panel-in,
-  .cm-scene[data-moment="soir"] .cm-panel-in{overflow:visible;}
-  .cm-scene[data-moment="matin"] .cm-panel-thumb,
-  .cm-scene[data-moment="soir"] .cm-panel-thumb{position:absolute;left:50%;top:0;
+  /* Chemin (matin/soir/hebdo) : noms, numéros et supports sont DESSINÉS dans les illustrations
+     → on masque les overlays HTML des panneaux. On n'affiche QUE le produit : un médaillon posé
+     AU-DESSUS de chaque station, centré. Stations vides : rien (règle .cm-empty existante). */
+  .cm-scene[data-moment="matin"] .cm-panel-num, .cm-scene[data-moment="matin"] .cm-panel-name, .cm-scene[data-moment="matin"] .cm-panel-check, .cm-scene[data-moment="matin"] .cm-panel-halo,
+  .cm-scene[data-moment="soir"] .cm-panel-num,  .cm-scene[data-moment="soir"] .cm-panel-name,  .cm-scene[data-moment="soir"] .cm-panel-check,  .cm-scene[data-moment="soir"] .cm-panel-halo,
+  .cm-scene[data-moment="hebdo"] .cm-panel-num, .cm-scene[data-moment="hebdo"] .cm-panel-name, .cm-scene[data-moment="hebdo"] .cm-panel-check, .cm-scene[data-moment="hebdo"] .cm-panel-halo{display:none !important;}
+  .cm-scene[data-moment="matin"] .cm-panel-in, .cm-scene[data-moment="soir"] .cm-panel-in, .cm-scene[data-moment="hebdo"] .cm-panel-in{overflow:visible;}
+  .cm-scene[data-moment="matin"] .cm-panel-thumb, .cm-scene[data-moment="soir"] .cm-panel-thumb, .cm-scene[data-moment="hebdo"] .cm-panel-thumb{position:absolute;left:50%;top:0;
     transform:translate(-50%,-118%);z-index:8;width:42px;height:42px;font-size:23px;
     border:2.5px solid rgba(255,253,250,0.96);background:var(--surface);
     box-shadow:0 3px 12px rgba(28,16,6,0.45);}
-  /* Hebdo : rendu sans panneaux (médaillon + étiquette). Noms + produits sont dans l'image
-     → on masque ces overlays HTML (produit ET nom de station). */
-  .cm-scene[data-moment="hebdo"] .cm-medal,
-  .cm-scene[data-moment="hebdo"] .cm-tag{display:none !important;}
   .cm-links{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible;}
   .cm-links path{fill:none;stroke-linecap:round;}
   .cm-links .lk-base{stroke:rgba(120,92,58,0.20);}
@@ -6143,10 +6131,11 @@
       traiter :{x:73, y:65, h:18.31, r:1.40, cx:84,   cy:65.5, pw:12.5, ph:7.5, rot:-2},  // 2 → ardoise de l'apothicaire
       hydrater:{x:30, y:35, h:11.97, r:1.50, cx:26,   cy:36,   pw:13.5, ph:4.6, rot:0}    // 3 → panonceau près de la verrière
     }},
-    hebdo:{ img:'img/clairiere.jpg', w:853, h:1844, top:22, pos:{
-      nettoyer:{x:14.57, y:58.57, h:13.29, r:1.15},
-      masque  :{x:79.69, y:54.53, h:17.76, r:1.31},
-      hydrater:{x:34.34, y:45.59, h:18.18, r:1.18}
+    hebdo:{ img:'img/clairiere.jpg', w:853, h:1844, top:22, panels:true, pos:{
+      // Panneaux de pierre calibrés (cx,cy = centre, pw/ph = taille, rot). Le médaillon flotte au-dessus.
+      nettoyer:{x:12, y:72, h:13, r:1.4, cx:12, cy:69, pw:15, ph:8, rot:0},   // 1 → plaque Nettoyer (bas gauche)
+      masque  :{x:80, y:70, h:13, r:1.4, cx:80, cy:67, pw:15, ph:8, rot:0},   // 2 → plaque Masque & Soins (bas droite)
+      hydrater:{x:51, y:52, h:13, r:1.4, cx:51, cy:49, pw:14, ph:8, rot:0}    // 3 → plaque Hydrater (centre)
     }}
   };
 
