@@ -1304,7 +1304,9 @@
     transition:opacity .32s ease, transform .32s ease;}
   .cm-sun svg{width:100%;height:100%;display:block;overflow:visible;}
   .cm-scene[data-moment="matin"] .cm-sun{filter:drop-shadow(0 0 7px rgba(244,201,93,0.55));}
-  .cm-scene[data-moment="hebdo"] .cm-sun{filter:drop-shadow(0 0 6px rgba(244,201,93,0.45));}
+  .cm-scene[data-moment="hebdo"] .cm-sun{filter:drop-shadow(0 0 7px rgba(233,178,196,0.5));}
+  /* Icône emoji (lotus de l'hebdo) : occupe la même zone, centrée, légèrement plus grande. */
+  .cm-sun.cm-sun-emoji{width:auto;height:auto;font-size:26px;line-height:1;text-align:center;}
   .cm-scene[data-moment="soir"]  .cm-sun{filter:drop-shadow(0 0 7px rgba(243,228,196,0.55));}
   /* Titre : chaud, un peu plus épais, ombre douce → lisible sans cartouche. */
   .cm-title{font-family:var(--serif);font-size:31px;font-weight:700;line-height:1.12;letter-spacing:.006em;
@@ -5903,6 +5905,10 @@
         '<path d="M23 4.4a9.6 9.6 0 1 0 0 17.2 7.5 7.5 0 0 1 0-17.2z" fill="#F3E4C4"/>'+
         '<path d="M32 4.6l.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8z" fill="#F7EDD6"/>'+
         '</svg></div>';
+    }
+    if(moment==='hebdo'){
+      // Fleur de lotus : soin profond, spa, moment pour soi — l'esprit du rituel hebdo.
+      return '<div class="cm-sun cm-sun-emoji" aria-hidden="true">🪷</div>';
     }
     return '<div class="cm-sun" aria-hidden="true"><svg viewBox="0 0 44 26" fill="none">'+
       '<g stroke="#F4C95D" stroke-width="1.8" stroke-linecap="round">'+
