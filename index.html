@@ -6229,8 +6229,7 @@
     const sun=cmMomentIcon(moment);
     // Un seul titre = le nom du rituel (modifiable). Aucun sous-titre ni texte en double.
     const head=isEdit
-      ? '<div class="cm-head">'+sun+'<div class="cm-title" onclick="cmRename()">'+title+'<span class="cm-title-pen">✎</span></div>'+count+
-        '<div class="cm-autosave">✓ Enregistré automatiquement</div></div>'
+      ? '<div class="cm-head">'+sun+'<div class="cm-title" onclick="cmRename()">'+title+'<span class="cm-title-pen">✎</span></div>'+count+'</div>'
       : '<div class="cm-head">'+sun+'<div class="cm-title">'+title+'</div></div>';
 
     // Édition : plus de flèche « ‹ » (ambiguë) — un vrai bouton « Enregistrer » qui termine l'édition.
@@ -6777,6 +6776,7 @@
   // sans quitter le panneau. Le décor défile via cmShowSlot ; le panneau se recompose.
   function cmPanelGoTab(m){
     if(!m) return;
+    cmSaveIfEditing();   // ne pas perdre une édition en cours en changeant d'onglet
     rpSlotView=m;
     cmShowSlot(m);
     cmPanelRender();
@@ -6786,6 +6786,7 @@
   async function cmPanelSelect(id){
     const all=window.__allRituels||[];
     const t=all.find(function(r){ return String(r.id)===String(id); }); if(!t) return;
+    cmSaveIfEditing();   // ne pas perdre une édition en cours en chargeant un autre rituel
     if(navigator.vibrate) navigator.vibrate(6);
     const tM=(t.moment==='matin'||t.moment==='both'), tS=(t.moment==='soir'||t.moment==='both');
     let off=[];
@@ -6845,6 +6846,7 @@
   // Nouveau rituel pour la période affichée : referme le panneau et ouvre un chemin vierge.
   function cmPanelNew(){
     const moment=(chDraft&&chDraft.moment)||rpSlotView||'matin';
+    cmSaveIfEditing();   // ne pas perdre une édition en cours avant d'ouvrir un rituel vierge
     cmClosePanel();
     if(typeof openRituelChemin==='function') openRituelChemin(null, moment);
   }
@@ -7056,16 +7058,19 @@
     if(typeof loadHomeRoutine==='function') loadHomeRoutine();
   }
 
-  // Enregistrement automatique (mode édition), légèrement différé pour regrouper les gestes.
-  // On ne crée jamais un rituel vide tant qu'aucun produit n'a été posé.
+  // Enregistrement automatique DÉSACTIVÉ : la sauvegarde se fait au bouton « Enregistrer »
+  // (cmFinishEdit). Les modifications restent en mémoire (chDraft) pendant l'édition ; un filet
+  // de sécurité silencieux dans closeRituelChemin les enregistre si on quitte sans valider, pour
+  // ne jamais perdre le travail. cmAutoSave devient un no-op (les appels existants ne font rien).
   let cmSaveTimer=null;
-  function cmAutoSave(){
+  function cmAutoSave(){ /* no-op : plus d'enregistrement automatique pendant l'édition */ }
+  // Filet de sécurité silencieux : enregistre le brouillon courant s'il est en cours d'édition,
+  // avant qu'une action (changement d'onglet / de rituel) ne le remplace → aucune perte de travail.
+  function cmSaveIfEditing(){
     if(!chDraft || chDraft.mode!=='edit') return;
     const set=CM_SETS[chDraft.moment]||CM_SETS.matin;
     const has=set.some(function(k){ return chDraft.filled[k]; });
-    if(!chDraft.id && !has) return;
-    clearTimeout(cmSaveTimer);
-    cmSaveTimer=setTimeout(function(){ cmPersist(); },700);
+    if(chDraft.id || has) cmPersist();
   }
 
   // Sortie du mode édition (flèche ‹) : on enregistre puis on revient à la consultation du
