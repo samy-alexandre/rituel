@@ -1313,6 +1313,9 @@
     color:#FDEFD9;text-shadow:0 1px 2px rgba(12,7,2,0.55),0 2px 15px rgba(12,7,2,0.42);cursor:pointer;}
   .cm-scene[data-moment="matin"] .cm-title{color:#FFF1DB;}   /* lumière un peu plus chaude */
   .cm-scene[data-moment="soir"]  .cm-title{color:#FBEBCF;}   /* ivoire chaud */
+  /* Crayon d'édition : collé au dernier mot (aucune espace sécable avant → il ne tombe jamais
+     seul sur la ligne du dessous), plus petit et légèrement en retrait. */
+  .cm-title-pen{display:inline-block;margin-left:9px;font-size:0.6em;font-weight:600;opacity:.82;vertical-align:middle;}
   .cm-modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;
     padding:22px;background:rgba(46,33,28,0.44);opacity:0;pointer-events:none;transition:opacity .22s ease;}
   .cm-modal.show{opacity:1;pointer-events:auto;}
@@ -1568,7 +1571,9 @@
   .cm-panel-veil{position:fixed;inset:0;z-index:3000;background:transparent;
     opacity:0;pointer-events:none;transition:opacity .28s ease;}
   .cm-panel-veil.show{opacity:1;pointer-events:auto;}
-  .cm-panel{position:fixed;z-index:3001;
+  /* .cm-rpanel (et NON .cm-panel) : .cm-panel est déjà la classe des stations peintes du
+     chemin (cm-node cm-panel) — réutiliser ce nom les faisait disparaître (opacity:0). */
+  .cm-rpanel{position:fixed;z-index:3001;
     top:calc(58px + env(safe-area-inset-top));right:12px;
     width:min(344px,86vw);max-height:54dvh;display:flex;flex-direction:column;
     padding:16px 15px 15px;border-radius:28px;
@@ -1579,9 +1584,9 @@
     transform-origin:calc(100% - 8px) -10px;
     transform:scale(0.42) translateY(-10px);opacity:0;pointer-events:none;
     transition:transform .3s cubic-bezier(.2,.9,.28,1.06),opacity .22s ease;overflow:hidden;}
-  .cm-panel.show{transform:scale(1) translateY(0);opacity:1;pointer-events:auto;}
+  .cm-rpanel.show{transform:scale(1) translateY(0);opacity:1;pointer-events:auto;}
   /* Halo chaud décoratif, comme si la lumière venait de la fleur (coin haut-droit). */
-  .cm-panel::before{content:"";position:absolute;top:-40px;right:-30px;width:150px;height:150px;
+  .cm-rpanel::before{content:"";position:absolute;top:-40px;right:-30px;width:150px;height:150px;
     background:radial-gradient(circle,rgba(255,236,196,0.5),rgba(255,236,196,0) 70%);pointer-events:none;}
   .cm-panel-hd{position:relative;font-family:var(--serif);font-size:22px;font-weight:700;
     color:#4A2E1E;letter-spacing:.005em;margin:0 2px 12px;}
@@ -1602,12 +1607,18 @@
   .cm-rcard{background:linear-gradient(160deg, rgba(255,253,249,0.92), rgba(252,244,234,0.86));
     border:1px solid rgba(255,255,255,0.75);border-radius:22px;padding:15px 15px 13px;
     box-shadow:0 8px 22px -10px rgba(46,28,18,0.3),inset 0 1px 0 rgba(255,255,255,0.85);}
-  .cm-rcard-top{display:flex;align-items:baseline;gap:8px;margin-bottom:11px;}
+  .cm-rcard-top{display:flex;align-items:center;gap:8px;margin-bottom:11px;}
   .cm-rcard-name{flex:1;min-width:0;font-family:var(--serif);font-size:19px;font-weight:700;
     color:#3A2418;line-height:1.15;overflow:hidden;text-overflow:ellipsis;}
-  .cm-rcard-badge{flex:0 0 auto;font-size:9.5px;font-weight:800;letter-spacing:.07em;
-    text-transform:uppercase;color:#B26A2E;background:rgba(226,168,86,0.18);
-    border:1px solid rgba(226,168,86,0.4);border-radius:99px;padding:3px 9px;}
+  /* Bascule Actif / En pause : un rituel actif par créneau, cliquable directement ici. */
+  .cm-rcard-actif{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+    font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+    color:#9A8676;background:rgba(120,80,54,0.09);border:1px solid rgba(120,80,54,0.18);
+    border-radius:99px;padding:5px 11px;transition:background .16s ease,color .16s ease,border-color .16s ease,transform .1s ease;}
+  .cm-rcard-actif .cm-rcard-dot{width:7px;height:7px;border-radius:50%;background:#B7A48F;transition:background .16s ease,box-shadow .16s ease;}
+  .cm-rcard-actif.on{color:#4E7A3E;background:rgba(120,170,90,0.16);border-color:rgba(120,170,90,0.42);}
+  .cm-rcard-actif.on .cm-rcard-dot{background:#5FA043;box-shadow:0 0 6px rgba(95,160,67,0.75);}
+  .cm-rcard-actif:active{transform:scale(0.94);}
   .cm-rsteps{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
   .cm-rstep{display:flex;align-items:center;gap:10px;}
   .cm-rstep-ic{flex:0 0 auto;width:30px;height:30px;border-radius:10px;display:flex;
@@ -6210,7 +6221,7 @@
     const sun=cmMomentIcon(moment);
     // Un seul titre = le nom du rituel (modifiable). Aucun sous-titre ni texte en double.
     const head=isEdit
-      ? '<div class="cm-head">'+sun+'<div class="cm-title" onclick="cmRename()">'+title+' ✎</div>'+count+
+      ? '<div class="cm-head">'+sun+'<div class="cm-title" onclick="cmRename()">'+title+'<span class="cm-title-pen">✎</span></div>'+count+
         '<div class="cm-autosave">✓ Enregistré automatiquement</div></div>'
       : '<div class="cm-head">'+sun+'<div class="cm-title">'+title+'</div></div>';
 
@@ -6655,7 +6666,7 @@
     let veil=document.getElementById('cm-panel-veil');
     if(!veil){ veil=document.createElement('div'); veil.id='cm-panel-veil'; veil.className='cm-panel-veil'; veil.onclick=cmClosePanel; document.body.appendChild(veil); }
     let panel=document.getElementById('cm-panel');
-    if(!panel){ panel=document.createElement('div'); panel.id='cm-panel'; panel.className='cm-panel'; document.body.appendChild(panel); }
+    if(!panel){ panel=document.createElement('div'); panel.id='cm-panel'; panel.className='cm-rpanel'; document.body.appendChild(panel); }
     cmPanelRender();
     ov.classList.add('cm-panel-open');
     if(navigator.vibrate) navigator.vibrate(6);
@@ -6714,9 +6725,10 @@
       } else {
         stepsHtml='<div class="cm-rempty">Aucune étape pour l\'instant. Ouvre « Modifier » pour composer ton chemin 🌿</div>';
       }
-      const badge=cur.actif?'<span class="cm-rcard-badge">Actif</span>':'';
+      const toggle='<button class="cm-rcard-actif'+(cur.actif?' on':'')+'" onclick="cmPanelToggleActif()" title="'+(cur.actif?'Mettre en pause':'Activer ce rituel')+'">'+
+        '<span class="cm-rcard-dot"></span>'+(cur.actif?'Actif':'En pause')+'</button>';
       card='<div class="cm-rcard">'+
-        '<div class="cm-rcard-top"><div class="cm-rcard-name">'+escapeHtml(cur.nom||cmMomentMeta(moment).ph)+'</div>'+badge+'</div>'+
+        '<div class="cm-rcard-top"><div class="cm-rcard-name">'+escapeHtml(cur.nom||cmMomentMeta(moment).ph)+'</div>'+toggle+'</div>'+
         stepsHtml+
         '<div class="cm-ractions">'+
           '<button class="cm-ract primary" onclick="cmPanelEdit()"><span class="cm-ract-e">✏️</span>Modifier</button>'+
@@ -6783,9 +6795,37 @@
       if(off.length) await sb.from('rituels').update({actif:false}).in('id',off);
       await sb.from('rituels').update({actif:true}).eq('id',id);
     }catch(e){}
-    window.__allRituels=null;
+    // On NE vide PAS window.__allRituels (le panneau en dépend) : loadRituels le rafraîchit.
     if(typeof loadRituels==='function') loadRituels();
     if(typeof loadHomeRoutine==='function') loadHomeRoutine();
+  }
+  // Active ou met en pause le rituel courant, directement depuis la carte. Un seul rituel
+  // actif par créneau (matin/soir/hebdo) : activer celui-ci met les concurrents en pause.
+  async function cmPanelToggleActif(){
+    const cur=cmCurrentRitual(); if(!cur) return;
+    const all=window.__allRituels||[];
+    if(navigator.vibrate) navigator.vibrate(6);
+    const turnOn=!cur.actif;
+    let off=[];
+    if(turnOn){
+      if(cur.moment==='hebdo'){
+        off=all.filter(function(r){ return r.actif && r.moment==='hebdo' && String(r.id)!==String(cur.id); }).map(function(r){ return r.id; });
+      } else {
+        const tM=(cur.moment==='matin'||cur.moment==='both'), tS=(cur.moment==='soir'||cur.moment==='both');
+        off=all.filter(function(r){ return r.actif && String(r.id)!==String(cur.id) && r.moment!=='hebdo' &&
+          ((tM&&(r.moment==='matin'||r.moment==='both'))||(tS&&(r.moment==='soir'||r.moment==='both'))); }).map(function(r){ return r.id; });
+      }
+      off.forEach(function(oid){ const o=all.find(function(r){ return r.id===oid; }); if(o) o.actif=false; });
+    }
+    cur.actif=turnOn;
+    cmPanelRender();
+    try{
+      if(off.length) await sb.from('rituels').update({actif:false}).in('id',off);
+      await sb.from('rituels').update({actif:turnOn}).eq('id',cur.id);
+    }catch(e){ if(typeof showToast==='function') showToast('Oups, réessaie 🌿'); }
+    if(typeof loadRituels==='function') loadRituels();
+    if(typeof loadHomeRoutine==='function') loadHomeRoutine();
+    if(typeof showToast==='function') showToast(turnOn?'Rituel activé ✨':'Rituel mis en pause 🌙');
   }
   // Modifier le rituel courant : on referme le panneau et on bascule le chemin en édition.
   function cmPanelEdit(){
@@ -6813,7 +6853,7 @@
     }catch(e){ if(typeof showToast==='function') showToast('Oups, réessaie 🌿'); return; }
     cmPanelRender();
     if(typeof showToast==='function') showToast('Rituel dupliqué 🌿');
-    if(typeof loadRituels==='function'){ window.__allRituels=null; loadRituels(); }
+    if(typeof loadRituels==='function') loadRituels();
   }
   // Supprime le rituel courant, puis bascule sur le rituel suivant de la même période
   // (ou l'état vide), sans quitter le panneau.
@@ -6830,7 +6870,6 @@
     chDraft=cmDraftFor(moment);
     cmRender();
     cmPanelRender();
-    window.__allRituels=null;
     if(typeof loadRituels==='function') loadRituels();
     if(typeof loadHomeRoutine==='function') loadHomeRoutine();
   }
