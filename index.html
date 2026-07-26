@@ -1484,6 +1484,17 @@
      où poser/toucher un produit, en aperçu comme en édition. Produit posé = médaillon plein. */
   .cm-scene[data-moment="matin"] .cm-node.cm-empty .cm-panel-thumb, .cm-scene[data-moment="soir"] .cm-node.cm-empty .cm-panel-thumb, .cm-scene[data-moment="hebdo"] .cm-node.cm-empty .cm-panel-thumb{
     display:flex !important;background:rgba(255,251,244,0.5);border-style:dashed;border-color:rgba(201,90,63,0.9);color:var(--accent);font-weight:700;box-shadow:0 2px 8px rgba(28,16,6,0.3);}
+  /* En ÉDITION (pancarte vide, non figée) : cible « + » plus grande, plus contrastée et qui
+     respire lentement → on comprend tout de suite qu'on peut taper dessus. Zone tactile élargie
+     sur le nœud lui-même (min 62px) pour ne pas rater le tap. */
+  .cm-scene .cm-node.cm-panel.cm-empty:not(.cm-fige){min-width:62px;min-height:62px;}
+  .cm-scene .cm-node.cm-empty:not(.cm-fige) .cm-panel-thumb{
+    width:54px !important;height:54px !important;font-size:29px !important;font-weight:800 !important;
+    background:rgba(255,249,241,0.82) !important;border-width:3px !important;color:var(--accent) !important;
+    animation:cmPlusPulse 2.1s ease-in-out infinite;}
+  @keyframes cmPlusPulse{
+    0%,100%{transform:translate(-50%,-50%) scale(1);box-shadow:0 2px 9px rgba(28,16,6,0.32);}
+    50%    {transform:translate(-50%,-50%) scale(1.12);box-shadow:0 4px 16px rgba(201,90,63,0.55);}}
   .cm-links{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible;}
   .cm-links path{fill:none;stroke-linecap:round;}
   .cm-links .lk-base{stroke:rgba(120,92,58,0.20);}
@@ -6163,6 +6174,7 @@
     const moment=r?(r.moment||'matin'):(presetMoment||'matin');
     try{ (new Image()).src=cmTheme(moment).img; }catch(e){}
     chDraft={ id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:cmComputeFilled(r,moment), mode:(mode||(r?'view':'edit')) };
+    window.__cmFireflyPlayed=false;   // nouvelle ouverture d'édition → la luciole peut reguider
     cmRender();
     el.scrollTop=0; el.classList.add('show'); document.body.style.overflow='hidden';
     cmNavTuck(false); cmNavGlass(true);
@@ -6356,11 +6368,13 @@
   }
 
   // ===== Guidage discret à la création : luciole qui vole vers la 1re pancarte vide =====
-  function cmGuideDismissed(){ try{ return localStorage.getItem('rituel_station_hint')==='1'; }catch(e){ return false; } }
   function cmDraftHasProduct(d){ if(!d||!d.filled) return false; const set=CM_SETS[d.moment]||CM_SETS.matin; return set.some(function(k){ return d.filled[k]; }); }
-  // Vrai si on doit guider : édition d'un rituel encore vide, et l'aide n'a jamais été écartée.
-  function cmGuideActive(d){ return !!(d && d.mode==='edit' && !cmDraftHasProduct(d) && !cmGuideDismissed()); }
-  // Lâche une luciole (une seule fois par session) qui rejoint la 1re pancarte vide du volet courant.
+  // Vrai si on doit guider : on édite un rituel encore vide (aucun produit posé). Le guidage
+  // (aide + luciole) réapparaît donc à chaque nouvelle création vide, et disparaît dès le 1er
+  // produit. La luciole, elle, ne se lance qu'une fois par ouverture d'édition (flag réinitialisé
+  // dans openRituelChemin / cmSetMode).
+  function cmGuideActive(d){ return !!(d && d.mode==='edit' && !cmDraftHasProduct(d)); }
+  // Lâche une luciole (une fois par ouverture d'édition) qui rejoint la 1re pancarte vide.
   function cmMaybeGuide(){
     if(window.__cmFireflyPlayed) return;
     if(!cmGuideActive(chDraft)) return;
@@ -7008,8 +7022,10 @@
       const t=e.touches[0];
       const ddx=t.clientX-x0, ddy=t.clientY-y0;
       if(!axis){
-        if(Math.abs(ddx)<8 && Math.abs(ddy)<8) return;
-        axis = Math.abs(ddx)>Math.abs(ddy) ? 'x' : 'y';
+        // Seuil relevé (12px) + exigence d'un mouvement franchement horizontal pour verrouiller
+        // un swipe : un simple tap (même un peu tremblant) n'est plus avalé comme un geste.
+        if(Math.abs(ddx)<12 && Math.abs(ddy)<12) return;
+        axis = (Math.abs(ddx)>Math.abs(ddy)*1.25) ? 'x' : 'y';
         if(axis!=='x') return;
       }
       e.preventDefault();
@@ -7044,8 +7060,8 @@
   }
   function cmPick(key,pid){
     chDraft.filled[key]=pid;
-    // Premier produit posé : l'aide de découverte (texte + luciole) ne réapparaîtra plus.
-    try{ localStorage.setItem('rituel_station_hint','1'); }catch(e){}
+    // 1er produit posé → le rituel n'est plus vide : l'aide et la luciole disparaissent d'elles-mêmes
+    // (cmGuideActive devient faux) au re-render ci-dessous.
     cmClosePop(); cmRender(); cmAutoSave();
     // La station se réveille : brève pulsation du médaillon.
     requestAnimationFrame(function(){
@@ -7056,7 +7072,7 @@
     });
   }
   function cmClear(key){ delete chDraft.filled[key]; cmClosePop(); cmRender(); cmAutoSave(); }
-  function cmSetMode(m){ if(!chDraft) return; chDraft.mode=m; cmRender(); }
+  function cmSetMode(m){ if(!chDraft) return; chDraft.mode=m; if(m==='edit') window.__cmFireflyPlayed=false; cmRender(); }
   // Boîte de dialogue maison : les fenêtres du navigateur cassent l'ambiance.
   function cmAsk(o){
     return new Promise(function(res){
