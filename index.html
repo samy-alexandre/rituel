@@ -1390,7 +1390,7 @@
   .cm-node.cm-panel::before{display:none;}
   .cm-node.cm-panel.cm-fige{cursor:pointer;}
   .cm-panel-in{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:2px;padding:4% 6%;box-sizing:border-box;overflow:hidden;transition:transform .14s ease;}
+    gap:2px;padding:4% 6%;box-sizing:border-box;overflow:hidden;transition:transform .24s cubic-bezier(.34,1.56,.64,1);}
   /* Numéro : petit repère rond, dans le flux, au-dessus du nom. */
   /* Numéro : pastille ronde posée AU-DESSUS de la pancarte, centrée. Chiffre serif recentré
      (léger nudge vers le bas). Hors de .cm-panel-in → jamais rogné par son overflow. */
@@ -1428,8 +1428,47 @@
   .cm-node.cm-panel.vy-done .cm-panel-halo,.cm-node.cm-panel.cm-fait .cm-panel-halo{opacity:0;animation:none;}
   .cm-node.cm-panel.vy-done .cm-panel-thumb,.cm-node.cm-panel.cm-fait .cm-panel-thumb{display:none;}
   .cm-node.cm-panel.vy-done .cm-panel-check,.cm-node.cm-panel.cm-fait .cm-panel-check{display:block;}
-  /* Réaction discrète au toucher. */
-  .cm-node.cm-panel:active .cm-panel-in{transform:scale(0.955);}
+  /* Réaction au toucher : légère réduction (~95 %) puis rebond au relâchement (easing élastique
+     ci-dessus) → la pancarte « répond » et se sent cliquable. */
+  .cm-node.cm-panel:active .cm-panel-in{transform:scale(0.95);}
+
+  /* ===== Guidage discret à la création (au-dessus de l'image, jamais l'image elle-même) ===== */
+  /* Luciole : un simple point lumineux CSS avec halo. Trajectoire interpolée via variables
+     (--fx0/--fy0 départ près du chemin → --fx1/--fy1 première pancarte vide), avec de petits
+     détours autour de la pancarte. Lente et douce : elle guide le regard sans clignoter. */
+  .cm-firefly{position:absolute;left:0;top:0;width:18px;height:18px;border-radius:50%;z-index:11;pointer-events:none;
+    background:radial-gradient(circle at 50% 50%, rgba(255,250,214,1) 0%, rgba(255,232,152,0.95) 28%, rgba(255,212,112,0.5) 50%, rgba(255,200,100,0) 72%);
+    filter:drop-shadow(0 0 6px rgba(255,226,150,0.9));
+    animation:cmFireflyPath 6.2s cubic-bezier(.45,.05,.55,.95) forwards, cmFireflyTwinkle 1.5s ease-in-out infinite;}
+  @keyframes cmFireflyPath{
+    0%   {transform:translate(var(--fx0),var(--fy0)) scale(.5);opacity:0;}
+    8%   {opacity:1;}
+    16%  {transform:translate(calc(var(--fx0) - 16px), calc(var(--fy0) - 46px)) scale(1);opacity:1;}
+    40%  {transform:translate(calc(var(--fx1) + 24px), calc(var(--fy1) + 30px)) scale(1);opacity:1;}
+    52%  {transform:translate(calc(var(--fx1) + 22px), calc(var(--fy1) - 16px));}
+    62%  {transform:translate(calc(var(--fx1) - 4px),  calc(var(--fy1) - 24px));}
+    72%  {transform:translate(calc(var(--fx1) - 22px), calc(var(--fy1) + 4px));}
+    80%  {transform:translate(calc(var(--fx1) - 2px),  calc(var(--fy1) + 18px));}
+    87%  {transform:translate(var(--fx1),var(--fy1)) scale(1);opacity:1;}
+    96%  {transform:translate(var(--fx1),var(--fy1)) scale(.9);opacity:.85;}
+    100% {transform:translate(var(--fx1),var(--fy1)) scale(.5);opacity:0;}
+  }
+  @keyframes cmFireflyTwinkle{0%,100%{filter:drop-shadow(0 0 5px rgba(255,226,150,0.7));}50%{filter:drop-shadow(0 0 11px rgba(255,238,172,1));}}
+
+  /* Petite aide : « Touchez une pancarte… », posée bas-centre, verre dépoli discret.
+     Rendue tant qu'aucun produit n'a été ajouté ; disparaît (re-render) au 1er produit. */
+  .cm-hint{position:absolute;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:11;
+    display:inline-flex;align-items:center;gap:7px;max-width:86%;pointer-events:none;text-align:center;
+    font-family:var(--sans);font-size:12px;font-weight:600;color:#5A3E2A;line-height:1.35;
+    background:rgba(252,246,238,0.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.6);border-radius:99px;padding:9px 16px;
+    box-shadow:0 6px 18px -6px rgba(46,28,18,0.34),inset 0 1px 0 rgba(255,255,255,0.7);
+    animation:cmHintIn .5s ease both, cmHintPulse 2.8s ease-in-out .7s infinite;}
+  .cm-hint .cm-hint-ic{font-size:14px;line-height:1;}
+  @keyframes cmHintIn{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+  @keyframes cmHintPulse{0%,100%{box-shadow:0 6px 18px -6px rgba(46,28,18,0.34),inset 0 1px 0 rgba(255,255,255,0.7);}
+    50%{box-shadow:0 9px 24px -6px rgba(214,142,92,0.55),inset 0 1px 0 rgba(255,255,255,0.7);}}
+  .cm-scene.cm-soir .cm-hint{color:#F3E6CE;background:rgba(40,28,44,0.6);border-color:rgba(255,240,205,0.35);}
   /* Chemin (matin/soir/hebdo) : noms, numéros et supports sont DESSINÉS dans les illustrations
      → on masque les overlays HTML des panneaux. On n'affiche QUE le produit : un médaillon posé
      AU-DESSUS de chaque station, centré. Stations vides : rien (règle .cm-empty existante). */
@@ -6234,8 +6273,10 @@
 
     // Édition : plus de flèche « ‹ » (ambiguë) — un vrai bouton « Enregistrer » qui termine l'édition.
     const saveBtn = isEdit ? '<button class="cm-save" onclick="cmFinishEdit()">✓ Enregistrer mon rituel</button>' : '';
+    // Aide de découverte : visible tant qu'aucun produit n'est posé (et jamais écartée).
+    const hint = cmGuideActive(d) ? '<div class="cm-hint"><span class="cm-hint-ic">👆</span>Touchez une pancarte pour ajouter un produit</div>' : '';
     return '<div class="cm-scene'+(moment==='soir'?' cm-soir':'')+'" data-moment="'+moment+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
-        '<div class="cm-tools">'+tools+'</div>'+head+'<div class="cm-build">'+CM_BUILD+'</div>'+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+saveBtn+
+        '<div class="cm-tools">'+tools+'</div>'+head+'<div class="cm-build">'+CM_BUILD+'</div>'+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+hint+saveBtn+
       '</div>';
   }
 
@@ -6311,6 +6352,31 @@
       const scene=layer.querySelector('.cm-scene'); if(scene) cmLayoutScene(scene, scene.dataset.moment);
     });
     const cur=stage.querySelector('.cm-cur .cm-scene'); if(cur){ cmBindLongPress(cur); cmBindCalib(cur); } // seul le calque courant réagit à l'appui long
+    cmMaybeGuide();
+  }
+
+  // ===== Guidage discret à la création : luciole qui vole vers la 1re pancarte vide =====
+  function cmGuideDismissed(){ try{ return localStorage.getItem('rituel_station_hint')==='1'; }catch(e){ return false; } }
+  function cmDraftHasProduct(d){ if(!d||!d.filled) return false; const set=CM_SETS[d.moment]||CM_SETS.matin; return set.some(function(k){ return d.filled[k]; }); }
+  // Vrai si on doit guider : édition d'un rituel encore vide, et l'aide n'a jamais été écartée.
+  function cmGuideActive(d){ return !!(d && d.mode==='edit' && !cmDraftHasProduct(d) && !cmGuideDismissed()); }
+  // Lâche une luciole (une seule fois par session) qui rejoint la 1re pancarte vide du volet courant.
+  function cmMaybeGuide(){
+    if(window.__cmFireflyPlayed) return;
+    if(!cmGuideActive(chDraft)) return;
+    const scene=document.querySelector('#rituel-chemin .cm-cur .cm-scene'); if(!scene) return;
+    if(scene.querySelector('.cm-firefly')) return;
+    const empty=scene.querySelector('.cm-node.cm-empty'); if(!empty) return;
+    const sr=scene.getBoundingClientRect(), er=empty.getBoundingClientRect();
+    if(!sr.width || !er.width) return;   // pas encore mesurable : on réessaiera au prochain layout
+    const ex=(er.left-sr.left)+er.width/2, ey=(er.top-sr.top)+er.height/2;
+    const sw=scene.clientWidth||sr.width, sh=scene.clientHeight||sr.height;
+    const fly=document.createElement('div'); fly.className='cm-firefly';
+    fly.style.setProperty('--fx0',(sw*0.5-9)+'px'); fly.style.setProperty('--fy0',(sh*0.86-9)+'px');
+    fly.style.setProperty('--fx1',(ex-9)+'px');     fly.style.setProperty('--fy1',(ey-9)+'px');
+    fly.addEventListener('animationend', function(e){ if(e.animationName==='cmFireflyPath') fly.remove(); });
+    scene.appendChild(fly);
+    window.__cmFireflyPlayed=true;   // une seule luciole par session ; le texte d'aide, lui, reste tant que vide
   }
 
   // ===================== VOYAGE DU JOUR =====================
@@ -6977,7 +7043,10 @@
     });
   }
   function cmPick(key,pid){
-    chDraft.filled[key]=pid; cmClosePop(); cmRender(); cmAutoSave();
+    chDraft.filled[key]=pid;
+    // Premier produit posé : l'aide de découverte (texte + luciole) ne réapparaîtra plus.
+    try{ localStorage.setItem('rituel_station_hint','1'); }catch(e){}
+    cmClosePop(); cmRender(); cmAutoSave();
     // La station se réveille : brève pulsation du médaillon.
     requestAnimationFrame(function(){
       const nd=document.querySelector('#rituel-chemin .cm-cur .cm-node[data-bld="'+key+'"]');
