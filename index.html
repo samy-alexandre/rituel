@@ -1342,6 +1342,13 @@
   .cm-tools{position:absolute;top:14px;right:14px;z-index:9;display:flex;flex-direction:column;gap:7px;align-items:flex-end;}
   .cm-tool{width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
   .cm-tool.on{background:var(--accent) !important;box-shadow:0 4px 14px rgba(201,90,63,0.45) !important;}
+  /* Fleur lumineuse (remplace l'engrenage) : blanche, légère lueur, éclôt au toucher. */
+  .cm-tool-flower{background:rgba(255,253,250,0.42);}
+  .cm-flower{width:27px;height:27px;display:block;filter:drop-shadow(0 0 5px rgba(255,255,255,0.7)) drop-shadow(0 1px 2px rgba(46,33,28,0.28));transition:filter .35s ease;}
+  .cm-flower-petals{transform-origin:20px 20px;transform:scale(0.9);transition:transform .45s cubic-bezier(.34,1.56,.64,1);}
+  .cm-tool-flower:active{transform:scale(0.97);}
+  .cm-tool-flower:active .cm-flower-petals{transform:scale(1.14) rotate(20deg);}   /* la fleur s'ouvre */
+  .cm-tool-flower:active .cm-flower{filter:drop-shadow(0 0 10px rgba(255,255,255,0.98)) drop-shadow(0 1px 2px rgba(46,33,28,0.28));}
 
   /* Clairière : les bâtiments sont peints dans le décor, on ne pose que la zone sensible. */
   .cm-node.cm-paint .cm-medal{position:absolute;right:-8px;bottom:-8px;}
@@ -6058,7 +6065,17 @@
     const title=escapeHtml(d.nom||meta.ph);
     const nOk=set.filter(function(k){ return d.filled[k]; }).length;
     const count='<div class="cm-count">'+nOk+' étape'+(nOk>1?'s':'')+' sur '+set.length+'</div>';
-    const tools='<button class="cm-tool" title="Menu" onclick="cmOpenMenu()">⚙️</button>';
+    const tools='<button class="cm-tool cm-tool-flower" title="Menu" aria-label="Menu" onclick="cmOpenMenu()">'+
+      '<svg class="cm-flower" viewBox="0 0 40 40" fill="none" aria-hidden="true">'+
+        '<g class="cm-flower-petals" fill="rgba(255,255,255,0.95)">'+
+          '<ellipse cx="20" cy="9.4" rx="4.6" ry="8.5"/>'+
+          '<ellipse cx="20" cy="9.4" rx="4.6" ry="8.5" transform="rotate(72 20 20)"/>'+
+          '<ellipse cx="20" cy="9.4" rx="4.6" ry="8.5" transform="rotate(144 20 20)"/>'+
+          '<ellipse cx="20" cy="9.4" rx="4.6" ry="8.5" transform="rotate(216 20 20)"/>'+
+          '<ellipse cx="20" cy="9.4" rx="4.6" ry="8.5" transform="rotate(288 20 20)"/>'+
+        '</g>'+
+        '<circle cx="20" cy="20" r="4" fill="#F6DFA0"/>'+
+      '</svg></button>';
     // Icône du moment : soleil levant (matin/hebdo) ou croissant de lune (soir).
     const sun=cmMomentIcon(moment);
     // Un seul titre = le nom du rituel (modifiable). Aucun sous-titre ni texte en double.
