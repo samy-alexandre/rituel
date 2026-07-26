@@ -9,7 +9,10 @@ export function escapeHtml(s) {
 // et optionnelles (ex. jsPDF), afin de ne pas peser sur le premier chargement mobile.
 export function loadScript(src) {
   return new Promise((res, rej) => {
-    if (document.querySelector('script[data-src="' + src + '"]')) { res(); return; }
+    if (document.querySelector('script[data-src="' + src + '"]')) {
+      res();
+      return;
+    }
     const s = document.createElement('script');
     s.src = src;
     s.setAttribute('data-src', src);

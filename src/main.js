@@ -10,7 +10,7 @@
 // Couche core/ (modules ESM propres) importée AVANT le code hérité : chaque module s'expose
 // aussi sur window pour rester accessible au script classique hérité (pont transitoire).
 import './core/supabase.js'; // crée le client `sb` (bundlé) et l'expose sur window.sb
-import './core/utils.js';    // escapeHtml, loadScript
+import './core/utils.js'; // escapeHtml, loadScript
 // Features extraites du monolithe (Phase B). Chaque module s'expose sur window (pont transitoire).
 import './features/datepicker/datepicker.js';
 import './styles/index.css';

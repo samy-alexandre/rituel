@@ -1,0 +1,5 @@
+dist
+node_modules
+public/app.legacy.js
+package-lock.json
+src/styles
