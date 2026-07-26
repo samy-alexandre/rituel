@@ -1,0 +1,14 @@
+/* Point d'entrée des styles — ORDRE PRÉSERVÉ (la cascade en dépend).
+   Découpage par domaine de app.css (identique à l'octet une fois concaténé). */
+@import './tokens.css';
+@import './layout.css';
+@import './screens.css';
+@import './auth.css';
+@import './onboarding.css';
+@import './topbar.css';
+@import './home.css';
+@import './chat.css';
+@import './datepicker.css';
+@import './products.css';
+@import './hub.css';
+@import './ritual.css';

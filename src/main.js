@@ -13,7 +13,7 @@ import './core/supabase.js'; // crée le client `sb` (bundlé) et l'expose sur w
 import './core/utils.js';    // escapeHtml, loadScript
 // Features extraites du monolithe (Phase B). Chaque module s'expose sur window (pont transitoire).
 import './features/datepicker/datepicker.js';
-import './styles/app.css';
+import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
 // l'ordre d'exécution (le module est différé, le DOM est déjà parsé quand on arrive ici).

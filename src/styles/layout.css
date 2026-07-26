@@ -1,0 +1,47 @@
+  /* ===== Desktop : app centrée dans un décor ===== */
+  @media (min-width: 680px) {
+    body {
+      background:
+        radial-gradient(circle at 12% 20%, var(--blush-soft) 0%, transparent 28%),
+        radial-gradient(circle at 88% 75%, #F0E6D6 0%, transparent 32%),
+        radial-gradient(circle at 70% 12%, #F3E2DB 0%, transparent 25%),
+        var(--bg-soft);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    body::before, body::after {
+      content: ''; position: fixed; width: 320px; height: 320px;
+      background: no-repeat center/contain;
+      opacity: 0.5; pointer-events: none; z-index: 0;
+    }
+    body::before {
+      left: 4%; top: 12%;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><g fill='none' stroke='%23C95A3F' stroke-width='1.2' opacity='0.45'><path d='M100 190 C100 130 100 90 100 50'/><path d='M100 120 C70 110 55 85 60 60 C90 70 100 95 100 120'/><path d='M100 100 C130 92 148 68 145 42 C115 50 100 78 100 100'/><path d='M100 75 C78 68 68 48 72 30 C92 40 100 58 100 75'/><circle cx='100' cy='42' r='10'/><circle cx='100' cy='42' r='4' fill='%23C95A3F'/></g></svg>");
+    }
+    body::after {
+      right: 4%; bottom: 10%; transform: scaleX(-1);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><g fill='none' stroke='%23E8A6A0' stroke-width='1.2' opacity='0.5'><path d='M100 190 C100 130 100 90 100 50'/><path d='M100 130 C68 122 52 96 58 70 C90 80 100 105 100 130'/><path d='M100 105 C132 98 150 72 146 46 C116 54 100 80 100 105'/><circle cx='100' cy='46' r='12'/><circle cx='88' cy='52' r='9'/><circle cx='112' cy='52' r='9'/><circle cx='100' cy='62' r='9'/><circle cx='100' cy='52' r='5' fill='%23E8A6A0'/></g></svg>");
+    }
+    #app {
+      height: 880px; max-height: calc(100vh - 48px);
+      border-radius: 46px;
+      box-shadow: var(--shadow-lg), 0 0 0 10px #1c1410, 0 0 0 12px #2a201b;
+      overflow: hidden; position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+    }
+    .scroll-host { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    /* Sur desktop, les éléments fixes se calent dans le cadre */
+    #app .nav, #app .chat-input-bar { position: absolute; }
+    #app .toast { position: absolute; }
+    #app .modal { position: absolute; }
+  }
+
+  /* Mobile : on garde la scroll-host comme conteneur normal */
+  @media (max-width: 679px) {
+    .scroll-host { min-height: 100vh; min-height: 100dvh; }
+  }
+
+  /* ===== Typo ===== */
+  .serif { font-family: var(--serif); font-weight: 400; font-variation-settings: "SOFT" 30, "WONK" 0; letter-spacing: -0.01em; }
+  .display { font-family: var(--serif); font-weight: 300; font-variation-settings: "SOFT" 50, "WONK" 1; letter-spacing: -0.03em; line-height: 1; }
+  .italic { font-style: italic; }
+  .eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }

@@ -1,0 +1,527 @@
+  /* ===== Carte de construction d'un rituel ===== */
+  /* ===== Voyage du jour ===== */
+  .vy-hero{position:relative;border-radius:22px;overflow:hidden;cursor:pointer;margin-bottom:14px;box-shadow:0 14px 34px rgba(142,60,38,0.16);background:#EFE6D8;}
+  .vy-hero-img{height:172px;background-size:cover;background-position:center 42%;position:relative;}
+  .vy-hero-img::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,250,242,0.10) 0%,rgba(46,33,28,0.05) 42%,rgba(46,33,28,0.62) 100%);}
+  .vy-hero-body{position:absolute;left:0;right:0;bottom:0;padding:14px 16px 15px;z-index:2;display:flex;align-items:flex-end;gap:12px;}
+  .vy-hero-txt{flex:1;min-width:0;}
+  .vy-hero-t{font-family:var(--serif);font-size:19px;font-weight:600;color:#FFFDFA;line-height:1.2;text-shadow:0 2px 10px rgba(46,33,28,0.5);}
+  .vy-hero-s{font-size:12px;color:rgba(255,253,250,0.9);margin-top:3px;text-shadow:0 1px 8px rgba(46,33,28,0.5);}
+  .vy-hero-cta{flex-shrink:0;background:rgba(255,253,250,0.95);color:#8E3C26;font-family:var(--sans);font-size:12.5px;font-weight:700;border:none;border-radius:99px;padding:9px 15px;box-shadow:0 4px 14px rgba(46,33,28,0.28);}
+  .vy-hero-bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,253,250,0.28);z-index:3;}
+  .vy-hero-fill{height:100%;background:linear-gradient(90deg,#E3B96A,#C9A24F);transition:width .5s ease;}
+  .vy-hero-plant{position:absolute;font-size:22px;z-index:2;transform:translate(-50%,-70%);filter:drop-shadow(0 2px 5px rgba(46,33,28,0.4));}
+  .hr-listtoggle{display:block;width:100%;background:transparent;border:none;color:var(--muted);font-family:var(--sans);font-size:12px;font-weight:600;padding:9px 0 2px;cursor:pointer;}
+
+  .vy-trail{position:absolute;inset:0;z-index:3;pointer-events:none;}
+  .vy-trail path{fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke-dashoffset .75s cubic-bezier(.4,0,.2,1);}
+  .vy-trail .vy-glow{stroke:rgba(243,206,124,0.42);}
+  .vy-trail .vy-core{stroke:rgba(255,236,181,0.92);}
+  .vy-walker{position:absolute;z-index:8;font-size:27px;transform:translate(-50%,-78%);transition:left .7s cubic-bezier(.4,0,.2,1),top .7s cubic-bezier(.4,0,.2,1);pointer-events:none;filter:drop-shadow(0 3px 6px rgba(46,33,28,0.4));will-change:left,top;}
+  .vy-walker.hop{animation:vyHop .7s ease;}
+  @keyframes vyHop{0%,100%{transform:translate(-50%,-78%) scale(1);}45%{transform:translate(-50%,-96%) scale(1.14);}}
+  .cm-node.vy-done .cm-lbl{background:rgba(255,246,226,0.96);color:#7A5A22;}
+  .vy-check{position:absolute;right:-2px;bottom:-2px;width:21px;height:21px;border-radius:50%;background:#C9A24F;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(46,33,28,0.3);}
+  .vy-petal{position:fixed;z-index:400;pointer-events:none;font-size:15px;animation:vyFall 2.6s linear forwards;}
+  @keyframes vyFall{0%{opacity:0;transform:translateY(-10px) rotate(0);}12%{opacity:1;}100%{opacity:0;transform:translateY(78vh) rotate(320deg);}}
+  .cm-overlay{position:fixed;inset:0;z-index:210;background:var(--bg);opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .28s ease,visibility .28s,transform .28s ease;overflow:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .cm-overlay::-webkit-scrollbar{display:none;}
+  .cm-overlay.show{opacity:1;visibility:visible;transform:translateY(0);}
+  .cm-wrap{max-width:480px;margin:0 auto;position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+  /* ===== Chemin : illustration plein cadre ===== */
+  /* Calques empilés (prev/cur/next). Au repos, seul le calque courant est visible ;
+     les voisins attendent hors champ, transparents. Pendant le swipe, le voisin arrive
+     PAR-DESSUS en fondu (crossfade) tandis que le courant recule un peu (parallaxe) :
+     la coupure disparaît, et un calque plein couvre toujours l'écran → jamais de vide. */
+  .cm-stage{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;}
+  .cm-layer{position:absolute;inset:0;will-change:transform,opacity;backface-visibility:hidden;}
+  .cm-layer.cm-side{opacity:0;z-index:3;pointer-events:none;}
+  .cm-layer[data-role="prev"]{transform:translateX(-100%);}
+  .cm-layer[data-role="next"]{transform:translateX(100%);}
+  .cm-layer.cm-cur{z-index:1;}
+  .cm-scene{position:relative;height:100%;width:100%;background-repeat:no-repeat;overflow:hidden;}
+  .cm-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;animation:cmPulse 1.1s ease-in-out infinite;}
+  @keyframes cmPulse{0%,100%{opacity:.35;transform:scale(.92);}50%{opacity:1;transform:scale(1);}}
+  /* Plus de brume : le paysage est net de haut en bas (voiles haut/bas retirés). */
+  /* En-tête intégré au décor : motif soleil, grand titre serif, sur-titre en capitales,
+     une ligne d'introduction. Aucun cartouche : le texte respire directement sur le paysage. */
+  .cm-head{position:absolute;left:0;right:0;top:calc(20px + env(safe-area-inset-top));z-index:8;text-align:center;padding:0 52px;pointer-events:none;}
+  .cm-head .cm-title,.cm-head .cm-count{pointer-events:auto;}
+  /* Voile vignette très doux DERRIÈRE le header uniquement (pas de bandeau, pas de carte,
+     pas de verre) : rend le titre lisible sur un ciel lumineux, tout en restant fondu au paysage. */
+  .cm-head::before{content:"";position:absolute;left:50%;top:-30px;transform:translateX(-50%);
+    width:150%;max-width:560px;height:184px;z-index:-1;pointer-events:none;
+    background:radial-gradient(68% 100% at 50% 22%, rgba(0,0,0,0.34), rgba(0,0,0,0.16) 46%, rgba(0,0,0,0) 72%);}
+  /* Icône du moment (soleil levant le matin, croissant de lune le soir). Lueur discrète.
+     Le passage matin↔soir se fait en fondu via le crossfade de scène (~320ms). */
+  .cm-sun{display:block;margin:0 auto 8px;width:42px;height:26px;opacity:1;
+    transition:opacity .32s ease, transform .32s ease;}
+  .cm-sun svg{width:100%;height:100%;display:block;overflow:visible;}
+  .cm-scene[data-moment="matin"] .cm-sun{filter:drop-shadow(0 0 7px rgba(244,201,93,0.55));}
+  .cm-scene[data-moment="hebdo"] .cm-sun{filter:drop-shadow(0 0 7px rgba(233,178,196,0.5));}
+  /* Icône emoji (lotus de l'hebdo) : occupe la même zone, centrée, légèrement plus grande. */
+  .cm-sun.cm-sun-emoji{width:auto;height:auto;font-size:26px;line-height:1;text-align:center;}
+  .cm-scene[data-moment="soir"]  .cm-sun{filter:drop-shadow(0 0 7px rgba(243,228,196,0.55));}
+  /* Titre : chaud, un peu plus épais, ombre douce → lisible sans cartouche. */
+  .cm-title{font-family:var(--serif);font-size:31px;font-weight:700;line-height:1.12;letter-spacing:.006em;
+    color:#FDEFD9;text-shadow:0 1px 2px rgba(12,7,2,0.55),0 2px 15px rgba(12,7,2,0.42);cursor:pointer;}
+  .cm-scene[data-moment="matin"] .cm-title{color:#FFF1DB;}   /* lumière un peu plus chaude */
+  .cm-scene[data-moment="soir"]  .cm-title{color:#FBEBCF;}   /* ivoire chaud */
+  /* Crayon d'édition : collé au dernier mot (aucune espace sécable avant → il ne tombe jamais
+     seul sur la ligne du dessous), plus petit et légèrement en retrait. */
+  .cm-title-pen{display:inline-block;margin-left:9px;font-size:0.6em;font-weight:600;opacity:.82;vertical-align:middle;}
+  .cm-modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;
+    padding:22px;background:rgba(46,33,28,0.44);opacity:0;pointer-events:none;transition:opacity .22s ease;}
+  .cm-modal.show{opacity:1;pointer-events:auto;}
+  .cm-modal-box{width:100%;max-width:330px;background:var(--surface);border:1px solid var(--line);
+    border-radius:20px;padding:20px 18px 16px;box-shadow:0 22px 60px rgba(46,33,28,0.34);
+    transform:scale(0.93) translateY(8px);transition:transform .26s cubic-bezier(.2,1,.3,1);}
+  .cm-modal.show .cm-modal-box{transform:scale(1) translateY(0);}
+  .cm-modal-t{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);}
+  .cm-modal-s{font-family:var(--sans);font-size:13px;color:var(--muted);line-height:1.5;margin-top:6px;}
+  .cm-modal-in{width:100%;box-sizing:border-box;font-family:var(--sans);font-size:15px;color:var(--ink);
+    border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--bg);margin-top:14px;}
+  .cm-modal-in:focus{outline:none;border-color:var(--accent);}
+  .cm-modal-b{display:flex;gap:9px;margin-top:16px;}
+  .cm-modal-b button{flex:1;font-family:var(--sans);font-size:14px;font-weight:600;border-radius:99px;
+    padding:12px 10px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);}
+  .cm-modal-b button:active{transform:scale(0.97);}
+  .cm-modal-b .go{background:var(--accent);border-color:var(--accent);color:#FFFDFA;}
+  .cm-modal-b .danger{background:#A93B25;border-color:#A93B25;color:#FFFDFA;}
+  .cm-build{position:absolute;right:8px;bottom:6px;z-index:12;font-family:var(--sans);
+    font-size:9px;letter-spacing:.08em;color:var(--cm-ink);opacity:0.34;pointer-events:none;}
+  @keyframes cmAppel{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.13);opacity:.95}}
+  .cm-node.cm-empty .cm-medal{animation:cmAppel 2.4s ease-in-out infinite;}
+  .cm-node.cm-paint.cm-empty::before{opacity:.55;}
+  .cm-count{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--cm-ink);background:rgba(255,253,250,0.34);border:1px solid rgba(255,253,250,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:3px 11px;border-radius:99px;}
+  .cm-title-edit{font-size:11px;margin-top:3px;color:var(--cm-ink);opacity:.8;cursor:pointer;}
+  .cm-back{position:absolute;top:14px;left:14px;z-index:9;width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:19px;color:#3A2418;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
+  /* Bouton « Enregistrer » (mode édition) : CTA clair posé en bas, au-dessus de la barre. */
+  .cm-save{position:absolute;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:12;
+    font-family:var(--sans);font-size:15px;font-weight:800;letter-spacing:.01em;color:#FFF6EF;white-space:nowrap;
+    background:linear-gradient(150deg,#D9714E,#C24E32);border:none;border-radius:99px;padding:14px 28px;
+    box-shadow:0 12px 28px -8px rgba(180,70,44,0.7),0 2px 8px rgba(46,28,18,0.32),inset 0 1px 0 rgba(255,255,255,0.25);
+    cursor:pointer;transition:transform .12s ease,box-shadow .2s ease;}
+  .cm-save:active{transform:translateX(-50%) scale(0.96);}
+  @media(hover:hover){.cm-save:hover{box-shadow:0 14px 32px -8px rgba(180,70,44,0.8),0 2px 8px rgba(46,28,18,0.32);}}
+  .cm-tools{position:absolute;top:14px;right:14px;z-index:9;display:flex;flex-direction:column;gap:7px;align-items:flex-end;}
+  .cm-tool{width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
+  .cm-tool.on{background:var(--accent) !important;box-shadow:0 4px 14px rgba(201,90,63,0.45) !important;}
+  /* Fleur poignée : plus de cercle, plus d'ombre — juste une fleur posée sur le décor.
+     Elle est la poignée du panneau des rituels : au clic, ses pétales s'ouvrent doucement
+     et le panneau semble en émerger. Second clic (ou clic dehors) : elle se referme. */
+  .cm-tool-flower{background:transparent !important;box-shadow:none !important;width:46px;height:46px;
+    -webkit-backdrop-filter:none !important;backdrop-filter:none !important;
+    transition:transform .3s cubic-bezier(.34,1.35,.5,1);}
+  .cm-flower{width:33px;height:33px;display:block;
+    filter:drop-shadow(0 1px 3px rgba(24,14,8,0.4)) drop-shadow(0 0 6px rgba(255,246,225,0.55));
+    transition:filter .35s ease;}
+  .cm-flower-petals{transform-origin:20px 20px;transform:scale(0.86);transition:transform .42s cubic-bezier(.34,1.5,.5,1);}
+  .cm-flower-core{transition:transform .42s cubic-bezier(.34,1.5,.5,1),filter .35s ease;transform-origin:20px 20px;}
+  .cm-tool-flower:active{transform:scale(0.94);}
+  /* Ouverture pilotée par l'overlay (classe stable) : survit au re-render des scènes. */
+  .cm-overlay.cm-panel-open .cm-cur .cm-tool-flower{transform:scale(1.08) rotate(-4deg);}
+  .cm-overlay.cm-panel-open .cm-cur .cm-flower-petals{transform:scale(1.02) rotate(38deg);}
+  .cm-overlay.cm-panel-open .cm-cur .cm-flower-core{transform:scale(1.28);filter:drop-shadow(0 0 4px rgba(255,235,170,0.95));}
+  .cm-overlay.cm-panel-open .cm-cur .cm-flower{filter:drop-shadow(0 1px 3px rgba(24,14,8,0.42)) drop-shadow(0 0 11px rgba(255,240,190,0.9));}
+
+  /* Clairière : les bâtiments sont peints dans le décor, on ne pose que la zone sensible. */
+  .cm-node.cm-paint .cm-medal{position:absolute;right:-8px;bottom:-8px;}
+  @keyframes cmPose{0%{transform:scale(1)}38%{transform:scale(1.16)}100%{transform:scale(1)}}
+  .cm-node.cm-pose .cm-medal{animation:cmPose .52s cubic-bezier(.3,1.4,.5,1);}
+  .cm-node.cm-fige{cursor:default;}
+  .cm-node{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+  .cm-node.cm-fige .cm-medal{animation:none;}
+  .cm-node.cm-paint::before{content:"";position:absolute;inset:-6px;border-radius:16px;
+    background:radial-gradient(50% 50% at 50% 60%,rgba(255,240,200,0.30),rgba(255,240,200,0) 72%);
+    opacity:0;transition:opacity .3s ease;}
+  .cm-node.cm-paint:active::before{opacity:1;}
+  .cm-node.cm-paint.cm-fait::before{opacity:1;background:radial-gradient(50% 50% at 50% 60%,rgba(243,206,124,0.55),rgba(243,206,124,0) 70%);}
+  /* ===== Station = UN SEUL composant, posé pile sur la pancarte peinte (aucune plaque HTML) =====
+     Conteneur transparent de la taille de la pancarte ; à l'intérieur, numéro + nom + icône
+     centrés (flex), le tout réduit automatiquement pour ne jamais dépasser de la pancarte. */
+  .cm-node.cm-panel{position:absolute;transform:translate(-50%,-50%) rotate(var(--rot,0deg));z-index:6;cursor:pointer;background:none;}
+  .cm-node.cm-panel::before{display:none;}
+  .cm-node.cm-panel.cm-fige{cursor:pointer;}
+  .cm-panel-in{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;padding:4% 6%;box-sizing:border-box;overflow:hidden;transition:transform .24s cubic-bezier(.34,1.56,.64,1);}
+  /* Numéro : petit repère rond, dans le flux, au-dessus du nom. */
+  /* Numéro : pastille ronde posée AU-DESSUS de la pancarte, centrée. Chiffre serif recentré
+     (léger nudge vers le bas). Hors de .cm-panel-in → jamais rogné par son overflow. */
+  .cm-panel-num{position:absolute;left:50%;top:0;transform:translate(-50%,-118%);z-index:7;
+    display:flex;align-items:center;justify-content:center;width:16px;height:16px;padding-top:0.5px;box-sizing:border-box;
+    border-radius:50%;background:rgba(250,244,232,0.96);border:1px solid rgba(150,110,60,0.6);
+    font-family:var(--serif);font-size:9.5px;font-weight:700;color:#6B4A24;line-height:1;box-shadow:0 1px 3px rgba(46,33,28,0.28);}
+  /* Nom : encré DANS la pancarte via mix-blend-mode (fusion avec le grain du bois),
+     plus de halo blanc « autocollant ». Scènes claires (matin/hebdo) : multiply. */
+  .cm-panel-name{flex:0 1 auto;max-width:100%;font-family:var(--serif);font-weight:600;color:#3A2410;text-align:center;line-height:1.02;
+    letter-spacing:.01em;overflow-wrap:normal;word-break:normal;white-space:normal;
+    mix-blend-mode:multiply;}
+  /* Scène sombre (soir) : lettrage clair posé sur bois sombre, ombre courte, sans halo. */
+  .cm-scene.cm-soir .cm-panel-name{color:#F2E4C8;mix-blend-mode:normal;text-shadow:0 1px 2px rgba(15,8,22,0.55);}
+  .cm-scene.cm-soir .cm-panel-num{background:rgba(38,26,18,0.72);border-color:rgba(238,216,176,0.5);color:#F0DEB9;}
+  /* Icône du produit : petite pastille, dans le flux, sous le nom. */
+  .cm-panel-thumb{flex:0 0 auto;width:15px;height:15px;border-radius:50%;overflow:hidden;background:var(--surface);
+    border:1.5px solid rgba(201,90,63,0.8);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;
+    box-shadow:0 1px 3px rgba(46,33,28,0.28);}
+  .cm-panel-thumb img{width:100%;height:100%;object-fit:cover;}
+  /* Coche « terminé » : discrète. */
+  .cm-panel-check{flex:0 0 auto;width:15px;height:15px;border-radius:50%;background:linear-gradient(135deg,#9DB389,#788F5F);
+    color:#FFFDFA;font-size:9px;line-height:15px;text-align:center;box-shadow:0 1px 3px rgba(46,33,28,0.3);display:none;}
+  /* Halo chaud autour de la pancarte (aucun cadre), éteint par défaut. */
+  .cm-panel-halo{position:absolute;inset:-16%;z-index:1;pointer-events:none;opacity:0;border-radius:20px;
+    background:radial-gradient(58% 58% at 50% 50%,rgba(247,214,150,0.65),rgba(247,214,150,0) 72%);
+    transition:opacity .5s ease;}
+  /* NON CONFIGURÉ : aucun halo, nom légèrement estompé, pas d'icône. */
+  .cm-node.cm-panel.cm-empty .cm-panel-name{opacity:.8;}
+  .cm-node.cm-panel.cm-empty .cm-panel-thumb{display:none;}
+  /* CONFIGURÉ : le halo respire lentement, comme émanant du jardin. */
+  @keyframes cmHalo{0%,100%{opacity:.4;transform:scale(.98)}50%{opacity:.9;transform:scale(1.03)}}
+  .cm-node.cm-panel:not(.cm-empty):not(.cm-muted):not(.vy-done):not(.cm-fait) .cm-panel-halo{opacity:.6;animation:cmHalo 3.6s ease-in-out infinite;}
+  /* TERMINÉ : le halo s'éteint, une coche discrète remplace l'icône. */
+  .cm-node.cm-panel.vy-done .cm-panel-halo,.cm-node.cm-panel.cm-fait .cm-panel-halo{opacity:0;animation:none;}
+  .cm-node.cm-panel.vy-done .cm-panel-thumb,.cm-node.cm-panel.cm-fait .cm-panel-thumb{display:none;}
+  .cm-node.cm-panel.vy-done .cm-panel-check,.cm-node.cm-panel.cm-fait .cm-panel-check{display:block;}
+  /* Réaction au toucher : légère réduction (~95 %) puis rebond au relâchement (easing élastique
+     ci-dessus) → la pancarte « répond » et se sent cliquable. */
+  .cm-node.cm-panel:active .cm-panel-in{transform:scale(0.95);}
+
+  /* ===== Guidage discret à la création (au-dessus de l'image, jamais l'image elle-même) ===== */
+  /* Luciole : point lumineux qui suit une COURBE de Bézier lisse (offset-path, construit en JS
+     depuis le départ jusqu'à la 1re pancarte). Le déplacement se fait d'un seul tenant, avec une
+     seule easing → aucun à-coup, aucun arrêt aux waypoints. Un léger flottement (bob) et un
+     scintillement sont portés par le point intérieur pour un rendu vivant et organique. */
+  .cm-firefly{position:absolute;left:0;top:0;width:0;height:0;z-index:11;pointer-events:none;
+    offset-rotate:0deg;offset-distance:0%;
+    animation:cmFireflyMove 5.8s cubic-bezier(.42,.04,.34,1) forwards, cmFireflyFade 5.8s linear forwards;}
+  .cm-firefly-dot{position:absolute;left:0;top:0;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
+    background:radial-gradient(circle at 50% 42%, #ffffff 0%, #fff7d2 30%, #ffe088 52%, rgba(255,205,110,0) 78%);
+    animation:cmFireflyBob 2.3s ease-in-out infinite, cmFireflyTwinkle 1.7s ease-in-out infinite;}
+  @keyframes cmFireflyMove{from{offset-distance:0%;}to{offset-distance:100%;}}
+  @keyframes cmFireflyFade{0%{opacity:0;}9%{opacity:1;}88%{opacity:1;}100%{opacity:0;}}
+  /* Micro-flottement latéral, très léger, désynchronisé du déplacement → vie naturelle. */
+  @keyframes cmFireflyBob{0%{transform:translate(0,0);}25%{transform:translate(2.5px,-3px);}50%{transform:translate(-2px,-1px);}75%{transform:translate(1.5px,2.5px);}100%{transform:translate(0,0);}}
+  @keyframes cmFireflyTwinkle{0%,100%{filter:drop-shadow(0 0 6px rgba(255,242,185,0.95)) drop-shadow(0 0 15px rgba(255,220,135,0.6));opacity:.92;}
+    50%{filter:drop-shadow(0 0 12px rgba(255,250,205,1)) drop-shadow(0 0 24px rgba(255,226,145,0.8));opacity:1;}}
+  @media(prefers-reduced-motion:reduce){.cm-firefly{display:none;}}
+
+  /* Petite aide : « Touchez une pancarte… », posée bas-centre, verre dépoli discret.
+     Rendue tant qu'aucun produit n'a été ajouté ; disparaît (re-render) au 1er produit. */
+  .cm-hint{position:absolute;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:11;
+    display:inline-flex;align-items:center;gap:7px;max-width:86%;pointer-events:none;text-align:center;
+    font-family:var(--sans);font-size:12px;font-weight:600;color:#5A3E2A;line-height:1.35;
+    background:rgba(252,246,238,0.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.6);border-radius:99px;padding:9px 16px;
+    box-shadow:0 6px 18px -6px rgba(46,28,18,0.34),inset 0 1px 0 rgba(255,255,255,0.7);
+    animation:cmHintIn .5s ease both, cmHintPulse 2.8s ease-in-out .7s infinite;}
+  .cm-hint .cm-hint-ic{font-size:14px;line-height:1;}
+  @keyframes cmHintIn{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+  @keyframes cmHintPulse{0%,100%{box-shadow:0 6px 18px -6px rgba(46,28,18,0.34),inset 0 1px 0 rgba(255,255,255,0.7);}
+    50%{box-shadow:0 9px 24px -6px rgba(214,142,92,0.55),inset 0 1px 0 rgba(255,255,255,0.7);}}
+  .cm-scene.cm-soir .cm-hint{color:#F3E6CE;background:rgba(40,28,44,0.6);border-color:rgba(255,240,205,0.35);}
+  /* Chemin (matin/soir/hebdo) : noms, numéros et supports sont DESSINÉS dans les illustrations
+     → on masque les overlays HTML des panneaux. On n'affiche QUE le produit : un médaillon posé
+     AU-DESSUS de chaque station, centré. Stations vides : rien (règle .cm-empty existante). */
+  .cm-scene[data-moment="matin"] .cm-panel-num, .cm-scene[data-moment="matin"] .cm-panel-name, .cm-scene[data-moment="matin"] .cm-panel-check, .cm-scene[data-moment="matin"] .cm-panel-halo,
+  .cm-scene[data-moment="soir"] .cm-panel-num,  .cm-scene[data-moment="soir"] .cm-panel-name,  .cm-scene[data-moment="soir"] .cm-panel-check,  .cm-scene[data-moment="soir"] .cm-panel-halo,
+  .cm-scene[data-moment="hebdo"] .cm-panel-num, .cm-scene[data-moment="hebdo"] .cm-panel-name, .cm-scene[data-moment="hebdo"] .cm-panel-check, .cm-scene[data-moment="hebdo"] .cm-panel-halo{display:none !important;}
+  .cm-scene[data-moment="matin"] .cm-panel-in, .cm-scene[data-moment="soir"] .cm-panel-in, .cm-scene[data-moment="hebdo"] .cm-panel-in{overflow:visible;}
+  .cm-scene[data-moment="matin"] .cm-panel-thumb, .cm-scene[data-moment="soir"] .cm-panel-thumb, .cm-scene[data-moment="hebdo"] .cm-panel-thumb{position:absolute;left:50%;top:50%;
+    transform:translate(-50%,-50%);z-index:8;width:42px;height:42px;font-size:23px;
+    border:2.5px solid rgba(255,253,250,0.96);background:var(--surface);
+    box-shadow:0 3px 12px rgba(28,16,6,0.45);}
+  /* Emplacement VIDE : on le montre quand même (repère cliquable pointillé) → la personne voit
+     où poser/toucher un produit, en aperçu comme en édition. Produit posé = médaillon plein. */
+  .cm-scene[data-moment="matin"] .cm-node.cm-empty .cm-panel-thumb, .cm-scene[data-moment="soir"] .cm-node.cm-empty .cm-panel-thumb, .cm-scene[data-moment="hebdo"] .cm-node.cm-empty .cm-panel-thumb{
+    display:flex !important;background:rgba(255,251,244,0.5);border-style:dashed;border-color:rgba(201,90,63,0.9);color:var(--accent);font-weight:700;box-shadow:0 2px 8px rgba(28,16,6,0.3);}
+  /* En ÉDITION (pancarte vide, non figée) : cible « + » plus grande, plus contrastée et qui
+     respire lentement → on comprend tout de suite qu'on peut taper dessus. Zone tactile élargie
+     sur le nœud lui-même (min 62px) pour ne pas rater le tap. */
+  .cm-scene .cm-node.cm-panel.cm-empty:not(.cm-fige){min-width:62px;min-height:62px;}
+  .cm-scene .cm-node.cm-empty:not(.cm-fige) .cm-panel-thumb{
+    width:54px !important;height:54px !important;font-size:29px !important;font-weight:800 !important;
+    background:rgba(255,249,241,0.82) !important;border-width:3px !important;color:var(--accent) !important;
+    animation:cmPlusPulse 2.1s ease-in-out infinite;}
+  @keyframes cmPlusPulse{
+    0%,100%{transform:translate(-50%,-50%) scale(1);box-shadow:0 2px 9px rgba(28,16,6,0.32);}
+    50%    {transform:translate(-50%,-50%) scale(1.12);box-shadow:0 4px 16px rgba(201,90,63,0.55);}}
+  .cm-links{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible;}
+  .cm-links path{fill:none;stroke-linecap:round;}
+  .cm-links .lk-base{stroke:rgba(120,92,58,0.20);}
+  .cm-links .lk-top{stroke:rgba(247,232,201,0.92);}
+  .cm-scene.cm-soir .cm-links .lk-top{stroke:rgba(238,196,158,0.85);}
+  .cm-node{position:absolute;transform:translate(-50%,-100%);z-index:6;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .cm-bld{position:relative;display:block;line-height:0;transition:transform .16s ease,filter .3s ease;}
+  .cm-bld::after{content:"";position:absolute;left:5%;right:5%;bottom:-2px;height:11px;border-radius:50%;
+    background:radial-gradient(50% 50% at 50% 50%,rgba(74,52,32,0.40),rgba(74,52,32,0) 72%);}
+  .cm-bld img{display:block;width:100%;height:100%;-webkit-user-drag:none;position:relative;z-index:1;
+    filter:drop-shadow(0 2px 2px rgba(74,52,32,0.32));}
+  .cm-scene.cm-soir .cm-bld::after{background:radial-gradient(50% 50% at 50% 50%,rgba(38,22,44,0.5),rgba(38,22,44,0) 72%);}
+  .cm-node:active .cm-bld{transform:scale(0.94);}
+  .cm-node.cm-empty .cm-bld{filter:grayscale(0.55) brightness(1.04) opacity(0.6);}
+  .cm-node.cm-muted{cursor:default;}
+  .cm-medal{position:absolute;right:calc(-9px * var(--k,1));bottom:calc(2px * var(--k,1));
+    width:calc(32px * var(--k,1));height:calc(32px * var(--k,1));border-radius:50%;
+    background:var(--surface);border:calc(2.5px * var(--k,1)) solid var(--accent);overflow:hidden;
+    display:flex;align-items:center;justify-content:center;font-size:calc(15px * var(--k,1));
+    line-height:1;box-shadow:0 3px 9px rgba(46,33,28,0.34);}
+  .cm-medal img{width:100%;height:100%;object-fit:cover;}
+  .cm-node.cm-empty .cm-medal{background:rgba(255,253,250,0.86);border-style:dashed;color:var(--accent);}
+  .cm-tag{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .cm-node.tag-down .cm-tag{bottom:auto;top:calc(100% + 5px);}
+  .cm-lbl{position:relative;font-family:var(--serif);font-size:11.5px;font-weight:600;color:#5B3B22;
+    background:linear-gradient(180deg,#FCF3E0 0%,#F5E7CA 55%,#EEDCB6 100%);
+    border:1px solid rgba(196,161,117,0.75);border-radius:3px;padding:2px 14px;display:inline-block;opacity:0.94;
+    box-shadow:0 2px 5px rgba(46,33,28,0.20),inset 0 1px 0 rgba(255,255,255,0.7);
+    max-width:min(146px,44vw);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.01em;}
+  .cm-lbl::before,.cm-lbl::after{content:"";position:absolute;top:-1.5px;bottom:-1.5px;width:5px;
+    background:linear-gradient(180deg,#E9D5AC,#D2B685);border:1px solid #B08F63;border-radius:2px;
+    box-shadow:0 1px 3px rgba(46,33,28,0.22);}
+  .cm-lbl::before{left:1px;}
+  .cm-lbl::after{right:1px;}
+  .cm-scene.cm-soir .cm-lbl{color:#4A2F1B;}
+  .cm-sub{font-size:10px;color:var(--ink-soft);margin-top:2px;background:rgba(255,253,250,0.88);padding:1px 8px;border-radius:99px;display:inline-block;max-width:104px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;}
+  .cm-scene.cm-compact .cm-lbl{font-size:11.5px;}
+  .cm-scene.cm-compact .cm-sub{display:none;}
+  .cm-scene.cm-soir .cm-bld{filter:saturate(0.78) brightness(0.8);}
+  .cm-scene.cm-soir .cm-node.cm-empty .cm-bld{filter:saturate(0.4) brightness(0.68) opacity(0.62);}
+  .cm-node.vy-done .cm-bld{filter:brightness(1.07) saturate(1.14) drop-shadow(0 0 9px rgba(243,206,124,0.8));}
+  .cm-scene.cm-soir .cm-node.vy-done .cm-bld{filter:brightness(0.98) saturate(1.05) drop-shadow(0 0 11px rgba(255,205,110,0.9));}
+  .cm-node.vy-done .cm-lbl{background:rgba(255,246,226,0.97);color:#7A5A22;}
+  .cm-node.vy-done .cm-medal{border-color:#C9A24F;}
+  .cm-node.vy-next .cm-bld{animation:vyBeat 2.6s ease-in-out infinite;}
+  @keyframes vyBeat{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+  .vy-check{position:absolute;left:calc(-7px * var(--k,1));bottom:calc(2px * var(--k,1));
+    width:calc(23px * var(--k,1));height:calc(23px * var(--k,1));border-radius:50%;background:#C9A24F;color:#fff;
+    font-size:calc(12px * var(--k,1));font-weight:800;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 6px rgba(46,33,28,0.3);}
+  .cm-tip{background:linear-gradient(180deg,#FCF3E0,#F5E8CC);border:1px solid #DCC59B;border-radius:12px;padding:10px 12px;margin-bottom:11px;}
+  .cm-tip-q{font-size:11.5px;color:#6B4A2A;line-height:1.5;}
+  .cm-tip-l{display:flex;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(176,143,99,0.55);font-size:11.5px;color:#5B3B22;line-height:1.5;}
+  .cm-tip-l span{flex-shrink:0;}
+  .cm-pop-grip{width:38px;height:4px;border-radius:99px;background:var(--line);
+    margin:0 auto 10px;flex-shrink:0;}
+  .cm-sheet-img{position:relative;height:158px;border-radius:22px 22px 0 0;overflow:hidden;
+    background-repeat:no-repeat;background-color:#EDE4D6;margin:-14px -14px 14px;}
+  .cm-sheet-img .cm-pop-grip{position:absolute;top:9px;left:50%;transform:translateX(-50%);
+    margin:0;z-index:3;background:rgba(255,253,250,0.70);box-shadow:0 1px 4px rgba(46,33,28,0.25);}
+  .cm-sheet-img .cm-pop-x{position:absolute;top:9px;right:9px;z-index:3;width:34px;height:34px;
+    border-radius:50%;border:none;background:rgba(28,19,13,0.44);color:#FFFDFA;
+    font-size:21px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+  .cm-sheet-img .cm-pop-x:active{transform:scale(0.92);}
+  .cm-sheet-img::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(rgba(46,33,28,0) 42%,rgba(46,33,28,0.62) 100%);}
+  .cm-sheet-t{position:absolute;left:16px;right:56px;bottom:12px;z-index:2;
+    font-family:var(--serif);font-size:20px;font-weight:600;color:#FFFDFA;
+    text-shadow:0 2px 10px rgba(46,33,28,0.55);}
+  .cm-pop{position:fixed;z-index:60;left:50%;bottom:0;width:min(440px,100%);
+    transform:translate(-50%,100%);background:var(--surface);
+    border-radius:22px 22px 0 0;box-shadow:0 -14px 44px rgba(46,33,28,0.30);
+    padding:14px 14px calc(18px + env(safe-area-inset-bottom));
+    max-height:82dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    transition:transform .34s cubic-bezier(.22,.9,.3,1),opacity .2s ease;
+    opacity:0;pointer-events:none;}
+  .cm-pop.show{transform:translate(-50%,0);opacity:1;pointer-events:auto;}
+  .cm-pop-veil{position:fixed;inset:0;z-index:59;background:rgba(46,33,28,0.34);
+    opacity:0;pointer-events:none;transition:opacity .3s ease;}
+  .cm-pop-veil.show{opacity:1;pointer-events:auto;}
+
+  .cm-pop.up .cm-pop-arrow{top:auto;bottom:-7px;border-left:none;border-top:none;border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+
+  .cm-pop-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;padding:0 2px;}
+  .cm-pop-t{font-size:12px;font-weight:700;color:var(--ink);}
+  .cm-pop-x{background:none;border:none;font-size:17px;color:var(--muted);cursor:pointer;line-height:1;}
+  .cm-car{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;scroll-snap-type:x mandatory;}
+  .cm-car::-webkit-scrollbar{display:none;}
+  .cm-pcard{min-width:96px;scroll-snap-align:start;background:var(--surface-warm);border:1px solid var(--line);border-radius:13px;padding:11px 9px;text-align:center;cursor:pointer;transition:transform .12s ease,border-color .12s ease;}
+  .cm-pcard:active{transform:scale(0.95);}
+  .cm-pcard.sel{border-color:var(--accent);background:var(--blush-soft);}
+  .cm-pcard-e{font-size:26px;}
+  .cm-pcard-n{font-size:11px;font-weight:600;color:var(--ink);margin-top:6px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cm-pcard-b{font-size:9.5px;color:var(--muted);margin-top:1px;}
+  .cm-pop-none{font-size:11.5px;color:var(--muted);text-align:center;padding:8px 4px;line-height:1.5;}
+  .cm-pop-skip{margin-top:10px;width:100%;background:none;border:1px dashed var(--line);border-radius:11px;padding:8px;font-size:11.5px;font-weight:600;color:var(--muted);cursor:pointer;}
+  .cm-pop-remove{margin-top:8px;width:100%;background:none;border:none;padding:4px;font-size:11.5px;font-weight:600;color:var(--accent-deep);cursor:pointer;}
+  .cm-menu-btn{display:block;width:100%;text-align:left;background:none;border:none;border-top:1px solid var(--line);padding:13px 4px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;}
+  .cm-menu-btn:first-of-type{border-top:none;}
+  /* ===== Menu de l'engrenage : dropdown en verre dépoli, ancré en haut à droite =====
+     Ouverture en fondu + léger glissé/échelle depuis le coin ; fermeture au clic extérieur. */
+  .cm-menu{position:absolute;z-index:64;top:60px;right:14px;width:min(232px,74vw);
+    background:rgba(252,247,240,0.55);
+    backdrop-filter:blur(26px) saturate(1.7);-webkit-backdrop-filter:blur(26px) saturate(1.7);
+    border:1px solid rgba(255,255,255,0.55);border-radius:20px;padding:7px;
+    box-shadow:0 18px 46px rgba(46,33,28,0.28),0 2px 8px rgba(46,33,28,0.14),inset 0 1px 0 rgba(255,255,255,0.6);
+    transform-origin:top right;transform:translateY(-8px) scale(0.94);opacity:0;pointer-events:none;
+    transition:transform .26s cubic-bezier(.2,.9,.3,1.05),opacity .2s ease;}
+  .cm-menu.show{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}
+  .cm-menu-item{display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+    background:none;border:none;border-radius:13px;padding:12px 12px;
+    font-family:inherit;font-size:14px;font-weight:600;color:#3A2418;cursor:pointer;
+    transition:background .15s ease,transform .1s ease;}
+  .cm-menu-item:active{transform:scale(0.97);}
+  @media(hover:hover){.cm-menu-item:hover{background:rgba(255,255,255,0.42);}}
+  .cm-menu-item .cm-menu-ic{font-size:17px;line-height:1;width:22px;text-align:center;flex:0 0 auto;}
+  .cm-menu-item.danger{color:#B23A22;}
+  @media(hover:hover){.cm-menu-item.danger:hover{background:rgba(201,90,63,0.12);}}
+  .cm-menu-sep{height:1px;background:rgba(90,60,40,0.14);margin:5px 8px;}
+  /* Voile transparent : capte le clic extérieur sans assombrir le paysage. */
+  .cm-veil-clear{background:transparent !important;}
+
+  /* ===== Panneau des rituels : la fleur en est la poignée =====
+     Grande carte en verre dépoli chaud, coins très arrondis, transparence, ombre douce.
+     Émerge du coin supérieur droit (sous la fleur) en s'ouvrant depuis ce coin.
+     JAMAIS de translation du décor : seul le panneau s'anime. */
+  /* Panneau & voile posés sur <body> (position:fixed) : cmRender remplace l'innerHTML du
+     chemin, donc les garder hors de cet élément évite qu'ils soient détruits à chaque
+     changement d'onglet / de rituel. L'ouverture de la fleur reste pilotée par la classe
+     .cm-panel-open sur l'overlay (elle, n'est jamais recréée). */
+  .cm-panel-veil{position:fixed;inset:0;z-index:3000;background:transparent;
+    opacity:0;pointer-events:none;transition:opacity .28s ease;}
+  .cm-panel-veil.show{opacity:1;pointer-events:auto;}
+  /* .cm-rpanel (et NON .cm-panel) : .cm-panel est déjà la classe des stations peintes du
+     chemin (cm-node cm-panel) — réutiliser ce nom les faisait disparaître (opacity:0). */
+  .cm-rpanel{position:fixed;z-index:3001;
+    top:calc(58px + env(safe-area-inset-top));right:12px;
+    width:min(344px,86vw);max-height:54dvh;display:flex;flex-direction:column;
+    padding:16px 15px 15px;border-radius:28px;
+    background:linear-gradient(158deg, rgba(253,247,238,0.82), rgba(250,240,228,0.7) 62%, rgba(247,233,221,0.72));
+    backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);
+    border:1px solid rgba(255,255,255,0.6);
+    box-shadow:0 26px 60px -14px rgba(46,28,18,0.4),0 6px 18px rgba(46,28,18,0.16),inset 0 1px 0 rgba(255,255,255,0.7);
+    transform-origin:calc(100% - 8px) -10px;
+    transform:scale(0.42) translateY(-10px);opacity:0;pointer-events:none;
+    transition:transform .3s cubic-bezier(.2,.9,.28,1.06),opacity .22s ease;overflow:hidden;}
+  .cm-rpanel.show{transform:scale(1) translateY(0);opacity:1;pointer-events:auto;}
+  /* Halo chaud décoratif, comme si la lumière venait de la fleur (coin haut-droit). */
+  .cm-rpanel::before{content:"";position:absolute;top:-40px;right:-30px;width:150px;height:150px;
+    background:radial-gradient(circle,rgba(255,236,196,0.5),rgba(255,236,196,0) 70%);pointer-events:none;}
+  .cm-panel-hd{position:relative;font-family:var(--serif);font-size:22px;font-weight:700;
+    color:#4A2E1E;letter-spacing:.005em;margin:0 2px 12px;}
+  .cm-panel-tabs{position:relative;display:flex;gap:6px;margin-bottom:13px;
+    background:rgba(120,80,54,0.08);border-radius:16px;padding:4px;}
+  .cm-ptab{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
+    background:transparent;border:none;border-radius:12px;padding:8px 4px;cursor:pointer;
+    font-family:var(--sans);font-size:12.5px;font-weight:700;color:#8A6E58;
+    transition:background .2s ease,color .2s ease,box-shadow .2s ease;}
+  .cm-ptab .cm-ptab-e{font-size:15px;line-height:1;}
+  .cm-ptab.on{background:rgba(255,252,247,0.92);color:#4A2E1E;
+    box-shadow:0 2px 8px rgba(46,28,18,0.14),inset 0 1px 0 rgba(255,255,255,0.8);}
+  .cm-ptab:active{transform:scale(0.96);}
+  .cm-panel-body{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -4px;padding:0 4px 2px;}
+  .cm-panel-body::-webkit-scrollbar{display:none;}
+  /* Carte du rituel courant : mise en avant, plus grande. */
+  .cm-rcard{background:linear-gradient(160deg, rgba(255,253,249,0.92), rgba(252,244,234,0.86));
+    border:1px solid rgba(255,255,255,0.75);border-radius:22px;padding:15px 15px 13px;
+    box-shadow:0 8px 22px -10px rgba(46,28,18,0.3),inset 0 1px 0 rgba(255,255,255,0.85);}
+  .cm-rcard-top{display:flex;align-items:center;gap:8px;margin-bottom:11px;}
+  .cm-rcard-name{flex:1;min-width:0;font-family:var(--serif);font-size:19px;font-weight:700;
+    color:#3A2418;line-height:1.15;overflow:hidden;text-overflow:ellipsis;}
+  /* Bascule Actif / En pause : un rituel actif par créneau, cliquable directement ici. */
+  .cm-rcard-actif{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+    font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+    color:#9A8676;background:rgba(120,80,54,0.09);border:1px solid rgba(120,80,54,0.18);
+    border-radius:99px;padding:5px 11px;transition:background .16s ease,color .16s ease,border-color .16s ease,transform .1s ease;}
+  .cm-rcard-actif .cm-rcard-dot{width:7px;height:7px;border-radius:50%;background:#B7A48F;transition:background .16s ease,box-shadow .16s ease;}
+  .cm-rcard-actif.on{color:#4E7A3E;background:rgba(120,170,90,0.16);border-color:rgba(120,170,90,0.42);}
+  .cm-rcard-actif.on .cm-rcard-dot{background:#5FA043;box-shadow:0 0 6px rgba(95,160,67,0.75);}
+  .cm-rcard-actif:active{transform:scale(0.94);}
+  .cm-rsteps{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+  .cm-rstep{display:flex;align-items:center;gap:10px;}
+  .cm-rstep-ic{flex:0 0 auto;width:30px;height:30px;border-radius:10px;display:flex;
+    align-items:center;justify-content:center;font-size:15px;overflow:hidden;
+    background:rgba(120,80,54,0.09);border:1px solid rgba(120,80,54,0.12);}
+  .cm-rstep-ic img{width:100%;height:100%;object-fit:cover;}
+  .cm-rstep-tx{min-width:0;line-height:1.2;}
+  .cm-rstep-ph{font-family:var(--sans);font-size:12.5px;font-weight:700;color:#4A3222;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cm-rstep-sub{font-family:var(--sans);font-size:11px;color:#9A8676;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cm-rstep-more{font-family:var(--sans);font-size:11px;font-weight:600;color:#B0937C;
+    padding-left:40px;margin-top:-2px;}
+  .cm-rempty{font-family:var(--sans);font-size:12.5px;color:#9A8676;line-height:1.5;
+    padding:4px 2px 12px;}
+  .cm-ractions{display:flex;gap:7px;}
+  .cm-ract{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
+    background:rgba(120,80,54,0.07);border:1px solid rgba(120,80,54,0.13);border-radius:13px;
+    padding:9px 6px;cursor:pointer;font-family:var(--sans);font-size:11.5px;font-weight:700;
+    color:#5A3E2A;transition:background .16s ease,transform .1s ease;}
+  .cm-ract .cm-ract-e{font-size:14px;line-height:1;}
+  .cm-ract:active{transform:scale(0.95);}
+  @media(hover:hover){.cm-ract:hover{background:rgba(120,80,54,0.13);}}
+  .cm-ract.primary{background:linear-gradient(150deg,#D9714E,#C24E32);border-color:transparent;
+    color:#FFF6EF;box-shadow:0 4px 12px rgba(194,78,50,0.34);}
+  @media(hover:hover){.cm-ract.primary:hover{background:linear-gradient(150deg,#E07A56,#C94E30);}}
+  .cm-ract.danger{color:#B23A22;}
+  @media(hover:hover){.cm-ract.danger:hover{background:rgba(178,58,34,0.12);}}
+  /* Carrousel : autres rituels de la même période, petites cartes horizontales. */
+  .cm-rcaro-lbl{font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;color:#A88C74;margin:15px 2px 8px;}
+  .cm-rcaro{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;
+    scroll-snap-type:x proximity;padding:1px 2px 4px;margin:0 -2px;}
+  .cm-rcaro::-webkit-scrollbar{display:none;}
+  .cm-rmini{flex:0 0 auto;width:128px;scroll-snap-align:start;text-align:left;cursor:pointer;
+    background:linear-gradient(160deg,rgba(255,253,249,0.7),rgba(250,241,231,0.62));
+    border:1px solid rgba(255,255,255,0.6);border-radius:16px;padding:11px 12px;
+    box-shadow:0 4px 12px -6px rgba(46,28,18,0.24);
+    transition:transform .12s ease,border-color .16s ease,box-shadow .16s ease;}
+  .cm-rmini:active{transform:scale(0.95);}
+  @media(hover:hover){.cm-rmini:hover{border-color:rgba(217,113,78,0.5);}}
+  .cm-rmini-name{font-family:var(--sans);font-size:12.5px;font-weight:700;color:#4A3222;
+    line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:7px;}
+  .cm-rmini-dots{display:flex;align-items:center;gap:3px;}
+  .cm-rmini-dot{width:16px;height:16px;border-radius:6px;display:flex;align-items:center;
+    justify-content:center;font-size:9px;overflow:hidden;background:rgba(120,80,54,0.1);}
+  .cm-rmini-dot img{width:100%;height:100%;object-fit:cover;}
+  .cm-rmini-n{font-family:var(--sans);font-size:10.5px;font-weight:700;color:#A88C74;margin-left:2px;}
+  .cm-rnew{width:100%;margin-top:14px;background:transparent;border:1px dashed rgba(120,80,54,0.34);
+    border-radius:14px;padding:11px;cursor:pointer;font-family:var(--sans);font-size:12.5px;
+    font-weight:700;color:#8A6E58;transition:background .16s ease,border-color .16s ease;}
+  .cm-rnew:active{transform:scale(0.98);}
+  @media(hover:hover){.cm-rnew:hover{background:rgba(120,80,54,0.06);border-color:rgba(120,80,54,0.5);}}
+
+  /* Indicateur d'enregistrement automatique (mode édition). */
+  .cm-autosave{display:inline-flex;align-items:center;gap:5px;margin-top:9px;
+    font-family:var(--sans);font-size:10.5px;font-weight:600;letter-spacing:.02em;
+    color:var(--cm-ink);opacity:.72;background:rgba(255,253,250,0.22);
+    border:1px solid rgba(255,253,250,0.34);border-radius:99px;padding:4px 11px;
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+  /* Fiche station (lecture seule) : reprend la carte d'édition, sans les actions. */
+  .cm-fiche{padding:2px 2px 2px;}
+  .cm-fiche-top{display:flex;gap:13px;align-items:center;}
+  .cm-fiche-img{width:66px;height:66px;border-radius:16px;overflow:hidden;flex-shrink:0;background:linear-gradient(150deg,var(--blush-soft),#F2D8D1);display:flex;align-items:center;justify-content:center;box-shadow:0 5px 14px rgba(46,33,28,0.12);}
+  .cm-fiche-img img{width:100%;height:100%;object-fit:cover;}
+  .cm-fiche-emo{font-size:30px;}
+  .cm-fiche-info{min-width:0;flex:1;}
+  .cm-fiche-cat{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);}
+  .cm-fiche-name{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);line-height:1.2;margin-top:3px;}
+  .cm-fiche-brand{font-size:12px;color:var(--muted);margin-top:2px;}
+  .cm-fiche-lbl{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:15px 0 8px;}
+  .cm-fiche-effs{display:flex;flex-wrap:wrap;gap:6px;}
+  .cm-fiche-eff{font-size:11.5px;font-weight:600;color:var(--ink-soft);background:var(--surface-warm);border:1px solid var(--line);border-radius:99px;padding:5px 11px;}
+
+  .cm-wow{position:fixed;inset:0;z-index:240;display:none;align-items:center;justify-content:center;background:rgba(46,33,28,0.3);backdrop-filter:blur(3px);}
+  .cm-wow.show{display:flex;}
+  .cm-wow-card{background:var(--surface);border-radius:26px;padding:30px 26px;text-align:center;max-width:290px;box-shadow:0 30px 70px rgba(46,33,28,0.35);transform:scale(0.7);opacity:0;transition:transform .4s cubic-bezier(.2,1.3,.4,1),opacity .3s;}
+  .cm-wow.show .cm-wow-card{transform:scale(1);opacity:1;}
+  .cm-wow-badge{width:84px;height:84px;border-radius:50%;margin:0 auto;background:radial-gradient(circle at 40% 35%,#F4D98A,var(--gold) 60%,var(--accent));display:flex;align-items:center;justify-content:center;font-size:42px;box-shadow:0 0 0 10px rgba(189,154,82,0.15);animation:cmPop 0.5s ease;}
+  @keyframes cmPop{0%{transform:scale(0);}70%{transform:scale(1.15);}100%{transform:scale(1);}}
+  .cm-wow-t{font-family:var(--serif);font-size:23px;font-weight:600;color:var(--ink);margin-top:16px;}
+  .cm-wow-s{font-size:13px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
+  .cm-wow-btn{margin-top:20px;background:var(--accent);color:#fff;border:none;border-radius:13px;padding:12px 24px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;}
+  .cm-spark{position:fixed;font-size:18px;pointer-events:none;z-index:241;animation:cmFly 1.1s ease-out forwards;}
+  @keyframes cmFly{0%{opacity:0;transform:translate(0,0) scale(0.4);}20%{opacity:1;}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.1);}}
+
+  .lea-pop{position:fixed;z-index:360;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 44px rgba(46,33,28,0.24);padding:12px 13px 13px;opacity:0;visibility:hidden;transform:scale(.92) translateY(6px);transition:opacity .16s ease,transform .16s ease,visibility .16s;pointer-events:none;}
+  .lea-pop.show{opacity:1;visibility:visible;transform:scale(1) translateY(0);pointer-events:auto;}
+  .lea-pop-head{display:flex;align-items:center;gap:8px;position:relative;}
+  .lea-pop-av{width:27px;height:27px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--serif);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .lea-pop-name{flex:1;font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);}
+  .lea-pop-ic{background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:2px 5px;line-height:1;}
+  .lea-pop-menu{display:none;position:absolute;top:28px;right:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 26px rgba(46,33,28,0.2);padding:5px;z-index:5;}
+  .lea-pop-menu.open{display:block;}
+  .lea-pop-menu button{display:block;width:100%;text-align:left;background:none;border:none;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--ink);padding:9px 11px;white-space:nowrap;cursor:pointer;border-radius:9px;}
+  .lea-pop-menu button:active{background:var(--surface-warm);}
+  .lea-pop-msg{margin-top:10px;font-size:13px;line-height:1.5;color:var(--ink-soft);}
+  .lea-pop-hint{margin-top:10px;font-size:11px;color:var(--muted);font-style:italic;}
