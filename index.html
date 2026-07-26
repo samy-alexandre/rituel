@@ -1342,6 +1342,14 @@
   .cm-count{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--cm-ink);background:rgba(255,253,250,0.34);border:1px solid rgba(255,253,250,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:3px 11px;border-radius:99px;}
   .cm-title-edit{font-size:11px;margin-top:3px;color:var(--cm-ink);opacity:.8;cursor:pointer;}
   .cm-back{position:absolute;top:14px;left:14px;z-index:9;width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:19px;color:#3A2418;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
+  /* Bouton « Enregistrer » (mode édition) : CTA clair posé en bas, au-dessus de la barre. */
+  .cm-save{position:absolute;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:12;
+    font-family:var(--sans);font-size:15px;font-weight:800;letter-spacing:.01em;color:#FFF6EF;white-space:nowrap;
+    background:linear-gradient(150deg,#D9714E,#C24E32);border:none;border-radius:99px;padding:14px 28px;
+    box-shadow:0 12px 28px -8px rgba(180,70,44,0.7),0 2px 8px rgba(46,28,18,0.32),inset 0 1px 0 rgba(255,255,255,0.25);
+    cursor:pointer;transition:transform .12s ease,box-shadow .2s ease;}
+  .cm-save:active{transform:translateX(-50%) scale(0.96);}
+  @media(hover:hover){.cm-save:hover{box-shadow:0 14px 32px -8px rgba(180,70,44,0.8),0 2px 8px rgba(46,28,18,0.32);}}
   .cm-tools{position:absolute;top:14px;right:14px;z-index:9;display:flex;flex-direction:column;gap:7px;align-items:flex-end;}
   .cm-tool{width:38px;height:38px;border-radius:50%;background:rgba(255,253,250,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:none;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(46,33,28,0.16);cursor:pointer;}
   .cm-tool.on{background:var(--accent) !important;box-shadow:0 4px 14px rgba(201,90,63,0.45) !important;}
@@ -6225,9 +6233,10 @@
         '<div class="cm-autosave">✓ Enregistré automatiquement</div></div>'
       : '<div class="cm-head">'+sun+'<div class="cm-title">'+title+'</div></div>';
 
+    // Édition : plus de flèche « ‹ » (ambiguë) — un vrai bouton « Enregistrer » qui termine l'édition.
+    const saveBtn = isEdit ? '<button class="cm-save" onclick="cmFinishEdit()">✓ Enregistrer mon rituel</button>' : '';
     return '<div class="cm-scene'+(moment==='soir'?' cm-soir':'')+'" data-moment="'+moment+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
-        (isEdit?'<button class="cm-back" onclick="cmBack()">‹</button>':'')+
-        '<div class="cm-tools">'+tools+'</div>'+head+'<div class="cm-build">'+CM_BUILD+'</div>'+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+
+        '<div class="cm-tools">'+tools+'</div>'+head+'<div class="cm-build">'+CM_BUILD+'</div>'+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+saveBtn+
       '</div>';
   }
 
@@ -7033,7 +7042,16 @@
       if(chDraft.id){ await sb.from('rituels').update({ nom:nom, moment:chDraft.moment, produits:produits, actif:true }).eq('id', chDraft.id); }
       else { const { data } = await sb.from('rituels').insert({ user_id:currentUser.id, nom:nom, moment:chDraft.moment, produits:produits, position:0, actif:true, rappels:(chDraft.rappels||{on:false,days:[],hebdoDay:1}) }).select('id').maybeSingle(); if(data){ chDraft.id=data.id; chDraft._created=true; } }
     }catch(e){}
-    window.__allRituels=null;
+    // On NE vide PLUS window.__allRituels (le panneau et le décor en dépendent — le vider faisait
+    // disparaître tous les rituels pendant l'auto-save). On synchronise le cache en mémoire :
+    // la création/màj apparaît instantanément, puis loadRituels rafraîchit depuis la base.
+    if(!Array.isArray(window.__allRituels)) window.__allRituels=[];
+    if(chDraft.id){
+      const snap={ nom:nom, moment:chDraft.moment, produits:produits, actif:true };
+      const ex=window.__allRituels.find(function(r){ return String(r.id)===String(chDraft.id); });
+      if(ex) Object.assign(ex, snap);
+      else window.__allRituels.push(Object.assign({ id:chDraft.id, user_id:(currentUser&&currentUser.id), rappels:(chDraft.rappels||{on:false,days:[],hebdoDay:1}) }, snap));
+    }
     if(typeof loadRituels==='function') loadRituels();
     if(typeof loadHomeRoutine==='function') loadHomeRoutine();
   }
@@ -7138,15 +7156,16 @@
 
   async function loadRituels(){
     renderRituelCout();
-    // NB : on ne rend PAS le hub "Mes rituels" ici — il n'est peuplé qu'à la demande
-    // (cmBackToList), pour ne jamais l'apercevoir derrière le chemin à l'ouverture.
-    const host=document.getElementById('rituels-list'); if(!host) return;
+    if(!currentUser) return;
+    // IMPORTANT : on repeuple TOUJOURS le cache mémoire window.__allRituels — le panneau de la
+    // fleur et le décor du chemin en dépendent. (L'ancienne liste DOM "rituels-list" a été retirée
+    // de l'UI ; auparavant on sortait ici si elle manquait, ce qui laissait le cache vide → tous
+    // les rituels disparaissaient après un enregistrement automatique.)
     const { data } = await sb.from('rituels').select('*,rappels').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
     const rits = data || [];
     window.__allRituels = rits;
-    renderRituelActuel(rits);
-    if(!rits.length){ host.innerHTML=''; const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display='none'; return; }
-    host.innerHTML = '';
+    try{ renderRituelActuel(rits); }catch(e){}
+    const host=document.getElementById('rituels-list'); if(host) host.innerHTML='';
     const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display = rits.length>1 ? 'block' : 'none';
   }
 
