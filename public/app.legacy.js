@@ -1,0 +1,6588 @@
+  // ===== Connexion au backend Supabase =====
+  const SUPABASE_URL = 'https://cozidiruigjtfzgzvjhe.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvemlkaXJ1aWdqdGZ6Z3p2amhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzMwNjQsImV4cCI6MjA5NjMwOTA2NH0.BmVSbWAt9HAXlntY9TdgCcxlLoUNFt9zKe6QQ0VV_eg';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  let currentUser = null; // la personne connectée
+
+  // ===== State (cache local de l'écran courant) =====
+  let state = { skinType:null, concerns:[], goal:null, name:'', email:'', genre:null, coachGenre:'femme', onbStep:0 };
+
+  // ===== Auth =====
+  function switchAuth(mode){
+    document.getElementById('tab-login').classList.toggle('active', mode==='login');
+    document.getElementById('tab-signup').classList.toggle('active', mode==='signup');
+    document.getElementById('form-login').classList.toggle('hidden', mode!=='login');
+    document.getElementById('form-signup').classList.toggle('hidden', mode!=='signup');
+  }
+  function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+  // ===== Politique de confidentialité =====
+  function openPolicy(){
+    try{ var pd=document.getElementById('policy-date'); if(pd) pd.textContent=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }catch(e){} document.getElementById('policy').classList.add('open'); }
+  function closePolicy(){ document.getElementById('policy').classList.remove('open'); }
+
+  function setBtnLoading(btn, loading, labelIdle){
+    if(!btn) return;
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Un instant…' : labelIdle;
+  }
+
+    function pickSignupGenre(g){
+    state.signupGenre=g;
+    var f=document.getElementById('gp-femme'), h=document.getElementById('gp-homme');
+    if(f) f.classList.toggle('sel', g==='femme');
+    if(h) h.classList.toggle('sel', g==='homme');
+  }
+  async function doSignup(){
+    const name=document.getElementById('signup-name').value.trim();
+    const email=document.getElementById('signup-email').value.trim().toLowerCase();
+    const pass=document.getElementById('signup-pass').value;
+    const age=parseInt(document.getElementById('signup-age').value,10);
+    const err=document.getElementById('signup-error'); err.textContent='';
+    const btn=document.querySelector('#form-signup .btn');
+    if(!name){ err.textContent='Indiquez votre prénom.'; return; }
+    if(!age || age<13 || age>120){ err.textContent='Indique un âge valide.'; return; }
+    if(!state.signupGenre){ err.textContent='Indique si tu es une femme ou un homme.'; return; }
+    if(!validEmail(email)){ err.textContent='E-mail invalide.'; return; }
+    if(pass.length<6){ err.textContent='Mot de passe : 6 caractères minimum.'; return; }
+    if(!document.getElementById('signup-consent').checked){ err.textContent='Veuillez accepter la politique de confidentialité pour continuer.'; return; }
+    setBtnLoading(btn, true);
+    state.age=age; state.genre=state.signupGenre;
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options:{ data:{ prenom: name, age: age, genre: state.signupGenre } }
+    });
+    setBtnLoading(btn, false, 'Créer mon carnet Rituel');
+    if(error){
+      if(/already/i.test(error.message)) err.textContent='Un compte existe déjà avec cet e-mail.';
+      else err.textContent = error.message;
+      return;
+    }
+    // Si la confirmation par e-mail est activée, pas de session immédiate
+    if(!data.session){
+      err.style.color='var(--sage)';
+      err.textContent="Compte créé ! Vérifie ton e-mail pour confirmer, puis connecte-toi.";
+      switchAuth('login');
+      err.style.color='';
+      return;
+    }
+    currentUser = data.user;
+    state.name = name;
+    document.getElementById('auth').classList.add('hidden');
+    const ob=document.getElementById('onboarding'); ob.classList.add('active'); 
+  }
+
+  async function doLogin(){
+    const email=document.getElementById('login-email').value.trim().toLowerCase();
+    const pass=document.getElementById('login-pass').value;
+    const err=document.getElementById('login-error'); err.textContent='';
+    const btn=document.querySelector('#form-login .btn');
+    if(!validEmail(email)){ err.textContent='E-mail invalide.'; return; }
+    setBtnLoading(btn, true);
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    setBtnLoading(btn, false, 'Se connecter');
+    if(error){
+      if(/Invalid login/i.test(error.message)) err.textContent='E-mail ou mot de passe incorrect.';
+      else if(/not confirmed/i.test(error.message)) err.textContent="E-mail pas encore confirmé. Vérifie ta boîte mail.";
+      else err.textContent = error.message;
+      return;
+    }
+    currentUser = data.user;
+    const profile = await loadProfile();
+    applyProfile(profile);
+    if(profile && profile.type_peau){ enterApp(); }
+    else {
+      // connecté mais onboarding pas terminé
+      document.getElementById('auth').classList.add('hidden');
+      const ob=document.getElementById('onboarding');
+      ob.classList.add('active'); 
+    }
+  }
+
+  async function forgotPassword(){
+    const email=(document.getElementById('login-email').value||'').trim().toLowerCase();
+    const err=document.getElementById('login-error');
+    if(!validEmail(email)){ if(err){ err.style.color=''; err.textContent='Entre ton e-mail ci-dessus, puis retape « Mot de passe oublié ? ».'; } return; }
+    try{
+      await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin });
+      if(err){ err.style.color='var(--sage)'; err.textContent='E-mail envoyé ! Ouvre le lien reçu pour choisir un nouveau mot de passe.'; }
+    }catch(e){ if(err){ err.style.color=''; err.textContent="Impossible d'envoyer l'e-mail · réessaie."; } }
+  }
+  async function pwUpdate(){
+    const pwd=document.getElementById('pwreset-input').value;
+    const er=document.getElementById('pwreset-error'); if(er) er.textContent='';
+    if((pwd||'').length<6){ if(er) er.textContent='6 caractères minimum.'; return; }
+    const btn=document.getElementById('pwreset-btn'); setBtnLoading(btn,true);
+    const { error }=await sb.auth.updateUser({ password:pwd });
+    setBtnLoading(btn,false,'Valider mon nouveau mot de passe');
+    if(error){ if(er) er.textContent=error.message; return; }
+    document.getElementById('pwreset-sheet').classList.remove('open');
+    showToast('Mot de passe mis à jour ✓');
+  }
+  sb.auth.onAuthStateChange((event)=>{
+    if(event==='PASSWORD_RECOVERY'){
+      const a=document.getElementById('auth'); if(a){ a.classList.remove('hidden'); a.style.visibility='visible'; }
+      const sh=document.getElementById('pwreset-sheet'); if(sh) sh.classList.add('open');
+    }
+  });
+
+  async function doLogout(){
+    await sb.auth.signOut();
+    location.reload();
+  }
+
+  // ═══════════ Rituel+ (abonnement Stripe) ═══════════
+  function refreshPremiumUI(){
+    // Carte de vente dans le profil : cachée si déjà abonnée
+    const card=document.querySelector('.premium-card');
+    if(card) card.style.display = isPremium ? 'none' : '';
+    const gere=document.getElementById('premium-manage');
+    if(gere) gere.style.display = isPremium ? '' : 'none';
+    // Statut lisible : renouvellement prévu, ou abonnement annulé
+    const rn=document.getElementById('premium-renew');
+    const ti=document.getElementById('premium-title');
+    const nt=document.getElementById('premium-note');
+    const bt=document.getElementById('premium-btn');
+    if(rn && isPremium){
+      const dateTxt = premiumUntil
+        ? new Date(premiumUntil).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})
+        : null;
+      if(premiumCancel){
+        if(ti) ti.textContent = 'Rituel+ · annulé';
+        rn.textContent = dateTxt ? ('Se termine le '+dateTxt) : 'Se termine à la fin de la période';
+        if(nt) nt.innerHTML = 'Ton abonnement ne sera <b>pas renouvelé</b>. Tu gardes tout jusqu\'à cette date 🌸';
+        if(bt) bt.textContent = 'Réactiver mon abonnement';
+      } else {
+        if(ti) ti.textContent = 'Rituel+ actif';
+        rn.textContent = dateTxt ? ('Prochain paiement le '+dateTxt) : 'Renouvellement automatique';
+        if(nt) nt.innerHTML = 'Renouvellement automatique. Si tu annules, tu gardes l\'accès jusqu\'à la fin de la période déjà payée 🌸';
+        if(bt) bt.textContent = 'Gérer ou annuler mon abonnement';
+      }
+    }
+    // Badges "PLUS" : inutiles une fois abonnée
+    document.querySelectorAll('.plus-pill').forEach(b=>{ b.style.display = isPremium ? 'none' : ''; });
+  }
+
+  // Porte d'entrée unique : renvoie true si l'accès est autorisé, sinon ouvre le paywall
+  function requirePlus(raison){
+    if(isPremium) return true;
+    openPlusSheet(raison);
+    return false;
+  }
+
+  async function startCheckout(plan){
+    if(!currentUser){ showToast('Connecte-toi d\'abord 🌸'); return; }
+    const btns=document.querySelectorAll('.plus-buy');
+    btns.forEach(b=>{ b.disabled=true; });
+    const old=document.getElementById('plus-buy-mois');
+    try{
+      const { data:{ session } } = await sb.auth.getSession();
+      if(!session){ showToast('Reconnecte-toi 🌸'); btns.forEach(b=>{ b.disabled=false; }); return; }
+      const r=await fetch('/api/checkout',{
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+session.access_token },
+        body: JSON.stringify({ plan })
+      });
+      const d=await r.json();
+      if(d && d.url){ window.location.href = d.url; return; }
+      showToast(d && d.error ? d.error : 'Paiement indisponible pour le moment 🌸');
+    }catch(e){
+      showToast('Oups : '+(e.message||'réessaie'));
+    }
+    btns.forEach(b=>{ b.disabled=false; });
+  }
+
+  async function openBillingPortal(){
+    if(!currentUser) return;
+    try{
+      const { data:{ session } } = await sb.auth.getSession();
+      const r=await fetch('/api/portal',{ method:'POST', headers:{ 'Authorization':'Bearer '+session.access_token } });
+      const d=await r.json();
+      if(d && d.url){ window.location.href=d.url; return; }
+      showToast(d && d.error ? d.error : 'Indisponible pour le moment 🌸');
+    }catch(e){ showToast('Oups : '+(e.message||'réessaie')); }
+  }
+
+  // Retour depuis la page de paiement Stripe
+  // Le statut peut changer hors de l'app (paiement, annulation) : on revérifie au retour
+  document.addEventListener('visibilitychange', async ()=>{
+    if(document.visibilityState==='visible' && currentUser){
+      try{
+        const prof=await loadProfile();
+        if(prof && !!prof.is_premium !== isPremium){ applyProfile(prof); }
+      }catch(e){}
+    }
+  });
+
+  async function checkPaymentReturn(){
+    const p=new URLSearchParams(location.search);
+    const r=p.get('paiement');
+    if(!r) return;
+    history.replaceState({}, '', location.pathname);
+    if(r==='ok'){
+      showToast('Bienvenue dans Rituel+ 🌸');
+      // Le webhook Stripe peut mettre quelques secondes : on rafraîchit le profil
+      for(let i=0;i<5;i++){
+        await new Promise(res=>setTimeout(res, 1200));
+        const prof=await loadProfile();
+        if(prof && prof.is_premium){ applyProfile(prof); break; }
+      }
+    } else if(r==='annule'){
+      showToast('Paiement annulé · tu peux réessayer quand tu veux 🌸');
+    }
+  }
+
+  // ===== Profil (table profiles) =====
+  async function loadProfile(){
+    if(!currentUser) return null;
+    const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
+    return data;
+  }
+  function applyProfile(p){
+    if(!p) return;
+    isPremium = !!p.is_premium;
+    premiumUntil = p.premium_until || null;
+    premiumCancel = !!p.premium_cancel;
+    refreshPremiumUI();
+    if(p.prenom) state.name = p.prenom;
+    if(p.type_peau) state.skinType = p.type_peau;
+    if(p.objectifs){ try{ const o=JSON.parse(p.objectifs); if(Array.isArray(o)){ state.concerns=o; } else { state.concerns=o.concerns||[]; state.goal=o.goal||null; state.age=o.age||null; } }catch(e){ state.concerns=[]; } }
+    state.rituelType = p.rituel_type || state.rituelType || 'both';
+    if(p.genre) state.genre = p.genre;
+    state.coachGenre = 'femme';
+    state.cycleEnabled = !!p.cycle_enabled;
+    state.cycleLastStart = p.cycle_last_start || null;
+    state.cycleLength = p.cycle_length || 28;
+    updateCycleMenuMeta();
+    applyCoachIdentity();
+    state.email = currentUser ? currentUser.email : '';
+  }
+  async function saveProfile(){
+    if(!currentUser) return;
+    const { error } = await sb.from('profiles').upsert({
+      id: currentUser.id,
+      prenom: state.name,
+      type_peau: state.skinType,
+      objectifs: JSON.stringify({ concerns: state.concerns||[], goal: state.goal||null, age: state.age||null }),
+      genre: state.genre,
+      coach_genre: state.coachGenre || 'femme'
+    });
+    if(error) console.warn('saveProfile:', error.message);
+  }
+
+  // ===== RGPD : export et suppression =====
+  async function exportData(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    showToast('Préparation de l\'export…');
+    const profile = await loadProfile();
+    const { data: entries } = await sb.from('entries').select('*').eq('user_id', currentUser.id);
+    const payload = { compte:{ email: currentUser.email }, profil: profile, journal: entries||[], exporte_le: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mes-donnees-rituel.json';
+    a.click();
+    showToast('Vos données ont été exportées ✓');
+  }
+
+  async function deleteAccount(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    if(!await cmAsk({titre:'Supprimer ton compte ?',texte:'Tes photos, ton journal, ton profil et ton compte seront définitivement effacés. Cette action est irréversible.',ok:'Supprimer mon compte',annuler:'Annuler',danger:true})) return;
+    showToast('Suppression en cours…');
+    try{
+      const { data:{ session } } = await sb.auth.getSession();
+      const token = session ? session.access_token : '';
+      const res = await fetch('/api/delete-account', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }
+      });
+      const data = await res.json();
+      if(data && data.success){
+        try{ localStorage.removeItem('rituel_profile_'+currentUser.id); }catch(e){}
+        await sb.auth.signOut();
+        alert('Ton compte et toutes tes données ont été définitivement supprimés.');
+        location.reload();
+      } else {
+        showToast('Erreur : '+((data && data.error) || 'suppression impossible'));
+      }
+    }catch(e){
+      showToast('Erreur lors de la suppression : '+e.message);
+    }
+  }
+
+  // ===== Onboarding =====
+  function onbShow(n){
+    // Sauter la page genre (4) si déjà renseigné à l'inscription
+    if(n===4 && state.genre){ n = (state.onbStep < 4) ? 5 : 3; }
+    state.onbStep=n;
+    if(n===6){ document.getElementById('onb-name').textContent = state.name ? ', '+state.name : ''; }
+    document.querySelectorAll('.onb-page').forEach(p=>p.classList.remove('active'));
+    const pg=document.querySelector(`.onb-page[data-page="${n}"]`);
+    if(pg) pg.classList.add('active');
+    window.scrollTo(0,0);
+  }
+  function onbNext(){ onbShow(state.onbStep+1); }
+  function onbBack(){ if(state.onbStep>0) onbShow(state.onbStep-1); }
+  function toggleOpt(el,key){
+    el.parentElement.querySelectorAll('.onb-opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected'); state[key]=el.dataset.value;
+    if(key==='skinType') document.getElementById('btn-step1').disabled=false;
+    if(key==='goal') document.getElementById('btn-step3').disabled=false;
+    if(key==='genre'){ document.getElementById('btn-step4').disabled=false; }
+  }
+  function toggleOptMulti(el,key){
+    el.classList.toggle('selected'); const v=el.dataset.value;
+    if(el.classList.contains('selected')){ if(!state[key].includes(v)) state[key].push(v); }
+    else state[key]=state[key].filter(x=>x!==v);
+  }
+  let onbProducts=[];
+  function onbAddProduct(){
+    const inp=document.getElementById('onb-prod-input');
+    const br=document.getElementById('onb-brand-input');
+    if(!inp || !br) return;
+    const cap=function(s){ if(!s) return ''; s=s.trim(); return s.charAt(0).toUpperCase()+s.slice(1); };
+    const nom=inp.value.trim();
+    const marque=br.value.trim();
+    if(!nom){ inp.focus(); return; }
+    if(!marque){ showToast('Ajoute aussi la marque 🌸'); br.focus(); return; }
+    onbProducts.push({ nom: cap(nom), marque: cap(marque) });
+    inp.value=''; br.value='';
+    renderOnbProducts(); inp.focus();
+  }
+  function onbRemoveProduct(i){ onbProducts.splice(i,1); renderOnbProducts(); }
+  function renderOnbProducts(){
+    const el=document.getElementById('onb-prod-list'); if(!el) return;
+    el.innerHTML = onbProducts.map((p,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-warm);border-radius:12px;padding:10px 14px;font-size:14px;"><span>🧴 '+escapeHtml(p.nom)+(p.marque?' <span style="color:var(--muted);font-size:12px;">· '+escapeHtml(p.marque)+'</span>':'')+'</span><button onclick="onbRemoveProduct('+i+')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;">×</button></div>').join('');
+  }
+  async function finishOnboarding(){
+    const btn=document.querySelector('.onb-page[data-page="6"] .btn');
+    if(btn){ btn.disabled=true; btn.textContent='Un instant…'; }
+    await saveProfile();
+    if(onbProducts.length && currentUser){
+      const rows = onbProducts.map((p,idx)=>({ user_id: currentUser.id, moment:'matin', position: idx, nom: p.marque ? (p.nom+' · '+p.marque) : p.nom, emoji:'🧴', in_matin:true, in_soir:true }));
+      try{ await sb.from('products').insert(rows); }catch(e){}
+    }
+    // filet de sécurité : on mémorise localement que l'onboarding est fait
+    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: { concerns: state.concerns||[], goal: state.goal||null } })); }catch(e){}
+    document.getElementById('onboarding').classList.remove('active');
+    enterApp();
+  }
+
+  // ===== Enter app =====
+  function enterApp(){
+    document.getElementById('auth').classList.add('hidden');
+    document.getElementById('onboarding').classList.remove('active');
+    document.getElementById('nav').classList.remove('hidden');
+    updateUserUI();
+    applyCoachIdentity();
+    navTo('home');
+    updateBellDot();
+    startReminderScheduler();
+    initLeaBubble();
+    checkPaymentReturn();
+  }
+
+  function updateUserUI(){
+    const name = state.name || 'toi';
+    const first = name.charAt(0).toUpperCase();
+    document.getElementById('topbar-name').textContent = name;
+    document.getElementById('topbar-avatar').textContent = first;
+    document.getElementById('profile-avatar').textContent = first;
+    document.getElementById('profile-name').textContent = name;
+    if(currentUser && currentUser.email) document.getElementById('profile-email').textContent = currentUser.email;
+    else if(state.email) document.getElementById('profile-email').textContent = state.email;
+    renderProfileBadges();
+    const d=new Date();
+    const days=['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
+    const months=['JANV','FÉVR','MARS','AVRIL','MAI','JUIN','JUIL','AOÛT','SEPT','OCT','NOV','DÉC'];
+    document.getElementById('topbar-date').textContent = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+    const h=d.getHours();
+    const gh=document.getElementById('greet-hello'); if(gh) gh.textContent = (h>=5 && h<18) ? 'Bonjour' : 'Bonsoir';
+    const gi=document.getElementById('greet-invite');
+    if(gi){
+      const prenom=(document.getElementById('topbar-name')||{}).textContent||'';
+      const soir = !(h>=5 && h<18);
+      gi.textContent = soir ? 'Prêt' + (prenom && prenom!=='toi' ? '' : '') + ' pour ton rituel du soir ?' : 'Prêt pour ton rituel du jour ?';
+    }
+  }
+
+  // ===== Profil : badges + édition de la peau =====
+  const SKIN_LABELS = { seche:'Peau sèche', mixte:'Peau mixte', grasse:'Peau grasse', sensible:'Peau sensible', normale:'Peau normale' };
+  const CONCERN_LABELS = { acne:'Acné', taches:'Taches', rides:'Rides', eclat:'Éclat', pores:'Pores', cernes:'Cernes' };
+  const SKIN_TYPES = [['seche','🌾','Sèche'],['mixte','🍯','Mixte'],['grasse','✨','Grasse'],['sensible','🌸','Sensible'],['normale','🌿','Normale']];
+  const CONCERNS = [['acne','🌷','Acné, imperfections'],['taches','🍃','Taches, pigmentation'],['rides','🌹','Rides, fermeté'],['eclat','💫','Éclat, teint terne'],['pores','🌼','Pores dilatés'],['cernes','👁️','Cernes']];
+
+  async function renderProfileBadges(){
+    const el = document.getElementById('profile-badges'); if(!el) return;
+    let html='';
+    if(state.skinType) html += `<span class="badge">${SKIN_LABELS[state.skinType]||'Peau'}</span>`;
+    (state.concerns||[]).forEach(c=>{ if(CONCERN_LABELS[c]) html += `<span class="badge">${CONCERN_LABELS[c]}</span>`; });
+    const n = currentUser ? await computeStreak() : 0;
+    html += `<span class="badge-accent badge">${n>0 ? ('🔥 Série '+n+' j') : '🌱 Pas encore de série'}</span>`;
+    el.innerHTML = html;
+  }
+
+  let tmpSkin=null, tmpConcerns=[];
+  function openSkinSheet(){
+    tmpSkin = state.skinType;
+    tmpConcerns = [...(state.concerns||[])];
+    renderSkinOpts();
+    document.getElementById('skin-sheet').classList.add('open');
+  }
+  function renderSkinOpts(){
+    document.getElementById('skin-type-opts').innerHTML = SKIN_TYPES.map(([v,e,l])=>`<button class="onb-opt${tmpSkin===v?' selected':''}" onclick="pickSkin('${v}')"><span class="onb-opt-emoji">${e}</span><div class="onb-opt-text"><div class="onb-opt-title">${l}</div></div><div class="onb-opt-check"></div></button>`).join('');
+    document.getElementById('skin-concern-opts').innerHTML = CONCERNS.map(([v,e,l])=>`<button class="onb-opt${tmpConcerns.includes(v)?' selected':''}" onclick="toggleConcern('${v}')"><span class="onb-opt-emoji">${e}</span><div class="onb-opt-text"><div class="onb-opt-title">${l}</div></div><div class="onb-opt-check"></div></button>`).join('');
+  }
+  function pickSkin(v){ tmpSkin=v; renderSkinOpts(); }
+  function toggleConcern(v){ tmpConcerns = tmpConcerns.includes(v) ? tmpConcerns.filter(x=>x!==v) : [...tmpConcerns, v]; renderSkinOpts(); }
+  function closeSkinSheet(){ document.getElementById('skin-sheet').classList.remove('open'); }
+
+  // ===== Quizz type de peau (base dermato : type = sébum/sécheresse, sensibilité à part) =====
+  const QUIZ=[
+    { q:"3-4h après t'être lavé le visage (sans rien appliquer), ta peau…", opts:[
+      {l:"Tiraille, un peu rêche", t:'seche'},
+      {l:"Brille un peu partout", t:'grasse'},
+      {l:"Brille sur le front/nez/menton, normale ailleurs", t:'mixte'},
+      {l:"Est confortable, équilibrée", t:'normale'} ] },
+    { q:"Tes pores sont plutôt…", opts:[
+      {l:"Quasi invisibles", t:'seche'},
+      {l:"Visibles sur le nez / le front", t:'mixte'},
+      {l:"Dilatés un peu partout", t:'grasse'},
+      {l:"Peu visibles", t:'normale'} ] },
+    { q:"En milieu de journée, ton front et ton nez…", opts:[
+      {l:"Restent mats", t:'normale'},
+      {l:"Deviennent brillants un peu partout", t:'grasse'},
+      {l:"Brillent seulement sur la zone T", t:'mixte'},
+      {l:"Tiraillent, inconfort", t:'seche'} ] },
+    { q:"Tiraillements ou peau qui pèle, c'est…", opts:[
+      {l:"Souvent", t:'seche'},
+      {l:"De temps en temps", t:'mixte'},
+      {l:"Rarement / jamais", t:'normale'} ] },
+    { q:"Face à un nouveau produit, au froid ou au parfum, ta peau…", opts:[
+      {l:"Rougit / picote facilement", t:null, sens:2},
+      {l:"Réagit un peu, parfois", t:null, sens:1},
+      {l:"Tolère bien, aucun souci", t:'normale', sens:0} ] },
+    { q:"Boutons / imperfections ?", opts:[
+      {l:"Fréquents", t:'grasse'},
+      {l:"Occasionnels", t:'mixte'},
+      {l:"Rares", t:'normale'} ] }
+  ];
+  let quizStep=0, quizAns=[], quizCtx='profile';
+  function openQuiz(ctx){ quizCtx=ctx||'profile'; quizStep=0; quizAns=[]; renderQuiz(); document.getElementById('quiz-sheet').classList.add('open'); }
+  function closeQuiz(){ document.getElementById('quiz-sheet').classList.remove('open'); }
+  function quizPick(i){ quizAns[quizStep]=QUIZ[quizStep].opts[i]; quizStep++; renderQuiz(); }
+  function quizBack(){ if(quizStep>0){ quizStep--; renderQuiz(); } }
+  function quizResult(){
+    const sc={seche:0,grasse:0,mixte:0,normale:0}; let sens=0;
+    quizAns.forEach(o=>{ if(o){ if(o.t && sc[o.t]!=null) sc[o.t]++; if(o.sens!=null) sens=Math.max(sens,o.sens); } });
+    const order=['mixte','grasse','seche','normale']; let best=order[0];
+    order.forEach(t=>{ if(sc[t]>sc[best]) best=t; });
+    if(sens>=2) best='sensible';
+    return { type:best, sens };
+  }
+  function renderQuiz(){
+    const body=document.getElementById('quiz-body'); if(!body) return;
+    if(quizStep < QUIZ.length){
+      const Q=QUIZ[quizStep];
+      body.innerHTML =
+        '<div class="onb-progress" style="margin-bottom:18px;">'+QUIZ.map((_,k)=>'<div class="onb-dot'+(k<quizStep?' done':'')+'"></div>').join('')+'</div>'+
+        '<h2 class="onb-title" style="font-size:20px;">'+Q.q+'</h2>'+
+        '<div class="onb-options" style="margin-top:16px;">'+Q.opts.map((o,i)=>'<button class="onb-opt" onclick="quizPick('+i+')"><div class="onb-opt-text"><div class="onb-opt-title">'+o.l+'</div></div><div class="onb-opt-check"></div></button>').join('')+'</div>'+
+        (quizStep>0?'<button class="btn btn-ghost" style="margin-top:6px;" onclick="quizBack()">← Précédent</button>':'');
+    } else {
+      const r=quizResult();
+      const meta=SKIN_TYPES.find(s=>s[0]===r.type)||['normale','🌿','Normale'];
+      const sensLine = (r.sens>=1 && r.type!=='sensible') ? '<p style="color:var(--ink-soft);font-size:13px;margin-top:8px;line-height:1.5;">Ta peau a aussi l\'air réactive · pense à privilégier des produits doux 🌸</p>' : '';
+      body.innerHTML =
+        '<div style="text-align:center;padding:6px 0 2px;">'+
+          '<div style="font-size:52px;">'+meta[1]+'</div>'+
+          '<div class="eyebrow" style="margin-top:6px;">Ton résultat</div>'+
+          '<h2 class="display" style="font-size:30px;margin:6px 0;">Peau <em class="italic" style="color:var(--accent);">'+meta[2].toLowerCase()+'</em></h2>'+
+          sensLine+
+        '</div>'+
+        '<button class="btn btn-accent" style="margin-top:16px;" onclick="quizApply()">Garder ce résultat</button>'+
+        '<button class="btn btn-ghost" style="margin-top:8px;" onclick="openQuiz(quizCtx)">Refaire le test</button>';
+    }
+  }
+  function quizApply(){
+    const r=quizResult();
+    if(quizCtx==='onboarding'){
+      state.skinType=r.type;
+      const page=document.querySelector('.onb-page[data-page="1"]');
+      if(page){ page.querySelectorAll('.onb-opt').forEach(o=>o.classList.toggle('selected', o.dataset.value===r.type)); }
+      const btn=document.getElementById('btn-step1'); if(btn) btn.disabled=false;
+      closeQuiz();
+      showToast('Type de peau : '+ (SKIN_TYPES.find(s=>s[0]===r.type)||['','','peau'])[2].toLowerCase() +' 🌸');
+    } else {
+      if(document.getElementById('skin-type-opts')){ pickSkin(r.type); }
+      closeQuiz();
+      showToast('Résultat appliqué · pense à enregistrer 🌸');
+    }
+  }
+  async function saveSkinProfile(){
+    if(!tmpSkin){ showToast('Choisis un type de peau'); return; }
+    state.skinType = tmpSkin;
+    state.concerns = tmpConcerns;
+    await saveProfile();
+    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: { concerns: state.concerns||[], goal: state.goal||null } })); }catch(e){}
+    closeSkinSheet();
+    renderProfileBadges();
+    showToast('Profil peau mis à jour 🌸');
+  }
+
+  // ===== Navigation =====
+  // ===== Bouton + flottant (FAB) =====
+  function fabAction(){
+    const cur = document.getElementById('app').getAttribute('data-screen');
+    if(cur==='routine'){ openProductForm(); }
+    else if(cur==='ritual'){ openRituelChemin(null, (typeof rhActiveTab!=='undefined' && rhActiveTab) || 'matin'); }
+  }
+  function updateFab(screen){
+    const fab=document.getElementById('fab-add');
+    if(!fab) return;
+    const cur = screen || document.getElementById('app').getAttribute('data-screen');
+    let show = (cur==='routine' || cur==='ritual');   // + visible sur Produits et Rituel
+    fab.classList.toggle('show', show);
+  }
+
+    function navTo(screen){
+    const prev = document.getElementById('app').getAttribute('data-screen');
+    if(prev && prev!=='chat') window._lastScreen = prev;
+    if(prev==='ritual' && screen!=='ritual') closeRituelChemin(); // sinon l'aperçu reste affiché par-dessus les autres onglets
+    document.querySelectorAll('.screen, .chat-screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(screen).classList.add('active');
+    if(screen==='chat'){ try{ leaInjectDaily(); }catch(e){} try{ refreshChatLock(); }catch(e){} }
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.screen===screen));
+    document.getElementById('app').setAttribute('data-screen', screen);
+    const host=document.getElementById('scroll-host'); if(host) host.scrollTo(0,0);
+    window.scrollTo(0,0);
+    const bub=document.getElementById('lea-bubble'); if(bub) bub.style.display = (currentUser && screen!=='chat') ? 'flex' : 'none';
+    closeLeaPop();
+    updateFab(screen);
+    if(screen==='profile') refreshPremiumUI();
+    if(screen==='ritual'){
+      // On propose le créneau du moment, et on synchronise les onglets
+      const h=new Date().getHours();
+      rpSlotView = (h >= 12) ? 'soir' : 'matin';
+      document.querySelectorAll('.rt-tab').forEach(b=>b.classList.toggle('sel', b.dataset.m===rpSlotView));
+      if(currentUser) cmEnterRitual(); // affichage immédiat (cache ou léger fondu), jamais la liste derrière
+    }
+    if(currentUser){
+      if(screen==='home'){ loadHomeData(); loadTodayPhoto(); }
+      else if(screen==='routine'){ loadProducts(); }
+      else if(screen==='ritual'){ loadRitual(); }
+      else if(screen==='journal'){ loadJournalFromDB(); renderCalendar(); }
+      else if(screen==='profile'){ renderProfileBadges(); }
+    }
+  }
+  // ===== Identité du coach =====
+  function coachName(){ return 'Léa'; }
+  function coachTitre(){ return 'ta compagne de soin'; }
+  function updateChatIntro(){
+    const el=document.getElementById('chat-intro'); if(!el) return;
+    el.textContent = "Coucou 🌸 Moi c'est "+coachName()+", "+coachTitre()+". Je suis là pour t'aider avec ta peau, tes produits, ta routine… ou juste pour répondre à tes questions, sans jugement. Dis-moi tout, qu'est-ce qui t'amène aujourd'hui ?";
+  }
+  function applyCoachIdentity(){
+    const nm=coachName();
+    const h=document.getElementById('chat-coach-name-text'); if(h) h.textContent=nm;
+    const bub=document.getElementById('lea-bubble'); if(bub) bub.setAttribute('aria-label','Parler à '+nm);
+    const pb=document.getElementById('lea-photo-btn'); if(pb) pb.textContent='✨ Demander l\'avis de '+nm+' sur ma photo';
+    updateChatIntro();
+  }
+
+  function openChat(){
+    refreshChatQuota(); updateChatIntro(); navTo('chat'); }
+  function closeChat(){ navTo(window._lastScreen || 'home'); }
+
+  // ===== Entrée du jour (une ligne par jour dans 'entries') =====
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+  async function getTodayEntryId(){
+    if(!currentUser) return null;
+    const { data } = await sb.from('entries').select('id').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
+    if(data && data.length) return data[0].id;
+    const { data: ins, error } = await sb.from('entries').insert({ user_id: currentUser.id, date: todayStr() }).select('id').single();
+    if(error){ console.warn('getTodayEntryId:', error.message); return null; }
+    return ins ? ins.id : null;
+  }
+  async function updateTodayEntry(fields){
+    const id = await getTodayEntryId();
+    if(!id) return;
+    const { error } = await sb.from('entries').update(fields).eq('id', id);
+    if(error) console.warn('updateTodayEntry:', error.message);
+  }
+
+  // ===== Humeur + intensité =====
+  let currentMood = null;
+  function selectMood(el, val){
+    el.parentElement.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+    el.classList.add('selected');
+    currentMood = val;
+    document.getElementById('intensity-box').classList.remove('hidden');
+    saveMood();
+  }
+  function onIntensity(v){ document.getElementById('intensity-val').textContent = v+'%'; }
+  async function saveMood(){
+    if(!currentUser || !currentMood) return;
+    const intensite = parseInt(document.getElementById('intensity-slider').value,10);
+    await updateTodayEntry({ humeur: currentMood, humeur_intensite: intensite });
+    showToast('Humeur enregistrée ✓');
+  }
+
+  // ===== Routine matin / soir =====
+  let currentPeriod = 'matin';
+  function switchPeriod(p){
+    currentPeriod = p;
+    document.getElementById('pb-matin').classList.toggle('active', p==='matin');
+    document.getElementById('pb-soir').classList.toggle('active', p==='soir');
+    const em=document.getElementById('hr-emoji'), ti=document.getElementById('hr-title');
+    if(em){ em.textContent = p==='soir' ? '🌙' : '☀️'; em.classList.toggle('soir', p==='soir'); }
+    if(ti) ti.textContent = p==='soir' ? 'Rituel du soir' : 'Rituel du matin';
+    document.getElementById('routine-matin').classList.toggle('hidden', p!=='matin');
+    document.getElementById('routine-soir').classList.toggle('hidden', p!=='soir');
+    updateRoutineCount();
+    if(typeof renderHomeVoyage==='function') renderHomeVoyage();
+  }
+  function listStats(period){
+    const list=document.getElementById('routine-'+period);
+    const total=list.querySelectorAll('.routine-item').length;
+    const done=list.querySelectorAll('.routine-item.done').length;
+    return { done, total, complete: total>0 && done===total };
+  }
+  function updateRoutineCount(){
+    const s=listStats(currentPeriod);
+    const fill=document.getElementById('hr-bar-fill');
+    const sub=document.getElementById('hr-sub');
+    const pct = s.total ? Math.round((s.done/s.total)*100) : 0;
+    if(fill) fill.style.width = pct+'%';
+    if(sub){
+      if(!s.total) sub.textContent = 'Aucune étape pour l\'instant';
+      else if(s.complete) sub.textContent = 'Terminé, bravo 🌸';
+      else sub.textContent = s.done+' sur '+s.total+(s.done===0?' · c\'est parti 🌸':' · continue 🌿');
+    }
+  }
+  async function toggleRoutine(el){
+    el.classList.toggle('done');
+    const list = el.closest('.routine-list');
+    const period = (list && list.id==='routine-soir') ? 'soir' : 'matin';
+    if(navigator.vibrate) navigator.vibrate(10);
+    updateRoutineCount();
+    // Mémoriser les étapes cochées de ce créneau
+    const doneIds = [...list.querySelectorAll('.routine-item.done')].map(x=>x.dataset.pid).filter(Boolean);
+    window.__homeSteps = window.__homeSteps || { matin:[], soir:[] };
+    window.__homeSteps[period] = doneIds;
+    const complete = listStats(period).complete;
+    const fields = period==='soir' ? { routine_soir: complete } : { routine_matin: complete };
+    fields.steps = { matin: window.__homeSteps.matin||[], soir: window.__homeSteps.soir||[] };
+    try{ await updateTodayEntry(fields); }
+    catch(e){ await updateTodayEntry(period==='soir' ? { routine_soir: complete } : { routine_matin: complete }); }
+    bustStreak();
+    renderStreak();
+    if(typeof renderHomeVoyage==='function') renderHomeVoyage();
+  }
+  function applyRoutineState(period, complete){
+    const list=document.getElementById('routine-'+period);
+    if(!list) return;
+    list.querySelectorAll('.routine-item').forEach(it=>{
+      it.classList.toggle('done', !!complete);
+      const _rt=it.querySelector('.routine-time'); if(_rt) _rt.textContent = complete ? '✓' : '…';
+    });
+  }
+
+  // ===== Streak (selon le type de rituel choisi) =====
+  function dayComplete(e){
+    if(!e) return false;
+    if(e.repos) return true;
+    const t = state.rituelType || 'both';
+    if(t==='matin') return !!e.routine_matin;
+    if(t==='soir') return !!e.routine_soir;
+    return !!(e.routine_matin && e.routine_soir);
+  }
+  let _stkCache=null;
+  function bustStreak(){ _stkCache=null; }
+  async function computeStreak(){
+    if(!currentUser) return 0;
+    if(_stkCache && _stkCache.d===todayStr()) return _stkCache.v;
+    const { data } = await sb.from('entries').select('date,routine_matin,routine_soir,repos').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(90);
+    if(!data || !data.length) return 0;
+    const done={}; data.forEach(e=>{ done[e.date] = dayComplete(e); });
+    let streak=0; const d=new Date();
+    if(!done[d.toISOString().slice(0,10)]) d.setDate(d.getDate()-1);
+    for(let i=0;i<90;i++){
+      const ds=d.toISOString().slice(0,10);
+      if(done[ds]){ streak++; d.setDate(d.getDate()-1); } else break;
+    }
+    _stkCache={ d: todayStr(), v: streak };
+    return streak;
+  }
+  async function renderStreak(){
+    if(!currentUser) return;
+    const n = await computeStreak();
+    document.getElementById('streak-num').textContent = n;
+    document.getElementById('streak-unit').textContent = n>1 ? "jours d'affilée" : "jour";
+    document.getElementById('streak-flame').textContent = n===0 ? '🌱' : (n>=7 ? '🔥' : '🌸');
+    const label=document.getElementById('streak-label');
+    if(n===0) label.textContent='Fais ton rituel pour démarrer ta série ✨';
+    else if(n<3) label.textContent='Beau début, continue comme ça 🌸';
+    else if(n<7) label.textContent='Belle régularité, ça se voit sur la peau ✨';
+    else label.textContent='Tu es rayonnante de constance 🔥';
+    const { data } = await sb.from('entries').select('date,routine_matin,routine_soir').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(14);
+    const done={}; (data||[]).forEach(e=>{ done[e.date]=dayComplete(e); });
+    // Semainier : lundi → dimanche, avec l'initiale du jour
+    const LETTRES=['D','L','M','M','J','V','S'];
+    const today=new Date();
+    const jour=today.getDay();                  // 0 = dimanche
+    const depuisLundi=(jour===0?6:jour-1);      // recule jusqu'au lundi
+    let mini='';
+    for(let i=0;i<7;i++){
+      const dd=new Date(); dd.setDate(dd.getDate()-depuisLundi+i);
+      const ds=dd.toISOString().slice(0,10);
+      const futur = dd > today && ds !== todayStr();
+      const cls = done[ds] ? 'active' : (futur ? 'futur' : '');
+      const auj = (ds===todayStr()) ? ' auj' : '';
+      mini += '<div class="sk-day '+cls+auj+'"><span class="sk-l">'+LETTRES[dd.getDay()]+'</span><span class="sk-p">'+(done[ds]?'✓':'')+'</span></div>';
+    }
+    document.getElementById('streak-mini').innerHTML = mini;
+    renderPlant(n);
+  }
+
+  // ===== Plante qui pousse avec la série =====
+  function plantStage(n){ if(n<=0) return 0; if(n<3) return 1; if(n<7) return 2; if(n<14) return 3; if(n<21) return 4; return 5; }
+
+  const PLANT_TYPES = {
+    fleur:     { name:'Fleur',     emoji:'🌸', unlock:0 },
+    lavande:   { name:'Lavande',   emoji:'🪻', unlock:3 },
+    tournesol: { name:'Tournesol', emoji:'🌻', unlock:7 },
+    cactus:    { name:'Cactus',    emoji:'🌵', unlock:14 },
+    rose:      { name:'Rose',      emoji:'🌹', unlock:30 }
+  };
+  function currentPlant(){ try{ return localStorage.getItem('rituel_plant') || 'fleur'; }catch(e){ return 'fleur'; } }
+
+  function bloomSVG(type, topY, stage){
+    const P=[];
+    if(type==='lavande'){
+      const count = stage>=5 ? 6 : (stage>=4 ? 3 : 0);
+      for(let i=0;i<count;i++){ const yy=topY - i*8; P.push('<ellipse cx="100" cy="'+yy+'" rx="5.5" ry="6.5" fill="'+(i%2?'#9B82D6':'#8B7CC4')+'"/>'); }
+      return P.join('');
+    }
+    if(type==='cactus'){
+      if(stage>=5){
+        for(let k=0;k<5;k++){ const a=-Math.PI/2 + k*(2*Math.PI/5); const px=Math.round(100+Math.cos(a)*7); const py=Math.round(topY+Math.sin(a)*7); P.push('<circle cx="'+px+'" cy="'+py+'" r="5" fill="#E8729B"/>'); }
+        P.push('<circle cx="100" cy="'+topY+'" r="3.5" fill="#F4C84B"/>');
+      }
+      return P.join('');
+    }
+    if(type==='rose'){
+      if(stage>=5){
+        for(let k=0;k<8;k++){ const a=k*(Math.PI/4); const px=Math.round(100+Math.cos(a)*14); const py=Math.round(topY+Math.sin(a)*14); P.push('<circle cx="'+px+'" cy="'+py+'" r="8" fill="#D6457B"/>'); }
+        for(let k=0;k<5;k++){ const a=k*(2*Math.PI/5)+0.4; const px=Math.round(100+Math.cos(a)*7); const py=Math.round(topY+Math.sin(a)*7); P.push('<circle cx="'+px+'" cy="'+py+'" r="6" fill="#B83266"/>'); }
+        P.push('<circle cx="100" cy="'+topY+'" r="4" fill="#8E2150"/>');
+      } else if(stage>=4){
+        P.push('<circle cx="100" cy="'+topY+'" r="9" fill="#E59ABA"/>');
+        P.push('<path d="M100 '+(topY-9)+' Q109 '+topY+' 100 '+(topY+9)+' Q91 '+topY+' 100 '+(topY-9)+' Z" fill="#C85084"/>');
+      }
+      return P.join('');
+    }
+    if(stage>=5){
+      const r  = type==='tournesol' ? 14 : 13;
+      const pr = type==='tournesol' ? 6 : 9;
+      const petalColor  = type==='tournesol' ? '#F4C026' : 'var(--blush)';
+      const centerColor = type==='tournesol' ? '#7A5230' : 'var(--gold)';
+      for(let k=0;k<petals;k++){ const a=k*(2*Math.PI/petals); const px=Math.round(100+Math.cos(a)*r); const py=Math.round(topY+Math.sin(a)*r); P.push('<circle cx="'+px+'" cy="'+py+'" r="'+pr+'" fill="'+petalColor+'"/>'); }
+      P.push('<circle cx="100" cy="'+topY+'" r="8" fill="'+centerColor+'"/>');
+    } else if(stage>=4){
+      const c  = type==='tournesol' ? '#E8C25A' : 'var(--accent-soft)';
+      const c2 = type==='tournesol' ? '#C99B2E' : 'var(--accent)';
+      P.push('<circle cx="100" cy="'+topY+'" r="9" fill="'+c+'"/>');
+      P.push('<path d="M100 '+(topY-9)+' Q109 '+topY+' 100 '+(topY+9)+' Q91 '+topY+' 100 '+(topY-9)+' Z" fill="'+c2+'"/>');
+    }
+    return P.join('');
+  }
+
+  function plantSVG(stage, type){
+    type = type || 'fleur';
+    const soilY=150;
+    const stemH = 10 + stage*22;
+    const topY = soilY - stemH;
+    const isCactus = type==='cactus';
+    const stemW = isCactus ? 13 : 4;
+    const stemColor = isCactus ? '#6FA368' : 'var(--sage)';
+    const parts = [];
+    parts.push('<path d="M70 150 L75 182 Q76 188 82 188 L118 188 Q124 188 125 182 L130 150 Z" fill="#D7A286"/>');
+    parts.push('<path d="M64 144 H136 L134 154 H66 Z" fill="#C68E70"/>');
+    parts.push('<ellipse cx="100" cy="150" rx="32" ry="5" fill="#7C5A44"/>');
+    if(stage===0){
+      parts.push('<path d="M100 150 C95 143 87 142 83 145 C88 150 96 151 100 150 Z" fill="var(--sage)"/>');
+      parts.push('<path d="M100 150 C105 143 113 142 117 145 C112 150 104 151 100 150 Z" fill="var(--sage)"/>');
+    } else {
+      const midY = Math.round((soilY+topY)/2);
+      parts.push('<path d="M100 '+soilY+' Q'+(isCactus?100:97)+' '+midY+' 100 '+topY+'" stroke="'+stemColor+'" stroke-width="'+stemW+'" fill="none" stroke-linecap="round"/>');
+      const pairs = Math.min(stage,4);
+      for(let i=0;i<pairs;i++){
+        const ly = Math.round(soilY - stemH*(i+1)/(pairs+1));
+        if(isCactus){
+          parts.push('<ellipse cx="89" cy="'+ly+'" rx="7" ry="11" fill="#6FA368"/>');
+          parts.push('<ellipse cx="111" cy="'+(ly-4)+'" rx="7" ry="11" fill="#6FA368"/>');
+        } else {
+          parts.push('<path d="M100 '+ly+' C84 '+(ly-9)+' 73 '+(ly-3)+' 71 '+(ly+6)+' C84 '+(ly+8)+' 96 '+(ly+4)+' 100 '+ly+' Z" fill="var(--sage)"/>');
+          parts.push('<path d="M100 '+ly+' C116 '+(ly-9)+' 127 '+(ly-3)+' 129 '+(ly+6)+' C116 '+(ly+8)+' 104 '+(ly+4)+' 100 '+ly+' Z" fill="var(--sage)"/>');
+        }
+      }
+      parts.push(bloomSVG(type, topY, stage));
+    }
+    return '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:150px;height:150px;">'+parts.join('')+'</svg>';
+  }
+
+  async function renderPlant(n){
+    const host=document.getElementById('plant-host'); if(!host) return;
+    if(typeof n!=='number'){ n = currentUser ? await computeStreak() : 0; }
+    const st=plantStage(n);
+    host.innerHTML = plantSVG(st, currentPlant());
+    const cap=document.getElementById('plant-caption');
+    if(cap){
+      if(n===0) cap.textContent='Fais ton rituel pour faire pousser ta plante 🌱';
+      else if(st>=5) cap.textContent='En fleur ! '+n+' jours de rituel 🌸';
+      else cap.textContent='Ta plante pousse · '+n+' jour'+(n>1?'s':'')+' 🌿';
+    }
+    // Félicitations quand la plante change de palier (pas au tout premier affichage)
+    try{
+      const key = currentUser ? 'rituel_plant_stage_'+currentUser.id : 'rituel_plant_stage';
+      const prev = parseInt(localStorage.getItem(key)||'-1',10);
+      if(st>0 && prev>=0 && st>prev){
+        const msgs={1:'Ta graine a germé 🌱',2:'Ta plante grandit 🌿',3:'De belles feuilles ! 🍃',4:'Un bouton apparaît 🌸',5:'Ta plante est en fleur ! 🌸'};
+        showToast(msgs[st]||'Ta plante a poussé 🌿');
+      }
+      if(st!==prev) localStorage.setItem(key, String(st));
+    }catch(e){}
+    // Déblocage de nouvelles plantes selon la série (notif au passage d'un palier)
+    try{
+      const uid = currentUser ? currentUser.id : 'anon';
+      const ukey='rituel_unlocked_'+uid;
+      if(localStorage.getItem(ukey)===null){
+        const achieved=Object.values(PLANT_TYPES).reduce((mx,v)=>(v.unlock<=n?Math.max(mx,v.unlock):mx),0);
+        localStorage.setItem(ukey, String(achieved));
+      } else {
+        const prevU=parseInt(localStorage.getItem(ukey),10);
+        const newly=Object.values(PLANT_TYPES).filter(v=>v.unlock>prevU && v.unlock<=n).sort((a,b)=>a.unlock-b.unlock);
+        if(newly.length){ const last=newly[newly.length-1]; showToast(last.emoji+' Nouvelle plante débloquée : '+last.name+' !'); localStorage.setItem(ukey, String(last.unlock)); }
+      }
+    }catch(e){}
+  }
+
+  async function bestStreak(){
+    if(!currentUser) return 0;
+    const { data } = await sb.from('entries').select('date,routine_matin,routine_soir,repos').eq('user_id',currentUser.id).order('date',{ascending:true});
+    const es=data||[];
+    const done=new Set(); es.forEach(e=>{ if(dayComplete(e)) done.add(e.date); });
+    if(!done.size) return 0;
+    const dates=[...done].sort();
+    let best=0, run=0, prev=null;
+    for(const d of dates){
+      if(prev){ const diff=Math.round((new Date(d)-new Date(prev))/86400000); run = (diff===1)? run+1 : 1; } else run=1;
+      if(run>best) best=run; prev=d;
+    }
+    return best;
+  }
+  function plantLockedToast(d){ showToast('🔒 Plante à débloquer dès '+d+' jours de série 🌱'); }
+  async function openPlantSheet(){
+    const cur=currentPlant();
+    let best=0;
+    try{ best=await bestStreak(); }catch(e){ best=0; }
+    document.getElementById('plant-list').innerHTML = Object.keys(PLANT_TYPES).map(k=>{
+      const v=PLANT_TYPES[k];
+      const locked = best < (v.unlock||0);
+      const onclick = locked ? ('plantLockedToast('+v.unlock+')') : ("pickPlant('"+k+"')");
+      const border = (k===cur && !locked) ? 'var(--accent)' : 'var(--line)';
+      const bg = (k===cur && !locked) ? 'var(--blush-soft)' : 'var(--surface)';
+      const right = locked
+        ? '<div style="font-size:11px;color:var(--muted);text-align:right;line-height:1.3;flex-shrink:0;">🔒<br>dès '+v.unlock+' j</div>'
+        : (k===cur ? '<div style="font-size:13px;color:var(--accent-deep);flex-shrink:0;">✓</div>' : '');
+      return '<button onclick="'+onclick+'" style="display:flex;align-items:center;gap:14px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid '+border+';background:'+bg+';cursor:pointer;text-align:left;'+(locked?'opacity:0.55;':'')+'">'+
+        '<div style="width:54px;height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--surface-warm);border-radius:12px;"><div style="transform:scale(0.36);transform-origin:center;">'+plantSVG(5,k)+'</div></div>'+
+        '<div style="flex:1;font-family:var(--serif);font-size:16px;">'+v.emoji+' '+v.name+'</div>'+ right +
+      '</button>';
+    }).join('');
+    document.getElementById('plant-sheet').classList.add('open');
+  }
+  function pickPlant(k){ try{ localStorage.setItem('rituel_plant', k); }catch(e){} renderPlant(); openPlantSheet(); showToast(PLANT_TYPES[k].emoji+' Jolie plante !'); }
+  function closePlantSheet(){ document.getElementById('plant-sheet').classList.remove('open'); }
+
+  // ===== Image à partager (story) =====
+  async function shareStreakImage(){
+    if(!currentUser){ showToast('Connecte-toi pour partager 🌸'); return; }
+    showToast('Création de l\'image… 🌸');
+    const n = await computeStreak();
+    const cs = getComputedStyle(document.documentElement);
+    const get=(v,fb)=>{ const x=cs.getPropertyValue(v).trim(); return x||fb; };
+    const accent=get('--accent','#C95A3F'), accentSoft=get('--accent-soft','#EBCDC0'), blushSoft=get('--blush-soft','#F6E0DC'), ink=get('--ink','#2E211C'), inkSoft=get('--ink-soft','#6B5B52');
+    // plante en SVG avec couleurs résolues (les var() ne marchent pas dans une image isolée)
+    let svg = plantSVG(plantStage(n), currentPlant()).replace('style="width:150px;height:150px;"','width="540" height="540"');
+    ['--sage','--gold','--blush','--accent','--accent-soft','--blush-soft'].forEach(v=>{ svg = svg.split('var('+v+')').join(get(v,'#888')); });
+
+    const W=1080,H=1920;
+    const canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#FFFFFF'); g.addColorStop(0.55,blushSoft); g.addColorStop(1,accentSoft);
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    try{ await Promise.all([document.fonts.load('700 280px Newsreader'), document.fonts.load('600 72px Manrope'), document.fonts.load('italic 700 96px Newsreader')]); await document.fonts.ready; }catch(e){}
+    // plante
+    const img=new Image();
+    const svgUrl='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg)));
+    await new Promise(res=>{ img.onload=res; img.onerror=res; img.src=svgUrl; });
+    try{ ctx.drawImage(img,(W-560)/2,300,560,560); }catch(e){}
+    ctx.textAlign='center';
+    if(n>0){
+      ctx.fillStyle=accent; ctx.font='italic 700 280px Newsreader, Georgia, serif'; ctx.fillText(String(n), W/2, 1140);
+      ctx.fillStyle=ink; ctx.font='600 72px Manrope, Arial, sans-serif'; ctx.fillText(n>1?'jours de rituel':'jour de rituel', W/2, 1240);
+    } else {
+      ctx.fillStyle=accent; ctx.font='italic 700 110px Newsreader, Georgia, serif'; ctx.fillText('Mon rituel commence', W/2, 1120);
+    }
+    ctx.fillStyle=inkSoft; ctx.font='400 44px Manrope, Arial, sans-serif'; ctx.fillText('Ma peau, jour après jour 🌸', W/2, 1330);
+    ctx.fillStyle=accent; ctx.font='italic 700 96px Newsreader, Georgia, serif'; ctx.fillText('Rituel', W/2, 1700);
+    ctx.fillStyle=inkSoft; ctx.font='400 40px Manrope, Arial, sans-serif'; ctx.fillText('monrituel.app', W/2, 1772);
+    canvas.toBlob(async (blob)=>{
+      if(!blob){ showToast('Oups, réessaie 🌿'); return; }
+      const file=new File([blob],'rituel-'+n+'jours.png',{type:'image/png'});
+      try{
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          await navigator.share({ files:[file], text:(n>0?(n+' jours de rituel 🌱'):'Je commence mon rituel 🌱')+' monrituel.app' });
+          return;
+        }
+      }catch(e){ if(e && e.name==='AbortError') return; }
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='rituel-'+n+'jours.png'; document.body.appendChild(a); a.click(); a.remove();
+      showToast('Image enregistrée · partage-la en story 🌸');
+    },'image/png');
+  }
+
+  // ===== Chargement de l'accueil =====
+  async function loadHomeData(){
+    if(!currentUser) return;
+    // on repart toujours d'une humeur "vierge" à l'affichage…
+    document.querySelectorAll('#home .mood-btn').forEach(b=>b.classList.remove('selected'));
+    document.getElementById('intensity-box').classList.add('hidden');
+    document.getElementById('intensity-slider').value = 50; onIntensity(50);
+    currentMood = null;
+
+    const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
+    const e = (data && data.length) ? data[0] : null;
+    // …et on ne ré-affiche l'humeur QUE si elle a été notée aujourd'hui
+    if(e && e.humeur){
+      const btns=document.querySelectorAll('#home .mood-btn');
+      if(btns[e.humeur-1]) btns[e.humeur-1].classList.add('selected');
+      currentMood=e.humeur;
+      document.getElementById('intensity-box').classList.remove('hidden');
+      const slider=document.getElementById('intensity-slider');
+      slider.value = e.humeur_intensite || 50; onIntensity(slider.value);
+    }
+    await loadHomeRoutine();
+    applyRoutineState('matin', e ? e.routine_matin : false);
+    applyRoutineState('soir', e ? e.routine_soir : false);
+    applyRituelTypeToHome();
+    renderStreak();
+    renderDayTiles(e);
+    loadHabits();
+    loadLeaTip();
+    updateRestBtn(e);
+    loadLeaProactive(e);
+    updateChatBadge();
+    maybeShowLettreCta();
+    maybeShowBilan5();
+    loadUV();
+    loadCycleCard();
+    loadEclatProgram();
+  }
+
+  // ===== Jour de repos (joker hebdo qui protège la série) =====
+  function updateRestBtn(e){
+    const btn=document.getElementById('rest-btn'); if(!btn) return;
+    const isRepos = e && e.repos;
+    btn.textContent = isRepos ? '☁️ Repos actif' : '☁️ Repos';
+  }
+  async function takeRestDay(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    const today=todayStr();
+    const { data } = await sb.from('entries').select('repos').eq('user_id',currentUser.id).eq('date',today).order('created_at',{ascending:true}).limit(1);
+    const isRepos = data && data.length && data[0].repos;
+    if(isRepos){
+      await updateTodayEntry({ repos:false });
+      showToast('Jour de repos annulé');
+    } else {
+      const since=new Date(); since.setDate(since.getDate()-6); const sinceStr=since.toISOString().slice(0,10);
+      const { data: wk } = await sb.from('entries').select('date').eq('user_id',currentUser.id).eq('repos',true).gte('date',sinceStr).neq('date',today);
+      if(wk && wk.length>=1){ showToast('Tu as déjà pris ton jour de repos cette semaine 🌸'); return; }
+      await updateTodayEntry({ repos:true });
+      showToast('Jour de repos pris · ta série est protégée ☁️');
+    }
+    const { data: d2 } = await sb.from('entries').select('repos').eq('user_id',currentUser.id).eq('date',today).limit(1);
+    updateRestBtn((d2&&d2.length)?d2[0]:null);
+    bustStreak();
+    renderStreak();
+  }
+
+  // Affiche les bons moments sur l'accueil selon le type de rituel choisi
+  function applyRituelTypeToHome(){ /* géré dynamiquement par loadHomeRoutine selon les rituels existants */ }
+
+  // Construit la checklist de l'accueil à partir des vrais produits du Rituel
+  async function loadHomeRoutine(){
+    if(!currentUser) return;
+    const { data: rits } = await sb.from('rituels').select('id,nom,moment,produits,position,actif').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+    const rituels = rits || [];
+    const homeSec=document.getElementById('home-rituel-section');
+    if(homeSec) homeSec.style.display='block';
+    const emptyEl=document.getElementById('home-rituel-empty');
+    const partEls=[document.getElementById('hr-card')];
+    if(!rituels.length){
+      if(emptyEl) emptyEl.style.display='block';
+      partEls.forEach(el=>{ if(el) el.style.display='none'; });
+      const cb=document.getElementById('rituel-choose-btn'); if(cb) cb.style.display='none';
+      return;
+    }
+    if(emptyEl) emptyEl.style.display='none';
+    partEls.forEach(el=>{ if(el) el.style.display=''; });
+    ensureActiveRituels(rituels);
+    window.__allRituels = rituels;
+    const act = pickActive(rituels);
+    const hasM = !!act.matin;
+    const hasS = !!act.soir;
+    const chooseBtn=document.getElementById('rituel-choose-btn');
+    if(chooseBtn) chooseBtn.style.display = rituels.length>1 ? 'inline-block' : 'none';
+    // Le sélecteur ☀️/🌙 n'a de sens que si les deux créneaux existent
+    const swEl = homeSec ? homeSec.querySelector('.hr-switch') : null;
+    if(swEl) swEl.style.display = (hasM && hasS) ? 'flex' : 'none';
+    // Créneau par défaut selon l'heure : le soir à partir de midi
+    const _h = new Date().getHours();
+    const _prefSoir = _h >= 12;
+    let _p = 'matin';
+    if(_prefSoir && hasS) _p='soir';
+    else if(hasM) _p='matin';
+    else if(hasS) _p='soir';
+    switchPeriod(_p);
+    try{
+      const gi2=document.getElementById('greet-invite');
+      if(gi2){
+        const allDone = (function(){
+          const mEl=document.getElementById('routine-matin'); const sEl=document.getElementById('routine-soir');
+          const items=[].concat([...(mEl?mEl.querySelectorAll('.routine-item'):[])],[...(sEl?sEl.querySelectorAll('.routine-item'):[])]);
+          if(!items.length) return false;
+          return items.every(it=>it.classList.contains('done'));
+        })();
+        if(allDone) gi2.textContent='Ton rituel du jour est fait, bravo 🌸';
+      }
+    }catch(e){}
+    const { data: prods } = await sb.from('products').select('id,nom,effets,emoji,categorie,photo_path').eq('user_id', currentUser.id);
+    const pmap={}; (prods||[]).forEach(p=>{ pmap[p.id]=p; });
+    // Étapes déjà cochées aujourd'hui (mémorisées en base)
+    window.__homeSteps = { matin:[], soir:[] };
+    try{
+      const { data: te } = await sb.from('entries').select('steps').eq('user_id', currentUser.id).eq('date', todayStr()).limit(1);
+      const st = (te && te.length && te[0].steps) ? te[0].steps : null;
+      if(st){ window.__homeSteps = { matin: Array.isArray(st.matin)?st.matin:[], soir: Array.isArray(st.soir)?st.soir:[] }; }
+    }catch(e){}
+    for(const moment of ['matin','soir']){
+      const list = document.getElementById('routine-'+moment);
+      const src = act[moment];
+      const ids = (src && Array.isArray(src.produits)) ? src.produits : [];
+      const items = ids.map(id=>pmap[id]).filter(Boolean);
+      window.__homeRoutine = window.__homeRoutine || {}; window.__homeRoutine[moment] = items;
+      if(!items.length){
+        list.innerHTML = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;">Rien pour le ${moment==='soir'?'soir':'matin'} pour l'instant.<br><button class="btn-soft" style="padding:7px 14px;font-size:11.5px;margin-top:8px;" onclick="navTo('ritual')">Complète-le dans l'onglet Rituel →</button></div>`;
+      } else {
+        const doneIds = (window.__homeSteps && window.__homeSteps[moment]) || [];
+        list.innerHTML = items.map((p,i)=>{
+          const parts=(p.nom||'').split(' · ');
+          const isDone = doneIds.indexOf(p.id)>=0;
+          return `<div class="routine-item${isDone?' done':''}" data-pid="${p.id}" onclick="toggleRoutine(this)">`+
+            `<div class="routine-thumb"><span class="n">${i+1}</span>${p.emoji||'🧴'}</div>`+
+            `<div class="routine-info"><div class="routine-name">${escapeHtml(parts[0]||'')}</div>`+
+            `${parts[1]?`<div class="routine-product">${escapeHtml(parts[1])}</div>`:(p.effets?`<div class="routine-product">${escapeHtml(p.effets)}</div>`:'')}</div>`+
+            `<div class="routine-check"></div></div>`;
+        }).join('');
+      }
+    }
+    if(typeof renderHomeVoyage==='function') renderHomeVoyage();
+  }
+
+  // ===== Ma journée (sommeil / hydratation / alimentation) =====
+  const ALIM_LABELS = ['', 'À améliorer', 'Correcte', 'Équilibrée', 'Bonne', 'Parfaite'];
+  function fmtSleep(v){
+    v = parseFloat(v); const h=Math.floor(v); const m=Math.round((v-h)*60);
+    return m ? (h+'h'+(m<10?'0'+m:m)) : (h+'h');
+  }
+  function onDaySommeil(v){ document.getElementById('ds-sommeil-val').textContent = fmtSleep(v); }
+  function onDayHydra(v){ const n=parseInt(v,10); document.getElementById('ds-hydra-val').textContent = n+(n>1?' verres':' verre'); }
+  function onDayAlim(v){ document.getElementById('ds-alim-val').textContent = ALIM_LABELS[parseInt(v,10)]||'…'; }
+
+  async function openDaySheet(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    let som=7, hyd=6, ali=3;
+    const { data } = await sb.from('entries').select('sommeil,hydratation,alimentation').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
+    const e = (data && data.length) ? data[0] : null;
+    if(e){
+      if(e.sommeil!=null) som=e.sommeil;
+      if(e.hydratation!=null) hyd=e.hydratation;
+      if(e.alimentation!=null) ali=e.alimentation;
+    }
+    const s=document.getElementById('ds-sommeil'); s.value=som; onDaySommeil(som);
+    try{ sb.from('entries').select('humeur').eq('user_id',currentUser.id).eq('date',todayStr()).limit(1).then(({data})=>{ const hv=(data&&data[0])?data[0].humeur:null; document.querySelectorAll('#ds-mood .mood-btn').forEach((bt,i)=>bt.classList.toggle('selected', hv===i+1)); }); }catch(_e){}
+    const h=document.getElementById('ds-hydra'); h.value=hyd; onDayHydra(hyd);
+    const a=document.getElementById('ds-alim'); a.value=ali; onDayAlim(ali);
+    document.getElementById('day-sheet').classList.add('open');
+  }
+  function closeDaySheet(){ document.getElementById('day-sheet').classList.remove('open'); }
+  async function saveDay(){
+    const sommeil = parseFloat(document.getElementById('ds-sommeil').value);
+    const hydratation = parseInt(document.getElementById('ds-hydra').value,10);
+    const alimentation = parseInt(document.getElementById('ds-alim').value,10);
+    showToast('Enregistrement…');
+    await updateTodayEntry({ sommeil, hydratation, alimentation });
+    closeDaySheet();
+    showToast('Journée enregistrée 🌸');
+    const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
+    renderDayTiles((data && data.length) ? data[0] : null);
+  }
+  function renderDayTiles(e){
+    const MOOD_EMOJI = ['','😣','😕','😌','😊','✨'];
+    const set=(id, val, sub)=>{ const el=document.getElementById(id); if(el) el.innerHTML='<em>'+val+'</em>'; const s=document.getElementById(id+'-sub'); if(s&&sub!=null) s.textContent=sub; };
+    const PLUS = '<span style="color:var(--accent);">+</span>';
+    if(e && e.sommeil!=null) set('tile-sommeil', fmtSleep(e.sommeil), 'aujourd\'hui'); else set('tile-sommeil',PLUS,'');
+    if(e && e.hydratation!=null){ const n=e.hydratation; set('tile-hydra', n+'<span style="font-size:15px;color:var(--muted);"> '+(n>1?'verres':'verre')+'</span>', 'aujourd\'hui'); } else set('tile-hydra',PLUS,'');
+    if(e && e.alimentation!=null) set('tile-alim', ALIM_LABELS[e.alimentation]||'…', 'aujourd\'hui'); else set('tile-alim',PLUS,'');
+    if(e && e.humeur) set('tile-humeur', MOOD_EMOJI[e.humeur]||'…', (e.humeur_intensite!=null ? e.humeur_intensite+'%' : 'aujourd\'hui')); else set('tile-humeur',PLUS,'');
+  }
+
+  // ===== Photo du jour =====
+  async function handlePhoto(input){
+    const f=input.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=e=>{
+      document.getElementById('photo-img').src=e.target.result;
+      document.getElementById('photo-empty').classList.add('hidden');
+      document.getElementById('photo-display').classList.remove('hidden');
+    };
+    r.readAsDataURL(f);
+    const ext = (f.name.split('.').pop()||'jpg').toLowerCase();
+    await uploadDayPhoto(f, ext);
+    input.value='';
+  }
+
+  // Recharge la photo du jour si elle existe déjà
+  async function loadTodayPhoto(){
+    if(!currentUser) return;
+    const today = new Date().toISOString().slice(0,10);
+    const { data } = await sb.from('entries').select('photo_path').eq('user_id', currentUser.id).eq('date', today).order('created_at',{ascending:false}).limit(1);
+    const path = (data && data.length) ? data[0].photo_path : null;
+    const url = path ? await signedPhoto(path) : null;
+    const sec=document.getElementById('lea-photo-section');
+    if(url){
+      document.getElementById('photo-img').src = url;
+      document.getElementById('photo-empty').classList.add('hidden');
+      document.getElementById('photo-display').classList.remove('hidden');
+      if(sec) sec.style.display='block';
+    } else {
+      document.getElementById('photo-display').classList.add('hidden');
+      document.getElementById('photo-empty').classList.remove('hidden');
+      if(sec) sec.style.display='none';
+    }
+  }
+  async function signedPhoto(path){
+    if(!path) return null;
+    const { data } = await sb.storage.from('photos').createSignedUrl(path, 3600);
+    return data ? data.signedUrl : null;
+  }
+
+  // ===== Rituel : produits perso =====
+  let currentRoutineView = 'matin';
+  let editingProductId = null;
+  let pfPhotoFile = null;
+  let pfState = 'open';
+  let pfMois = null;
+  
+  let pfPhotoPath = null;
+  let pfEmoji = '🧴';
+  const PRODUCT_EMOJIS = ['🧴','🧼','🫧','💧','💎','✨','☀️','🌙','🌸','🌿','💛','🧪','👁️','💋'];
+
+  function productDateInfo(p){
+    const fmt=(d)=>{ const x=d.split('-'); return x[2]+'/'+x[1]+'/'+x[0].slice(2); };
+    const parts=[]; let peremLine='';
+    if(p.date_ouverture) parts.push('Ouvert le '+fmt(p.date_ouverture));
+    if(p.date_peremption){
+      const exp=new Date(p.date_peremption); const today=new Date(); today.setHours(0,0,0,0);
+      const days=Math.round((exp-today)/86400000);
+      const months = days/30;
+      // Couleur selon le temps restant
+      let col;
+      if(days<0) col=['#FBE2DC','#B23A1E'];        // périmé : rouge
+      else if(months>9) col=['#EFE7DD','#7A6B5C'];  // > 9 mois : neutre
+      else if(months>6) col=['#E3F0E0','#3E7A4E'];  // 6-9 : vert
+      else if(months>3) col=['#F7ECCB','#8A6A1E'];  // 3-6 : orange
+      else col=['#FBE2DC','#B23A1E'];               // < 3 mois : rouge
+      // Texte de la pastille
+      let txt;
+      if(days<0){
+        const dPass=Math.abs(days);
+        txt = '⚠️ Périmé ' + (dPass===0?"aujourd'hui":(dPass===1?'depuis 1 jour':'depuis '+dPass+' jours'));
+      } else if(days===0){
+        txt = '⚠️ Périme aujourd\'hui';
+      } else {
+        const joursTxt = days===1 ? '1 jour' : days+' jours';
+        txt = 'Périme le '+fmt(p.date_peremption)+' ('+joursTxt+')';
+      }
+      peremLine = '<div style="margin-top:5px;"><span class="prod-badge" style="background:'+col[0]+';color:'+col[1]+';">'+txt+'</span></div>';
+    }
+    const line = parts.length ? '<div class="product-dates">'+parts.join(' · ')+'</div>' : '';
+    return line+peremLine;
+  }
+
+    // ===== Favoris produits (localStorage) =====
+  function favSet(){ try{ return new Set(JSON.parse(localStorage.getItem('rituel_favs_'+(currentUser?currentUser.id:'x'))||'[]')); }catch(e){ return new Set(); } }
+  function favSave(s){ try{ localStorage.setItem('rituel_favs_'+(currentUser?currentUser.id:'x'), JSON.stringify([...s])); }catch(e){} }
+  function toggleFav(id, ev){
+    if(ev) ev.stopPropagation();
+    const s=favSet();
+    if(s.has(id)) s.delete(id); else s.add(id);
+    favSave(s);
+    const _on=s.has(id);
+    const _b=(ev&&ev.currentTarget)?ev.currentTarget:null;
+    if(_b){ _b.textContent=_on?'★':'☆'; _b.classList.toggle('on',_on); }
+    if(!_b || productSort==='fav') loadProducts();
+  }
+
+  let productCatFilter = 'all';
+  function toggleCatFilter(){
+    const menu=document.getElementById('cat-filter-menu');
+    const open = menu.style.display!=='none';
+    menu.style.display = open ? 'none' : 'flex';
+    document.getElementById('cat-filter-chip').classList.toggle('sel', !open && productCatFilter!=='all');
+  }
+  // fermer le menu si on clique ailleurs
+  document.addEventListener('click', function(e){
+    const dd=document.querySelector('.cat-dd');
+    const menu=document.getElementById('cat-dd-menu');
+    if(dd && menu && !dd.contains(e.target)){ menu.classList.remove('open'); }
+  });
+
+    // ═══ Produits : un seul menu, tri + catégorie ═══
+  const SORTS = [
+    { id:'cat',   n:'Par catégorie' },
+    { id:'fav',   n:'Favoris d\'abord' },
+    { id:'alpha', n:'De A à Z' },
+    { id:'perem', n:'Par date de péremption' }
+  ];
+
+  function toggleSortMenu(ev){
+    if(ev) ev.stopPropagation();
+    const menu=document.getElementById('sort-menu'); if(!menu) return;
+    if(menu.classList.contains('open')){ menu.classList.remove('open'); return; }
+
+    const prods = window.__allProducts || [];
+    const compte = {};
+    prods.forEach(p=>{ const k=p.categorie||'autre'; compte[k]=(compte[k]||0)+1; });
+
+    let html = '<div class="sort-head">Trier par</div>';
+    html += SORTS.map(s=>
+      '<button type="button" class="sort-opt'+(productSort===s.id?' sel':'')+'" onclick="setProductSort(\''+s.id+'\')">'+
+        '<span class="tick">✓</span><span class="lbl">'+s.n+'</span></button>'
+    ).join('');
+
+    const utilisees = CATS.filter(x=>compte[x[0]]);
+    if(utilisees.length){
+      html += '<div class="sort-sep"></div><div class="sort-head">Catégorie</div>';
+      html += [['all','Toutes']].concat(utilisees.map(x=>[x[0], x[2]])).map(cat=>{
+        const id=cat[0], nom=cat[1];
+        const n = (id==='all') ? prods.length : (compte[id]||0);
+        return '<button type="button" class="sort-opt'+(productCatFilter===id?' sel':'')+'" onclick="pickCat(\''+id+'\')">'+
+          '<span class="tick">✓</span><span class="lbl">'+nom+'</span><span class="cnt">'+n+'</span></button>';
+      }).join('');
+    }
+
+    menu.innerHTML = html;
+
+    // On sort le menu de l'écran produits et on l'attache au body :
+    // tant qu'il reste dedans, il gonfle la hauteur de la page et crée une barre de défilement.
+    if(menu.parentElement !== document.body){
+      document.body.appendChild(menu);
+    }
+
+    const btn = document.getElementById('sort-btn');
+    if(btn){
+      const r = btn.getBoundingClientRect();
+      menu.style.left = Math.max(16, r.left) + 'px';
+      menu.style.top  = (r.bottom + 6) + 'px';
+      menu.style.right = 'auto';
+    }
+    menu.classList.add('open');
+  }
+
+  function closeSortMenu(){
+    const m=document.getElementById('sort-menu');
+    if(m) m.classList.remove('open');
+  }
+
+  function refreshSortLabel(){
+    const el=document.getElementById('sort-label'); if(!el) return;
+    if(productCatFilter && productCatFilter!=='all'){
+      const info=CATS.find(x=>x[0]===productCatFilter);
+      el.textContent = info ? info[2] : 'Catégorie';
+      return;
+    }
+    const s=SORTS.find(x=>x.id===productSort);
+    el.textContent = s ? s.n.replace(' d\'abord','').replace('Par date de péremption','Péremption') : 'Trier';
+  }
+
+  function pickCat(cat){
+    productCatFilter = cat;
+    closeSortMenu();
+    refreshSortLabel();
+    loadProducts();
+  }
+
+  // Refermer le menu si on tape ailleurs
+  document.addEventListener('click', function(e){
+    const menu=document.getElementById('sort-menu');
+    if(!menu || !menu.classList.contains('open')) return;
+    // Le menu vit désormais dans le <body> : il faut aussi l'exclure du "clic extérieur"
+    if(!e.target.closest('.sort-bar') && !e.target.closest('.sort-menu')){
+      menu.classList.remove('open');
+    }
+  });
+
+  // Le menu est fixé à l'écran : on le referme dès que la page bouge
+  window.addEventListener('scroll', function(e){
+    const m=document.getElementById('sort-menu');
+    const t=e.target;
+    if(m && t && t.nodeType===1 && (t===m || (t.closest && t.closest('.sort-menu')))) return;
+    closeSortMenu();
+  }, true);
+
+
+
+
+
+  function setCatFilter(cat){
+    productCatFilter = cat;
+    const sel=document.getElementById('cat-filter-select');
+    if(sel) sel.classList.toggle('active-filter', cat!=='all');
+    loadProducts();
+  }
+
+  let rpForceWelcome = false;
+  let rpSlotView = 'matin';   // onglet actif : matin | soir | hebdo  // 'matin' | 'soir' | 'hebdo' : sous-vue d'un créneau  // afficher l'écran d'accueil de création même avec des rituels
+  let isPremium = false;
+  let premiumUntil = null;
+  let premiumCancel = false;  // activable plus tard avec le paiement
+      let productSort = 'cat';  // 'fav', 'alpha', 'perem'
+  function setProductSort(s){
+    productSort = s;
+    productCatFilter = 'all';   // trier remet la vue complète
+    closeSortMenu();
+    refreshSortLabel();
+    loadProducts();
+  }
+
+  // ===== Mode sélection multiple des produits (appui long) =====
+  let selectionMode = false;
+  let selectedProducts = new Set();
+  let longPressTimer = null;
+
+  function startLongPress(id){
+    cancelLongPress();
+    longPressTimer = setTimeout(function(){
+      if(!selectionMode){
+        enterSelectionMode();
+        toggleProductSelection(id);
+        if(navigator.vibrate) navigator.vibrate(40);
+      }
+    }, 500);
+  }
+  function cancelLongPress(){ if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; } }
+
+  function onProductCardClick(id, e){
+    if(e && e.target && e.target.classList && e.target.classList.contains('pf-fav')) return;
+    if(selectionMode){
+      if(e) e.stopPropagation();
+      toggleProductSelection(id);
+    } else {
+      openProductBook(id);
+    }
+  }
+
+  function enterSelectionMode(){
+    selectionMode = true;
+    selectedProducts.clear();
+    document.querySelectorAll('#products-list .sel-circle').forEach(c=>c.style.display='flex');
+    document.getElementById('selection-bar').classList.add('show');
+  }
+  function exitSelectionMode(){
+    selectionMode = false;
+    selectedProducts.clear();
+    document.querySelectorAll('#products-list .sel-circle').forEach(c=>{ c.style.display='none'; c.style.background='transparent'; c.style.borderColor='var(--line)'; c.textContent=''; });
+    document.querySelectorAll('#products-list .product-card').forEach(card=>card.style.background='');
+    document.getElementById('selection-bar').classList.remove('show');
+  }
+  function toggleProductSelection(id){
+    const card = document.querySelector('#products-list .product-card[data-pid="'+id+'"]');
+    if(!card) return;
+    const circle = card.querySelector('.sel-circle');
+    if(selectedProducts.has(id)){
+      selectedProducts.delete(id);
+      if(circle){ circle.style.background='transparent'; circle.style.borderColor='var(--line)'; circle.textContent=''; }
+      card.style.background='';
+    } else {
+      selectedProducts.add(id);
+      if(circle){ circle.style.background='var(--accent)'; circle.style.borderColor='var(--accent)'; circle.textContent='✓'; }
+      card.style.background='var(--blush-soft)';
+    }
+    // mettre à jour le compteur de la barre
+    const cnt=document.getElementById('selection-count');
+    if(cnt) cnt.textContent = selectedProducts.size + ' sélectionné' + (selectedProducts.size>1?'s':'');
+    // si plus rien de sélectionné, on peut sortir du mode
+    if(selectedProducts.size===0) exitSelectionMode();
+  }
+
+  // suppression avec confirmation
+  function askDeleteSelected(){
+    if(selectedProducts.size===0) return;
+    document.getElementById('del-confirm-count').textContent = selectedProducts.size>1 ? ('ces '+selectedProducts.size+' produits') : 'ce produit';
+    document.getElementById('del-confirm-overlay').style.display='flex';
+  }
+  function closeDeleteConfirm(){ document.getElementById('del-confirm-overlay').style.display='none'; }
+  async function confirmDeleteSelected(){
+    const ids = Array.from(selectedProducts);
+    closeDeleteConfirm();
+    if(!ids.length) return;
+    try {
+      await sb.from('products').delete().in('id', ids);
+      showToast(ids.length>1 ? (ids.length+' produits supprimés 🌸') : 'Produit supprimé 🌸');
+    } catch(e){ showToast('Erreur lors de la suppression'); }
+    exitSelectionMode();
+    loadProducts();
+  }
+
+  // ===== Carnet de produits : teintes + rendu premium =====
+  const CN_TINT = { demaquillant:'#F6E6E0', nettoyant:'#E6EFE4', toner:'#E7EDF0', serum:'#F7ECD9', yeux:'#ECE7F0', creme:'#EFEAE2', spf:'#FBEFD3', masque:'#F3E4EC', cible:'#F6E2DC', autre:'#EDE9E1' };
+
+  function cnMoment(p){ return ''; }
+
+  async function cnCardHtml(p, favs){
+    let thumb = p.emoji || '🧴';
+    if(p.photo_path){ const url=await signedPhoto(p.photo_path); if(url) thumb='<img src="'+url+'" alt="">'; }
+    const parts=(p.nom||'').split(' · ');
+    const name=escapeHtml(parts[0]||'');
+    const brand=parts.length>1 ? escapeHtml(parts.slice(1).join(' · ')) : '';
+    const meta = [p.effets?escapeHtml(p.effets):'', (p.prix!=null&&p.prix!=='')?(p.prix+'€'):''].filter(Boolean).join(' · ');
+    const tint = CN_TINT[p.categorie||'autre'] || CN_TINT.autre;
+    return '<div class="cn-card product-card" data-pid="'+p.id+'" onclick="onProductCardClick(\''+p.id+'\', event)" ontouchstart="startLongPress(\''+p.id+'\')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">'+
+      '<div class="sel-circle" style="display:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;align-items:center;justify-content:center;color:#fff;font-size:13px;"></div>'+
+      '<div class="cn-thumb" style="background:'+tint+';">'+thumb+'</div>'+
+      '<div class="cn-body">'+
+        '<div class="cn-name">'+name+'</div>'+
+        (brand?'<div class="cn-brand">'+brand+'</div>':'')+
+        (meta?'<div class="cn-meta">'+meta+'</div>':'')+
+        cnMoment(p)+
+        productDateInfo(p)+
+      '</div>'+
+      '<button class="pf-fav cn-fav'+(favs.has(p.id)?' on':'')+'" onclick="toggleFav(\''+p.id+'\', event)">'+(favs.has(p.id)?'★':'☆')+'</button>'+
+    '</div>';
+  }
+
+  async function cnRenderFlat(products, favs){
+    let html=''; for(const p of products){ html += await cnCardHtml(p, favs); } return html;
+  }
+
+  async function cnRenderChaptered(products, favs){
+    const groups={}; products.forEach(p=>{ const c=p.categorie||'autre'; (groups[c]=groups[c]||[]).push(p); });
+    let html='';
+    for(const cat of CATS){
+      const items=groups[cat[0]];
+      if(!items || !items.length) continue;
+      html += '<div class="cn-chapter"><span class="cn-chapter-ic">'+cat[1]+'</span><span class="cn-chapter-t">'+cat[2]+'</span><span class="cn-chapter-n">'+items.length+'</span><span class="cn-chapter-rule"></span></div>';
+      for(const p of items){ html += await cnCardHtml(p, favs); }
+    }
+    return html;
+  }
+
+  function cnEmptyHtml(){
+    return '<div class="cn-empty"><div class="cn-empty-ic">🧴</div><div class="cn-empty-t">Ton carnet est vide</div><div class="cn-empty-s">Scanne un produit ou ajoute-le à la main pour commencer ta collection.</div><button class="cn-empty-btn" onclick="openBarcodeSheet()">📷 Scanner un produit</button></div>';
+  }
+
+  // ===== Fiche produit plein écran (façon livre) =====
+  const PB_GRAD = {
+    demaquillant:['#F7E7E1','#E9CDC4'], nettoyant:['#E9F1E7','#CFE0CB'], toner:['#E7EDF1','#CDD9E1'],
+    serum:['#F8EDDA','#EDD6B0'], yeux:['#EEE8F1','#D8CDE1'], creme:['#F0EBE3','#DFD4C4'],
+    spf:['#FCF0D6','#F2DCA0'], masque:['#F5E6EE','#E4C6D6'], cible:['#F7E4DE','#EBC6BB'], autre:['#EFEBE3','#DED5C6']
+  };
+
+  function pbDates(p){
+    const fmt=(d)=>{ const x=d.split('-'); return x[2]+'/'+x[1]+'/'+x[0].slice(2); };
+    let rows='';
+    if(p.date_ouverture) rows+='<div class="pb-date-row"><span>Ouvert le</span><b>'+fmt(p.date_ouverture)+'</b></div>';
+    if(p.date_peremption){
+      const exp=new Date(p.date_peremption); const today=new Date(); today.setHours(0,0,0,0);
+      const days=Math.round((exp-today)/86400000); const months=days/30;
+      let col;
+      if(days<0) col=['#FBE2DC','#B23A1E'];
+      else if(months>9) col=['#EFE7DD','#7A6B5C'];
+      else if(months>6) col=['#E3F0E0','#3E7A4E'];
+      else if(months>3) col=['#F7ECCB','#8A6A1E'];
+      else col=['#FBE2DC','#B23A1E'];
+      let txt;
+      if(days<0){ const dp=Math.abs(days); txt='⚠️ Périmé '+(dp===0?"aujourd'hui":(dp===1?'depuis 1 jour':'depuis '+dp+' jours')); }
+      else if(days===0){ txt='⚠️ Périme aujourd\'hui'; }
+      else { txt='Périme le '+fmt(p.date_peremption)+' · '+(days===1?'1 jour':days+' jours'); }
+      rows+='<div class="pb-date-row"><span>Fraîcheur</span><span class="pb-badge" style="background:'+col[0]+';color:'+col[1]+';">'+txt+'</span></div>';
+    }
+    return rows ? '<div class="pb-section"><div class="pb-sec-t">Suivi</div>'+rows+'</div>' : '';
+  }
+
+  async function openProductBook(id, minimal){
+    const p=(window.__allProducts||[]).find(x=>String(x.id)===String(id));
+    if(!p) return;
+    const el=document.getElementById('product-book'); if(!el) return;
+    const g=PB_GRAD[p.categorie||'autre']||PB_GRAD.autre;
+    const parts=(p.nom||'').split(' · ');
+    const name=escapeHtml(parts[0]||'');
+    const brand=parts.length>1 ? escapeHtml(parts.slice(1).join(' · ')) : '';
+    const catL=(CATS.find(x=>x[0]===(p.categorie||'autre'))||['','','Soin'])[2];
+    let visual;
+    if(p.photo_path){ const url=await signedPhoto(p.photo_path); visual = url ? '<img src="'+url+'" alt="">' : '<div class="pb-halo"></div><div class="pb-emoji">'+(p.emoji||'🧴')+'</div>'; }
+    else visual='<div class="pb-halo"></div><div class="pb-emoji">'+(p.emoji||'🧴')+'</div>';
+    const isFav=favSet().has(p.id);
+    let chips='';
+    if(!minimal && p.prix!=null&&p.prix!=='') chips+='<span class="pb-chip price">'+p.prix+'€</span>';
+    const desc=p.effets?('<div class="pb-desc">'+escapeHtml(p.effets)+'</div>'):'';
+    // En mode minimal (clic depuis l'aperçu d'un rituel) : catégorie, nom, marque, effets — rien d'autre.
+    el.innerHTML='<div class="pb-wrap">'+
+      '<button class="pb-close" onclick="closeProductBook()">‹</button>'+
+      (minimal?'':'<button class="pb-fav'+(isFav?' on':'')+'" id="pb-fav-btn" onclick="pbToggleFav(\''+p.id+'\')">'+(isFav?'★':'☆')+'</button>')+
+      '<div class="pb-visual" style="background:linear-gradient(150deg,'+g[0]+','+g[1]+');">'+visual+'</div>'+
+      '<div class="pb-card"><div class="pb-cat">'+catL+'</div><div class="pb-name">'+name+'</div>'+
+      (brand?'<div class="pb-brand">'+brand+'</div>':'')+desc+
+      (minimal?'':(
+        (chips?'<div class="pb-chips">'+chips+'</div>':'')+
+        pbDates(p)+
+        '<div class="pb-actions"><button class="pb-edit" onclick="pbEdit(\''+p.id+'\')">Modifier</button><button class="pb-del" onclick="pbDelete(\''+p.id+'\')">Supprimer</button></div>'))+
+      '</div></div>';
+    el.scrollTop=0;
+    el.classList.add('show');
+    document.body.style.overflow='hidden';
+  }
+  function closeProductBook(){ const el=document.getElementById('product-book'); if(el) el.classList.remove('show'); document.body.style.overflow=''; }
+  function pbEdit(id){ closeProductBook(); setTimeout(function(){ openProductForm(id); }, 260); }
+  function pbToggleFav(id){ const s=favSet(); if(s.has(id)) s.delete(id); else s.add(id); favSave(s); const b=document.getElementById('pb-fav-btn'); if(b){ b.textContent=s.has(id)?'★':'☆'; b.classList.toggle('on', s.has(id)); } }
+  async function pbDelete(id){ if(!await cmAsk({titre:'Supprimer ce produit ?',texte:'Il sera retiré de ton carnet et de tous tes rituels.',ok:'Supprimer',annuler:'Annuler',danger:true})) return; try{ await sb.from('products').delete().eq('id', id); }catch(e){} closeProductBook(); if(typeof showToast==='function') showToast('Produit supprimé'); loadProducts(); }
+
+  // ===== Produits en livre : vue feuilletable =====
+  function getProdView(){ try{ return localStorage.getItem('rituel_prodview')||'list'; }catch(e){ return 'list'; } }
+  function setProdView(v){ try{ localStorage.setItem('rituel_prodview', v); }catch(e){} }
+  function toggleProductView(){ setProdView(getProdView()==='book'?'list':'book'); loadProducts(); }
+  function pbkToggleFav(id, el){ const s=favSet(); if(s.has(id)) s.delete(id); else s.add(id); favSave(s); if(el){ el.textContent=s.has(id)?'★':'☆'; el.classList.toggle('on', s.has(id)); } }
+
+  function pbkGoTo(i){ const l=document.getElementById('products-list'); if(!l) return; l.scrollTo({left:i*(l.clientWidth||1), behavior:'smooth'}); }
+  function bkSommairePage(products){
+    const groups={}; products.forEach(function(p,i){ const c=p.categorie||'autre'; (groups[c]=groups[c]||[]).push({p:p,i:i}); });
+    let body='', nbCat=0;
+    CATS.forEach(function(cat){
+      const items=groups[cat[0]]; if(!items||!items.length) return; nbCat++;
+      body+='<div class="bkt-cat"><span class="bkt-cat-t">'+cat[1]+'  '+cat[2]+'</span><span class="bkt-rule"></span></div>';
+      items.forEach(function(it){
+        const nm=escapeHtml((it.p.nom||'').split(' · ')[0]);
+        body+='<div class="bkt-item" onclick="pbkGoTo('+(it.i+1)+')"><span class="bkt-e">'+(it.p.emoji||'🧴')+'</span><span class="bkt-n">'+nm+'</span><span class="bkt-lead"></span><span class="bkt-p">'+(it.i+1)+'</span></div>';
+      });
+    });
+    const n=products.length;
+    return '<div class="pbk-page"><div class="bkt">'+
+      '<div class="bkt-orn">❧</div>'+
+      '<div class="bkt-k">Sommaire</div>'+
+      '<div class="bkt-title">Ma <em>collection</em></div>'+
+      '<div class="bkt-sub">'+n+' produit'+(n>1?'s':'')+' · '+nbCat+' famille'+(nbCat>1?'s':'')+'</div>'+
+      '<div class="bkt-div"><span class="bkt-rule"></span><span>❦</span><span class="bkt-rule"></span></div>'+
+      '<div class="bkt-grid">'+body+'</div>'+
+      '<div class="bkt-hint">glisse pour feuilleter →</div>'+
+      '</div></div>';
+  }
+
+  function bkRoman(n){ const r=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']]; let s=''; r.forEach(function(p){ while(n>=p[0]){ s+=p[1]; n-=p[0]; } }); return s||'I'; }
+  function bkRow(k,v,cls){ return '<div class="bk2-row"><span class="bk2-k">'+k+'</span><span class="bk2-lead"></span><span class="bk2-v'+(cls||'')+'">'+v+'</span></div>'; }
+  function bkDateRows(p){
+    const fmt=function(d){ const x=d.split('-'); return x[2]+'/'+x[1]+'/'+x[0].slice(2); };
+    let out='';
+    if(p.date_ouverture) out+=bkRow('Ouvert le', fmt(p.date_ouverture));
+    if(p.date_peremption){
+      const exp=new Date(p.date_peremption), t=new Date(); t.setHours(0,0,0,0);
+      const days=Math.round((exp-t)/86400000), months=days/30;
+      let c; if(days<0) c=['#FBE2DC','#B23A1E']; else if(months>9) c=['#EFE7DD','#7A6B5C']; else if(months>6) c=['#E3F0E0','#3E7A4E']; else if(months>3) c=['#F7ECCB','#8A6A1E']; else c=['#FBE2DC','#B23A1E'];
+      let txt; if(days<0) txt='Périmé'; else if(days===0) txt="Périme aujourd'hui"; else txt=fmt(p.date_peremption)+' · '+days+' j';
+      out+='<div class="bk2-row"><span class="bk2-k">Fraîcheur</span><span class="bk2-lead"></span><span class="bk2-v badge" style="background:'+c[0]+';color:'+c[1]+';">'+txt+'</span></div>';
+    }
+    return out;
+  }
+  async function pbkPage(p, favs, idx, total){
+    const parts=(p.nom||'').split(' · ');
+    const name=escapeHtml(parts[0]||'');
+    const brand=parts.length>1 ? escapeHtml(parts.slice(1).join(' · ')) : '';
+    const catL=(CATS.find(function(x){return x[0]===(p.categorie||'autre');})||['','','Soin'])[2];
+    let plate;
+    if(p.photo_path){ const url=await signedPhoto(p.photo_path); plate = url ? '<img src="'+url+'" alt="">' : '<div class="bk2-emoji">'+(p.emoji||'🧴')+'</div>'; }
+    else plate='<div class="bk2-emoji">'+(p.emoji||'🧴')+'</div>';
+    const moment=(p.in_matin&&p.in_soir)?'Matin & soir':(p.in_matin?'Matin':(p.in_soir?'Soir':'—'));
+    let rows=bkRow('Catégorie', escapeHtml(catL))+bkRow('Moment', moment);
+    if(p.prix!=null&&p.prix!=='') rows+=bkRow('Prix', p.prix+' €');
+    rows+=bkDateRows(p);
+    const notes=p.effets?escapeHtml(p.effets):'—';
+    return '<div class="pbk-page" data-pid="'+p.id+'">'+
+      '<button class="bk2-fav'+(favs.has(p.id)?' on':'')+'" onclick="pbkToggleFav(\''+p.id+'\',this)">'+(favs.has(p.id)?'★':'☆')+'</button>'+
+      '<div class="bk2">'+
+        '<div class="bk2-head"><span class="bk2-rule"></span><span class="bk2-plate-no">Fiche N° '+(idx+1)+'</span><span class="bk2-rule"></span></div>'+
+        '<div class="bk2-plate"><div class="bk2-plate-in">'+
+          '<span class="bk2-corner tl">❦</span><span class="bk2-corner tr">❦</span><span class="bk2-corner bl">❦</span><span class="bk2-corner br">❦</span>'+
+          plate+'</div></div>'+
+        '<div class="bk2-caption">'+escapeHtml(catL)+'</div>'+
+        '<div class="bk2-title">'+name+'</div>'+
+        (brand?'<div class="bk2-latin">'+brand+'</div>':'')+
+        '<div class="bk2-orn">❧</div>'+
+        '<div class="bk2-rows">'+rows+'</div>'+
+        '<div class="bk2-notes-t">Notes</div><div class="bk2-notes">'+notes+'</div>'+
+        '<div class="bk2-actions"><button class="bk2-edit" onclick="openProductForm(\''+p.id+'\')">Modifier</button><button class="bk2-del" onclick="pbDelete(\''+p.id+'\')">Retirer</button></div>'+
+        '<div class="bk2-foot"><span class="bk2-rule"></span><span class="bk2-folio">— '+(idx+1)+' / '+total+' —</span><span class="bk2-rule"></span></div>'+
+      '</div></div>';
+  }
+
+  async function renderProductsBook(products, favs){
+    const list=document.getElementById('products-list');
+    let pages=bkSommairePage(products); for(let i=0;i<products.length;i++){ pages += await pbkPage(products[i], favs, i, products.length); }
+    list.style.cssText=''; list.className='pl-book';
+    list.innerHTML=pages;
+    const sec=list.parentElement;
+    let dots=document.getElementById('pbk-dots');
+    if(!dots){ dots=document.createElement('div'); dots.id='pbk-dots'; dots.className='pbk-dots'; if(sec) sec.appendChild(dots); }
+    let _d=''; for(let i=0;i<products.length+1;i++){ _d+='<span class="pbk-dot'+(i===0?' on':'')+'"></span>'; }
+    dots.innerHTML=_d;
+    list.onscroll=function(){ const i=Math.round(list.scrollLeft/(list.clientWidth||1)); dots.querySelectorAll('.pbk-dot').forEach(function(d,j){ d.classList.toggle('on', j===i); }); };
+    list.scrollLeft=0;
+  }
+
+    async function loadProducts(){
+    if(!currentUser) return;
+    const list = document.getElementById('products-list');
+    const { data } = await sb.from('products').select('*').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+    const _favs = favSet();
+    let baseData = (data || []);
+    // On garde la liste complète : elle sert à compter les produits par catégorie
+    window.__allProducts = baseData.slice();
+    refreshSortLabel();
+    // Filtre par catégorie
+    if(productCatFilter && productCatFilter!=='all'){
+      baseData = baseData.filter(function(p){ return (p.categorie||'autre')===productCatFilter; });
+    }
+    const products = baseData.slice().sort(function(a,b){
+      if(productSort==='alpha'){
+        return (a.nom||'').localeCompare(b.nom||'', 'fr', {sensitivity:'base'});
+      }
+      if(productSort==='perem'){
+        // les produits avec une date de péremption d'abord, du plus proche au plus lointain
+        const da=a.date_peremption||'', db=b.date_peremption||'';
+        if(!da && !db) return 0;
+        if(!da) return 1;  // sans date → à la fin
+        if(!db) return -1;
+        return da.localeCompare(db);
+      }
+      // défaut : favoris en premier
+      const fa=_favs.has(a.id)?1:0, fb=_favs.has(b.id)?1:0;
+      if(fa!==fb) return fb-fa;
+      return 0;
+    });
+    const rt=document.getElementById('routine');
+    const _oldDots=document.getElementById('pbk-dots'); if(_oldDots) _oldDots.remove();
+    const _tg=document.getElementById('prodview-toggle');
+    if(getProdView()==='book' && products.length){
+      rt.classList.add('book-mode');
+      if(_tg) _tg.textContent='☰';
+      const bookProds=products.slice().sort(function(a,b){ const ra=(CAT_RANK[a.categorie||'autre']!=null?CAT_RANK[a.categorie||'autre']:99), rb=(CAT_RANK[b.categorie||'autre']!=null?CAT_RANK[b.categorie||'autre']:99); return ra-rb; });
+      await renderProductsBook(bookProds, _favs);
+    } else {
+      rt.classList.remove('book-mode');
+      if(_tg) _tg.textContent='📖';
+      list.className=''; list.style.cssText='display:flex;flex-direction:column;gap:0;';
+      if(!products.length){ list.innerHTML = cnEmptyHtml(); }
+      else if(productSort==='cat' && (!productCatFilter || productCatFilter==='all')){ list.innerHTML = await cnRenderChaptered(products, _favs); }
+      else { list.innerHTML = await cnRenderFlat(products, _favs); }
+    }
+    renderRoutineFooter();
+  }
+
+  async function renderRoutineFooter(){
+    if(!currentUser) return;
+    const { data: all } = await sb.from('products').select('prix').eq('user_id', currentUser.id);
+    const arr = all || [];
+    let cout=0; arr.forEach(p=>{ const v=parseFloat(p.prix); if(!isNaN(v)) cout+=v; });
+    const cv=document.getElementById('cout-val'); if(cv) cv.textContent = cout>0 ? ('~'+Math.round(cout)+'€') : '0€';
+    const pc=document.getElementById('prod-count'); if(pc) pc.textContent = arr.length;
+  }
+
+  function renderEmojiPicker(){ var el=document.getElementById('pf-icon-picker'); if(!el) return; el.innerHTML = '<button type="button" class="pf-photo-choice" onclick="document.getElementById(\'pf-photo-input\').click()">📷  Prendre mon produit en photo</button><div class="pf-or">ou choisis une icône</div>' + '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">'+PRODUCT_EMOJIS.map(e=>`<button type="button" onclick="pickEmoji('${e}')" style="width:42px;height:42px;border-radius:12px;border:1px solid ${e===pfEmoji?'var(--accent)':'var(--line)'};background:${e===pfEmoji?'var(--accent)':'var(--surface)'};font-size:20px;cursor:pointer;">${e}</button>`).join('')+'</div>'; }
+  function pfToggleIconPicker(){ var el=document.getElementById('pf-icon-picker'); if(!el) return; var open=el.style.display!=='none'; el.style.display=open?'none':'block'; if(!open) renderEmojiPicker(); }
+  function pickEmoji(e){ pfEmoji=e; pfPhotoFile=null; var btn=document.getElementById('pf-icon-btn'); if(btn) btn.textContent=e; var pk=document.getElementById('pf-icon-picker'); if(pk) pk.style.display='none'; }
+  function pfPhotoPreview(input){
+    const f=input.files[0]; if(!f) return;
+    pfPhotoFile=f;
+    const _pk=document.getElementById('pf-icon-picker'); if(_pk) _pk.style.display='none';
+    const _b=document.getElementById('pf-icon-btn'); if(!_b) return; const r=new FileReader(); r.onload=ev=>{ _b.innerHTML='<img src="'+ev.target.result+'" alt="" style="width:100%;height:100%;object-fit:cover;">'; }; r.readAsDataURL(f);
+  }
+  function closeProductSheet(){ document.getElementById('product-sheet').classList.remove('open'); }
+
+  // ===== Swipe-to-dismiss universel sur les fiches (.sheet) =====
+  (function(){
+    let startY=0, curY=0, startT=0, dragging=false, sheetEl=null, overlayEl=null, active=false;
+
+    function onTouchStart(e){
+      const sheet = e.target.closest('.sheet');
+      if(!sheet){ sheetEl=null; return; }
+      sheetEl = sheet;
+      overlayEl = sheet.closest('.sheet-overlay');
+      startY = e.touches[0].clientY;
+      curY = startY;
+      startT = Date.now();
+      dragging = true;
+      active = false;  // devient vrai seulement si on tire vers le bas en étant en haut
+      sheetEl.style.transition = 'none';
+    }
+
+    function onTouchMove(e){
+      if(!dragging || !sheetEl) return;
+      curY = e.touches[0].clientY;
+      const dy = curY - startY;  // positif = vers le bas
+
+      // On ne s'active que si : on tire vers le bas ET le contenu est tout en haut
+      if(dy > 0 && sheetEl.scrollTop <= 0){
+        active = true;
+        // léger rubber-band au début (plus doux sur les 40 premiers px)
+        const eased = dy < 40 ? dy * 0.6 : (24 + (dy - 40));
+        sheetEl.style.transform = 'translateY('+eased+'px)';
+        if(overlayEl){ overlayEl.style.background = 'rgba(46,33,28,'+Math.max(0.12, 0.45 - dy/500)+')'; }
+        e.preventDefault();
+      } else if(active && dy <= 0){
+        // on est revenu au-dessus : on annule
+        active = false;
+        sheetEl.style.transform = 'translateY(0)';
+        if(overlayEl){ overlayEl.style.background=''; }
+      }
+    }
+
+    function onTouchEnd(e){
+      if(!dragging || !sheetEl){ dragging=false; return; }
+      dragging = false;
+      const dy = curY - startY;
+      const dt = Date.now() - startT;
+      const speed = dy / Math.max(dt,1);  // vitesse du geste (px/ms)
+      sheetEl.style.transition = 'transform .28s cubic-bezier(.2,.8,.2,1)';
+
+      // Fermeture si : geste ample (>110px) OU geste rapide vers le bas (flick)
+      const shouldClose = active && sheetEl.scrollTop <= 0 && (dy > 110 || (dy > 40 && speed > 0.5));
+
+      if(shouldClose){
+        sheetEl.style.transform = 'translateY(100%)';
+        const ov = overlayEl, sh = sheetEl;
+        setTimeout(function(){
+          if(ov) ov.classList.remove('open');
+          if(sh){ sh.style.transform=''; sh.style.transition=''; }
+          if(ov) ov.style.background='';
+        }, 250);
+      } else {
+        // revenir en place
+        sheetEl.style.transform = 'translateY(0)';
+        if(overlayEl){ overlayEl.style.background=''; }
+      }
+      active = false;
+    }
+
+    document.addEventListener('touchstart', onTouchStart, {passive:true});
+    document.addEventListener('touchmove', onTouchMove, {passive:false});
+    document.addEventListener('touchend', onTouchEnd, {passive:true});
+  })();
+
+  // ===== Datepicker custom (logique) =====
+  function dpFmtDisplay(iso){ if(!iso) return ''; const p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+  let dpTarget=null, dpView=new Date(), dpSelected=null;
+  const DP_MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const DP_DOW=['L','M','M','J','V','S','D'];
+  function dpOpen(inputId){
+    dpTarget=document.getElementById(inputId);
+    if(!dpTarget) return;
+    const v=dpTarget.getAttribute('data-iso');
+    if(v){ dpSelected=new Date(v); dpView=new Date(v); }
+    else { dpSelected=null; dpView=new Date(); }
+    // jours de la semaine (une seule fois)
+    const dow=document.getElementById('dp-dow');
+    dow.innerHTML=DP_DOW.map(d=>'<div class="dp-dow">'+d+'</div>').join('');
+    const yBox=document.getElementById('dp-years');
+    if(yBox){ yBox.classList.remove('open'); }
+    document.getElementById('dp-days').style.display='';
+    dow.style.display='';
+    dpRender();
+    document.getElementById('dp-overlay').classList.add('open');
+  }
+  function dpClose(){ document.getElementById('dp-overlay').classList.remove('open'); dpTarget=null; }
+  function dpPrevMonth(){ dpView.setMonth(dpView.getMonth()-1); dpRender(); }
+  function dpNextMonth(){ dpView.setMonth(dpView.getMonth()+1); dpRender(); }
+  // Choisir l'année d'un coup, au lieu de cliquer 12 fois sur la flèche
+  function dpToggleYears(){
+    const box=document.getElementById('dp-years');
+    const days=document.getElementById('dp-days');
+    const dow=document.getElementById('dp-dow');
+    if(!box) return;
+    const ouvert = box.classList.contains('open');
+    if(ouvert){
+      box.classList.remove('open');
+      days.style.display=''; dow.style.display='';
+      return;
+    }
+    // Années disponibles : de 5 ans en arrière à 15 ans en avant (péremption)
+    const y = dpView.getFullYear();
+    const now = new Date().getFullYear();
+    const debut = Math.min(now - 5, y - 5);
+    const fin   = Math.max(now + 15, y + 5);
+    let html='';
+    for(let a=debut; a<=fin; a++){
+      html += '<button type="button" class="dp-year'+(a===y?' sel':'')+'" onclick="dpPickYear('+a+')">'+a+'</button>';
+    }
+    box.innerHTML = html;
+    box.classList.add('open');
+    days.style.display='none'; dow.style.display='none';
+    // On centre la vue sur l'année courante
+    const sel = box.querySelector('.dp-year.sel');
+    if(sel) sel.scrollIntoView({ block:'center' });
+  }
+
+  function dpPickYear(a){
+    dpView = new Date(a, dpView.getMonth(), 1);
+    document.getElementById('dp-years').classList.remove('open');
+    document.getElementById('dp-days').style.display='';
+    document.getElementById('dp-dow').style.display='';
+    dpRender();
+  }
+
+  function dpRender(){
+    document.getElementById('dp-title').textContent = DP_MONTHS[dpView.getMonth()]+' '+dpView.getFullYear();
+    const y=dpView.getFullYear(), m=dpView.getMonth();
+    const first=new Date(y,m,1);
+    let startDow=first.getDay(); startDow=(startDow===0)?6:startDow-1; // lundi=0
+    const daysInMonth=new Date(y,m+1,0).getDate();
+    const daysPrev=new Date(y,m,0).getDate();
+    const today=new Date(); today.setHours(0,0,0,0);
+    let html='';
+    // jours du mois précédent (grisés)
+    for(let i=startDow-1;i>=0;i--){ html+='<button type="button" class="dp-day other" disabled>'+(daysPrev-i)+'</button>'; }
+    // jours du mois
+    for(let d=1;d<=daysInMonth;d++){
+      const date=new Date(y,m,d);
+      let cls='dp-day';
+      if(date.getTime()===today.getTime()) cls+=' today';
+      if(dpSelected && date.getFullYear()===dpSelected.getFullYear() && date.getMonth()===dpSelected.getMonth() && date.getDate()===dpSelected.getDate()) cls+=' sel';
+      const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      html+='<button type="button" class="'+cls+'" onclick="dpPick(\''+ds+'\')">'+d+'</button>';
+    }
+    // On complète toujours jusqu'à 6 semaines : la carte garde la même taille d'un mois à l'autre
+    const posees = startDow + daysInMonth;
+    for(let d=1; posees + d - 1 < 42; d++){
+      html+='<button type="button" class="dp-day other" disabled>'+d+'</button>';
+    }
+    document.getElementById('dp-days').innerHTML=html;
+  }
+  function dpPick(ds){
+    if(!dpTarget) return;
+    dpTarget.setAttribute('data-iso', ds);
+    dpTarget.value = dpFmtDisplay(ds);
+    dpTarget.dispatchEvent(new Event('change'));
+    dpClose();
+  }
+  function dpClear(){ if(dpTarget){ dpTarget.setAttribute('data-iso',''); dpTarget.value=''; dpTarget.dispatchEvent(new Event('change')); } dpClose(); }
+  function dpToday(){ const t=new Date(); dpPick(t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')); }
+
+  function pfSetMois(m){
+    pfMois = (pfMois===m) ? null : m;  // re-cliquer désélectionne
+    document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.toggle('sel', parseInt(b.dataset.mois,10)===pfMois));
+    pfRefreshPerem();
+  }
+  // Calcule la date de péremption EFFECTIVE : la plus proche entre
+  // la date imprimée sur le produit et (ouverture + durée de conservation).
+  function pfEffectivePerem(printedStr, ouvStr, mois){
+    const dates=[];
+    if(printedStr){ dates.push(new Date(printedStr)); }
+    if(ouvStr && mois){ const d=new Date(ouvStr); d.setMonth(d.getMonth()+mois); dates.push(d); }
+    if(!dates.length) return null;
+    return new Date(Math.min.apply(null, dates.map(d=>d.getTime())));
+  }
+  function pfRefreshPerem(){
+    const el = document.getElementById('pf-perem-calc');
+    if(!el) return;
+    const _pe=document.getElementById('pf-peremption'); const printed = _pe ? (_pe.getAttribute('data-iso')||'') : '';
+    const _ou=document.getElementById('pf-ouverture'); const ouv = _ou ? (_ou.getAttribute('data-iso')||'') : '';
+    const eff = pfEffectivePerem(printed, ouv, pfMois);
+    if(!eff){ el.textContent=''; return; }
+    const fmt = eff.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    // Expliquer quelle date est retenue
+    let note = '';
+    if(printed && ouv && pfMois){
+      const dOuv=new Date(ouv); dOuv.setMonth(dOuv.getMonth()+pfMois);
+      const dPr=new Date(printed);
+      note = (dPr <= dOuv) ? ' (date sur le produit)' : ' (après ouverture)';
+    }
+    el.textContent = '🌸 Périme le ' + fmt + note;
+  }
+
+  async function openProductForm(id){
+    editingProductId = id || null;
+    pfPhotoFile = null; pfPhotoPath = null; pfEmoji = '🧴'; pfCat='autre';
+    setTimeout(function(){ var b=document.getElementById('pf-icon-btn'); if(b) b.textContent='🧴'; var pk=document.getElementById('pf-icon-picker'); if(pk) pk.style.display='none'; },0);
+    pfMois=null; setTimeout(function(){ document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.remove('sel')); ['pf-ouverture','pf-peremption'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.setAttribute('data-iso',''); e.value=''; } }); const el=document.getElementById('pf-perem-calc'); if(el) el.textContent=''; },0);
+    document.getElementById('pf-error').textContent='';
+    document.getElementById('pf-nom').value='';
+    document.getElementById('pf-marque').value='';
+    pfEffetsSet('');
+    document.getElementById('pf-prix').value='';
+    document.getElementById('pf-ouverture').value='';
+    document.getElementById('pf-peremption').value='';
+    document.getElementById('pf-delete').style.display = id ? 'block' : 'none';
+    document.getElementById('product-sheet-title').textContent = id ? 'Modifier le produit' : 'Nouveau produit';
+    document.getElementById('product-sheet').classList.add('open');
+    if(id){
+      const { data: p } = await sb.from('products').select('*').eq('id', id).maybeSingle();
+      if(p){
+        var _full=(p.nom||''); var _parts=_full.split(' · '); document.getElementById('pf-nom').value=_parts[0]||''; document.getElementById('pf-marque').value=_parts[1]||'';
+        pfEmoji = p.emoji || '🧴'; var _ib=document.getElementById('pf-icon-btn'); if(_ib) _ib.textContent=pfEmoji;
+        // Remplir les dates connues (les deux peuvent coexister)
+        if(p.date_ouverture){ var _o=document.getElementById('pf-ouverture'); _o.setAttribute('data-iso',p.date_ouverture); _o.value=dpFmtDisplay(p.date_ouverture); }
+        if(p.date_peremption){ var _pp=document.getElementById('pf-peremption'); _pp.setAttribute('data-iso',p.date_peremption); _pp.value=dpFmtDisplay(p.date_peremption); }
+        // Récupérer la durée de conservation mémorisée (stockée dans date_debut sous forme "0001-01-0M")
+        if(p.date_debut){
+          var _mm = parseInt(String(p.date_debut).slice(-2),10);
+          if([3,6,9,12].indexOf(_mm)>=0){ pfMois=_mm; }
+        }
+        setTimeout(function(){
+          document.querySelectorAll('.pf-mois-btn').forEach(b=>b.classList.toggle('sel', parseInt(b.dataset.mois,10)===pfMois));
+          pfRefreshPerem();
+        },10);
+        pfEffetsSet(p.effets||'');
+        pfCat = p.categorie || 'autre';
+        document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.toggle('selected', b.dataset.cat===pfCat));
+        document.getElementById('pf-prix').value = (p.prix!=null?p.prix:'');
+
+      }
+    }
+  }
+
+  // ===== Catégories de soins (ordre canonique d'une routine) =====
+  const CATS=[['demaquillant','🧼','Démaquillant / baume'],['nettoyant','🫧','Nettoyant'],['toner','💦','Lotion / toner'],['serum','✨','Sérum'],['yeux','👁️','Contour des yeux'],['creme','🧴','Crème hydratante'],['spf','☀️','Protection SPF'],['masque','🎭','Masque / exfoliant'],['cible','🩹','Soin ciblé'],['autre','🌿','Autre']];
+  const CAT_RANK={}; CATS.forEach((x,i)=>CAT_RANK[x[0]]=i);
+  function catLabel(k){ const f=CATS.find(x=>x[0]===k); return f ? f[1]+' '+f[2] : ''; }
+  let pfCat='autre';
+  function pfSetCat(el,k){ pfCat=k; document.querySelectorAll('#pf-cats .rj-chip').forEach(b=>b.classList.remove('selected')); el.classList.add('selected'); }
+
+  async function saveProduct(){
+    if(!currentUser) return;
+    const cap=function(s){ if(!s) return ''; s=s.trim(); return s.charAt(0).toUpperCase()+s.slice(1); };
+    const nomRaw = document.getElementById('pf-nom').value.trim();
+    const marqueRaw = document.getElementById('pf-marque').value.trim();
+    const err = document.getElementById('pf-error');
+    if(!nomRaw){ err.textContent='Donne au moins un nom au produit.'; return; }
+    const nom = marqueRaw ? (cap(nomRaw)+' · '+cap(marqueRaw)) : cap(nomRaw);
+    const _effRaw = pfEffetsGet();
+    const effets = _effRaw ? (_effRaw.charAt(0).toUpperCase() + _effRaw.slice(1)) : '';
+    const prixRaw = document.getElementById('pf-prix').value.trim();
+    const prix = prixRaw==='' ? null : parseFloat(prixRaw.replace(',','.'));
+    // Toutes les infos peuvent coexister. La péremption stockée = la plus proche.
+    const d_ouv = document.getElementById('pf-ouverture').getAttribute('data-iso') || null;
+    const printedPer = document.getElementById('pf-peremption').getAttribute('data-iso') || null;
+    let d_per = null;
+    const _eff = pfEffectivePerem(printedPer, d_ouv, pfMois);
+    if(_eff) d_per = _eff.toISOString().slice(0,10);
+    // Mémoriser la durée de conservation choisie dans date_debut (format "0001-01-0M")
+    let d_deb = null;
+    if(pfMois){ d_deb = '0001-01-' + (pfMois<10 ? '0'+pfMois : ''+pfMois); }
+    err.textContent='';
+    showToast('Enregistrement…');
+    let _photoPath=null;
+    if(pfPhotoFile){
+      try{
+        const _ext=((pfPhotoFile.name||'photo.jpg').split('.').pop()||'jpg').toLowerCase().slice(0,4);
+        const _path=currentUser.id+'/products/'+Date.now()+'.'+_ext;
+        const { error:_up } = await sb.storage.from('photos').upload(_path, pfPhotoFile, { upsert:true });
+        if(!_up) _photoPath=_path;
+      }catch(e){}
+    }
+    if(editingProductId){
+      const _payload={ nom, effets, categorie: pfCat, prix, emoji: pfEmoji, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per };
+      if(_photoPath) _payload.photo_path=_photoPath;
+      await sb.from('products').update(_payload).eq('id', editingProductId);
+    } else {
+      const { data: existing } = await sb.from('products').select('id').eq('user_id', currentUser.id);
+      const position = existing ? existing.length : 0;
+      const _ins={ user_id: currentUser.id, moment:'matin', position, nom, effets, categorie: pfCat, prix, emoji: pfEmoji, date_ouverture:d_ouv, date_debut:d_deb, date_peremption:d_per, in_matin:true, in_soir:true };
+      if(_photoPath) _ins.photo_path=_photoPath;
+      await sb.from('products').insert(_ins);
+    }
+    closeProductSheet();
+    showToast('Produit enregistré ✓');
+    loadProducts();
+  }
+
+  async function deleteProduct(){
+    if(!editingProductId) return;
+    if(!await cmAsk({titre:'Supprimer ce produit ?',texte:'Il sera retiré de ton carnet et de tous tes rituels.',ok:'Supprimer',annuler:'Annuler',danger:true})) return;
+    await sb.from('products').delete().eq('id', editingProductId);
+    closeProductSheet();
+    showToast('Produit supprimé');
+    loadProducts();
+  }
+
+  // ===== Écran Rituel (choix matin/soir/les deux + aperçu) =====
+  async function loadRitual(){
+    if(!currentUser) return;
+    // On ne peuple JAMAIS la liste derrière : le chemin s'ouvre directement (cmEnterRitual a
+    // déjà affiché le créneau si les données sont en cache). La liste "Mes rituels" n'est
+    // rendue qu'à la demande, via cmBackToList — impossible de l'apercevoir en entrant.
+    if(window.__allRituels) return;
+    await loadRituels();
+    // Premier chargement : on remplace le fondu d'attente par le chemin du créneau courant.
+    const slot = (rpSlotView==='hebdo') ? 'matin' : (rpSlotView || 'matin');
+    const active = pickActive(window.__allRituels||[])[slot];
+    if(active) openRituelChemin(active.id, slot, 'view');
+    else openRituelChemin(null, slot, 'edit'); // pas de rituel pour ce créneau : on ouvre direct la création
+  }
+  // Plus de page « Mes rituels » : toute la navigation entre rituels se fait depuis le panneau
+  // de la fleur. On reste donc dans le chemin immersif et on ré-affiche le rituel actif de la
+  // période courante (données rechargées), au lieu d'ouvrir un hub séparé.
+  async function cmBackToList(){
+    if(typeof cmClosePanel==='function') cmClosePanel();
+    const mo=(chDraft&&chDraft.moment)||rpSlotView||'matin';
+    window.__allRituels=null;
+    if(typeof loadRituels==='function') await loadRituels();
+    if(!window.__cmProds && typeof cmLoadProducts==='function') await cmLoadProducts();
+    rpSlotView=mo;
+    if(typeof cmShowSlot==='function') cmShowSlot(mo);
+  }
+
+  // ===== Rituels nommés =====
+  let rituelDraft = null;       // { id, nom, moment, produits:[ids] }
+  let rdProductMap = {};        // id -> produit
+  let rdPickerSel = new Set();
+
+  async function recomputeRituelType(){
+    if(!currentUser) return;
+    const { data } = await sb.from('rituels').select('moment').eq('user_id', currentUser.id);
+    const rits = data || [];
+    const hasM = rits.some(r=>r.moment==='matin'||r.moment==='both');
+    const hasS = rits.some(r=>r.moment==='soir'||r.moment==='both');
+    const t = (hasM&&hasS)?'both':(hasM?'matin':(hasS?'soir':'both'));
+    state.rituelType = t;
+    try{ await sb.from('profiles').update({ rituel_type:t }).eq('id', currentUser.id); }catch(e){}
+  }
+
+  // ===== Routines préfaites =====
+  const PRESETS={
+    grasse:{ nom:'Peau grasse · débutant', steps:[['Nettoyant gel doux','nettoyant','🫧'],['Lotion purifiante','toner','💦'],['Sérum niacinamide','serum','✨'],['Crème hydratante légère','creme','🧴'],['Protection SPF (le matin)','spf','☀️']] },
+    acne:{ nom:'Acné légère', steps:[['Nettoyant doux','nettoyant','🫧'],['Soin ciblé imperfections','cible','🩹'],['Crème non comédogène','creme','🧴'],['Protection SPF (le matin)','spf','☀️']] },
+    seche:{ nom:'Peau sèche', steps:[['Nettoyant crème','nettoyant','🫧'],['Sérum hydratant','serum','✨'],['Crème riche','creme','🧴'],['Protection SPF (le matin)','spf','☀️']] },
+    rougeurs:{ nom:'Rougeurs', steps:[['Nettoyant très doux','nettoyant','🫧'],['Sérum apaisant','serum','✨'],['Crème apaisante','creme','🧴'],['SPF minérale (le matin)','spf','☀️']] },
+    sensible:{ nom:'Peau sensible', steps:[['Nettoyant sans parfum','nettoyant','🫧'],['Crème barrière réparatrice','creme','🧴'],['Protection SPF douce (le matin)','spf','☀️']] },
+    simple:{ nom:'Ultra-simple · 3 étapes', steps:[['Nettoyant doux','nettoyant','🫧'],['Crème hydratante','creme','🧴'],['Protection SPF (le matin)','spf','☀️']] },
+  };
+  let __presetBusy=false;
+  async function applyPreset(key){
+    const P=PRESETS[key]; if(!P || !currentUser || __presetBusy) return;
+    __presetBusy=true; showToast('Création de ton rituel… 🌱');
+    try{
+      const { data: mine } = await sb.from('products').select('id,nom').eq('user_id', currentUser.id);
+      const byNom={}; (mine||[]).forEach(p=>byNom[(p.nom||'').toLowerCase()]=p.id);
+      const ids=[];
+      for(const [nom,cat,emo] of P.steps){
+        const lk=nom.toLowerCase();
+        if(byNom[lk]){ ids.push(byNom[lk]); continue; }
+        const { data: ins, error } = await sb.from('products').insert({ user_id:currentUser.id, nom, categorie:cat, emoji:emo, in_matin:true, in_soir:true }).select('id');
+        if(error || !ins || !ins[0]) throw (error||new Error('insert'));
+        ids.push(ins[0].id); byNom[lk]=ins[0].id;
+      }
+      const { data: oth } = await sb.from('rituels').select('id').eq('user_id', currentUser.id).eq('actif', true);
+      const off=(oth||[]).map(r=>r.id);
+      if(off.length) await sb.from('rituels').update({actif:false}).in('id', off);
+      const { count } = await sb.from('rituels').select('id',{count:'exact',head:true}).eq('user_id', currentUser.id);
+      await sb.from('rituels').insert({ user_id:currentUser.id, nom:P.nom, moment:'matin', produits:ids, position:(count||0), actif:true });
+      window.__allRituels=null;
+      showToast('Rituel créé et activé ✨');
+      loadRituels(); if(typeof loadProducts==='function') loadProducts();
+      loadHomeRoutine();
+    }catch(e){ showToast('Oups, réessaie dans un instant 🌿'); }
+    __presetBusy=false;
+  }
+
+  // ===== Rituel actif (sélection + exclusivité par moment) =====
+  function pickActive(rituels){
+    const daily=(rituels||[]).filter(r=>r.actif && r.moment!=='hebdo');
+    const m=[...daily].reverse().find(r=>r.moment==='matin'||r.moment==='both')||null;
+    const s=[...daily].reverse().find(r=>r.moment==='soir'||r.moment==='both')||null;
+    return { matin:m, soir:s };
+  }
+  function ensureActiveRituels(rituels){
+    // Un rituel actif maximum PAR créneau (matin / soir). Un "both" occupe les deux. Les hebdo ne comptent pas.
+    const daily=rituels.filter(r=>r.moment!=='hebdo');
+    const acts=daily.filter(r=>r.actif);
+    const off=[]; let mT=false, sT=false;
+    [...acts].reverse().forEach(r=>{
+      const wM=(r.moment==='matin'||r.moment==='both'), wS=(r.moment==='soir'||r.moment==='both');
+      if((wM&&mT)||(wS&&sT)){ r.actif=false; off.push(r.id); }
+      else { if(wM)mT=true; if(wS)sT=true; }
+    });
+    if(off.length){ try{ sb.from('rituels').update({actif:false}).in('id', off).then(function(){}); }catch(e){} }
+    return rituels;
+  }
+  function momentBadge(m){ return m==='matin'?'☀️ Matin':(m==='soir'?'🌙 Soir':'☀️🌙 Matin & soir'); }
+  async function openRituelSelect(){
+    let rits=window.__allRituels;
+    if(!rits){
+      const { data } = await sb.from('rituels').select('id,nom,moment,actif').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+      rits=data||[]; window.__allRituels=rits;
+    }
+    const host=document.getElementById('rituel-select-list');
+    rits = rits.filter(r=>r.moment!=='hebdo');
+    host.innerHTML = rits.map(r=>`<button class="btn-soft" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:8px;padding:12px 14px;border-radius:14px;${r.actif?'border-color:var(--accent);':''}" onclick="selectRituel('${r.id}')"><span style="flex:1;min-width:0;"><span style="display:block;font-size:11px;color:var(--muted);">${momentBadge(r.moment)}</span>${escapeHtml(r.nom||'Mon rituel')}</span>${r.actif?'<span style="color:var(--accent);font-weight:700;">✓</span>':''}</button>`).join('');
+    document.getElementById('rituel-select-sheet').classList.add('open');
+  }
+  function closeRituelSelect(){ document.getElementById('rituel-select-sheet').classList.remove('open'); }
+  async function selectRituel(id){
+    const all=window.__allRituels||[]; const t=all.find(r=>String(r.id)===String(id)); if(!t) return;
+    const on=[t.id];
+    const tM=(t.moment==='matin'||t.moment==='both'), tS=(t.moment==='soir'||t.moment==='both');
+    const off=all.filter(r=>r.actif && r.id!==t.id && r.moment!=='hebdo' && t.moment!=='hebdo' && ((tM&&(r.moment==='matin'||r.moment==='both'))||(tS&&(r.moment==='soir'||r.moment==='both')))).map(r=>r.id);
+    try{
+      if(off.length) await sb.from('rituels').update({actif:false}).in('id', off);
+      await sb.from('rituels').update({actif:true}).in('id', on);
+    }catch(e){ showToast('Oups, réessaie 🌿'); return; }
+    window.__allRituels=null;
+    closeRituelSelect(); showToast('Rituel sélectionné ✨');
+    loadHomeRoutine(); loadRituels();
+  }
+
+  // ===== Coût estimé par mois de la routine en cours =====
+  // ===== Affichage adaptatif : carte "ton rituel actuel" en haut =====
+    async function toggleRituelActif(id){
+    const all = window.__allRituels || [];
+    const t = all.find(r=>r.id===id);
+    if(!t) return;
+    const turnOn = !t.actif;
+    try{
+      if(turnOn && t.moment!=='hebdo'){
+        const tM=(t.moment==='matin'||t.moment==='both'), tS=(t.moment==='soir'||t.moment==='both');
+        const off=all.filter(r=>r.actif && r.id!==t.id && r.moment!=='hebdo' && ((tM&&(r.moment==='matin'||r.moment==='both'))||(tS&&(r.moment==='soir'||r.moment==='both')))).map(r=>r.id);
+        if(off.length) await sb.from('rituels').update({actif:false}).in('id', off);
+      }
+      await sb.from('rituels').update({actif:turnOn}).eq('id', id);
+    }catch(e){}
+    loadRituels();
+  }
+
+  // On ne peut pas composer une routine sans avoir de produits
+  async function hasAnyProduct(){
+    if(!currentUser) return false;
+    try{
+      const { count } = await sb.from('products').select('id', { count:'exact', head:true }).eq('user_id', currentUser.id);
+      return (count||0) > 0;
+    }catch(e){ return true; }  // en cas de souci réseau, on ne bloque pas
+  }
+  function noProductSheet(){
+    showToast('Ajoute d\'abord tes produits 🧴');
+    setTimeout(()=>navTo('routine'), 700);
+  }
+
+  // Reprendre la routine d'un créneau pour l'autre (souvent identiques matin/soir)
+  async function copierRituel(depuis, vers){
+    const rits = window.__allRituels || [];
+    const src = rits.find(r => r.moment === depuis);
+    await copierRituelVers(src, vers);
+  }
+
+  // ═══ Menu d'actions d'un rituel (⋯) ═══
+  let ractId = null;
+
+  function openRituelActions(id){
+    ractId = id;
+    const rits = window.__allRituels || [];
+    const r = rits.find(x=>String(x.id)===String(id));
+    if(!r) return;
+
+    const titre = document.getElementById('ract-title');
+    if(titre) titre.textContent = r.nom || 'Mon rituel';
+
+    const n = Array.isArray(r.produits) ? r.produits.length : 0;
+    let html = '<button type="button" class="ract-opt" onclick="ractModifier()">'+
+        '<span class="ico">✏️</span><span class="txt">Modifier</span></button>';
+
+    // Copier vers l'autre créneau : toujours proposé (matin ⇄ soir)
+    if((r.moment==='matin' || r.moment==='soir') && n){
+      const vers = (r.moment==='matin') ? 'soir' : 'matin';
+      const e = (vers==='soir') ? '🌙' : '☀️';
+      html += '<button type="button" class="ract-opt" onclick="ractCopier(\''+vers+'\')">'+
+          '<span class="ico">'+e+'</span>'+
+          '<span class="txt">Copier vers le '+vers+
+            '<small>'+ n +' étape'+(n>1?'s':'')+' · une copie, sans rien effacer</small>'+
+          '</span></button>';
+    }
+
+    html += '<button type="button" class="ract-opt danger" onclick="ractSupprimer()">'+
+        '<span class="ico">🗑️</span><span class="txt">Supprimer</span></button>';
+
+    document.getElementById('ract-list').innerHTML = html;
+    document.getElementById('ract-sheet').classList.add('open');
+  }
+
+  function closeRituelActions(){
+    document.getElementById('ract-sheet').classList.remove('open');
+  }
+
+  function ractModifier(){
+    const id = ractId;
+    closeRituelActions();
+    setTimeout(()=>openRituelEditor(id), 180);
+  }
+
+  async function ractCopier(vers){
+    const rits = window.__allRituels || [];
+    const src = rits.find(x=>String(x.id)===String(ractId));
+    closeRituelActions();
+    if(!src) return;
+    await copierRituelVers(src, vers);
+  }
+
+  async function ractSupprimer(){
+    const id = ractId;
+    closeRituelActions();
+    if(!await cmAsk({titre:'Supprimer ce rituel ?',texte:'Le rituel et son parcours seront effacés. Tes produits, eux, ne bougent pas.',ok:'Supprimer',annuler:'Annuler',danger:true})) return;
+    try{
+      await sb.from('rituels').delete().eq('id', id);
+      window.__allRituels = null;
+      await loadRituels();
+      showToast('Rituel supprimé 🌸');
+    }catch(e){ showToast('Oups : '+(e.message||'réessaie')); }
+  }
+
+  // Copie les étapes d'un rituel vers l'autre créneau
+  async function copierRituelVers(src, vers){
+    if(!currentUser || !src) return;
+    const prods = Array.isArray(src.produits) ? src.produits : [];
+    if(!prods.length){ showToast('Rien à copier 🌸'); return; }
+
+    const rits = window.__allRituels || [];
+    const nom = (vers==='matin') ? 'Rituel du matin' : 'Rituel du soir';
+
+    try{
+      // On AJOUTE une copie : rien n'est supprimé ni écrasé.
+      const { data: nouvelle, error } = await sb.from('rituels').insert({
+        user_id: currentUser.id,
+        nom: nom,
+        moment: vers,
+        produits: prods.slice(),
+        actif: true,
+        position: rits.length
+      }).select().single();
+      if(error) throw error;
+
+      // Une seule routine active par créneau : les autres passent en réserve (sans être perdues)
+      const aDesactiver = rits
+        .filter(r => r.actif && r.moment === vers && String(r.id) !== String(nouvelle && nouvelle.id))
+        .map(r => r.id);
+      if(aDesactiver.length){
+        await sb.from('rituels').update({ actif:false }).in('id', aDesactiver);
+      }
+
+      showToast('Copié vers le ' + vers + ' · ajuste-la comme tu veux 🌸');
+      window.__allRituels = null;
+      await loadRituels();
+      rpTabGo(vers);
+    }catch(e){
+      showToast('Oups : '+(e.message||'réessaie'));
+    }
+  }
+
+  // Onglets Matin / Soir / Hebdo : tout est accessible en un geste
+  function rpTabGo(m){
+    rpSlotView = m;
+    document.querySelectorAll('.rt-tab').forEach(b=>b.classList.toggle('sel', b.dataset.m===m));
+    renderRituelActuel(window.__allRituels || []);
+    updateFab('ritual');
+  }
+
+  // À l'ouverture : on propose le créneau du moment (soir dès midi)
+  function rpAutoTab(){
+    const h=new Date().getHours();
+    rpTabGo(h >= 12 ? 'soir' : 'matin');
+  }
+
+  
+  
+
+  
+  
+
+  async function openRituelQuick(m){
+    if(!(await hasAnyProduct())){ noProductSheet(); return; }
+    // Le fond affiche la sous-vue du créneau concerné (que le matin quand on crée du matin, etc.)
+    rpSlotView=m; rpForceWelcome=false;
+    renderRituelActuel(window.__allRituels||[]);
+    await openRituelEditor();
+    rdSetMoment(m);
+    const t=document.getElementById('rd-title');
+    if(t) t.textContent = 'Nouveau rituel';
+    const nomEl=document.getElementById('rd-nom');
+    if(nomEl) nomEl.placeholder = (m==='matin') ? 'Rituel du matin' : (m==='soir' ? 'Rituel du soir' : (m==='hebdo' ? 'Soin de la semaine' : 'Mon rituel'));
+  }
+
+  async function renderRituelActuel(rits){
+    const card=document.getElementById('rituel-actuel-card');
+    const presets=document.getElementById('rituel-presets-section');
+    if(!card) return;
+    rits = rits || [];
+    updateFab();
+    const daily = rits.filter(r=>r.moment!=='hebdo');
+    const hebdos = rits.filter(r=>r.moment==='hebdo');
+    if(presets) presets.style.display = (isPremium && !daily.length) ? '' : 'none';
+
+    // ── Sous-vue d'un créneau ──
+    if(rpSlotView){
+      const mv=rpSlotView;
+      const items = mv==='hebdo' ? hebdos : daily.filter(r=>r.moment===mv || r.moment==='both');
+      if(!items.length){
+        const INFO = {
+          matin: { e:'☀️', t:'Ton rituel du matin', d:'Nettoyer, protéger, préparer ta peau<br>pour la journée qui commence.' },
+          soir:  { e:'🌙', t:'Ton rituel du soir',  d:'Démaquiller, réparer, laisser ta peau<br>travailler pendant la nuit.' },
+          hebdo: { e:'🧖‍♀️', t:'Ton soin de la semaine', d:'Masque, gommage, sérum intensif…<br>Un rendez-vous, une fois par semaine.' }
+        };
+        const info = INFO[mv] || INFO.matin;
+
+        // Si l'autre créneau a déjà une routine, on propose de la copier
+        let copie = '';
+        if(mv === 'matin' || mv === 'soir'){
+          const autre = (mv === 'matin') ? 'soir' : 'matin';
+          const src = daily.find(r => r.moment === autre);
+          if(src && Array.isArray(src.produits) && src.produits.length){
+            const eAutre = (autre === 'matin') ? '☀️' : '🌙';
+            copie = '<button class="rt-copy-btn" onclick="copierRituel(\''+autre+'\',\''+mv+'\')">'+
+                      eAutre + ' Reprendre mon rituel du ' + autre +
+                      '<span class="rt-copy-sub">' + src.produits.length + ' étapes · tu pourras l\'ajuster</span>'+
+                    '</button>';
+          }
+        }
+
+        card.innerHTML =
+          '<div class="rt-empty">'+
+            '<div class="rt-empty-ico">'+info.e+'</div>'+
+            '<div class="rt-empty-title">'+info.t+'</div>'+
+            '<div class="rt-empty-sub">'+info.d+'</div>'+
+            '<button class="rt-empty-btn" onclick="openRituelQuick(\''+mv+'\')">Créer ce rituel</button>'+
+            copie +
+          '</div>';
+        card.style.display='block';
+        return;
+      }
+      const allIds=[...new Set(items.flatMap(r=>Array.isArray(r.produits)?r.produits:[]))];
+      let pmap={};
+      if(allIds.length){
+        const { data } = await sb.from('products').select('id,nom,emoji').in('id', allIds);
+        (data||[]).forEach(p=>pmap[p.id]=p);
+      }
+      const DAYS_FR=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+      function freqLabel(r){
+        const rap=r.rappels;
+        if(rap && rap.on && Array.isArray(rap.days) && rap.days.length){
+          return rap.days.length===7 ? 'Tous les jours' : (rap.days.length+' j/semaine');
+        }
+        return '';
+      }
+      function swHtml(r){
+        return '<label class="rp-sw" onclick="event.stopPropagation()"><input type="checkbox" '+(r.actif?'checked':'')+' onchange="toggleRituelActif(\''+r.id+'\')"><span class="k"></span></label>';
+      }
+      function badges(moment){
+        if(moment==='both') return '<span class="rp-badges"><span class="rp-badge-ico matin">☀️</span><span class="rp-badge-ico soir">🌙</span></span>';
+        const cls = moment==='matin' ? 'matin' : 'soir';
+        const e = moment==='matin' ? '☀️' : '🌙';
+        return '<span class="rp-badge-ico '+cls+'">'+e+'</span>';
+      }
+      function stepRow(p, idx){
+        const parts=(p.nom||'').split(' · ');
+        return '<div class="rp-step">'+
+          '<div class="rp-thumb"><span class="n">'+(idx+1)+'</span>'+(p.emoji||'🧴')+'</div>'+
+          '<div style="flex:1;min-width:0;"><div class="rp-pname">'+(parts[0]||'')+'</div>'+
+          (parts[1]?'<div class="rp-pbrand">'+parts[1]+'</div>':'')+
+          '</div></div>';
+      }
+      function dailyCard(r){
+        const label = r.moment==='matin' ? 'Rituel du matin' : (r.moment==='soir' ? 'Rituel du soir' : 'Matin & soir');
+        const prods = (Array.isArray(r.produits)?r.produits:[]).map(id=>pmap[id]).filter(Boolean);
+        const n = prods.length;
+        const freq = freqLabel(r);
+        const sub = n+' étape'+(n>1?'s':'') + (freq ? ' · '+freq : '');
+        const steps = r.actif
+          ? '<div class="rp-steps">'+(n ? prods.map(stepRow).join('') : '<div style="padding:10px 0 12px;color:var(--muted);font-size:12.5px;">Aucun produit pour l\'instant 🌸</div>')+'</div>'
+          : '';
+        return '<div class="rp-card'+(r.actif?'':' off')+'">'+
+          '<div class="rp-card-head">'+
+            '<div class="rp-card-title">'+badges(r.moment)+
+            '<div style="min-width:0;flex:1;"><span class="rp-card-name">'+(r.nom||label)+'</span><div class="rp-card-sub">'+sub+'</div></div></div>'+
+            swHtml(r)+
+            '<button class="rp-dots" onclick="event.stopPropagation();openRituelActions(\''+r.id+'\')" aria-label="Actions">⋯</button>'+
+          '</div>'+
+          steps+
+        '</div>';
+      }
+      function hebdoRow(r){
+        const day = (r.rappels && typeof r.rappels.hebdoDay==='number') ? DAYS_FR[r.rappels.hebdoDay] : 'dimanche';
+        const n = Array.isArray(r.produits)?r.produits.length:0;
+        return '<div class="rp-hebdo'+(r.actif?'':' off')+'" onclick="openRituelEditor(\''+r.id+'\')" style="cursor:pointer;">'+
+          '<span class="av">🧖‍♀️</span>'+
+          '<span style="flex:1;min-width:0;"><span class="hb-name" style="display:block;font-size:14.5px;font-weight:600;color:var(--ink);">'+(r.nom||'Soins de la semaine')+'</span>'+
+          '<span class="hb-sub" style="display:block;font-size:11.5px;color:var(--muted);margin-top:2px;"><span class="day">Le '+day+'</span> · '+n+' étape'+(n>1?'s':'')+'</span></span>'+
+          swHtml(r)+'</div>';
+      }
+      const sortActive = arr => [...arr].sort((a,b)=>(b.actif?1:0)-(a.actif?1:0));
+      const lbl = mv==='matin'?'Rituel du matin':(mv==='soir'?'Rituel du soir':'Soins hebdomadaires');
+      let sh = '';
+      sh += sortActive(items).map(mv==='hebdo'?hebdoRow:dailyCard).join('');
+      card.innerHTML = sh;
+      card.style.display='block';
+      return;
+    }
+
+  }
+
+  async function renderRituelCout(){
+    if(!currentUser) return;
+    const card=document.getElementById('rituel-cout-card');
+    const val=document.getElementById('rituel-cout-val');
+    const note=document.getElementById('rituel-cout-note');
+    if(!card||!val) return;
+    const { data } = await sb.from('products').select('prix,date_ouverture,date_debut,in_matin,in_soir').eq('user_id', currentUser.id);
+    const arr = data || [];
+    let total=0, comptes=0, sansDuree=0, utilises=0;
+    arr.forEach(function(p){
+      // Seulement les produits réellement utilisés (matin OU soir)
+      if(!(p.in_matin || p.in_soir)) return;
+      utilises++;
+      const prix=parseFloat(p.prix);
+      if(isNaN(prix)||prix<=0) return;
+      // Récupérer la durée de conservation mémorisée (stockée dans date_debut "0001-01-0M")
+      let mois=null;
+      if(p.date_debut){ var mm=parseInt(String(p.date_debut).slice(-2),10); if([3,6,9,12].indexOf(mm)>=0) mois=mm; }
+      if(mois){
+        total += prix/mois;  // coût mensuel de ce produit
+        comptes++;
+      } else {
+        sansDuree++;
+      }
+    });
+    if(utilises===0){ card.style.display='none'; return; }
+    card.style.display='block';
+    if(comptes===0){
+      val.textContent='—';
+      note.textContent='Ajoute une durée de conservation à tes produits pour estimer le coût mensuel 🌸';
+    } else {
+      val.textContent='~'+Math.round(total)+'€';
+      let txt = 'Basé sur '+comptes+' produit'+(comptes>1?'s':'')+' avec durée de conservation';
+      if(sansDuree>0){ txt += ' · '+sansDuree+' sans durée (non compté'+(sansDuree>1?'s':'')+')'; }
+      note.textContent = txt;
+    }
+  }
+
+  // ===== Parcours beauté : phases + rendu =====
+  const PC_PHASES = [
+    { key:'nettoyer', cats:['nettoyant','demaquillant'], emoji:'🫧', nom:'Nettoyer', moment:'both', optionnel:false,
+      why:"On repart d'une peau nette, matin et soir — sans jamais la décaper. Le soir, si tu portes du SPF ou du maquillage, une huile ou un baume d'abord : l'eau seule ne les dissout pas.",
+      lea:"Le matin, un nettoyage tout doux suffit. Le soir, masse l'huile à sec 30 secondes avant d'ajouter l'eau, puis enchaîne avec ton nettoyant 🌸" },
+    { key:'traiter', cats:['toner','serum','cible','yeux','masque'], emoji:'🎯', nom:'Traiter', moment:'both', optionnel:false,
+      why:"Le cœur du soin : les actifs qui répondent à <b>tes besoins spécifiques</b> — lotions, sérums, soins ciblés, contour des yeux et masques.",
+      lea:"C'est ici que se joue le travail de fond. Une nouveauté à la fois, et la régularité compte plus que la quantité 🌸" },
+    { key:'hydrater', cats:['creme'], emoji:'💧', nom:'Hydrater', moment:'both', optionnel:false,
+      why:"On scelle l'hydratation et on renforce la barrière protectrice de la peau.",
+      lea:"Même les peaux grasses ont besoin d'hydratation — sinon elles produisent plus de sébum pour compenser." },
+    { key:'proteger', cats:['spf'], emoji:'☀️', nom:'Protéger', moment:'matin', optionnel:false,
+      why:"L'étape anti-âge n°1. Le matin, toujours — même quand il fait gris. Le soir, pas de soleil : on saute cette étape.",
+      lea:"Le SPF, c'est LE geste qui change tout sur le long terme. Renouvelle-le si tu restes longtemps dehors ☀️" }
+  ];
+
+  function pcMomentBadge(m){
+    if(m==='both') return '☀️ 🌙';
+    if(m==='matin') return '☀️ matin';
+    if(m==='soir') return '🌙 soir';
+    if(m==='hebdo') return '🧖‍♀️ hebdo';
+    return '';
+  }
+  function pcProdChip(p){
+    const parts=(p.nom||'').split(' · ');
+    const brand = parts[1] ? ' <span class="pc-prod-b">· '+parts[1]+'</span>' : '';
+    return '<div class="pc-prod"><span class="pc-prod-e">'+(p.emoji||'🧴')+'</span><span class="pc-prod-n">'+(parts[0]||'Produit')+brand+'</span></div>';
+  }
+  function togglePcLea(el){
+    el.classList.toggle('open');
+    const b=el.nextElementSibling;
+    if(b) b.style.maxHeight = el.classList.contains('open') ? (b.scrollHeight+'px') : '0';
+  }
+
+  function pcGoalHtml(){
+    const g = state.goal;
+    let title='Une peau plus équilibrée', sub='Comprise, respectée et chouchoutée, jour après jour.';
+    if(g==='constance'){ title='Tenir ton rituel'; sub="La régularité, c'est ce qui transforme vraiment la peau. Un petit geste chaque jour 🌸"; }
+    else if(g==='comprendre'){ title='Comprendre ta peau'; sub='Repérer ce qui lui fait du bien, ce qui l\'aggrave, et voir ton évolution au fil du temps.'; }
+    else if(g==='deux'){ title='Une peau équilibrée & comprise'; sub='Tenir ton rituel tout en apprenant ce qui fait vraiment du bien à ta peau.'; }
+    return '<div class="pc-goal"><div class="pc-rail"><div class="pc-goal-node">✨</div></div>'+
+      '<div class="pc-goal-card"><div class="pc-goal-eyebrow">Ton objectif</div>'+
+      '<div class="pc-goal-title">'+title+'</div><div class="pc-goal-sub">'+sub+'</div></div></div>';
+  }
+
+  function pcEmptyHtml(){
+    const presets=[['grasse','🫧','Peau grasse'],['acne','🌋','Acné légère'],['seche','🏜️','Peau sèche'],['rougeurs','🍓','Rougeurs'],['sensible','🌸','Peau sensible'],['simple','🌿','Ultra-simple']];
+    const btns=presets.map(function(a){ return '<button class="btn-soft" style="display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:13px 15px;border-radius:14px;" onclick="applyPreset(\''+a[0]+'\')"><span style="font-size:20px;">'+a[1]+'</span><span style="flex:1;">'+a[2]+'</span><span style="color:var(--muted);">›</span></button>'; }).join('');
+    return '<div class="pc-hero"><div class="pc-hero-title">Ton parcours <em>beauté</em> 🌸</div>'+
+      '<div class="pc-hero-sub">Ta peau mérite un chemin clair. Choisis un point de départ — on crée tes produits et ton parcours, tu ajustes ensuite.</div></div>'+
+      '<div class="pc-empty">'+btns+'</div>';
+  }
+
+  async function renderParcours(){
+    const root=document.getElementById('parcours-root');
+    if(!root || !currentUser) return;
+    let prods=[];
+    try{ const { data } = await sb.from('products').select('id,nom,emoji,categorie,in_matin,in_soir').eq('user_id', currentUser.id); prods = data || []; }
+    catch(e){ prods=[]; }
+    if(!prods.length){ root.innerHTML = pcEmptyHtml(); return; }
+
+    const byCat={};
+    prods.forEach(function(p){ const c=p.categorie||'autre'; (byCat[c]=byCat[c]||[]).push(p); });
+    const concerns=(state.concerns||[]).map(function(c){ return (CONCERN_LABELS[c]||c); });
+
+    let filled=0; const total=PC_PHASES.length; let steps='';
+    PC_PHASES.forEach(function(ph){
+      let items=[]; ph.cats.forEach(function(c){ items=items.concat(byCat[c]||[]); });
+      const has = items.length>0;
+      if(has) filled++;
+
+      let moment=ph.moment;
+      if(has && ph.moment==='both'){
+        const m=items.some(function(p){return p.in_matin;});
+        const s=items.some(function(p){return p.in_soir;});
+        moment = (m&&s)?'both':(m?'matin':(s?'soir':'both'));
+      }
+
+      let why=ph.why;
+      if(ph.key==='traiter' && concerns.length){
+        why='Le cœur du soin : les actifs qui ciblent <b>'+concerns.join(', ').toLowerCase()+'</b>.';
+      }
+
+      if(has){
+        steps += '<div class="pc-step"><div class="pc-rail"><div class="pc-node">'+ph.emoji+'</div></div>'+
+          '<div class="pc-card"><div class="pc-card-top"><div class="pc-phase">'+ph.nom+'</div><span class="pc-moment">'+pcMomentBadge(moment)+'</span></div>'+
+          '<div class="pc-why">'+why+'</div>'+
+          '<div class="pc-prods">'+items.map(pcProdChip).join('')+'</div>'+
+          '<button class="pc-lea" onclick="togglePcLea(this)"><span class="pc-lea-av">L</span><span class="pc-lea-lbl">Le conseil de Léa</span><span class="pc-chev">▾</span></button>'+
+          '<div class="pc-lea-body"><div>'+ph.lea+'</div></div>'+
+          '</div></div>';
+      } else {
+        steps += '<div class="pc-step"><div class="pc-rail"><div class="pc-node ghost">'+ph.emoji+'</div></div>'+
+          '<div class="pc-card ghost"><div class="pc-card-top"><div class="pc-phase">'+ph.nom+'</div>'+(ph.optionnel?'<span class="pc-opt">facultatif</span>':'')+'</div>'+
+          '<div class="pc-why">'+ph.why+'</div>'+
+          '<button class="pc-add" onclick="navTo(\'routine\')">+ Ajouter un produit à cette étape</button>'+
+          '</div></div>';
+      }
+    });
+
+    const pct = Math.round(filled/total*100);
+    const hero = '<div class="pc-hero"><div class="pc-hero-title">Ton parcours <em>beauté</em> 🌸</div>'+
+      '<div class="pc-hero-sub">Le chemin de ta peau, étape par étape. Comprends le rôle de chaque geste — et vois où tu en es.</div>'+
+      '<div class="pc-progress"><div class="pc-progress-bar"><div class="pc-progress-fill" style="width:'+pct+'%"></div></div>'+
+      '<span class="pc-progress-txt">'+filled+'/'+total+' étapes</span></div></div>';
+
+    root.innerHTML = hero + '<div class="pc-track">'+steps+pcGoalHtml()+'</div>';
+  }
+
+  // ===== Rappel d'un rituel (semainier + heure) =====
+  let rapDraft=null;
+  function rhOpenRappel(ev,id){
+    if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+    const r=(window.__rhRituels||[]).find(function(x){ return String(x.id)===String(id); });
+    if(!r) return;
+    const rap=r.rappels||{};
+    const mo=r.moment||'matin';
+    const heure = mo==='soir' ? (rap.soir||'21:00') : (mo==='hebdo' ? (rap.soir||'20:00') : (rap.matin||'08:00'));
+    const days = (rap.days&&rap.days.length) ? rap.days.slice() : (mo==='hebdo' ? [(rap.hebdoDay!=null?rap.hebdoDay:1)] : [1,2,3,4,5,6,0]);
+    rapDraft={ id:r.id, moment:mo, on:!!rap.on, days:days, heure:heure };
+    rapRender();
+  }
+  function rapRender(){
+    let el=document.getElementById('rap-overlay');
+    if(!el){ el=document.createElement('div'); el.id='rap-overlay'; el.className='rap-overlay';
+      el.addEventListener('click', function(e){ if(e.target===el) rapClose(); });
+      document.body.appendChild(el); }
+    const L=[['L',1],['M',2],['M',3],['J',4],['V',5],['S',6],['D',0]];
+    const days=L.map(function(d){ const on=rapDraft.days.indexOf(d[1])>=0; return '<button class="rap-day'+(on?' on':'')+'" onclick="rapToggleDay('+d[1]+')">'+d[0]+'</button>'; }).join('');
+    const parts=(rapDraft.heure||'08:00').split(':');
+    const hh=parts[0]||'08', mm=parts[1]||'00';
+    let hOpts=''; for(let i=0;i<24;i++){ const v=(i<10?'0':'')+i; hOpts+='<option value="'+v+'"'+(v===hh?' selected':'')+'>'+v+'</option>'; }
+    let mins=[]; for(let i=0;i<60;i+=5){ mins.push((i<10?'0':'')+i); }
+    if(mins.indexOf(mm)<0) mins.push(mm);
+    mins.sort();
+    let mOpts=mins.map(function(v){ return '<option value="'+v+'"'+(v===mm?' selected':'')+'>'+v+'</option>'; }).join('');
+    const nb=rapDraft.days.length;
+    el.innerHTML='<div class="rap-card">'+
+      '<div class="rap-head"><span class="rap-ic">🔔</span><div class="rap-t">Rappel</div><button class="rap-x" onclick="rapClose()">×</button></div>'+
+      '<div class="rap-sub">Choisis les jours et l\'heure. Décoche tout pour ne plus être rappelée.</div>'+
+      '<div class="rap-lbl">Jours</div><div class="rap-days">'+days+'</div>'+
+      '<div class="rap-lbl" style="margin-top:18px;">Heure</div>'+
+      '<div class="rap-clock"><select class="rap-sel" onchange="rapSetH(this.value)">'+hOpts+'</select><span class="rap-colon">:</span><select class="rap-sel" onchange="rapSetM(this.value)">'+mOpts+'</select></div>'+
+      '<button class="rap-save" onclick="rapSave()">'+(nb?'Valider':'Désactiver le rappel')+'</button>'+
+      '</div>';
+    el.classList.add('show');
+  }
+  function rapToggleDay(d){ if(!rapDraft) return; const i=rapDraft.days.indexOf(d); if(i>=0) rapDraft.days.splice(i,1); else rapDraft.days.push(d); rapRender(); }
+  function rapToggleOn(v){ if(!rapDraft) return; rapDraft.on=!!v; rapRender(); }
+  function rapSetH(v){ if(rapDraft){ const p=(rapDraft.heure||'08:00').split(':'); rapDraft.heure=v+':'+(p[1]||'00'); } }
+  function rapSetM(v){ if(rapDraft){ const p=(rapDraft.heure||'08:00').split(':'); rapDraft.heure=(p[0]||'08')+':'+v; } }
+  function rapClose(){ const el=document.getElementById('rap-overlay'); if(el) el.classList.remove('show'); rapDraft=null; }
+  async function rapSave(){
+    if(!rapDraft) return;
+    let rap;
+    if(!rapDraft.days.length){ rap={ on:false, days:[], hebdoDay:1 }; }
+    else if(rapDraft.moment==='hebdo'){ rap={ on:true, days:rapDraft.days, hebdoDay:rapDraft.days[0], soir:rapDraft.heure }; }
+    else if(rapDraft.moment==='soir'){ rap={ on:true, days:rapDraft.days, soir:rapDraft.heure }; }
+    else { rap={ on:true, days:rapDraft.days, matin:rapDraft.heure }; }
+    const _on=rap.on;
+    try{ await sb.from('rituels').update({ rappels:rap }).eq('id', rapDraft.id); }catch(e){}
+    rapClose();
+    if(typeof showToast==='function') showToast(_on?'Rappel enregistré 🔔':'Rappel désactivé');
+    window.__allRituels=null;
+    if(typeof loadRituels==='function') loadRituels();
+  }
+
+  // ===== Hub des rituels : regroupé par moment =====
+  const RH_MOMENTS=[['matin','☀️','Matin'],['soir','🌙','Soir'],['hebdo','🧖‍♀️','Hebdo']];
+  let rhActiveTab=(new Date().getHours()>=18)?'soir':'matin';
+  function rhNewRituel(){ openRituelChemin(null, (typeof rhActiveTab!=='undefined' && rhActiveTab) || 'matin'); }
+  function rhGoTab(m){ rhActiveTab=m; RH_MOMENTS.forEach(function(mo){ const p=document.getElementById('rh-pane-'+mo[0]); if(p) p.style.display=(mo[0]===m)?'block':'none'; }); document.querySelectorAll('.rh-tab').forEach(function(t,i){ if(RH_MOMENTS[i]) t.classList.toggle('on', RH_MOMENTS[i][0]===m); }); }
+
+  function rhTrail(r, pmap){
+    const ids=Array.isArray(r.produits)?r.produits:[];
+    if(!ids.length) return '<div class="rh-empty">Aucun produit · appuie pour en ajouter</div>';
+    let html=''; const max=6;
+    ids.slice(0,max).forEach(function(id,i){ const p=pmap[id]; const ph=(window.__rhPhotos||{})[id];
+      const inner = ph ? '<img src="'+ph+'" alt="">' : (p?(p.emoji||'🧴'):'🧴');
+      if(i>0) html+='<span class="rh-link"></span>'; html+='<span class="rh-node">'+inner+'</span>'; });
+    if(ids.length>max){ html+='<span class="rh-link"></span><span class="rh-node" style="font-size:12px;font-weight:700;color:var(--muted);">+'+(ids.length-max)+'</span>'; }
+    return '<div class="rh-trail">'+html+'</div>';
+  }
+
+  // Un seul rituel actif par créneau : activer celui-ci met les concurrents en pause.
+  function rhSyncActif(all){
+    (all||[]).forEach(function(r){
+      const b=document.querySelector('.rh-actif[data-rid="'+r.id+'"]');
+      if(b){ b.classList.toggle('on',!!r.actif); const t=b.querySelector('.rh-actif-t'); if(t) t.textContent=r.actif?'Actif':'En pause'; }
+      document.querySelectorAll('.rh-card[data-card="'+r.id+'"]').forEach(function(c){ c.classList.toggle('rh-off',!r.actif); });
+    });
+  }
+  async function rhToggleActif(ev,id){
+    ev.stopPropagation(); ev.preventDefault();
+    const all=window.__rhRituels||window.__allRituels||[];
+    const t=all.find(function(r){ return String(r.id)===String(id); }); if(!t) return;
+    const turnOn=!t.actif;
+    if(navigator.vibrate) navigator.vibrate(8);
+    let off=[];
+    if(turnOn && t.moment!=='hebdo'){
+      const tM=(t.moment==='matin'||t.moment==='both'), tS=(t.moment==='soir'||t.moment==='both');
+      off=all.filter(function(r){ return r.actif && String(r.id)!==String(t.id) && r.moment!=='hebdo' &&
+        ((tM&&(r.moment==='matin'||r.moment==='both'))||(tS&&(r.moment==='soir'||r.moment==='both'))); }).map(function(r){ return r.id; });
+      off.forEach(function(oid){ const o=all.find(function(r){ return r.id===oid; }); if(o) o.actif=false; });
+    }
+    t.actif=turnOn;
+    rhSyncActif(all);
+    try{
+      if(off.length) await sb.from('rituels').update({actif:false}).in('id',off);
+      await sb.from('rituels').update({actif:turnOn}).eq('id',id);
+    }catch(e){ if(typeof showToast==='function') showToast('Oups, réessaie 🌿'); }
+    window.__allRituels=null;
+    if(typeof loadHomeRoutine==='function') loadHomeRoutine();
+    if(typeof showToast==='function') showToast(turnOn?'Rituel activé ✨':'Rituel mis en pause 🌙');
+  }
+
+  function rhCard(r, pmap){
+    const nb=(Array.isArray(r.produits)?r.produits.length:0);
+    const _on=!!(r.rappels&&r.rappels.on);
+    const bell='<button class="rh-bellbtn'+(_on?' on':'')+'" aria-label="Rappel" onclick="rhOpenRappel(event,\''+r.id+'\')">'+(_on?'🔔':'🔕')+'</button>';
+    const tag=(r.moment==='both')?'<span class="rh-tag">Matin & soir</span>':'';
+    const act='<button class="rh-actif'+(r.actif?' on':'')+'" data-rid="'+r.id+'" onclick="rhToggleActif(event,\''+r.id+'\')">'+
+      '<span class="rh-actif-dot"></span><span class="rh-actif-t">'+(r.actif?'Actif':'En pause')+'</span></button>';
+    return '<div class="rh-card'+(r.actif?'':' rh-off')+'" data-card="'+r.id+'" onclick="openRituelChemin(\''+r.id+'\')">'+
+      '<div class="rh-card-head"><div class="rh-name">'+escapeHtml(r.nom||'Mon rituel')+'</div>'+tag+bell+'</div>'+
+      rhTrail(r, pmap)+
+      '<div class="rh-foot"><span>'+nb+' étape'+(nb>1?'s':'')+'</span>'+act+'</div>'+
+      '</div>';
+  }
+
+  async function renderRituelsHub(){
+    const root=document.getElementById('parcours-root');
+    if(!root || !currentUser) return;
+    let rits=[], prods=[];
+    try{
+      const r1=await sb.from('rituels').select('*').eq('user_id',currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+      rits=r1.data||[];
+      const r2=await sb.from('products').select('id,nom,emoji,categorie,photo_path').eq('user_id',currentUser.id);
+      prods=r2.data||[];
+      window.__rhPhotos={};
+      for(const _p of prods){ if(_p.photo_path){ try{ const _u=await signedPhoto(_p.photo_path); if(_u) window.__rhPhotos[_p.id]=_u; }catch(e){} } }
+    }catch(e){
+      // Ne jamais laisser le message "Chargement…" bloqué à l'écran.
+      root.innerHTML='<div class="rh-hero"><div class="rh-hero-t">Mes <em>rituels</em> 🌸</div><div class="rh-hero-s">Oups, on n\'arrive pas à charger tes rituels.</div></div>'+
+        '<div class="rh-newwrap"><button class="rh-new" onclick="renderRituelsHub()">Réessayer</button></div>';
+      return;
+    }
+    const pmap={}; prods.forEach(function(p){ pmap[p.id]=p; });
+    window.__rhRituels=rits;
+    try{
+    const groups={matin:[],soir:[],hebdo:[]};
+    rits.forEach(function(r){ const m=r.moment||'matin'; if(m==='both'){ groups.matin.push(r); groups.soir.push(r); } else if(groups[m]) groups[m].push(r); else groups.matin.push(r); });
+    if(!window.__rhAutoTab){ window.__rhAutoTab=true; if(!(groups[rhActiveTab]&&groups[rhActiveTab].length)){ const _ff=RH_MOMENTS.find(function(mo){ return groups[mo[0]]&&groups[mo[0]].length; }); if(_ff) rhActiveTab=_ff[0]; } }
+
+    let html='<div class="rh-hero"><div class="rh-hero-t">Mes <em>rituels</em> 🌸</div></div>';
+
+    if(!rits.length){
+      const presets=[['grasse','🫧','Peau grasse'],['seche','🏜️','Peau sèche'],['sensible','🌸','Sensible'],['simple','🌿','Ultra-simple']];
+      html+='<div class="rh-quickstart"><div class="rh-quickstart-t">Pas d\'idée ? Pars d\'un rituel tout fait :</div><div class="rh-preset-row">'+
+        presets.map(function(a){ return '<button class="rh-preset" onclick="applyPreset(\''+a[0]+'\')">'+a[1]+' '+a[2]+'</button>'; }).join('')+
+        '</div></div>';
+    }
+
+    let tabs='<div class="rh-tabs">';
+    RH_MOMENTS.forEach(function(mo){ const c=groups[mo[0]].length; tabs+='<button class="rh-tab'+(mo[0]===rhActiveTab?' on':'')+'" onclick="rhGoTab(\''+mo[0]+'\')">'+mo[1]+' '+mo[2]+(c?'<span class="rh-tab-n">'+c+'</span>':'')+'</button>'; });
+    tabs+='</div>';
+    let panes='';
+    RH_MOMENTS.forEach(function(mo){
+      // Le rituel actif d'abord : c'est celui qu'on ouvre le plus souvent.
+      // Tri stable, l'ordre choisi par l'utilisateur est conservé à l'intérieur
+      // de chaque groupe.
+      const list=groups[mo[0]].map(function(r,i){ return {r:r,i:i}; })
+        .sort(function(a,b){
+          const d=(b.r.actif?1:0)-(a.r.actif?1:0);
+          return d!==0?d:a.i-b.i;
+        }).map(function(x){ return x.r; });
+      let inner='';
+      list.forEach(function(r){ inner+=rhCard(r, pmap); });
+
+      panes+='<div class="rh-tabpane" id="rh-pane-'+mo[0]+'" style="display:'+(mo[0]===rhActiveTab?'block':'none')+';">'+inner+'</div>';
+    });
+    root.innerHTML=html + tabs + '<div class="rh-newwrap"><button class="rh-new" onclick="rhNewRituel()">＋ Nouveau rituel</button></div>' + '<div class="rh-panes">'+panes+'</div>';
+    }catch(e){
+      root.innerHTML='<div class="rh-hero"><div class="rh-hero-t">Mes <em>rituels</em> 🌸</div><div class="rh-hero-s">Un souci est survenu.</div></div>'+
+        '<div class="rh-newwrap"><button class="rh-new" onclick="renderRituelsHub()">Réessayer</button></div>';
+    }
+  }
+
+  // ===== Chemin d'un rituel : carte sinueuse de ses étapes =====
+  // ===== Carte de construction d'un rituel =====
+  const CM_PHASES = {
+    nettoyer:{emoji:'🫧',nom:'Nettoyer',cat:'nettoyant'},
+    traiter:{emoji:'🎯',nom:'Traiter',cat:'serum'},
+    hydrater:{emoji:'💧',nom:'Hydrater',cat:'creme'},
+    proteger:{emoji:'☀️',nom:'Protéger',cat:'spf'},
+    masque:{emoji:'🧖‍♀️',nom:'Masque / soin',cat:'masque'}
+  };
+  const CM_SETS = {
+    matin:['nettoyer','traiter','hydrater','proteger'],
+    soir:['nettoyer','traiter','hydrater'],
+    both:['nettoyer','traiter','hydrater','proteger'],
+    hebdo:['nettoyer','masque','hydrater']
+  };
+  // Catégories rangées dans chaque station. « Traiter » regroupe lotion, sérum,
+  // soin ciblé, contour des yeux et masque. La station « masque » ne sert qu'à
+  // la scène peinte du rendez-vous hebdo.
+  const CM_PHASE_CATS = {
+    nettoyer:['demaquillant','nettoyant'],
+    traiter :['toner','serum','cible','yeux','masque'],
+    hydrater:['creme'],
+    proteger:['spf'],
+    masque  :['masque']
+  };
+  // Station d'accueil d'une catégorie pour un créneau donné (selon les stations
+  // réellement présentes). « autre » n'a pas de station fixe : dispo partout.
+  function cmCat2Phase(cat, moment){
+    const set = CM_SETS[moment] || CM_SETS.matin;
+    for(let i=0;i<set.length;i++){ const cats=CM_PHASE_CATS[set[i]]; if(cats && cats.indexOf(cat)>=0) return set[i]; }
+    return null;
+  }
+  let chDraft=null;
+
+  const CM_IMG_W=760, CM_IMG_H=1460;
+  const CM_BLD = {"depart":{"w":126.2,"h":74,"op":0.634,"oc":0.463},"nettoyer":{"w":91.8,"h":80},"equilibrer":{"w":79.7,"h":96},"traiter":{"w":88.7,"h":86},"yeux":{"w":62.7,"h":104},"hydrater":{"w":103.5,"h":88},"proteger":{"w":66.9,"h":110},"masque":{"w":114.9,"h":88},"arrivee":{"w":122.7,"h":94}};
+  const CM_BLD_SCALE = 0.66;
+  function cmBldK(yFrac){ return CM_BLD_SCALE*(0.78+Math.max(0,Math.min(1,yFrac))*0.50); }
+  // Variante clairière : aucune image, juste la zone sensible, le médaillon et le parchemin.
+  function cmPaintHtml(key,cls,medal,lbl,attr){
+    // Panneau posé sur le support du décor (fontaine, ardoise, enseigne…) : le nom est écrit
+    // dessus, un numéro discret + une miniature du produit s'y intègrent, halo et coche gérés
+    // par les états. Activé via la classe 'cm-usepanel' (chemin des scènes peintes).
+    if(/cm-usepanel/.test(cls)){
+      // Un seul composant centré sur la pancarte : numéro + nom + icône (+ coche) dans le flux.
+      return '<div class="cm-node cm-paint cm-panel '+cls+'" data-bld="'+key+'" '+(attr||'')+'>'+
+        '<span class="cm-panel-halo"></span>'+
+        '<span class="cm-panel-num"></span>'+
+        '<div class="cm-panel-in">'+
+          '<span class="cm-panel-name">'+lbl+'</span>'+
+          (medal?'<span class="cm-panel-thumb">'+medal+'</span>':'')+
+          '<span class="cm-panel-check">✓</span>'+
+        '</div></div>';
+    }
+    return '<div class="cm-node cm-paint '+cls+'" data-bld="'+key+'" '+(attr||'')+'>'+
+      (medal?'<span class="cm-medal">'+medal+'</span>':'')+
+      '<div class="cm-tag"><div class="cm-lbl">'+lbl+'</div></div></div>';
+  }
+
+  function cmNodeHtml(key,cls,medal,lbl,sub,attr,extra){
+    return '<div class="cm-node '+cls+'" data-bld="'+key+'" '+(attr||'')+'>'+
+      '<div class="cm-bld"><img src="img/bld/'+key+'.webp" alt="" draggable="false">'+
+      (medal?'<span class="cm-medal">'+medal+'</span>':'')+(extra||'')+'</div>'+
+      '<div class="cm-tag"><div class="cm-lbl">'+lbl+'</div>'+(sub?'<div class="cm-sub">'+sub+'</div>':'')+'</div></div>';
+  }
+  // Demi-largeur peinte du chemin à une profondeur donnée (0 = haut, 1 = bas).
+  function cmPathHalf(yFrac,sw){ return sw*(0.030+0.155*Math.max(0,Math.min(1,yFrac))); }
+
+  // Ruban du chemin échantillonné : sert à tester si un bâtiment mord dessus.
+  function cmRibbon(f,poly){
+    const out=[];
+    for(let i=1;i<poly.length;i++){
+      const a=[f.offX+poly[i-1][0]/100*f.rw, f.offY+poly[i-1][1]/100*f.rh];
+      const b=[f.offX+poly[i][0]/100*f.rw,   f.offY+poly[i][1]/100*f.rh];
+      for(let s=0;s<1;s+=0.25){
+        const x=a[0]+(b[0]-a[0])*s, y=a[1]+(b[1]-a[1])*s;
+        out.push([x,y,cmPathHalf((y-f.offY)/f.rh,f.sw)]);
+      }
+    }
+    return out;
+  }
+  function cmBoxCost(box,rib){
+    let c=0;
+    for(let i=0;i<rib.length;i++){
+      const x=rib[i][0], y=rib[i][1], hw=rib[i][2];
+      if(y<box.y0-hw||y>box.y1+hw) continue;
+      const dx=Math.max(box.x0-x,0,x-box.x1), dy=Math.max(box.y0-y,0,y-box.y1);
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<hw) c+=(hw-d);
+    }
+    return c;
+  }
+  // distance bord à bord entre deux rectangles (0 s'ils se touchent)
+  function cmBoxGap(a,b){
+    const dx=Math.max(0,Math.max(a.x0,b.x0)-Math.min(a.x1,b.x1));
+    const dy=Math.max(0,Math.max(a.y0,b.y0)-Math.min(a.y1,b.y1));
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+  function cmBoxOverlap(a,b){
+    return Math.max(0,Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0))*Math.max(0,Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0));
+  }
+
+  // Place tous les bâtiments : à côté du chemin, sans se marcher dessus, sans sortir du cadre.
+  // Cadrage de la clairière : on couvre la scène, et on zoome juste ce qu'il faut
+  // pour que le bâtiment le plus haut passe sous le titre.
+  function cmFitPaint(scene, def, tpMin){
+    const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return null;
+    const CW=def.w, CH=def.h, yT=def.top/100;
+    // Une clairière est un lieu : mieux vaut un peu de vide en bas, absorbé par le fondu,
+    // que rogner les bâtiments latéraux. On ne perd jamais plus de 12% de la largeur.
+    const k=Math.min(Math.max(sw/CW, sh/CH), 1.14*sw/CW);
+    const rw=CW*k, rh=CH*k;
+    let offY;
+    if(rh>=sh){
+      offY=(sh-rh)/2;
+      if(offY+yT*rh < tpMin) offY = tpMin - yT*rh;
+      offY=Math.max(sh-rh, Math.min(0, offY));
+    } else {
+      offY=Math.min(Math.max(0, tpMin-yT*rh), sh-rh);
+    }
+    return {rw:rw, rh:rh, offX:(sw-rw)/2, offY:offY, sw:sw, sh:sh};
+  }
+
+  // En lecture, le tap ne fait rien : c'est un aperçu. Mais un appui long
+  // ouvre le conseil de l'étape, sans quitter la carte.
+  function cmBindLongPress(scene){
+    if(scene.__lp) return; scene.__lp=true;
+    let timer=null, bouge=false;
+    const start=function(e){
+      const cible=e.target && e.target.closest && e.target.closest('.cm-node.cm-fige');
+      if(!cible) return;
+      const key=cible.dataset.bld;
+      if(!key||!CM_PHASES[key]||!CM_TIPS[key]) return;
+      bouge=false;
+      timer=setTimeout(function(){
+        timer=null; if(bouge) return;
+        if(navigator.vibrate){ try{ navigator.vibrate(12); }catch(_e){} }
+        cmInfo(key, parseInt(cible.dataset.i||'0',10));
+      },480);
+    };
+    const stop=function(){ if(timer){ clearTimeout(timer); timer=null; } };
+    scene.addEventListener('touchstart',start,{passive:true});
+    scene.addEventListener('touchmove',function(){ bouge=true; stop(); },{passive:true});
+    scene.addEventListener('touchend',stop);
+    scene.addEventListener('touchcancel',stop);
+    scene.addEventListener('mousedown',start);
+    scene.addEventListener('mouseup',stop);
+    scene.addEventListener('mouseleave',stop);
+  }
+
+  // ===== Mode calage (dev) : ajoute #calib à l'URL, puis touche un point de la scène.
+  // Affiche les coordonnées image (x%, y%) du tap → pour caler cx,cy de chaque station.
+  let cmCalibOn = /calib/i.test(location.hash);
+  window.addEventListener('hashchange', function(){ cmCalibOn = /calib/i.test(location.hash); });
+  function cmBindCalib(scene){
+    if(!cmCalibOn || scene.__calib) return; scene.__calib=true;
+    scene.addEventListener('click', function(e){
+      const f=scene.__cmf; if(!f) return;
+      const r=scene.getBoundingClientRect();
+      const x=((e.clientX - r.left - f.offX)/f.rw*100);
+      const y=((e.clientY - r.top  - f.offY)/f.rh*100);
+      let box=document.getElementById('cm-calib');
+      if(!box){ box=document.createElement('div'); box.id='cm-calib';
+        box.style.cssText='position:fixed;left:8px;bottom:76px;z-index:99999;background:rgba(0,0,0,0.82);color:#fff;font:600 13px/1.4 monospace;padding:9px 12px;border-radius:9px;max-width:92vw;white-space:pre;pointer-events:none;';
+        document.body.appendChild(box); }
+      box.textContent='CALAGE — dernier tap :\ncx:'+x.toFixed(1)+'  cy:'+y.toFixed(1)+'\n(dis-moi : station + ces valeurs)';
+    }, true);
+  }
+
+  function cmPlacePaint(scene, def, f, topLimit){
+    scene.__cmf=f; // mémorise le calage (rw,rh,offX,offY) pour le mode calage
+    scene.style.backgroundImage="url('"+def.img+"')";
+    scene.style.backgroundSize=f.rw+'px '+f.rh+'px';
+    scene.style.backgroundPosition=f.offX+'px '+f.offY+'px';
+    const nodes=scene.querySelectorAll('.cm-node');
+    for(let i=0;i<nodes.length;i++){
+      const nd=nodes[i], st=def.pos[nd.dataset.bld];
+      if(!st){ nd.style.display='none'; continue; }
+      if(nd.classList.contains('cm-panel')){ cmPlacePanel(nd, st, f); continue; } // panneau posé sur le support
+      const h=st.h/100*f.rh, w=Math.max(h*st.r, 54);
+      const cx=f.offX+st.x/100*f.rw, by=f.offY+st.y/100*f.rh;
+      nd.style.display=''; nd.style.width=Math.round(w)+'px'; nd.style.height=Math.round(Math.max(h,42))+'px';
+      nd.style.left=Math.round(cx)+'px'; nd.style.top=Math.round(by)+'px';
+      nd.style.zIndex=6+Math.round((by/Math.max(1,f.sh))*60);
+      nd.classList.toggle('tag-down', (by-h-34)<topLimit);
+      const tg=nd.querySelector('.cm-tag');
+      if(tg){
+        tg.style.transform='translateX(-50%)';
+        const tw=tg.offsetWidth||0, l=cx-tw/2, r=cx+tw/2;
+        let dx=0;
+        if(l<5) dx=5-l; else if(r>f.sw-5) dx=(f.sw-5)-r;
+        if(dx) tg.style.transform='translateX(calc(-50% + '+Math.round(dx)+'px))';
+      }
+      // Le médaillon déborde du bord de l'écran quand la station est latérale :
+      // on le repousse vers l'intérieur au lieu de le laisser sortir du cadre.
+      const md=nd.querySelector('.cm-medal');
+      if(md){
+        md.style.right=''; md.style.left='';
+        const mw=md.offsetWidth||44;
+        const bordD=cx+w/2+8, bordG=bordD-mw;
+        let off=-8;
+        if(bordD>f.sw-6) off+=(bordD-(f.sw-6));
+        else if(bordG<6) off-=(6-bordG);
+        md.style.right=Math.round(off)+'px';
+      }
+    }
+  }
+
+  // Place un panneau au CENTRE de son support (rect calibré cx,cy,pw,ph + légère rotation).
+  function cmPlacePanel(nd, st, f){
+    const cx=f.offX+st.cx/100*f.rw, cy=f.offY+st.cy/100*f.rh;
+    const w=st.pw/100*f.rw, h=st.ph/100*f.rh;
+    nd.style.display='';
+    nd.style.width=Math.round(w)+'px';
+    nd.style.height=Math.round(h)+'px';
+    nd.style.left=Math.round(cx)+'px';
+    nd.style.top=Math.round(cy)+'px';
+    nd.style.setProperty('--rot',(st.rot||0)+'deg');
+    nd.style.zIndex=6+Math.round((cy/Math.max(1,f.sh))*60);
+    const ne=nd.querySelector('.cm-panel-num'); if(ne) ne.textContent=nd.dataset.i||'';
+    cmFitPanelText(nd);
+  }
+  // Réduit la police du nom jusqu'à ce que le contenu de la pancarte (nom + icône ; le numéro
+  // est désormais AU-DESSUS, hors de la boîte) tienne en hauteur comme en largeur. Le mot
+  // n'est jamais coupé : on rapetisse. Le nom occupe davantage la pancarte qu'avant.
+  function cmFitPanelText(nd){
+    const box=nd.querySelector('.cm-panel-in'), t=nd.querySelector('.cm-panel-name');
+    if(!box||!t) return;
+    const bw=box.clientWidth, bh=box.clientHeight;
+    if(bw<=0||bh<=0) return;
+    let fs=Math.max(8, Math.min(20, Math.round(bh*0.44)));
+    t.style.fontSize=fs+'px';
+    let guard=24;
+    while(guard-- > 0 && (box.scrollHeight>bh+1 || box.scrollWidth>bw+1) && fs>6){ fs-=1; t.style.fontSize=fs+'px'; }
+  }
+
+  function cmPlaceNodes(scene,f,pts,poly,topLim){
+    const rib=cmRibbon(f,poly), sw=f.sw, placed=[], links=[];
+    // aucun bâtiment ne doit passer sous le bloc titre
+    const topLimit=topLim||96;
+    scene.querySelectorAll('.cm-node').forEach(function(nd,i){
+      const p=pts[i]||{x:sw/2,y:f.sh/2};
+      const b=CM_BLD[nd.dataset.bld]||CM_BLD.nettoyer;
+      const yF=(p.y-f.offY)/f.rh, kB=cmBldK(yF), onPath=(nd.dataset.center==='1');
+      let best=null;
+      let scales;
+      if(onPath){
+        // Le portail enjambe le chemin : c'est son entre-poteaux, pas son bord, qui doit
+        // couvrir la largeur du chemin. b.op = ouverture, b.oc = centre de l'ouverture.
+        const hw=cmPathHalf(yF,sw), op=b.op||1;
+        let kw=(2*hw*1.06)/(b.w*op);
+        kw=Math.min(kw,(0.21*f.sh)/b.h,(0.72*sw)/b.w);
+        kw=Math.max(kw,kB);
+        scales=[kw,kw*0.9,kB];
+      } else {
+        scales=[kB,kB*0.88,kB*0.78,kB*0.68,kB*0.58,kB*0.48];
+      }
+      for(let si=0;si<scales.length;si++){
+        const k=scales[si], w=b.w*k, h=b.h*k;
+        const cands=[];
+        if(onPath){ cands.push([p.x-((b.oc||0.5)-0.5)*w,0]); }
+        else {
+          const hw=cmPathHalf(yF,sw), s0=(i%2?1:-1);
+          [s0,-s0].forEach(function(sg){
+            [0,10,22,38,58].forEach(function(ex){
+              [0,10,22].forEach(function(dy){ cands.push([p.x+sg*(hw+w/2+5+ex),dy]); });
+            });
+          });
+        }
+        for(let ci=0;ci<cands.length;ci++){
+          const cx=Math.max(w/2+3,Math.min(sw-w/2-3,cands[ci][0])), by=p.y+cands[ci][1]*k;
+          if(cands[ci][1]>0 && by>f.sh-6) continue;   // ne jamais écarter la position de base
+          const box={x0:cx-w/2+w*0.07,x1:cx+w/2-w*0.07,y0:by-h+h*0.05,y1:by-h*0.05};
+          const obox={x0:box.x0-5,x1:box.x1+5,y0:box.y0-32,y1:box.y1};
+          let cost = onPath ? 0 : cmBoxCost(box,rib)*2.2;
+          if(by-h-32<topLimit) cost += (topLimit-(by-h-32))*40;
+          for(let q=0;q<placed.length;q++){
+            cost += cmBoxOverlap(obox,placed[q])*0.08;
+            cost += Math.max(0, 30-cmBoxGap(box,placed[q]))*1.8;   // les stations ne doivent pas se frôler
+          }
+          cost += Math.abs(cx-cands[ci][0])*0.6 + si*55 + Math.abs(cands[ci][0]-p.x)*0.48 + cands[ci][1]*1.2;
+          if(!best||cost<best.cost) best={cost:cost,cx:cx,by:by,k:k,w:w,h:h,box:obox};
+        }
+      }
+      if(!best) best={cx:p.x,by:p.y,k:kB,w:b.w*kB,h:b.h*kB,box:{x0:p.x,x1:p.x,y0:p.y,y1:p.y}};
+      nd.classList.toggle('tag-down', (best.by-best.h-34)<topLimit);
+      const tg=nd.querySelector('.cm-tag');
+      if(tg){
+        tg.style.transform='translateX(-50%)';
+        const tw=tg.offsetWidth||0, l=best.cx-tw/2, r=best.cx+tw/2;
+        let dx=0;
+        if(l<5) dx=5-l; else if(r>sw-5) dx=(sw-5)-r;
+        if(dx) tg.style.transform='translateX(calc(-50% + '+Math.round(dx)+'px))';
+      }
+      const el=nd.querySelector('.cm-bld');
+      if(el){ el.style.width=best.w+'px'; el.style.height=best.h+'px'; }
+      nd.style.setProperty('--k',best.k.toFixed(3));
+      nd.style.zIndex=6+Math.round((best.by/Math.max(1,f.sh))*60);
+      nd.style.left=best.cx+'px';
+      nd.style.top=(best.by!=null?best.by:p.y)+'px';
+      placed.push(best.box);
+      if(!onPath){
+        const near=cmNearest(rib,best.cx,best.by);
+        if(near){
+          const vx=best.cx-near[0], vy=best.by-near[1], L=Math.hypot(vx,vy)||1;
+          const sx=near[0]+vx/L*near[2]*0.92, sy=near[1]+vy/L*near[2]*0.92;
+          const ex=best.cx, ey=best.by-2;
+          const mx=(sx+ex)/2+(sy-ey)*0.10, my=(sy+ey)/2+(ex-sx)*0.10;
+          links.push('M'+sx.toFixed(1)+' '+sy.toFixed(1)+'Q'+mx.toFixed(1)+' '+my.toFixed(1)+' '+ex.toFixed(1)+' '+ey.toFixed(1));
+        }
+      }
+    });
+    const svg=scene.querySelector('.cm-links');
+    if(svg){
+      svg.setAttribute('viewBox','0 0 '+f.sw+' '+f.sh);
+      svg.setAttribute('width',f.sw); svg.setAttribute('height',f.sh);
+      const d=links.join(' ');
+      svg.innerHTML='<path class="lk-base" stroke-width="11" d="'+d+'"></path><path class="lk-top" stroke-width="5" d="'+d+'"></path>';
+    }
+  }
+
+  // point du ruban le plus proche d'un bâtiment : [x, y, demi-largeur]
+  function cmNearest(rib,x,y){
+    let best=null, bd=1e12;
+    for(let i=0;i<rib.length;i++){
+      const dx=rib[i][0]-x, dy=rib[i][1]-y, d=dx*dx+dy*dy;
+      if(d<bd){ bd=d; best=rib[i]; }
+    }
+    return best;
+  }
+  const CM_ANCHORS = {
+    matin:[[37.63,95.45],[43.04,76],[66.2,63],[31.38,50],[41.19,37],[57.25,20]],
+    soir:[[27.12,95.45],[54.26,76],[46.16,65],[54.97,54],[39.77,43],[58.1,32],[45.88,20]],
+    hebdo:[[59.1,95.45],[44.17,74],[64.78,57],[63.93,40],[56.11,20]]
+  };
+
+
+
+
+  const CM_THEME = {
+    matin:{img:'img/chemin-matin.jpg',ink:'#3A2418',scrim:'rgba(255,244,228,0.88)',glow:'rgba(255,246,228,0.95)'},
+    soir: {img:'img/jardin-soir.jpg', ink:'#FCEDDC',scrim:'rgba(48,28,58,0.62)',  glow:'rgba(48,28,58,0.9)'},
+    hebdo:{img:'img/chemin-hebdo.jpg',ink:'#33402F',scrim:'rgba(246,246,234,0.9)',glow:'rgba(246,246,234,0.95)'}
+  };
+  function cmTheme(m){ return CM_THEME[m]||CM_THEME.matin; }
+
+  // ===== Effets produit : liste fermée + saisie libre =====
+  const PF_EFFETS=["Hydrate", "Nourrit", "Apaise", "Répare", "Purifie", "Matifie", "Exfolie", "Démaquille", "Illumine", "Unifie le teint", "Anti-imperfections", "Anti-âge", "Anti-rougeurs", "Anti-taches", "Anti-cernes", "Raffermit", "Resserre les pores", "Protège du soleil"];
+  // Effets d'un produit : sélection multiple par pastilles, stockée dans « effets »
+  // sous la forme « Hydrate · Apaise ». Un effet personnalisé peut être ajouté.
+  let pfEffSel=[];        // effets choisis, dans l'ordre
+  let pfEffKnown=[];      // liste affichée au dernier rendu (index -> libellé)
+  function pfEffKey(s){ return (s||'').trim().toLowerCase(); }
+  function pfEffetsRender(){
+    const wrap=document.getElementById('pf-effets-chips'); if(!wrap) return;
+    pfEffKnown=PF_EFFETS.slice();
+    pfEffSel.forEach(function(e){ if(!pfEffKnown.some(function(k){ return pfEffKey(k)===pfEffKey(e); })) pfEffKnown.push(e); });
+    wrap.innerHTML=pfEffKnown.map(function(e,i){
+      const on=pfEffSel.some(function(s){ return pfEffKey(s)===pfEffKey(e); });
+      return '<button type="button" class="rj-chip pf-eff'+(on?' selected':'')+'" onclick="pfEffToggle('+i+',this)">'+escapeHtml(e)+'</button>';
+    }).join('');
+  }
+  function pfEffToggle(i,el){
+    const e=pfEffKnown[i]; if(e==null) return;
+    const k=pfEffKey(e), idx=pfEffSel.findIndex(function(s){ return pfEffKey(s)===k; });
+    if(idx>=0){ pfEffSel.splice(idx,1); if(el) el.classList.remove('selected'); }
+    else { pfEffSel.push(e); if(el) el.classList.add('selected'); }
+  }
+  function pfEffAddCustom(){
+    const inp=document.getElementById('pf-effets'); if(!inp) return;
+    const v=(inp.value||'').trim(); if(!v) return;
+    if(!pfEffSel.some(function(s){ return pfEffKey(s)===pfEffKey(v); })) pfEffSel.push(v);
+    inp.value=''; pfEffetsRender();
+  }
+  function pfEffKeydown(ev){ if(ev && ev.key==='Enter'){ ev.preventDefault(); pfEffAddCustom(); } }
+  function pfEffetsGet(){ return pfEffSel.join(' · '); }
+  function pfEffetsSet(v){
+    pfEffSel=[];
+    (v||'').split(/\s*·\s*|\s*,\s*/).forEach(function(part){ const t=part.trim(); if(t) pfEffSel.push(t); });
+    pfEffetsRender();
+  }
+  function cmAnchors(m){ return CM_ANCHORS[m]||CM_ANCHORS.matin; }
+  function cmMomentMeta(m){
+    if(m==='soir') return {k:'Ton rituel · Soir',ph:'Rituel du soir',start:'🌙'};
+    if(m==='hebdo') return {k:'Ton rituel · Semaine',ph:'Soins de la semaine',start:'🧖‍♀️'};
+    return {k:'Ton rituel · Matin',ph:'Rituel du matin',start:'🌱'};
+  }
+  // Icône du header, propre à chaque moment. Soir : croissant de lune + étoile, ton ivoire
+  // chaud (l'instant où l'on clôt sa journée). Matin/hebdo : soleil levant doré (nouveau départ).
+  function cmMomentIcon(moment){
+    if(moment==='soir'){
+      return '<div class="cm-sun" aria-hidden="true"><svg viewBox="0 0 44 26" fill="none">'+
+        '<path d="M23 4.4a9.6 9.6 0 1 0 0 17.2 7.5 7.5 0 0 1 0-17.2z" fill="#F3E4C4"/>'+
+        '<path d="M32 4.6l.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8z" fill="#F7EDD6"/>'+
+        '</svg></div>';
+    }
+    if(moment==='hebdo'){
+      // Fleur de lotus : soin profond, spa, moment pour soi — l'esprit du rituel hebdo.
+      return '<div class="cm-sun cm-sun-emoji" aria-hidden="true">🪷</div>';
+    }
+    return '<div class="cm-sun" aria-hidden="true"><svg viewBox="0 0 44 26" fill="none">'+
+      '<g stroke="#F4C95D" stroke-width="1.8" stroke-linecap="round">'+
+        '<path d="M22 3.2v3.4"/><path d="M11.4 7.4l2.1 2.1"/><path d="M32.6 7.4l-2.1 2.1"/><path d="M4.4 17h3.1"/><path d="M36.5 17h3.1"/>'+
+      '</g>'+
+      '<path d="M13 17.6a9 9 0 0 1 18 0z" fill="#F4C95D"/>'+
+      '<path d="M6.5 17.6h31" stroke="#F4C95D" stroke-width="1.8" stroke-linecap="round"/>'+
+      '</svg></div>';
+  }
+  // Pourquoi cette étape + le mot de Léa, affichés dans la fiche de station.
+  const CM_TIPS = {
+    nettoyer:{q:"Le nettoyant retire le sébum et les résidus sans décaper ta barrière cutanée. Le soir, si tu portes du SPF ou du maquillage, passe d'abord une huile ou un baume : l'eau seule ne les dissout pas.",
+              t:"Masse l'huile à sec 30 secondes avant d'ajouter l'eau, puis enchaîne avec ton nettoyant. Eau tiède, jamais chaude, 30 secondes suffisent."},
+    equilibrer:{q:"La lotion réhydrate juste après le nettoyage et prépare la peau à absorber la suite.",
+              t:"Applique-la sur peau encore humide, à la main : elle retient l'eau au lieu de l'évaporer."},
+    traiter:{q:"Le sérum est la formule la plus concentrée du rituel, celle qui cible vraiment ton besoin.",
+              t:"Une seule nouveauté à la fois, pendant deux semaines. Sinon tu ne sauras jamais ce qui marche."},
+    yeux:{q:"La peau du contour est très fine et bouge en permanence : elle marque avant le reste du visage.",
+              t:"Tapote avec l'annulaire, sur l'os autour de l'œil, jamais au ras des cils."},
+    hydrater:{q:"La crème scelle tout ce que tu viens d'appliquer et limite la perte en eau pendant la nuit.",
+              t:"Couche fine mais partout, cou compris. C'est souvent lui qu'on oublie."},
+    proteger:{q:"Le SPF est le geste anti-âge le plus efficace du rituel, même quand le ciel est couvert.",
+              t:"Deux doigts de produit pour le visage et le cou. On renouvelle si tu restes dehors longtemps."},
+    masque:{q:"Le masque est un coup de pouce ponctuel, pas un soin quotidien : il agit fort et vite.",
+              t:"Une à deux fois par semaine maximum, et jamais sur une peau irritée ou qui pèle."}
+  };
+  function cmTipHtml(key){
+    const t=CM_TIPS[key]; if(!t) return '';
+    return '<div class="cm-tip"><div class="cm-tip-q">'+t.q+'</div>'+
+      '<div class="cm-tip-l"><span>🌸</span><div><b>Léa</b> — '+t.t+'</div></div></div>';
+  }
+
+  function cmProductsForPhase(key){ const cats=CM_PHASE_CATS[key]||[]; return (window.__cmProds||[]).filter(function(p){ return cats.indexOf(p.categorie)>=0 || p.categorie==='autre'; }); }
+
+  // Charge les produits de l'utilisateur en mémoire (__cmProds + photos signées).
+  // INDISPENSABLE avant cmComputeFilled : sans ça, aucune station ne retrouve son produit.
+  async function cmLoadProducts(){
+    if(!currentUser){ window.__cmProds=window.__cmProds||[]; return; }
+    let prods=[];
+    try{ const r=await sb.from('products').select('id,nom,emoji,categorie,photo_path,effets,prix').eq('user_id',currentUser.id); prods=r.data||[]; }catch(e){}
+    window.__cmPhotos=window.__cmPhotos||{};
+    for(const _p of prods){ if(_p.photo_path && !window.__cmPhotos[_p.id]){ try{ const _u=await signedPhoto(_p.photo_path); if(_u) window.__cmPhotos[_p.id]=_u; }catch(e){} } }
+    window.__cmProds=prods; window.__allProducts=prods;
+  }
+
+  async function openRituelChemin(id, presetMoment, mode){
+   try{
+    const el=document.getElementById('rituel-chemin');
+    if(!el) throw new Error('conteneur #rituel-chemin absent');
+    if(!currentUser) throw new Error('pas connecte (currentUser null)');
+    await cmLoadProducts();
+    let r=null;
+    if(id){ try{ const rr=await sb.from('rituels').select('*').eq('id',id); r=(rr.data&&rr.data[0])||null; }catch(e){} }
+    const moment=r?(r.moment||'matin'):(presetMoment||'matin');
+    try{ (new Image()).src=cmTheme(moment).img; }catch(e){}
+    chDraft={ id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:cmComputeFilled(r,moment), mode:(mode||(r?'view':'edit')) };
+    window.__cmFireflyPlayed=false;   // nouvelle ouverture d'édition → la luciole peut reguider
+    cmRender();
+    el.scrollTop=0; el.classList.add('show'); document.body.style.overflow='hidden';
+    cmNavTuck(false); cmNavGlass(true);
+   }catch(_e){ if(window.console)console.error('carte rituel:',_e); if(typeof showToast==='function') showToast('Oups, la carte n\'a pas pu s\'ouvrir'); }
+  }
+
+  // Calcule quel produit occupe chaque étape du chemin, à partir des données déjà en mémoire
+  // (pmap = window.__cmProds) : réutilisé pour l'ouverture initiale et pour le swipe instantané.
+  function cmComputeFilled(r, moment){
+    const pmap={}; (window.__cmProds||[]).forEach(function(p){ pmap[p.id]=p; });
+    const set=CM_SETS[moment]||CM_SETS.matin;
+    const filled={};
+    if(r && Array.isArray(r.produits)){
+      r.produits.forEach(function(pid){ const p=pmap[pid]; if(!p) return; let ph=cmCat2Phase(p.categorie,moment); if(!ph || filled[ph]){ ph=set.find(function(k){ return !filled[k]; }); } if(ph && set.indexOf(ph)>=0 && !filled[ph]) filled[ph]=pid; });
+    }
+    return filled;
+  }
+
+  // Construit un "draft" de rituel pour un créneau à partir du cache mémoire (aucune requête réseau).
+  // Si aucun rituel actif pour la période, on retombe sur le premier rituel existant de cette
+  // période (même en pause) : le panneau et le décor montrent toujours un rituel réel plutôt
+  // qu'un écran vide. Seul un créneau sans aucun rituel ouvre le mode création.
+  function cmDraftFor(moment){
+    const rits=window.__allRituels||[];
+    let r = moment==='hebdo' ? (rits.find(function(x){ return x.moment==='hebdo' && x.actif; })||null) : pickActive(rits)[moment];
+    if(!r){ const g=cmGroups(); r=(g[moment]&&g[moment][0])||null; }
+    return { id:r?r.id:null, nom:r?(r.nom||''):'', moment:moment, rappels:r?r.rappels:null, filled:cmComputeFilled(r,moment), mode:(r?'view':'edit') };
+  }
+  // Affiche un rituel/créneau instantanément depuis le cache mémoire (aucune requête réseau).
+  // Utilisé à l'entrée dans l'onglet Rituel (si déjà chargé cette session) et pendant le swipe.
+  function cmShowSlot(moment){
+    chDraft=cmDraftFor(moment);
+    cmRender();
+  }
+
+  // Ouvre l'overlay du rituel sans délai perceptible : contenu en cache = instantané,
+  // sinon un léger fondu (déjà géré par .cm-overlay) le temps du premier chargement.
+  function cmEnterRitual(){
+    const el=document.getElementById('rituel-chemin'); if(!el) return;
+    el.classList.add('show');
+    document.body.style.overflow='hidden';
+    cmNavTuck(false); cmNavGlass(true); // footer en verre dépoli, posé sur le décor
+    // On n'affiche le chemin que lorsque rituels ET produits sont en mémoire, sinon
+    // cmComputeFilled renverrait des stations vides (produits pas chargés).
+    if(window.__allRituels && window.__cmProds){ cmShowSlot(rpSlotView); return; }
+    el.innerHTML='<div class="cm-loading"><span>🌸</span></div>';
+    (async function(){
+      if(!window.__allRituels && typeof loadRituels==='function') await loadRituels();
+      if(!window.__cmProds) await cmLoadProducts();
+      if(el.classList.contains('show')) cmShowSlot(rpSlotView);
+    })();
+  }
+
+  // Construit le HTML complet d'un volet (scène + stations + tête). Utilisé pour le volet
+  // central (interactif) et pour les volets voisins (prev/next), collés dessus pendant le swipe.
+  function cmSceneHtml(d){
+    const moment=d.moment, meta=cmMomentMeta(moment), th=cmTheme(moment);
+    const set=CM_SETS[moment]||CM_SETS.matin;
+    const pmap={}; (window.__cmProds||[]).forEach(function(p){ pmap[p.id]=p; });
+    const isEdit=(d.mode==='edit');
+
+    const paint=!!CM_PAINT[moment];
+    // Scènes peintes avec supports calibrés (panels:true) → les stations sont des panneaux
+    // posés sur le décor, plus des médaillons flottants.
+    const pcls=(CM_PAINT[moment]&&CM_PAINT[moment].panels)?' cm-usepanel':'';
+    let nodes = paint ? '' : cmNodeHtml('depart','cm-muted','','Départ','','data-center="1"');
+    set.forEach(function(key,i){
+      const ph=CM_PHASES[key], idx=i+1, pid=d.filled[key], p=pid?pmap[pid]:null;
+      if(p){
+        const url=(window.__cmPhotos||{})[pid];
+        const medal=url?'<img src="'+url+'" alt="">':(p.emoji||'🧴');
+        // La station porte toujours son nom (Nettoyer, Traiter…). En édition, le
+        // tap ouvre le carrousel ; en aperçu, il ouvre la fiche du produit rangé.
+        const act='data-i="'+idx+'"'+(isEdit?' onclick="cmOpenCarousel(\''+key+'\','+idx+')"':' onclick="cmShowStation(\''+key+'\',\''+pid+'\')"');
+        const lbl=ph.nom;
+        nodes+=(paint?cmPaintHtml(key,(isEdit?'':'cm-fige')+pcls,medal,lbl,act):cmNodeHtml(key,(isEdit?'':'cm-fige'),medal,lbl,'',act));
+      } else if(isEdit){
+        nodes+=(paint?cmPaintHtml(key,'cm-empty'+pcls,'+',ph.nom,'data-i="'+idx+'" onclick="cmOpenCarousel(\''+key+'\','+idx+')"')
+                     :cmNodeHtml(key,'cm-empty','+',ph.nom,'','data-i="'+idx+'" onclick="cmOpenCarousel(\''+key+'\','+idx+')"'));
+      } else {
+        // Aperçu, station vide : le tap ouvre quand même une carte (fiche de l'étape en lecture seule).
+        nodes+=(paint?cmPaintHtml(key,'cm-empty cm-fige'+pcls,ph.emoji,ph.nom,'data-i="'+idx+'" onclick="cmInfo(\''+key+'\','+idx+')"')
+                     :cmNodeHtml(key,'cm-empty cm-fige',ph.emoji,ph.nom,'','data-i="'+idx+'" onclick="cmInfo(\''+key+'\','+idx+')"'));
+      }
+    });
+    if(!paint) nodes+=cmNodeHtml('arrivee','cm-muted','','Objectif','');
+
+    const title=escapeHtml(d.nom||meta.ph);
+    const nOk=set.filter(function(k){ return d.filled[k]; }).length;
+    const count='<div class="cm-count">'+nOk+' étape'+(nOk>1?'s':'')+' sur '+set.length+'</div>';
+    const tools='<button class="cm-tool cm-tool-flower" title="Rituels" aria-label="Ouvrir mes rituels" onclick="cmTogglePanel()">'+
+      '<svg class="cm-flower" viewBox="0 0 40 40" fill="none" aria-hidden="true">'+
+        '<g class="cm-flower-petals" fill="rgba(255,255,255,0.95)">'+
+          '<ellipse cx="20" cy="9.4" rx="4.6" ry="8.5"/>'+
+          '<ellipse cx="20" cy="9.4" rx="4.6" ry="8.5" transform="rotate(72 20 20)"/>'+
+          '<ellipse cx="20" cy="9.4" rx="4.6" ry="8.5" transform="rotate(144 20 20)"/>'+
+          '<ellipse cx="20" cy="9.4" rx="4.6" ry="8.5" transform="rotate(216 20 20)"/>'+
+          '<ellipse cx="20" cy="9.4" rx="4.6" ry="8.5" transform="rotate(288 20 20)"/>'+
+        '</g>'+
+        '<circle class="cm-flower-core" cx="20" cy="20" r="4" fill="#F6DFA0"/>'+
+      '</svg></button>';
+    // Icône du moment : soleil levant (matin/hebdo) ou croissant de lune (soir).
+    const sun=cmMomentIcon(moment);
+    // Un seul titre = le nom du rituel (modifiable). Aucun sous-titre ni texte en double.
+    const head=isEdit
+      ? '<div class="cm-head">'+sun+'<div class="cm-title" onclick="cmRename()">'+title+'<span class="cm-title-pen">✎</span></div>'+count+'</div>'
+      : '<div class="cm-head">'+sun+'<div class="cm-title">'+title+'</div></div>';
+
+    // Édition : plus de flèche « ‹ » (ambiguë) — un vrai bouton « Enregistrer » qui termine l'édition.
+    const saveBtn = isEdit ? '<button class="cm-save" onclick="cmFinishEdit()">✓ Enregistrer mon rituel</button>' : '';
+    // Aide de découverte : visible tant qu'aucun produit n'est posé (et jamais écartée).
+    const hint = cmGuideActive(d) ? '<div class="cm-hint"><span class="cm-hint-ic">👆</span>Touchez une pancarte pour ajouter un produit</div>' : '';
+    return '<div class="cm-scene'+(moment==='soir'?' cm-soir':'')+'" data-moment="'+moment+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
+        '<div class="cm-tools">'+tools+'</div>'+head+'<div class="cm-build">'+CM_BUILD+'</div>'+'<svg class="cm-links" preserveAspectRatio="none"></svg>'+nodes+hint+saveBtn+
+      '</div>';
+  }
+
+  // Trois calques superposés : le courant au centre, ses deux voisins hors champ.
+  // Le swipe (cmBindSwipe) les anime en fondu + parallaxe pour une transition continue.
+  function cmRender(){
+    const el=document.getElementById('rituel-chemin'); if(!el||!chDraft) return;
+    const i=CM_ORDER.indexOf(chDraft.moment);
+    const prevD=cmDraftFor(CM_ORDER[(i+CM_ORDER.length-1)%CM_ORDER.length]);
+    const nextD=cmDraftFor(CM_ORDER[(i+1)%CM_ORDER.length]);
+    el.innerHTML='<div class="cm-wrap"><div class="cm-stage" id="cm-stage">'+
+        '<div class="cm-layer cm-side" data-role="prev">'+cmSceneHtml(prevD)+'</div>'+
+        '<div class="cm-layer cm-cur" data-role="cur">'+cmSceneHtml(chDraft)+'</div>'+
+        '<div class="cm-layer cm-side" data-role="next">'+cmSceneHtml(nextD)+'</div>'+
+      '</div></div>';
+    cmLayout();
+  }
+
+  // Cale l'illustration dans la zone dispo et renvoie la géométrie de rendu.
+  function cmFitScene(scene, yTopPct, yBotPct, tpMin){
+    const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return null;
+    const stretch=(sw/sh)/(CM_IMG_W/CM_IMG_H);
+    const yTopFull=Math.min(yTopPct,yBotPct)/100*sh;
+    let rw,rh,offX,offY;
+    if(stretch>=0.87 && stretch<=1.14&& yTopFull>=(tpMin||0)*0.92){
+      rw=sw; rh=sh; offX=0; offY=0;
+      scene.classList.toggle('cm-compact', sh<780);
+      scene.style.backgroundSize='100% 100%';
+    } else {
+      let k=Math.max(sw/CM_IMG_W, sh/CM_IMG_H);
+      // Sans jeu vertical on ne peut pas descendre le chemin sous le titre : on zoome juste ce qu'il faut.
+      const yTf=Math.min(yTopPct,yBotPct)/100;
+      if(tpMin && yTf>0.02){
+        const kNeed=(tpMin/yTf)/CM_IMG_H;
+        k=Math.min(Math.max(k,kNeed), 1.6*sw/CM_IMG_W);
+      }
+      rw=CM_IMG_W*k; rh=CM_IMG_H*k; offX=(sw-rw)/2;
+      const yT=Math.min(yTopPct,yBotPct)/100*rh, yB=Math.max(yTopPct,yBotPct)/100*rh;
+      const compact=((yB-yT)+196>sh)||sh<780; scene.classList.toggle('cm-compact', compact);
+      const tp=Math.max(compact?96:142, tpMin||0), bp=compact?42:58;
+      if((yB-yT)+tp+bp<=sh){
+        offY=(sh-rh)/2;
+        if(offY+yT<tp) offY=tp-yT;
+        if(offY+yB>sh-bp) offY=sh-bp-yB;
+      } else { offY=tp-yT; }   // place trop juste : on protège le titre, le bas déborde un peu
+      offY=Math.max(sh-rh, Math.min(0, offY));
+      scene.style.backgroundSize=rw+'px '+rh+'px';
+    }
+    scene.style.backgroundPosition=offX+'px '+offY+'px';
+    return {rw:rw,rh:rh,offX:offX,offY:offY,sw:sw,sh:sh};
+  }
+
+  function cmHeadBottom(scene){ const h=scene.querySelector('.cm-head'); return (h?(h.offsetTop+h.offsetHeight):76)+10; }
+
+  // Positionne les stations d'un volet donné (utilisé pour les 3 volets de la piste).
+  function cmLayoutScene(scene, moment){
+    const sw=scene.clientWidth, sh=scene.clientHeight; if(!sw||!sh) return;
+    const tl=cmHeadBottom(scene);
+    const def=CM_PAINT[moment];
+    if(def){
+      const fp=cmFitPaint(scene, def, tl+58); if(fp) cmPlacePaint(scene, def, fp, tl);
+      return;
+    }
+    const A=cmAnchors(moment);
+    const f=cmFitScene(scene, A[0][1], A[A.length-1][1], tl+58); if(!f) return;
+    const rw=f.rw, rh=f.rh, offX=f.offX, offY=f.offY;
+    cmPlaceNodes(scene,f,A.map(function(a){ return {x:offX+a[0]/100*rw, y:offY+a[1]/100*rh}; }),VY_POLY[moment]||VY_POLY.matin,tl);
+  }
+  function cmLayout(){
+    const stage=document.getElementById('cm-stage'); if(!stage||!chDraft) return;
+    cmBindSwipe(stage);
+    stage.querySelectorAll('.cm-layer').forEach(function(layer){
+      const scene=layer.querySelector('.cm-scene'); if(scene) cmLayoutScene(scene, scene.dataset.moment);
+    });
+    const cur=stage.querySelector('.cm-cur .cm-scene'); if(cur){ cmBindLongPress(cur); cmBindCalib(cur); } // seul le calque courant réagit à l'appui long
+    cmMaybeGuide();
+  }
+
+  // ===== Guidage discret à la création : luciole qui vole vers la 1re pancarte vide =====
+  function cmDraftHasProduct(d){ if(!d||!d.filled) return false; const set=CM_SETS[d.moment]||CM_SETS.matin; return set.some(function(k){ return d.filled[k]; }); }
+  // Vrai si on doit guider : on édite un rituel encore vide (aucun produit posé). Le guidage
+  // (aide + luciole) réapparaît donc à chaque nouvelle création vide, et disparaît dès le 1er
+  // produit. La luciole, elle, ne se lance qu'une fois par ouverture d'édition (flag réinitialisé
+  // dans openRituelChemin / cmSetMode).
+  function cmGuideActive(d){ return !!(d && d.mode==='edit' && !cmDraftHasProduct(d)); }
+  // Lâche une luciole (une fois par ouverture d'édition) qui rejoint la 1re pancarte vide.
+  function cmMaybeGuide(){
+    if(window.__cmFireflyPlayed) return;
+    if(!cmGuideActive(chDraft)) return;
+    // La luciole repose sur offset-path (motion path). Sans support, on s'abstient plutôt que de
+    // poser un point figé : l'aide texte + les cibles « + » animées guident déjà.
+    const okPath = !!(window.CSS && CSS.supports && (CSS.supports('offset-path',"path('M0,0 L1,1')") || CSS.supports('-webkit-offset-path',"path('M0,0 L1,1')")));
+    if(!okPath){ window.__cmFireflyPlayed=true; return; }
+    const scene=document.querySelector('#rituel-chemin .cm-cur .cm-scene'); if(!scene) return;
+    if(scene.querySelector('.cm-firefly')) return;
+    const empty=scene.querySelector('.cm-node.cm-empty'); if(!empty) return;
+    const sr=scene.getBoundingClientRect(), er=empty.getBoundingClientRect();
+    if(!sr.width || !er.width) return;   // pas encore mesurable : on réessaiera au prochain layout
+    const ex=(er.left-sr.left)+er.width/2, ey=(er.top-sr.top)+er.height/2;
+    const sw=scene.clientWidth||sr.width, sh=scene.clientHeight||sr.height;
+    // Départ près du chemin (bas-centre) → courbe de Bézier douce qui s'élève, rejoint la pancarte,
+    // en fait tranquillement le tour, puis se pose au centre. Le tout parcouru d'un seul tenant.
+    const sx=sw*0.5, sy=sh*0.85, dx=ex-sx, dy=ey-sy;
+    const entryX=ex+40, entryY=ey+34;                              // on arrive par le bas-droite de la pancarte
+    const ac1x=sx-30, ac1y=sy-Math.min(170, sh*0.24);             // décollage vers le haut
+    const ac2x=sx+dx*0.55, ac2y=sy+dy*0.35-30;                    // grand balayage vers la pancarte
+    const r=34;
+    const f=function(n){ return Math.round(n*10)/10; };
+    const d='M '+f(sx)+' '+f(sy)+
+      ' C '+f(ac1x)+' '+f(ac1y)+', '+f(ac2x)+' '+f(ac2y)+', '+f(entryX)+' '+f(entryY)+
+      ' C '+f(ex+r+6)+' '+f(ey+10)+', '+f(ex+r-2)+' '+f(ey-r+4)+', '+f(ex)+' '+f(ey-r)+          // tour : entrée → haut
+      ' C '+f(ex-r)+' '+f(ey-r+6)+', '+f(ex-r-2)+' '+f(ey+r-10)+', '+f(ex-r*0.4)+' '+f(ey+r*0.6)+ // haut → bas-gauche
+      ' C '+f(ex+r*0.2)+' '+f(ey+r*0.9)+', '+f(ex+8)+' '+f(ey+6)+', '+f(ex)+' '+f(ey);            // spirale → centre
+    const fly=document.createElement('div'); fly.className='cm-firefly';
+    fly.style.offsetPath="path('"+d+"')";
+    fly.style.webkitOffsetPath="path('"+d+"')";
+    fly.innerHTML='<span class="cm-firefly-dot"></span>';
+    fly.addEventListener('animationend', function(e){ if(e.animationName==='cmFireflyMove') fly.remove(); });
+    scene.appendChild(fly);
+    window.__cmFireflyPlayed=true;   // une luciole par ouverture d'édition ; le texte d'aide, lui, reste tant que vide
+  }
+
+  // ===================== VOYAGE DU JOUR =====================
+  // Scènes peintes : les bâtiments font partie du décor, le code ne pose que
+  // les zones sensibles. Positions relevées au calibrage, en % de l'image.
+  // x = centre, y = base au sol, h = hauteur, r = largeur / hauteur.
+  const CM_BUILD = 'b31';
+
+  const CM_PAINT = {
+    matin:{ img:'img/jardin-matin.jpg', w:853, h:1844, top:22, panels:true, pos:{
+      // x,y,h,r = médaillon (utilisé par le Voyage) ; cx,cy,pw,ph,rot = panneau posé sur le support (Chemin).
+      depart  :{x:40, y:93, h:21.78, r:1.30},
+      nettoyer:{x:20, y:64, h:13.85, r:1.50, cx:15.4, cy:43.0, pw:15,   ph:5.2, rot:0},   // 1 → Nettoyer
+      traiter :{x:73, y:65, h:18.31, r:1.40, cx:87.7, cy:64.6, pw:12.5, ph:7.5, rot:0},   // 2 → Traiter
+      hydrater:{x:30, y:35, h:11.97, r:1.50, cx:28.7, cy:30.3, pw:13.5, ph:4.6, rot:0},   // 3 → Hydrater
+      proteger:{x:72, y:37, h:12.87, r:1.60, cx:77.3, cy:22.8, pw:17,   ph:5,   rot:0},   // 4 → Protéger
+      arrivee :{x:52, y:22, h:3.17,  r:1.60}
+    }},
+    soir:{ img:'img/jardin-soir.jpg', w:853, h:1844, top:22, panels:true, pos:{
+      // Même jardin (de nuit) que le matin → mêmes emplacements produits.
+      nettoyer:{x:20, y:64, h:13.85, r:1.50, cx:15.4, cy:43.0, pw:15,   ph:5.2, rot:0},   // 1 → Nettoyer
+      traiter :{x:73, y:65, h:18.31, r:1.40, cx:87.7, cy:64.6, pw:12.5, ph:7.5, rot:0},   // 2 → Traiter
+      hydrater:{x:30, y:35, h:11.97, r:1.50, cx:28.7, cy:30.3, pw:13.5, ph:4.6, rot:0}    // 3 → Hydrater
+    }},
+    hebdo:{ img:'img/clairiere.jpg', w:853, h:1844, top:22, panels:true, pos:{
+      // cx,cy = centre du médaillon produit (calibré). pw/ph = zone cliquable.
+      nettoyer:{x:12, y:72, h:13, r:1.4, cx:13.3, cy:72.8, pw:15, ph:8, rot:0},   // 1 → Nettoyer
+      masque  :{x:80, y:70, h:13, r:1.4, cx:82.3, cy:69.7, pw:15, ph:8, rot:0},   // 2 → Masque & Soins
+      hydrater:{x:51, y:52, h:13, r:1.4, cx:54.8, cy:50.4, pw:14, ph:8, rot:0}    // 3 → Hydrater
+    }}
+  };
+
+
+  const VY_POLY = {"matin":[[47.4,95.5],[49.0,93.4],[50.4,91.3],[50.4,89.2],[49.8,87.1],[48.5,85.0],[47.9,82.9],[48.7,80.8],[49.3,78.7],[50.2,76.6],[50.7,74.5],[48.5,72.4],[48.6,70.3],[53.7,68.2],[54.5,66.1],[49.7,64.0],[45.9,61.9],[45.0,59.8],[46.7,57.7],[50.0,55.6],[53.2,53.5],[53.9,51.4],[52.0,49.3],[49.6,47.2],[47.2,45.1],[45.6,43.0],[46.6,40.9],[50.1,38.8],[54.2,36.7],[55.9,34.6],[54.3,32.5],[53.2,30.4],[54.2,28.3],[56.4,26.2]],"soir":[[26.7,95.5],[31.4,93.2],[31.5,90.9],[31.4,88.6],[33.2,86.3],[35.1,84.0],[38.5,81.7],[47.6,79.5],[57.1,77.2],[62.0,74.9],[65.5,72.6],[65.7,70.3],[60.1,68.0],[52.1,65.7],[44.1,63.4],[36.4,61.2],[32.7,58.9],[40.2,56.6],[54.8,54.3],[64.2,52.0],[62.5,49.7],[51.4,47.4],[41.4,45.1],[42.4,42.9],[51.4,40.6],[54.5,38.3],[48.2,36.0],[46.7,33.7],[51.5,31.4],[53.4,29.1],[53.8,26.9],[54.7,24.6],[52.7,22.3],[45.9,20.0]],"hebdo":[[59.2,95.5],[56.9,93.2],[52.4,90.9],[50.4,88.6],[47.0,86.3],[41.4,84.0],[39.2,81.7],[39.3,79.5],[40.7,77.2],[45.4,74.9],[52.4,72.6],[59.0,70.3],[64.4,68.0],[68.3,65.7],[69.0,63.4],[66.8,61.2],[64.1,58.9],[59.9,56.6],[50.3,54.3],[39.1,52.0],[33.0,49.7],[33.6,47.4],[38.7,45.1],[47.7,42.9],[60.2,40.6],[70.5,38.3],[69.8,36.0],[57.7,33.7],[43.4,31.4],[38.7,29.1],[45.9,26.9],[52.8,24.6],[53.6,22.3],[56.1,20.0]]};
+
+  let vyState=null;
+
+  // Polyligne du chemin en pixels écran + longueurs cumulées (pour marcher dessus)
+  function vyGeom(f, moment){
+    const raw=VY_POLY[moment]||VY_POLY.matin;
+    const pts=raw.map(function(q){ return [f.offX+q[0]/100*f.rw, f.offY+q[1]/100*f.rh]; });
+    const cum=[0];
+    for(let i=1;i<pts.length;i++){
+      const dx=pts[i][0]-pts[i-1][0], dy=pts[i][1]-pts[i-1][1];
+      cum.push(cum[i-1]+Math.sqrt(dx*dx+dy*dy));
+    }
+    return {pts:pts, cum:cum, total:cum[cum.length-1]};
+  }
+  function vyAt(g,t){
+    const d=Math.max(0,Math.min(1,t))*g.total;
+    let i=1; while(i<g.cum.length-1 && g.cum[i]<d) i++;
+    const seg=g.cum[i]-g.cum[i-1]||1, r=(d-g.cum[i-1])/seg;
+    return [g.pts[i-1][0]+(g.pts[i][0]-g.pts[i-1][0])*r, g.pts[i-1][1]+(g.pts[i][1]-g.pts[i-1][1])*r];
+  }
+  function vyDoneIds(){
+    const list=document.getElementById('routine-'+(vyState?vyState.moment:'matin'));
+    if(!list) return [];
+    return [].slice.call(list.querySelectorAll('.routine-item.done')).map(function(x){ return x.dataset.pid; }).filter(Boolean);
+  }
+  function vyT(i,n){ return (i+1)/(n+1); }
+
+  // Sur une scène peinte, une station n'est pas répartie le long de l'allée :
+  // elle est à sa place calibrée. On cherche le point de l'allée le plus proche.
+  function vyTPaint(def,poly,key){
+    const st=def.pos[key]; if(!st) return null;
+    // On compare la HAUTEUR seule : un lieu éloigné de l'allée ne doit pas
+    // se raccrocher à un point situé bien plus haut.
+    let bi=0, bd=1e9;
+    for(let i=0;i<poly.length;i++){
+      const d=Math.abs(poly[i][1]-st.y);
+      if(d<bd){ bd=d; bi=i; }
+    }
+    return bi/(poly.length-1);
+  }
+
+  // Le parcours doit toujours avancer, même si deux lieux sont peints
+  // à la même hauteur : on impose un écart minimal dans l'ordre du rituel.
+  function vyTList(def,poly,items){
+    let prev=0.06;
+    return items.map(function(p){
+      const t=vyTPaint(def,poly,cmCat2Phase(p.categorie, vyState?vyState.moment:'matin'));
+      const v=Math.max(t==null?prev+0.12:t, prev+0.05);
+      prev=v; return Math.min(v,0.94);
+    });
+  }
+
+  function openVoyage(moment){
+    const m=moment||(typeof currentPeriod!=='undefined'?currentPeriod:'matin');
+    const items=((window.__homeRoutine||{})[m])||[];
+    if(!items.length){ if(typeof showToast==='function') showToast('Aucune étape pour ce créneau'); return; }
+    vyState={moment:m, items:items};
+    try{ (new Image()).src=cmTheme(m).img; }catch(e){}
+    vyRender();
+    const el=document.getElementById('voyage');
+    el.classList.add('show'); document.body.style.overflow='hidden';
+    vyPhotos();
+  }
+  function closeVoyage(){
+    const el=document.getElementById('voyage');
+    if(el) el.classList.remove('show');
+    document.body.style.overflow='';
+    vyState=null;
+    if(typeof renderHomeVoyage==='function') renderHomeVoyage();
+  }
+
+  // Charge les photos produits en tâche de fond puis rafraîchit les pastilles
+  async function vyPhotos(){
+    if(!vyState) return;
+    window.__cmPhotos=window.__cmPhotos||{};
+    let changed=false;
+    for(const p of vyState.items){
+      if(!p.photo_path || window.__cmPhotos[p.id]) continue;
+      try{ const u=await signedPhoto(p.photo_path); if(u){ window.__cmPhotos[p.id]=u; changed=true; } }catch(e){}
+    }
+    if(changed && vyState) vyRender();
+  }
+
+  function vyRender(){
+    const el=document.getElementById('voyage'); if(!el||!vyState) return;
+    const m=vyState.moment, th=cmTheme(m), meta=cmMomentMeta(m), items=vyState.items;
+    const done=vyDoneIds(), n=items.length;
+    const nOk=items.filter(function(p){ return done.indexOf(p.id)>=0; }).length;
+    const nextIdx=items.findIndex(function(p){ return done.indexOf(p.id)<0; });
+
+    const vpaint=!!CM_PAINT[m];
+    let nodes=vpaint?'':cmNodeHtml('depart','cm-muted','','Départ','','data-t="0" data-center="1"','');
+    items.forEach(function(p,i){
+      const isDone=done.indexOf(p.id)>=0;
+      const nm=(p.nom||'').split(' \u00b7 ');
+      const url=(window.__cmPhotos||{})[p.id];
+      const medal=url?'<img src="'+url+'" alt="">':(p.emoji||'\ud83e\uddf4');
+      const key=cmCat2Phase(p.categorie, m)||(m==='hebdo'?'masque':'traiter');
+      const cls=(isDone?'vy-done ':'')+(i===nextIdx?'vy-next':'');
+      const at='data-t="'+vyT(i,n)+'" data-pid="'+p.id+'" onclick="vyTap(\''+p.id+'\')"';
+      const ck=isDone?'<span class="vy-check">\u2713</span>':'';
+      nodes+=(vpaint?cmPaintHtml(key,cls,medal+ck,escapeHtml(nm[0]||''),at)
+                   :cmNodeHtml(key,cls,medal,escapeHtml(nm[0]||''),'',at,ck));
+    });
+    nodes+=(vpaint?cmPaintHtml('arrivee','cm-muted','',(nOk===n?'Voyage termin\u00e9 !':'Arriv\u00e9e'),'data-t="1"')
+                 :cmNodeHtml('arrivee','cm-muted','',(nOk===n?'Voyage termin\u00e9 !':'Arriv\u00e9e'),'','data-t="1"',''));
+
+    el.innerHTML='<div class="cm-wrap">'+
+      '<div class="cm-scene'+(m==='soir'?' cm-soir':'')+'" style="background-image:url(\''+th.img+'\');--cm-scrim:'+th.scrim+';--cm-ink:'+th.ink+';--cm-glow:'+th.glow+';">'+
+        '<button class="cm-back" onclick="closeVoyage()">\u2039</button>'+
+        '<div class="cm-head"><div class="cm-title">'+escapeHtml(meta.ph)+'</div>'+
+          '<div class="cm-count">'+nOk+' \u00e9tape'+(nOk>1?'s':'')+' sur '+n+'</div></div>'+
+        '<svg class="vy-trail" preserveAspectRatio="none"><path class="vy-glow" stroke-width="13"></path><path class="vy-core" stroke-width="5"></path></svg>'+
+        '<svg class="cm-links" preserveAspectRatio="none"></svg>'+
+        '<div class="vy-walker" id="vy-walker">\ud83c\udf31</div>'+
+        nodes+
+      '</div></div>';
+    vyLayout();
+  }
+
+  function vyLayout(){
+    const scene=document.querySelector('#voyage .cm-scene'); if(!scene||!vyState) return;
+    const P=VY_POLY[vyState.moment]||VY_POLY.matin;
+    const tl=cmHeadBottom(scene);
+    const vdef=CM_PAINT[vyState.moment];
+    const f=vdef ? cmFitPaint(scene, vdef, tl+58)
+                 : cmFitScene(scene, P[0][1], P[P.length-1][1], tl+58);
+    if(!f) return;
+    const g=vyGeom(f, vyState.moment);
+    const done=vyDoneIds(), items=vyState.items, n=items.length;
+    let last=-1; items.forEach(function(p,i){ if(done.indexOf(p.id)>=0) last=i; });
+    const allDone=(last===n-1 && n>0);
+    let tCur;
+    if(allDone) tCur=1;
+    else if(last<0) tCur=0;
+    else if(vdef){ tCur=vyTList(vdef,P,items)[last]; }
+    else tCur=vyT(last,n);
+
+    const svg=scene.querySelector('.vy-trail');
+    svg.setAttribute('viewBox','0 0 '+f.sw+' '+f.sh);
+    svg.setAttribute('width',f.sw); svg.setAttribute('height',f.sh);
+    const d=g.pts.map(function(q,i){ return (i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1); }).join(' ');
+    scene.querySelectorAll('.vy-trail path').forEach(function(pa){
+      pa.setAttribute('d',d);
+      pa.style.strokeDasharray=g.total;
+      pa.style.strokeDashoffset=g.total*(1-tCur);
+    });
+
+    const pl=[];
+    scene.querySelectorAll('.cm-node').forEach(function(nd){
+      const pt=vyAt(g,parseFloat(nd.dataset.t)); pl.push({x:pt[0],y:pt[1]});
+    });
+    if(vdef) cmPlacePaint(scene,vdef,f,tl); else cmPlaceNodes(scene,f,pl,P,tl);
+
+
+    const w=document.getElementById('vy-walker');
+    if(w){ const pt=vyAt(g,tCur); w.style.left=pt[0]+'px'; w.style.top=pt[1]+'px'; }
+  }
+
+  async function vyTap(pid){
+    if(!vyState) return;
+    const list=document.getElementById('routine-'+vyState.moment);
+    const item=list?list.querySelector('.routine-item[data-pid="'+pid+'"]'):null;
+    if(!item) return;
+    const wasDone=item.classList.contains('done');
+    const node=document.querySelector('#voyage .cm-node[data-pid="'+pid+'"]');
+    if(node){
+      node.classList.toggle('vy-done', !wasDone);
+      const bld=node.querySelector('.cm-bld');
+      if(bld){ const c=bld.querySelector('.vy-check'); if(!wasDone && !c){ const q=document.createElement('span'); q.className='vy-check'; q.textContent='\u2713'; bld.appendChild(q); } else if(wasDone && c){ c.remove(); } }
+    }
+    const w=document.getElementById('vy-walker');
+    if(w && !wasDone){ w.classList.remove('hop'); void w.offsetWidth; w.classList.add('hop'); }
+    vyLayout();
+    if(!wasDone) vyPetals(6);
+    const items=vyState.items;
+    await toggleRoutine(item);
+    vyRender();
+    const done=vyDoneIds();
+    if(!wasDone && items.length && items.every(function(p){ return done.indexOf(p.id)>=0; })) vyCelebrate();
+  }
+
+  function vyPetals(n){
+    const spk=['\ud83c\udf38','\u2728','\ud83c\udf3f'];
+    for(let i=0;i<n;i++){
+      const s=document.createElement('div'); s.className='vy-petal'; s.textContent=spk[i%spk.length];
+      s.style.left=(12+Math.random()*76)+'%'; s.style.top=(12+Math.random()*20)+'%';
+      s.style.animationDelay=(Math.random()*0.35)+'s';
+      document.body.appendChild(s); setTimeout(function(){ s.remove(); },3000);
+    }
+  }
+  function vyCelebrate(){
+    if(navigator.vibrate) navigator.vibrate([14,60,24]);
+    vyPetals(14);
+    const spk=['\u2726','\u2727','\ud83c\udf1f','\ud83d\udcab'];
+    for(let i=0;i<14;i++){ const s=document.createElement('div'); s.className='cm-spark'; s.textContent=spk[i%spk.length];
+      s.style.left='50%'; s.style.top='62%'; const a=Math.random()*Math.PI*2, dd=80+Math.random()*160;
+      s.style.setProperty('--dx',(Math.cos(a)*dd)+'px'); s.style.setProperty('--dy',(Math.sin(a)*dd-50)+'px');
+      document.body.appendChild(s); setTimeout(function(){ s.remove(); },1200); }
+    let w=document.getElementById('cm-wow');
+    if(!w){ w=document.createElement('div'); w.id='cm-wow'; w.className='cm-wow'; document.body.appendChild(w); }
+    const meta=cmMomentMeta(vyState?vyState.moment:'matin');
+    w.innerHTML='<div class="cm-wow-card"><div class="cm-wow-badge">\ud83c\udf3f</div><div class="cm-wow-t">Tu es arriv\u00e9e au bout \u2728</div>'+
+      '<div class="cm-wow-s">'+escapeHtml(meta.ph)+' termin\u00e9. Ta plante a fait tout le chemin avec toi \ud83c\udf38</div>'+
+      '<button class="cm-wow-btn" onclick="vyWowClose()">Parfait</button></div>';
+    setTimeout(function(){ w.classList.add('show'); },260);
+  }
+  function vyWowClose(){ const w=document.getElementById('cm-wow'); if(w) w.classList.remove('show'); closeVoyage(); }
+
+  // --- carte d'accroche sur l'accueil ---
+  function renderHomeVoyage(){
+    const hero=document.getElementById('vy-hero'); if(!hero) return;
+    const m=(typeof currentPeriod!=='undefined'&&currentPeriod)?currentPeriod:'matin';
+    const items=((window.__homeRoutine||{})[m])||[];
+    if(!items.length){ hero.style.display='none'; return; }
+    const list=document.getElementById('routine-'+m);
+    const done=list?[].slice.call(list.querySelectorAll('.routine-item.done')).map(function(x){return x.dataset.pid;}):[];
+    const n=items.length, nOk=items.filter(function(p){ return done.indexOf(p.id)>=0; }).length;
+    let last=-1; items.forEach(function(p,i){ if(done.indexOf(p.id)>=0) last=i; });
+    const allDone=(nOk===n);
+    const t=allDone?1:(last<0?0:(last+1)/(n+1));
+    const P=VY_POLY[m]||VY_POLY.matin;
+    // position de la plante sur la bande visible de la carte (fenêtre 30%→80% de l'image)
+    const q=P[Math.round(t*(P.length-1))];
+    const vx=q[0], vy=Math.max(6,Math.min(94,(q[1]-30)/50*100));
+    const meta=cmMomentMeta(m);
+    const sub=allDone?'Voyage termin\u00e9 \u00b7 bravo \ud83c\udf38':(nOk?nOk+' \u00e9tape'+(nOk>1?'s':'')+' sur '+n+' \u00b7 continue':'Ta plante t\'attend au d\u00e9part');
+    hero.style.display='block';
+    hero.innerHTML='<div class="vy-hero-img" style="background-image:url(\''+cmTheme(m).img+'\');">'+
+      '<div class="vy-hero-plant" style="left:'+vx+'%;top:'+vy+'%;">'+(allDone?'\ud83c\udf3f':'\ud83c\udf31')+'</div></div>'+
+      '<div class="vy-hero-body"><div class="vy-hero-txt"><div class="vy-hero-t">'+escapeHtml(meta.ph)+'</div>'+
+      '<div class="vy-hero-s">'+sub+'</div></div>'+
+      '<span class="vy-hero-cta">'+(allDone?'Revoir':(nOk?'Continuer':'Commencer'))+'</span></div>'+
+      '<div class="vy-hero-bar"><div class="vy-hero-fill" style="width:'+Math.round(nOk/n*100)+'%;"></div></div>';
+  }
+  function toggleHrList(){
+    const l=document.getElementById('hr-lists'), b=document.getElementById('hr-listtoggle');
+    if(!l||!b) return;
+    const open=(l.style.display!=='none');
+    l.style.display=open?'none':'block';
+    b.textContent=open?'Voir en liste':'Masquer la liste';
+  }
+  window.addEventListener('resize', function(){ if(vyState) vyLayout(); });
+
+  window.addEventListener('resize', function(){ cmLayout(); });
+  window.addEventListener('orientationchange', function(){ setTimeout(cmLayout,180); });
+
+  function cmInfo(key,idx){ cmOpenCarousel(key,idx,true); }
+  // En-tête de la fiche : un gros plan du lieu, découpé dans la scène peinte
+  // grâce aux coordonnées du calibrage. Aucune image supplémentaire à charger.
+  function cmSheetHead(key,ph){
+    const def=chDraft&&CM_PAINT[chDraft.moment];
+    if(!def||!def.pos[key]) return '';
+    return '<div class="cm-sheet-img" id="cm-sheet-img">'+
+      '<div class="cm-pop-grip"></div>'+
+      '<button class="cm-pop-x" onclick="cmClosePop()" aria-label="Fermer">\u00d7</button>'+
+      '<div class="cm-sheet-t">'+ph.nom+'</div></div>';
+  }
+  function cmSheetZoom(pop,key){
+    const el=pop.querySelector('#cm-sheet-img'); if(!el) return;
+    const def=CM_PAINT[chDraft.moment], st=def.pos[key];
+    const W=el.offsetWidth||300, H=el.offsetHeight||158;
+    const largeurVue=Math.max(st.h*st.r*2.2, 22);          // largeur du cadrage, en % de l'image
+    const iw=W/(largeurVue/100), ih=iw*def.h/def.w;
+    el.style.backgroundImage="url('"+def.img+"')";
+    el.style.backgroundSize=Math.round(iw)+'px '+Math.round(ih)+'px';
+    el.style.backgroundPosition=Math.round(W/2-st.x/100*iw)+'px '+Math.round(H/2-(st.y-st.h*0.52)/100*ih)+'px';
+  }
+
+  function cmOpenCarousel(key,idx,infoOnly){
+    const scroll=document.getElementById('rituel-chemin');
+    const scene=scroll.querySelector('.cm-scene'); if(!scene) return;
+    if(!document.getElementById('cm-pop')){ const d=document.createElement('div'); d.id='cm-pop'; d.className='cm-pop'; scroll.appendChild(d); }
+    const ph=CM_PHASES[key], list=cmProductsForPhase(key), cur=chDraft.filled[key];
+    let cards;
+    if(infoOnly){ cards=''; }
+    else if(list.length){ cards=list.map(function(p){ const parts=(p.nom||'').split(' · '); const u=(window.__cmPhotos||{})[p.id]; const e=u?'<img src="'+u+'" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">':(p.emoji||'🧴'); return '<div class="cm-pcard'+(cur===p.id?' sel':'')+'" onclick="cmPick(\''+key+'\',\''+p.id+'\')"><div class="cm-pcard-e">'+e+'</div><div class="cm-pcard-n">'+escapeHtml(parts[0]||'')+'</div><div class="cm-pcard-b">'+escapeHtml(parts[1]||'')+'</div></div>'; }).join(''); }
+    else { cards='<div class="cm-pop-none">Aucun produit dans cette catégorie.<br>Ajoute-en un depuis l\'onglet Produits.</div>'; }
+    const removeBtn = (cur && !infoOnly) ? '<button class="cm-pop-remove" onclick="cmClear(\''+key+'\')">Retirer de cette étape</button>' : '';
+    const pop=document.getElementById('cm-pop');
+    const head=cmSheetHead(key,ph);
+    pop.innerHTML=head+
+      (head?'':'<div class="cm-pop-grip"></div><div class="cm-pop-h"><div class="cm-pop-t">'+ph.emoji+'  '+ph.nom+
+             '</div><button class="cm-pop-x" onclick="cmClosePop()">\u00d7</button></div>')+
+      cmTipHtml(key)+(cards?'<div class="cm-car">'+cards+'</div>':'')+removeBtn+
+      '<button class="cm-pop-skip" onclick="cmClosePop()">Fermer</button>';
+
+    let veil=document.getElementById('cm-veil');
+    if(!veil){ veil=document.createElement('div'); veil.id='cm-veil'; veil.className='cm-pop-veil';
+      veil.onclick=cmClosePop; scroll.appendChild(veil); }
+    cmSheetZoom(pop,key);
+    cmNavTuck(true);
+    requestAnimationFrame(function(){ pop.classList.add('show'); const v=document.getElementById('cm-veil'); if(v) v.classList.add('show'); });
+  }
+  function cmClosePop(){ const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show');
+    const v=document.getElementById('cm-veil'); if(v) v.classList.remove('show'); cmNavTuck(false); }
+
+  // ===== Panneau des rituels : la fleur en est la poignée =====
+  // La fleur n'ouvre plus un menu : elle déploie un panneau en verre dépoli chaud qui devient
+  // la porte d'entrée de TOUS les rituels. Onglets Matin/Soir/Hebdo, carte du rituel courant
+  // mise en avant, carrousel des autres rituels de la période. Plus de page « Mes rituels ».
+  // Contrainte : le décor est UNE image — on n'anime jamais que le panneau et l'UI.
+
+  // Regroupe les rituels par période (un « both » compte matin ET soir).
+  function cmGroups(){
+    const rits=window.__allRituels||[];
+    const g={matin:[],soir:[],hebdo:[]};
+    rits.forEach(function(r){ const m=r.moment||'matin';
+      if(m==='both'){ g.matin.push(r); g.soir.push(r); }
+      else if(g[m]) g[m].push(r); else g.matin.push(r); });
+    return g;
+  }
+  // Le rituel actuellement à l'écran (celui du draft), s'il existe encore en mémoire.
+  function cmCurrentRitual(){
+    if(!chDraft || !chDraft.id) return null;
+    return (window.__allRituels||[]).find(function(r){ return String(r.id)===String(chDraft.id); })||null;
+  }
+
+  function cmTogglePanel(){
+    const ov=document.getElementById('rituel-chemin');
+    if(ov && ov.classList.contains('cm-panel-open')) cmClosePanel(); else cmOpenPanel();
+  }
+  function cmOpenPanel(){
+    const ov=document.getElementById('rituel-chemin'); if(!ov) return;
+    // Panneau & voile sur <body> : ils survivent aux re-render de cmRender (qui remplace
+    // l'innerHTML du chemin lors d'un changement d'onglet ou de rituel).
+    let veil=document.getElementById('cm-panel-veil');
+    if(!veil){ veil=document.createElement('div'); veil.id='cm-panel-veil'; veil.className='cm-panel-veil'; veil.onclick=cmClosePanel; document.body.appendChild(veil); }
+    let panel=document.getElementById('cm-panel');
+    if(!panel){ panel=document.createElement('div'); panel.id='cm-panel'; panel.className='cm-rpanel'; document.body.appendChild(panel); }
+    cmPanelRender();
+    ov.classList.add('cm-panel-open');
+    if(navigator.vibrate) navigator.vibrate(6);
+    requestAnimationFrame(function(){ veil.classList.add('show'); panel.classList.add('show'); });
+  }
+  function cmClosePanel(){
+    const ov=document.getElementById('rituel-chemin'); if(ov) ov.classList.remove('cm-panel-open');
+    const p=document.getElementById('cm-panel'); if(p) p.classList.remove('show');
+    const v=document.getElementById('cm-panel-veil'); if(v) v.classList.remove('show');
+  }
+  // Alias conservés pour les appels existants (fin d'édition, fermeture du chemin).
+  function cmCloseMenu(){ cmClosePanel(); }
+
+  // Construit l'aperçu des 3 premières étapes du rituel courant.
+  function cmPanelSteps(){
+    const moment=(chDraft&&chDraft.moment)||'matin';
+    const set=CM_SETS[moment]||CM_SETS.matin;
+    const pmap={}; (window.__cmProds||[]).forEach(function(p){ pmap[p.id]=p; });
+    const photos=window.__cmPhotos||{};
+    const steps=[];
+    set.forEach(function(k){ const pid=chDraft&&chDraft.filled?chDraft.filled[k]:null; if(!pid) return;
+      const p=pmap[pid]; const ph=CM_PHASES[k];
+      const ic = photos[pid] ? '<img src="'+photos[pid]+'" alt="">' : ((p&&p.emoji)||(ph&&ph.emoji)||'🧴');
+      steps.push({ic:ic, ph:(ph?ph.nom:''), sub:(p?escapeHtml(p.nom||''):'')}); });
+    return steps;
+  }
+
+  function cmPanelRender(){
+    const panel=document.getElementById('cm-panel'); if(!panel) return;
+    const moment=(chDraft&&chDraft.moment)||rpSlotView||'matin';
+    const groups=cmGroups();
+    const cur=cmCurrentRitual();
+    const pmap={}; (window.__cmProds||[]).forEach(function(p){ pmap[p.id]=p; });
+    const photos=window.__cmPhotos||{};
+
+    // Onglets Matin / Soir / Hebdo
+    const TABS=[['matin','☀️','Matin'],['soir','🌙','Soir'],['hebdo','🌿','Hebdo']];
+    let tabs='<div class="cm-panel-tabs">';
+    TABS.forEach(function(t){ tabs+='<button class="cm-ptab'+(t[0]===moment?' on':'')+'" onclick="cmPanelGoTab(\''+t[0]+'\')">'+
+      '<span class="cm-ptab-e">'+t[1]+'</span>'+t[2]+'</button>'; });
+    tabs+='</div>';
+
+    // Carte du rituel courant (mise en avant)
+    let card;
+    if(cur){
+      const steps=cmPanelSteps();
+      const shown=steps.slice(0,3);
+      let stepsHtml;
+      if(shown.length){
+        stepsHtml='<div class="cm-rsteps">'+shown.map(function(s){
+          return '<div class="cm-rstep"><span class="cm-rstep-ic">'+s.ic+'</span>'+
+            '<span class="cm-rstep-tx"><div class="cm-rstep-ph">'+s.ph+'</div>'+
+            (s.sub?'<div class="cm-rstep-sub">'+s.sub+'</div>':'')+'</span></div>';
+        }).join('')+'</div>';
+        if(steps.length>3) stepsHtml+='<div class="cm-rstep-more">+ '+(steps.length-3)+' autre'+(steps.length-3>1?'s':'')+'</div>';
+      } else {
+        stepsHtml='<div class="cm-rempty">Aucune étape pour l\'instant. Ouvre « Modifier » pour composer ton chemin 🌿</div>';
+      }
+      const toggle='<button class="cm-rcard-actif'+(cur.actif?' on':'')+'" onclick="cmPanelToggleActif()" title="'+(cur.actif?'Mettre en pause':'Activer ce rituel')+'">'+
+        '<span class="cm-rcard-dot"></span>'+(cur.actif?'Actif':'En pause')+'</button>';
+      card='<div class="cm-rcard">'+
+        '<div class="cm-rcard-top"><div class="cm-rcard-name">'+escapeHtml(cur.nom||cmMomentMeta(moment).ph)+'</div>'+toggle+'</div>'+
+        stepsHtml+
+        '<div class="cm-ractions">'+
+          '<button class="cm-ract primary" onclick="cmPanelEdit()"><span class="cm-ract-e">✏️</span>Modifier</button>'+
+          '<button class="cm-ract" onclick="cmPanelDuplicate()"><span class="cm-ract-e">📄</span>Dupliquer</button>'+
+          '<button class="cm-ract danger" onclick="cmPanelDelete()"><span class="cm-ract-e">🗑️</span>Supprimer</button>'+
+        '</div></div>';
+    } else {
+      card='<div class="cm-rcard"><div class="cm-rempty" style="padding:6px 2px 14px;">Aucun rituel '+
+        (moment==='soir'?'du soir':(moment==='hebdo'?'hebdo':'du matin'))+' pour l\'instant.</div>'+
+        '<div class="cm-ractions"><button class="cm-ract primary" style="flex:none;padding:9px 16px;" onclick="cmPanelNew()"><span class="cm-ract-e">＋</span>Créer ce rituel</button></div></div>';
+    }
+
+    // Carrousel : les autres rituels de la période (hors rituel courant)
+    const others=(groups[moment]||[]).filter(function(r){ return !cur || String(r.id)!==String(cur.id); });
+    let caro='';
+    if(others.length){
+      caro='<div class="cm-rcaro-lbl">Autres rituels</div><div class="cm-rcaro">'+
+        others.map(function(r){
+          const ids=Array.isArray(r.produits)?r.produits:[];
+          let dots=ids.slice(0,3).map(function(id){ const p=pmap[id];
+            const inner=photos[id]?'<img src="'+photos[id]+'" alt="">':((p&&p.emoji)||'🧴');
+            return '<span class="cm-rmini-dot">'+inner+'</span>'; }).join('');
+          if(ids.length>3) dots+='<span class="cm-rmini-n">+'+(ids.length-3)+'</span>';
+          if(!ids.length) dots='<span class="cm-rmini-n">Vide</span>';
+          return '<button class="cm-rmini" onclick="cmPanelSelect(\''+r.id+'\')">'+
+            '<div class="cm-rmini-name">'+escapeHtml(r.nom||cmMomentMeta(moment).ph)+'</div>'+
+            '<div class="cm-rmini-dots">'+dots+'</div></button>';
+        }).join('')+'</div>';
+    }
+
+    panel.innerHTML='<div class="cm-panel-hd">Rituels</div>'+tabs+
+      '<div class="cm-panel-body">'+card+caro+
+      '<button class="cm-rnew" onclick="cmPanelNew()">＋ Nouveau rituel</button></div>';
+  }
+
+  // Changer d'onglet : affiche le rituel actif de cette période (ou vide si aucun),
+  // sans quitter le panneau. Le décor défile via cmShowSlot ; le panneau se recompose.
+  function cmPanelGoTab(m){
+    if(!m) return;
+    cmSaveIfEditing();   // ne pas perdre une édition en cours en changeant d'onglet
+    rpSlotView=m;
+    cmShowSlot(m);
+    cmPanelRender();
+  }
+  // Un clic sur une carte du carrousel charge immédiatement ce rituel (il devient l'actif
+  // de sa période), met à jour le décor et recompose le panneau. Persistance en arrière-plan.
+  async function cmPanelSelect(id){
+    const all=window.__allRituels||[];
+    const t=all.find(function(r){ return String(r.id)===String(id); }); if(!t) return;
+    cmSaveIfEditing();   // ne pas perdre une édition en cours en chargeant un autre rituel
+    if(navigator.vibrate) navigator.vibrate(6);
+    const tM=(t.moment==='matin'||t.moment==='both'), tS=(t.moment==='soir'||t.moment==='both');
+    let off=[];
+    if(t.moment==='hebdo'){
+      off=all.filter(function(r){ return r.actif && r.moment==='hebdo' && String(r.id)!==String(t.id); }).map(function(r){ return r.id; });
+    } else {
+      off=all.filter(function(r){ return r.actif && String(r.id)!==String(t.id) && r.moment!=='hebdo' &&
+        ((tM&&(r.moment==='matin'||r.moment==='both'))||(tS&&(r.moment==='soir'||r.moment==='both'))); }).map(function(r){ return r.id; });
+    }
+    off.forEach(function(oid){ const o=all.find(function(r){ return r.id===oid; }); if(o) o.actif=false; });
+    t.actif=true;
+    chDraft=cmDraftFor(t.moment);
+    cmRender();
+    cmPanelRender();
+    try{
+      if(off.length) await sb.from('rituels').update({actif:false}).in('id',off);
+      await sb.from('rituels').update({actif:true}).eq('id',id);
+    }catch(e){}
+    // On NE vide PAS window.__allRituels (le panneau en dépend) : loadRituels le rafraîchit.
+    if(typeof loadRituels==='function') loadRituels();
+    if(typeof loadHomeRoutine==='function') loadHomeRoutine();
+  }
+  // Active ou met en pause le rituel courant, directement depuis la carte. Un seul rituel
+  // actif par créneau (matin/soir/hebdo) : activer celui-ci met les concurrents en pause.
+  async function cmPanelToggleActif(){
+    const cur=cmCurrentRitual(); if(!cur) return;
+    const all=window.__allRituels||[];
+    if(navigator.vibrate) navigator.vibrate(6);
+    const turnOn=!cur.actif;
+    let off=[];
+    if(turnOn){
+      if(cur.moment==='hebdo'){
+        off=all.filter(function(r){ return r.actif && r.moment==='hebdo' && String(r.id)!==String(cur.id); }).map(function(r){ return r.id; });
+      } else {
+        const tM=(cur.moment==='matin'||cur.moment==='both'), tS=(cur.moment==='soir'||cur.moment==='both');
+        off=all.filter(function(r){ return r.actif && String(r.id)!==String(cur.id) && r.moment!=='hebdo' &&
+          ((tM&&(r.moment==='matin'||r.moment==='both'))||(tS&&(r.moment==='soir'||r.moment==='both'))); }).map(function(r){ return r.id; });
+      }
+      off.forEach(function(oid){ const o=all.find(function(r){ return r.id===oid; }); if(o) o.actif=false; });
+    }
+    cur.actif=turnOn;
+    cmPanelRender();
+    try{
+      if(off.length) await sb.from('rituels').update({actif:false}).in('id',off);
+      await sb.from('rituels').update({actif:turnOn}).eq('id',cur.id);
+    }catch(e){ if(typeof showToast==='function') showToast('Oups, réessaie 🌿'); }
+    if(typeof loadRituels==='function') loadRituels();
+    if(typeof loadHomeRoutine==='function') loadHomeRoutine();
+    if(typeof showToast==='function') showToast(turnOn?'Rituel activé ✨':'Rituel mis en pause 🌙');
+  }
+  // Modifier le rituel courant : on referme le panneau et on bascule le chemin en édition.
+  function cmPanelEdit(){
+    const cur=cmCurrentRitual(); if(!cur) return;
+    cmClosePanel();
+    cmSetMode('edit');
+  }
+  // Nouveau rituel pour la période affichée : referme le panneau et ouvre un chemin vierge.
+  function cmPanelNew(){
+    const moment=(chDraft&&chDraft.moment)||rpSlotView||'matin';
+    cmSaveIfEditing();   // ne pas perdre une édition en cours avant d'ouvrir un rituel vierge
+    cmClosePanel();
+    if(typeof openRituelChemin==='function') openRituelChemin(null, moment);
+  }
+  // Duplique le rituel courant : la copie reste en pause, apparaît dans le carrousel.
+  async function cmPanelDuplicate(){
+    const cur=cmCurrentRitual(); if(!cur||!cur.id) return;
+    const moment=(chDraft&&chDraft.moment)||'matin';
+    if(navigator.vibrate) navigator.vibrate(6);
+    const nom=((cur.nom||cmMomentMeta(moment).ph)+' (copie)').slice(0,40);
+    try{
+      const { data } = await sb.from('rituels').insert({ user_id:currentUser.id, nom:nom, moment:cur.moment,
+        produits:(Array.isArray(cur.produits)?cur.produits.slice():[]), position:0, actif:false,
+        rappels:(cur.rappels||{on:false,days:[],hebdoDay:1}) }).select('*').maybeSingle();
+      if(data && window.__allRituels) window.__allRituels.push(data);
+    }catch(e){ if(typeof showToast==='function') showToast('Oups, réessaie 🌿'); return; }
+    cmPanelRender();
+    if(typeof showToast==='function') showToast('Rituel dupliqué 🌿');
+    if(typeof loadRituels==='function') loadRituels();
+  }
+  // Supprime le rituel courant, puis bascule sur le rituel suivant de la même période
+  // (ou l'état vide), sans quitter le panneau.
+  async function cmPanelDelete(){
+    const cur=cmCurrentRitual(); if(!cur||!cur.id){ return; }
+    const moment=(chDraft&&chDraft.moment)||'matin';
+    if(!await cmAsk({titre:'Supprimer ce rituel ?',texte:'Le rituel et son parcours seront effacés. Tes produits, eux, ne bougent pas.',ok:'Supprimer',annuler:'Annuler',danger:true})) return;
+    try{ await sb.from('rituels').delete().eq('id', cur.id); }catch(e){}
+    const all=window.__allRituels||[]; const idx=all.findIndex(function(r){ return String(r.id)===String(cur.id); }); if(idx>=0) all.splice(idx,1);
+    if(typeof showToast==='function') showToast('Rituel supprimé');
+    // Bascule sur un rituel restant de la période (activé) sinon état vide.
+    const next=(cmGroups()[moment]||[])[0]||null;
+    if(next && !next.actif){ next.actif=true; try{ await sb.from('rituels').update({actif:true}).eq('id',next.id); }catch(e){} }
+    chDraft=cmDraftFor(moment);
+    cmRender();
+    cmPanelRender();
+    if(typeof loadRituels==='function') loadRituels();
+    if(typeof loadHomeRoutine==='function') loadHomeRoutine();
+  }
+
+  // ===== Swipe horizontal matin ↔ soir ↔ hebdo =====
+  // Transition en calques : le voisin arrive par-dessus le courant en fondu (crossfade),
+  // le courant recule légèrement et s'estompe (parallaxe). Deux plans qui se fondent → une
+  // sensation d'univers continu plutôt qu'un changement de page. Le calque courant couvre
+  // toujours l'écran, donc aucun vide, à n'importe quelle vitesse de geste.
+  const CM_ORDER=['matin','soir','hebdo'];
+  let cmAnim=false; // vrai pendant l'animation de fin de geste : bloque un nouveau geste tant qu'on n'a pas fini (anti-désync du swipe rapide)
+
+  function cmSwipeMoment(dir){
+    if(!chDraft) return;
+    const i=CM_ORDER.indexOf(chDraft.moment);
+    const next=CM_ORDER[(i+dir+CM_ORDER.length)%CM_ORDER.length];
+    rpSlotView=next;
+    chDraft=cmDraftFor(next);
+    cmRender();   // le nouveau courant reprend exactement là où le voisin venait de se poser → raccord invisible
+    cmAnim=false;
+  }
+  // Exécute cb une fois la transition de `el` terminée (avec filet de sécurité si l'événement ne part pas).
+  function cmAfter(el, cb){
+    let done=false;
+    const fin=function(e){ if(e && e.target!==el) return; if(done) return; done=true; el.removeEventListener('transitionend',fin); cb(); };
+    el.addEventListener('transitionend',fin);
+    setTimeout(fin, 460);
+  }
+
+  function cmBindSwipe(stage){
+    if(stage.__sw) return; stage.__sw=true;
+    const cur=stage.querySelector('[data-role="cur"]');
+    const prev=stage.querySelector('[data-role="prev"]');
+    const next=stage.querySelector('[data-role="next"]');
+    let x0=0,y0=0,dx=0,axis=null,vx=0,lastX=0,lastT=0,w=0;
+
+    const TR='transform .32s cubic-bezier(.22,.61,.36,1),opacity .32s ease';
+    function setTr(on){ [prev,next].forEach(function(l){ if(l) l.style.transition = on?TR:'none'; }); }
+    function rest(l,side){ if(!l) return; l.style.transform='translateX('+(side<0?'-100%':'100%')+')'; l.style.opacity=0; }
+    // Le calque courant reste TOUJOURS plein écran et opaque : impossible de voir le fond
+    // de l'appli. Seul le voisin visé glisse par-dessus en se révélant en fondu (crossfade)
+    // → les deux paysages se fondent l'un dans l'autre, sans aucune coupure blanche.
+    function paint(dxv){
+      const p=Math.min(Math.abs(dxv)/w,1);
+      if(dxv>0){ prev.style.transform='translateX('+(dxv-w)+'px)'; prev.style.opacity=p.toFixed(3); rest(next,1); }
+      else if(dxv<0){ next.style.transform='translateX('+(w+dxv)+'px)'; next.style.opacity=p.toFixed(3); rest(prev,-1); }
+      else { rest(prev,-1); rest(next,1); }
+    }
+
+    stage.addEventListener('touchstart',function(e){
+      if(cmAnim || e.touches.length!==1) return;
+      const t=e.touches[0];
+      x0=lastX=t.clientX; y0=t.clientY; lastT=Date.now(); dx=0; axis=null; vx=0;
+      w=stage.clientWidth||window.innerWidth;
+      setTr(false);
+    },{passive:true});
+    stage.addEventListener('touchmove',function(e){
+      if(cmAnim || e.touches.length!==1 || (axis&&axis!=='x')) return;
+      const t=e.touches[0];
+      const ddx=t.clientX-x0, ddy=t.clientY-y0;
+      if(!axis){
+        // Seuil relevé (12px) + exigence d'un mouvement franchement horizontal pour verrouiller
+        // un swipe : un simple tap (même un peu tremblant) n'est plus avalé comme un geste.
+        if(Math.abs(ddx)<12 && Math.abs(ddy)<12) return;
+        axis = (Math.abs(ddx)>Math.abs(ddy)*1.25) ? 'x' : 'y';
+        if(axis!=='x') return;
+      }
+      e.preventDefault();
+      dx=ddx;
+      const now=Date.now();
+      if(now>lastT) vx=(t.clientX-lastX)/(now-lastT);
+      lastX=t.clientX; lastT=now;
+      paint(dx);
+    },{passive:false});
+    stage.addEventListener('touchend',function(){
+      if(axis!=='x'){ axis=null; return; }
+      axis=null;
+      const p=Math.abs(dx)/w;
+      const commit = dx!==0 && (p>0.3 || Math.abs(vx)>0.4);
+      const rev = dx<0 ? next : prev;
+      setTr(true);
+      if(commit){
+        const dir=dx<0?1:-1;
+        cmAnim=true;
+        rev.style.transform='translateX(0)'; rev.style.opacity=1; // le voisin recouvre complètement, par-dessus le courant intact
+        cmAfter(rev, function(){ cmSwipeMoment(dir); });
+      } else {
+        cmAnim=true;
+        rest(prev,-1); rest(next,1); // le voisin repart en douceur, le courant n'a jamais bougé
+        cmAfter(rev, function(){ cmAnim=false; setTr(false); });
+      }
+    });
+    stage.addEventListener('touchcancel',function(){
+      if(axis==='x'){ const rev=dx<0?next:prev; setTr(true); rest(prev,-1); rest(next,1); cmAnim=true; cmAfter(rev,function(){ cmAnim=false; setTr(false); }); }
+      axis=null;
+    });
+  }
+  function cmPick(key,pid){
+    chDraft.filled[key]=pid;
+    // 1er produit posé → le rituel n'est plus vide : l'aide et la luciole disparaissent d'elles-mêmes
+    // (cmGuideActive devient faux) au re-render ci-dessous.
+    cmClosePop(); cmRender(); cmAutoSave();
+    // La station se réveille : brève pulsation du médaillon.
+    requestAnimationFrame(function(){
+      const nd=document.querySelector('#rituel-chemin .cm-cur .cm-node[data-bld="'+key+'"]');
+      if(!nd) return;
+      nd.classList.add('cm-pose');
+      setTimeout(function(){ nd.classList.remove('cm-pose'); },560);
+    });
+  }
+  function cmClear(key){ delete chDraft.filled[key]; cmClosePop(); cmRender(); cmAutoSave(); }
+  function cmSetMode(m){ if(!chDraft) return; chDraft.mode=m; if(m==='edit') window.__cmFireflyPlayed=false; cmRender(); }
+  // Boîte de dialogue maison : les fenêtres du navigateur cassent l'ambiance.
+  function cmAsk(o){
+    return new Promise(function(res){
+      let m=document.getElementById('cm-modal');
+      if(!m){ m=document.createElement('div'); m.id='cm-modal'; m.className='cm-modal'; document.body.appendChild(m); }
+      const val=(o.valeur||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+      m.innerHTML='<div class="cm-modal-box"><div class="cm-modal-t">'+o.titre+'</div>'+
+        (o.texte?'<div class="cm-modal-s">'+o.texte+'</div>':'')+
+        (o.champ?'<input class="cm-modal-in" id="cm-modal-in" maxlength="40" value="'+val+'" placeholder="'+(o.placeholder||'')+'">':'')+
+        '<div class="cm-modal-b"><button id="cm-modal-no">'+(o.annuler||'Annuler')+'</button>'+
+        '<button class="'+(o.danger?'danger':'go')+'" id="cm-modal-ok">'+(o.ok||'Valider')+'</button></div></div>';
+      const fin=function(v){ m.classList.remove('show'); setTimeout(function(){ m.innerHTML=''; },260); res(v); };
+      m.querySelector('#cm-modal-no').onclick=function(){ fin(null); };
+      m.querySelector('#cm-modal-ok').onclick=function(){ const i=m.querySelector('#cm-modal-in'); fin(i?i.value.trim():true); };
+      m.onclick=function(e){ if(e.target===m) fin(null); };
+      const inp=m.querySelector('#cm-modal-in');
+      if(inp) inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); fin(inp.value.trim()); } };
+      requestAnimationFrame(function(){ m.classList.add('show'); if(inp){ inp.focus(); inp.select(); } });
+    });
+  }
+
+  async function cmRename(){
+    const n=await cmAsk({titre:'Nom du rituel', champ:true, valeur:chDraft.nom||'',
+      placeholder:'Rituel du matin', ok:'Enregistrer'});
+    if(n!==null){ chDraft.nom=n; cmRender(); cmAutoSave(); }
+  }
+
+  function cmWow(){
+    const spk=['✦','✧','🌟','⭐','💫','🌸'];
+    for(let i=0;i<20;i++){ const s=document.createElement('div'); s.className='cm-spark'; s.textContent=spk[i%spk.length];
+      s.style.left='50%'; s.style.top='55%'; const ang=Math.random()*Math.PI*2, dist=90+Math.random()*180;
+      s.style.setProperty('--dx',(Math.cos(ang)*dist)+'px'); s.style.setProperty('--dy',(Math.sin(ang)*dist-60)+'px');
+      document.body.appendChild(s); setTimeout(function(){ s.remove(); },1200); }
+    let w=document.getElementById('cm-wow');
+    if(!w){ w=document.createElement('div'); w.id='cm-wow'; w.className='cm-wow'; document.body.appendChild(w); }
+    const meta=cmMomentMeta(chDraft.moment);
+    w.innerHTML='<div class="cm-wow-card"><div class="cm-wow-badge">🌿</div><div class="cm-wow-t">Ton rituel est prêt !</div><div class="cm-wow-s">Ton chemin est tracé. Retrouve-le chaque jour dans "Aujourd\'hui" 🌸</div><button class="cm-wow-btn" onclick="cmWowClose()">Voir mon rituel 🌸</button></div>';
+    setTimeout(function(){ w.classList.add('show'); },240);
+  }
+  function cmWowClose(){ const w=document.getElementById('cm-wow'); if(w) w.classList.remove('show'); cmBackToList(); }
+
+  // Enregistre le rituel courant (création ou mise à jour). Silencieux : aucune célébration,
+  // aucun changement de mode. C'est la brique de l'enregistrement automatique.
+  async function cmPersist(){
+    if(!chDraft) return;
+    // GARDE-FOU : si les produits ne sont pas chargés, chDraft.filled n'est pas fiable
+    // (il serait vide) → on refuse de sauvegarder pour ne JAMAIS écraser les produits du rituel.
+    if(!window.__cmProds){ return; }
+    const set=CM_SETS[chDraft.moment]||CM_SETS.matin;
+    const produits=set.map(function(k){ return chDraft.filled[k]; }).filter(Boolean);
+    const meta=cmMomentMeta(chDraft.moment);
+    const nom=(chDraft.nom||'').trim()||meta.ph;
+    try{
+      if(chDraft.id){ await sb.from('rituels').update({ nom:nom, moment:chDraft.moment, produits:produits, actif:true }).eq('id', chDraft.id); }
+      else { const { data } = await sb.from('rituels').insert({ user_id:currentUser.id, nom:nom, moment:chDraft.moment, produits:produits, position:0, actif:true, rappels:(chDraft.rappels||{on:false,days:[],hebdoDay:1}) }).select('id').maybeSingle(); if(data){ chDraft.id=data.id; chDraft._created=true; } }
+    }catch(e){}
+    // On NE vide PLUS window.__allRituels (le panneau et le décor en dépendent — le vider faisait
+    // disparaître tous les rituels pendant l'auto-save). On synchronise le cache en mémoire :
+    // la création/màj apparaît instantanément, puis loadRituels rafraîchit depuis la base.
+    if(!Array.isArray(window.__allRituels)) window.__allRituels=[];
+    if(chDraft.id){
+      const snap={ nom:nom, moment:chDraft.moment, produits:produits, actif:true };
+      const ex=window.__allRituels.find(function(r){ return String(r.id)===String(chDraft.id); });
+      if(ex) Object.assign(ex, snap);
+      else window.__allRituels.push(Object.assign({ id:chDraft.id, user_id:(currentUser&&currentUser.id), rappels:(chDraft.rappels||{on:false,days:[],hebdoDay:1}) }, snap));
+    }
+    if(typeof loadRituels==='function') loadRituels();
+    if(typeof loadHomeRoutine==='function') loadHomeRoutine();
+  }
+
+  // Enregistrement automatique DÉSACTIVÉ : la sauvegarde se fait au bouton « Enregistrer »
+  // (cmFinishEdit). Les modifications restent en mémoire (chDraft) pendant l'édition ; un filet
+  // de sécurité silencieux dans closeRituelChemin les enregistre si on quitte sans valider, pour
+  // ne jamais perdre le travail. cmAutoSave devient un no-op (les appels existants ne font rien).
+  let cmSaveTimer=null;
+  function cmAutoSave(){ /* no-op : plus d'enregistrement automatique pendant l'édition */ }
+  // Filet de sécurité silencieux : enregistre le brouillon courant s'il est en cours d'édition,
+  // avant qu'une action (changement d'onglet / de rituel) ne le remplace → aucune perte de travail.
+  function cmSaveIfEditing(){
+    if(!chDraft || chDraft.mode!=='edit') return;
+    const set=CM_SETS[chDraft.moment]||CM_SETS.matin;
+    const has=set.some(function(k){ return chDraft.filled[k]; });
+    if(chDraft.id || has) cmPersist();
+  }
+
+  // Sortie du mode édition (flèche ‹) : on enregistre puis on revient à la consultation du
+  // même rituel. Un rituel neuf resté vide est abandonné ; une toute 1re création est fêtée.
+  async function cmFinishEdit(){
+    clearTimeout(cmSaveTimer);
+    if(!chDraft){ cmBackToList(); return; }
+    cmCloseMenu();
+    const set=CM_SETS[chDraft.moment]||CM_SETS.matin;
+    const has=set.some(function(k){ return chDraft.filled[k]; });
+    if(!chDraft.id && !has){ cmBackToList(); return; } // rituel neuf resté vide → on abandonne
+    await cmPersist();
+    const created=chDraft._created; chDraft._created=false;
+    chDraft.mode='view'; chDraft._bak=null;
+    if(created){ cmWow(); return; } // toute 1re création (fût-elle déjà auto-enregistrée) : petit moment de joie, puis retour au hub
+    cmRender();
+  }
+
+  // Flèche ‹ : en édition → termine l'édition (auto-save) ; en consultation → liste « Mes rituels ».
+  function cmBack(){
+    if(chDraft && chDraft.mode==='edit'){ cmFinishEdit(); return; }
+    cmBackToList();
+  }
+
+  async function cmDelete(){
+    if(!chDraft) return;
+    if(!chDraft.id){ cmBackToList(); return; }
+    if(!await cmAsk({titre:'Supprimer ce rituel ?',texte:'Le rituel et son parcours seront effacés. Tes produits, eux, ne bougent pas.',ok:'Supprimer',annuler:'Annuler',danger:true})) return;
+    try{ await sb.from('rituels').delete().eq('id', chDraft.id); }catch(e){}
+    if(typeof showToast==='function') showToast('Rituel supprimé');
+    window.__allRituels=null;
+    if(typeof loadRituels==='function') loadRituels();
+    if(typeof loadHomeRoutine==='function') loadHomeRoutine();
+    cmBackToList();
+  }
+  function closeRituelChemin(){
+    clearTimeout(cmSaveTimer);
+    // Filet de sécurité : si on quitte le chemin en pleine édition, on enregistre avant de fermer.
+    if(chDraft && chDraft.mode==='edit'){ const set=CM_SETS[chDraft.moment]||CM_SETS.matin; const has=set.some(function(k){ return chDraft.filled[k]; }); if(chDraft.id || has) cmPersist(); }
+    const el=document.getElementById('rituel-chemin'); if(el) el.classList.remove('show'); document.body.style.overflow='';
+    const p=document.getElementById('cm-pop'); if(p) p.classList.remove('show');
+    cmCloseMenu(); cmNavTuck(false); cmNavGlass(false);
+  }
+  // Escamote la barre pendant les feuilles plein écran du rituel (sinon elle passerait au-dessus).
+  function cmNavTuck(on){ const n=document.getElementById('nav'); if(n) n.classList.toggle('nav-tucked', !!on); }
+  // Passe le footer en verre dépoli — réservé au chemin du Rituel (ailleurs : footer d'origine).
+  function cmNavGlass(on){ const n=document.getElementById('nav'); if(n) n.classList.toggle('nav-glass', !!on); }
+  // Depuis l'aperçu d'un rituel : ouvrir la fiche produit en mode minimal
+  // (catégorie, nom, marque, effets). __allProducts est déjà chargé (avec effets).
+  function cmShowProduct(pid){ if(pid) openProductBook(pid, true); }
+
+  // Fiche d'une station en consultation : même carte que l'édition, mais en lecture seule
+  // (image, nom, catégorie, effets/bénéfices + conseil de Léa). Aucune action d'édition.
+  function cmShowStation(key,pid){
+    const scroll=document.getElementById('rituel-chemin'); if(!scroll) return;
+    const p=(window.__cmProds||[]).find(function(x){ return String(x.id)===String(pid); });
+    if(!p){ cmShowProduct(pid); return; } // repli : fiche produit classique
+    if(!document.getElementById('cm-pop')){ const d=document.createElement('div'); d.id='cm-pop'; d.className='cm-pop'; scroll.appendChild(d); }
+    const pop=document.getElementById('cm-pop');
+    const ph=CM_PHASES[key]||{emoji:'🧴',nom:''};
+    const parts=(p.nom||'').split(' · ');
+    const name=escapeHtml(parts[0]||'');
+    const brand=parts.length>1?escapeHtml(parts.slice(1).join(' · ')):'';
+    const catL=(CATS.find(function(x){ return x[0]===(p.categorie||'autre'); })||['','','Soin'])[2];
+    const url=(window.__cmPhotos||{})[pid];
+    const visual=url?'<img src="'+url+'" alt="">':'<span class="cm-fiche-emo">'+(p.emoji||'🧴')+'</span>';
+    const effList=(p.effets||'').split('·').map(function(s){ return s.trim(); }).filter(Boolean);
+    const effHtml=effList.length
+      ? '<div class="cm-fiche-lbl">Effets & bénéfices</div><div class="cm-fiche-effs">'+effList.map(function(e){ return '<span class="cm-fiche-eff">'+escapeHtml(e)+'</span>'; }).join('')+'</div>'
+      : '';
+    const head=cmSheetHead(key,ph);
+    pop.innerHTML=head+
+      (head?'':'<div class="cm-pop-grip"></div><div class="cm-pop-h"><div class="cm-pop-t">'+ph.emoji+'  '+ph.nom+'</div><button class="cm-pop-x" onclick="cmClosePop()">×</button></div>')+
+      '<div class="cm-fiche"><div class="cm-fiche-top">'+
+        '<div class="cm-fiche-img">'+visual+'</div>'+
+        '<div class="cm-fiche-info"><div class="cm-fiche-cat">'+catL+'</div>'+
+          '<div class="cm-fiche-name">'+name+'</div>'+
+          (brand?'<div class="cm-fiche-brand">'+brand+'</div>':'')+
+        '</div></div>'+effHtml+'</div>'+
+      cmTipHtml(key)+
+      '<button class="cm-pop-skip" onclick="cmClosePop()">Fermer</button>';
+    let veil=document.getElementById('cm-veil');
+    if(!veil){ veil=document.createElement('div'); veil.id='cm-veil'; veil.className='cm-pop-veil'; veil.onclick=cmClosePop; scroll.appendChild(veil); }
+    cmSheetZoom(pop,key);
+    cmNavTuck(true);
+    requestAnimationFrame(function(){ pop.classList.add('show'); const v=document.getElementById('cm-veil'); if(v) v.classList.add('show'); });
+  }
+
+  async function loadRituels(){
+    renderRituelCout();
+    if(!currentUser) return;
+    // IMPORTANT : on repeuple TOUJOURS le cache mémoire window.__allRituels — le panneau de la
+    // fleur et le décor du chemin en dépendent. (L'ancienne liste DOM "rituels-list" a été retirée
+    // de l'UI ; auparavant on sortait ici si elle manquait, ce qui laissait le cache vide → tous
+    // les rituels disparaissaient après un enregistrement automatique.)
+    const { data } = await sb.from('rituels').select('*,rappels').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+    const rits = data || [];
+    window.__allRituels = rits;
+    try{ renderRituelActuel(rits); }catch(e){}
+    const host=document.getElementById('rituels-list'); if(host) host.innerHTML='';
+    const tb=document.getElementById('rituel-choose-btn-tab'); if(tb) tb.style.display = rits.length>1 ? 'block' : 'none';
+  }
+
+  async function openRituelEditor(id, presetMoment){
+    if(typeof openRituelChemin==='function') return openRituelChemin(id, presetMoment);
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    const { data: prods } = await sb.from('products').select('id,nom,emoji,effets,categorie,date_peremption').eq('user_id', currentUser.id).order('position',{ascending:true}).order('created_at',{ascending:true});
+    rdProductMap = {}; (prods||[]).forEach(p=>{ rdProductMap[p.id]=p; });
+    let loadedRappels = null;
+    if(id){
+      const { data: r } = await sb.from('rituels').select('*').eq('id', id).maybeSingle();
+      rituelDraft = r ? { id:r.id, nom:r.nom||'', moment:r.moment||'matin', produits:(Array.isArray(r.produits)?r.produits.slice():[]) } : { id:null, nom:'', moment:'matin', produits:[] };
+      loadedRappels = r ? r.rappels : null;
+    } else {
+      rituelDraft = { id:null, nom:'', moment:(presetMoment||'matin'), produits:[] };
+    }
+    document.getElementById('rd-nom').value = rituelDraft.nom;
+    setTimeout(function(){ rdApplyRappels(loadedRappels); }, 0);
+    rdSetMoment(rituelDraft.moment);
+
+    document.getElementById('rd-title').textContent = id ? 'Modifier le rituel' : 'Nouveau rituel';
+
+    renderRdProducts();
+    document.getElementById('rituel-sheet').classList.add('open');
+  }
+  function closeRituelSheet(){ document.getElementById('rituel-sheet').classList.remove('open'); }
+  // Récupère l'objet rappels depuis l'interface du semainier
+  function rdCollectRappels(){
+    const onEl = document.getElementById('rd-rem-on');
+    const on = onEl && onEl.checked;
+    const m = rituelDraft ? rituelDraft.moment : 'matin';
+
+    if(m==='hebdo'){
+      // Soin hebdo : le rappel tombe le jour choisi pour le soin
+      const obj = { on: !!on, hebdoDay: rdHebdoDay };
+      if(on){
+        obj.days = [rdHebdoDay];
+        obj.soir = document.getElementById('rd-h-soir').value || '21:00';
+      }
+      return obj;
+    }
+
+    if(!on) return null;
+    // Matin ou soir : la routine est quotidienne, donc le rappel aussi
+    const obj = { on:true, days:[0,1,2,3,4,5,6] };
+    if(m==='matin'||m==='both'){ obj.matin = document.getElementById('rd-h-matin').value || '08:00'; }
+    if(m==='soir'||m==='both'){ obj.soir  = document.getElementById('rd-h-soir').value  || '21:00'; }
+    return obj;
+  }
+  // Applique un objet rappels à l'interface (édition)
+  function rdApplyRappels(rap){
+    const onEl=document.getElementById('rd-rem-on');
+    const panel=document.getElementById('rd-rem-panel');
+    const bell=document.getElementById('rd-bell');
+    if(!onEl) return;
+
+    const actif = !!(rap && rap.on);
+    onEl.checked = actif;
+
+    if(rap){
+      if(rap.matin) document.getElementById('rd-h-matin').value = rap.matin;
+      if(rap.soir)  document.getElementById('rd-h-soir').value  = rap.soir;
+    }
+    // Le jour du soin hebdo (semainier hors rappels) : on le restaure toujours
+    rdHebdoDay = (rap && typeof rap.hebdoDay === 'number') ? rap.hebdoDay : 0;
+    document.querySelectorAll('.rd-hday').forEach(b=>{
+      b.classList.toggle('on', parseInt(b.dataset.hday,10) === rdHebdoDay);
+    });
+
+    // Le panneau reste fermé : la cloche indique juste s'il y a un rappel
+    if(panel) panel.style.display = 'none';
+    if(bell){
+      bell.classList.remove('on');
+      bell.classList.toggle('has-rem', actif);
+    }
+    rdSyncRemTimes();
+  }
+
+  // ===== Semainier de rappels (par rituel) =====
+  let rdHebdoDay = 0;  // 0=dimanche par défaut
+  function rdPickHebdoDay(d){
+    rdHebdoDay = d;
+    document.querySelectorAll('.rd-hday').forEach(b=>b.classList.toggle('on', parseInt(b.dataset.hday,10)===d));
+    rdSyncRemTimes();   // la note du rappel suit le jour choisi
+  }
+  // La cloche : discrète, elle ouvre les réglages de rappel au besoin
+  function rdToggleRemPanel(){
+    const panel=document.getElementById('rd-rem-panel');
+    const bell=document.getElementById('rd-bell');
+    const on=document.getElementById('rd-rem-on');
+    if(!panel || !bell || !on) return;
+
+    const actif = !on.checked;      // la cloche allume ou éteint le rappel
+    on.checked = actif;
+    panel.style.display = actif ? 'block' : 'none';
+    bell.classList.toggle('on', actif);
+
+    if(actif){
+      rdSyncRemTimes();
+      panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+  }
+
+  // Un point sur la cloche quand des rappels sont actifs
+  function rdRefreshBell(){
+    const bell=document.getElementById('rd-bell');
+    const on=document.getElementById('rd-rem-on');
+    if(!bell || !on) return;
+    bell.classList.toggle('has-rem', !!on.checked);
+  }
+
+  function rdToggleRem(){
+    setTimeout(rdRefreshBell, 0);
+    const on=document.getElementById('rd-rem-on').checked;
+    document.getElementById('rd-rem-body').style.display = on ? 'block' : 'none';
+    if(on) rdSyncRemTimes();
+  }
+  
+  
+  
+  // affiche les sélecteurs d'heure selon le moment (matin/soir/both)
+  function rdSyncRemTimes(){
+    const tm=document.getElementById('rd-time-matin'), ts=document.getElementById('rd-time-soir');
+    if(!tm||!ts) return;
+    const m = rituelDraft ? rituelDraft.moment : 'matin';
+    // Une seule heure : celle du créneau concerné
+    tm.style.display = (m==='matin'||m==='both') ? 'flex' : 'none';
+    ts.style.display = (m==='soir'||m==='both'||m==='hebdo') ? 'flex' : 'none';
+
+  }
+
+    function rdSetMoment(m){
+    rituelDraft.moment = m;
+    const hd=document.getElementById('rd-hebdo-day'); if(hd) hd.style.display = (m==='hebdo') ? 'block' : 'none';
+    // Le nom suggéré apparaît en gris dans le champ : discret, et modifiable
+    const nomEl=document.getElementById('rd-nom');
+    if(nomEl){
+      nomEl.placeholder = (m==='matin') ? 'Rituel du matin'
+                        : (m==='soir')  ? 'Rituel du soir'
+                        : (m==='hebdo') ? 'Soin de la semaine' : 'Mon rituel';
+    }
+    if(document.getElementById('rd-rem-on') && document.getElementById('rd-rem-on').checked) rdSyncRemTimes();
+  }
+  function rdRemove(id){ rituelDraft.produits = rituelDraft.produits.filter(x=>x!==id); renderRdProducts(); }
+  function renderRdProducts(){
+    const list=document.getElementById('rd-products'); if(!list) return;
+    if(!rituelDraft.produits.length){ list.innerHTML=''; return; }
+    list.innerHTML = rituelDraft.produits.map((id,i)=>{
+      const p=rdProductMap[id]; if(!p) return '';
+      return `<div class="rd-card" data-id="${id}"><div class="rd-handle">⠿</div><div class="rd-emoji">${p.emoji||'🧴'}</div><div style="flex:1;min-width:0;"><div class="rd-step" style="font-size:10px;color:var(--accent-deep);letter-spacing:.08em;">ÉTAPE ${i+1}</div><div class="product-name" style="font-size:15px;">${escapeHtml(p.nom||'')}${p.categorie? ' <span style="font-size:10px;color:var(--muted);font-weight:500;">· '+catLabel(p.categorie)+'</span>' : ''}</div></div><button class="rd-remove" onclick="rdRemove('${id}')">×</button></div>`;
+    }).join('');
+    initRituelDnd();
+    renderRdConflicts();
+  }
+  function rdActives(p){
+    const s=((p&&p.nom||'')+' '+(p&&p.effets||'')).toLowerCase();
+    const set=new Set();
+    if(/r[ée]tin|tr[ée]tin|adapal/.test(s)) set.add('retinoid');
+    if(/vitamine c|vitamin c|ascorb/.test(s)) set.add('vitc');
+    if(/\baha\b|\bbha\b|\bpha\b|glycoliqu|salicyliqu|lactiqu|mand[ée]liqu|peeling|exfoli/.test(s)) set.add('acids');
+    if(/benzoyl|peroxyde de benzoyle|\bbpo\b/.test(s)) set.add('bpo');
+    return set;
+  }
+  function detectConflicts(prods){
+    const all=new Set(); prods.forEach(p=>rdActives(p).forEach(a=>all.add(a)));
+    const m=[];
+    if(all.has('retinoid')&&all.has('acids')) m.push('Rétinoïde + acides exfoliants : souvent trop irritant dans le même rituel. Beaucoup préfèrent les espacer (un soir sur deux).');
+    if(all.has('retinoid')&&all.has('vitc')) m.push('Rétinoïde + vitamine C : on les sépare souvent · vitamine C le matin, rétinoïde le soir.');
+    if(all.has('retinoid')&&all.has('bpo')) m.push('Rétinoïde + peroxyde de benzoyle : peuvent s\'irriter ou se neutraliser selon la formule · souvent mieux d\'alterner.');
+    if(all.has('acids')&&all.has('vitc')) m.push('Acides exfoliants + vitamine C : combo parfois irritant · beaucoup préfèrent les espacer.');
+    return m;
+  }
+  function renderRdConflicts(){
+    const box=document.getElementById('rd-conflicts'); if(!box) return;
+    const prods=(rituelDraft&&rituelDraft.produits||[]).map(id=>rdProductMap[id]).filter(Boolean);
+    const msgs=detectConflicts(prods);
+    if(!msgs.length){ box.innerHTML=''; return; }
+    box.innerHTML='<div style="background:#FBF1E6;border:1px solid #EBD9BE;border-radius:14px;padding:12px 14px;font-size:12.5px;color:#7A5A2E;line-height:1.55;margin-bottom:4px;">💡 <b>Petit conseil</b><br>'+msgs.map(escapeHtml).join('<br>')+'<br><button class="btn-soft" style="padding:7px 14px;font-size:11.5px;margin-top:8px;" onclick="closeRituelSheet();navTo(\'chat\')">En parler à Léa →</button><div style="margin-top:6px;color:#A98A5E;font-size:11px;">Ça dépend de ta peau et des formules · ce n\'est pas un avis médical.</div></div>';
+  }
+  function renumberRd(){
+    const list=document.getElementById('rd-products'); if(!list) return;
+    [...list.querySelectorAll('.rd-card')].forEach((c,i)=>{ const s=c.querySelector('.rd-step'); if(s) s.textContent='ÉTAPE '+(i+1); });
+  }
+  function initRituelDnd(){
+    const list=document.getElementById('rd-products'); if(!list) return;
+    list.querySelectorAll('.rd-handle').forEach(h=>{
+      h.onpointerdown=(e)=>{
+        e.preventDefault();
+        const dragEl=h.closest('.rd-card'); if(!dragEl) return;
+        const cards=[...list.querySelectorAll('.rd-card')];
+        const idx=cards.indexOf(dragEl);
+        const gap=parseFloat(getComputedStyle(list).rowGap)||8;
+        const rowH=dragEl.offsetHeight+gap;
+        const startY=e.clientY;
+        let curIdx=idx;
+        dragEl.classList.add('dragging');
+        try{ h.setPointerCapture(e.pointerId); }catch(_){}
+        const others=cards.filter(x=>x!==dragEl);
+        const move=(ev)=>{
+          const dy=ev.clientY-startY;
+          dragEl.style.transform='translateY('+dy+'px)';
+          let target=idx+Math.round(dy/rowH);
+          target=Math.max(0, Math.min(cards.length-1, target));
+          if(target!==curIdx){
+            curIdx=target;
+            others.forEach(o=>{
+              const oi=cards.indexOf(o);
+              let shift=0;
+              if(idx<curIdx && oi>idx && oi<=curIdx) shift=-rowH;
+              else if(idx>curIdx && oi>=curIdx && oi<idx) shift=rowH;
+              o.style.transform = shift ? 'translateY('+shift+'px)' : '';
+            });
+            if(navigator.vibrate) navigator.vibrate(8);
+          }
+        };
+        const up=()=>{
+          document.removeEventListener('pointermove',move);
+          document.removeEventListener('pointerup',up);
+          document.removeEventListener('pointercancel',up);
+          dragEl.classList.remove('dragging');
+          cards.forEach(x=>{ x.style.transform=''; });
+          if(curIdx!==idx){
+            const order=[...others]; order.splice(curIdx,0,dragEl);
+            order.forEach(x=>list.appendChild(x));
+            renumberRd();
+          }
+          rituelDraft.produits = [...list.querySelectorAll('.rd-card')].map(x=>x.dataset.id);
+        };
+        document.addEventListener('pointermove',move);
+        document.addEventListener('pointerup',up);
+        document.addEventListener('pointercancel',up);
+      };
+    });
+  }
+  // ===== Tri/filtre du picker de produits (rituel) =====
+  let rdSort = 'fav';
+  let rdCatFilter = 'all';
+  function setRdSort(s){
+    rdSort = s;
+    document.querySelectorAll('[data-rdsort]').forEach(b=>b.classList.toggle('sel', b.dataset.rdsort===s));
+    renderRdPickerList();
+  }
+  function toggleRdCatDD(){ document.getElementById('rd-cat-menu').classList.toggle('open'); }
+  function pickRdCat(cat, label){
+    rdCatFilter = cat;
+    document.querySelectorAll('#rd-cat-menu .cat-dd-opt').forEach(b=>b.classList.toggle('sel', b.dataset.cat===cat));
+    const btn=document.getElementById('rd-cat-btn');
+    btn.innerHTML = label + ' <span style="font-size:8px;opacity:0.6;">▼</span>';
+    btn.classList.toggle('active-filter', cat!=='all');
+    document.getElementById('rd-cat-menu').classList.remove('open');
+    renderRdPickerList();
+  }
+  // construit la liste filtrée + triée
+  function renderRdPickerList(){
+    const list=document.getElementById('rd-picker-list');
+    if(!list) return;
+    let ids = Object.keys(rdProductMap).filter(id=>!rituelDraft.produits.includes(id));
+    // filtre catégorie
+    if(rdCatFilter!=='all'){
+      ids = ids.filter(id=>{ const p=rdProductMap[id]; return (p && (p.categorie||'autre')===rdCatFilter); });
+    }
+    // tri
+    const favs = (typeof favSet==='function') ? favSet() : new Set();
+    ids.sort(function(a,b){
+      const pa=rdProductMap[a], pb=rdProductMap[b];
+      if(rdSort==='alpha'){ return (pa.nom||'').localeCompare(pb.nom||'', 'fr', {sensitivity:'base'}); }
+      if(rdSort==='perem'){
+        const da=pa.date_peremption||'', db=pb.date_peremption||'';
+        if(!da && !db) return 0; if(!da) return 1; if(!db) return -1; return da.localeCompare(db);
+      }
+      // favoris
+      const fa=favs.has(a)?1:0, fb=favs.has(b)?1:0;
+      if(fa!==fb) return fb-fa; return 0;
+    });
+    if(!ids.length){
+      list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 2px;line-height:1.5;">Aucun produit dans cette vue 🌸</div>';
+      return;
+    }
+    list.innerHTML = ids.map(id=>{ const p=rdProductMap[id]; const sel=rdPickerSel.has(id);
+      const nom=(p.nom||'').split(' · ')[0];
+      return '<button class="rd-pick'+(sel?' picked':'')+'" data-id="'+id+'" onclick="rdTogglePick(\''+id+'\',this)" style="display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid '+(sel?'var(--accent)':'var(--line)')+';background:var(--surface);cursor:pointer;text-align:left;">'+
+        '<span style="font-size:20px;">'+(p.emoji||'🧴')+'</span>'+
+        '<span style="flex:1;font-size:14px;color:var(--ink);">'+nom+'</span>'+
+        '<span style="width:22px;height:22px;border-radius:50%;border:1.5px solid '+(sel?'var(--accent)':'var(--line)')+';background:'+(sel?'var(--accent)':'transparent')+';display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;">'+(sel?'✓':'')+'</span>'+
+      '</button>';
+    }).join('');
+  }
+
+  function openRituelHelp(){ document.getElementById('rituel-help-overlay').style.display='flex'; }
+  function closeRituelHelp(){ document.getElementById('rituel-help-overlay').style.display='none'; }
+
+      async function openRdPicker(){
+    rdPickerSel = new Set();
+    rdSort = 'fav'; rdCatFilter = 'all';
+    // reset visuel des chips
+    setTimeout(function(){
+      document.querySelectorAll('[data-rdsort]').forEach(b=>b.classList.toggle('sel', b.dataset.rdsort==='fav'));
+      const cb=document.getElementById('rd-cat-btn'); if(cb){ cb.innerHTML='Catégorie <span style="font-size:8px;opacity:0.6;">▼</span>'; cb.classList.remove('active-filter'); }
+      document.querySelectorAll('#rd-cat-menu .cat-dd-opt').forEach(b=>b.classList.toggle('sel', b.dataset.cat==='all'));
+    },0);
+    renderRdPickerList();
+    document.getElementById('rd-picker').classList.add('open');
+  }
+  function rdTogglePick(id, btn){
+    if(rdPickerSel.has(id)){ rdPickerSel.delete(id); }
+    else { rdPickerSel.add(id); }
+    renderRdPickerList();
+  }
+  function closeRdPicker(){ document.getElementById('rd-picker').classList.remove('open'); }
+  function confirmRdPicker(){
+    rdPickerSel.forEach(id=>{ if(!rituelDraft.produits.includes(id)) rituelDraft.produits.push(id); });
+    closeRdPicker();
+    renderRdProducts();
+  }
+  async function saveRituel(){
+    if(!currentUser) return;
+    const _autoNom = rituelDraft.moment==='matin'?'Rituel du matin':(rituelDraft.moment==='soir'?'Rituel du soir':(rituelDraft.moment==='hebdo'?'Soins de la semaine':'Mon rituel'));
+    const nom = (document.getElementById('rd-nom').value.trim()) || _autoNom;
+    showToast('Enregistrement…');
+    try{
+      const { data: cp } = await sb.from('products').select('id,categorie').in('id', rituelDraft.produits);
+      const rk={}; (cp||[]).forEach(p=>rk[p.id]=(p.categorie in CAT_RANK)?CAT_RANK[p.categorie]:99);
+      const before=rituelDraft.produits.join(',');
+      rituelDraft.produits=[...rituelDraft.produits].map((id,i)=>({id,i})).sort((x,y)=>((rk[x.id]??99)-(rk[y.id]??99))||(x.i-y.i)).map(x=>x.id);
+      if(rituelDraft.produits.join(',')!==before) showToast('Ordre ajusté selon les catégories ✨');
+    }catch(e){}
+    try{
+      const { data: oth } = await sb.from('rituels').select('id,moment,actif').eq('user_id', currentUser.id);
+      const myM=(rituelDraft.moment==='matin'||rituelDraft.moment==='both');
+      const myS=(rituelDraft.moment==='soir'||rituelDraft.moment==='both');
+      const offIds=(oth||[]).filter(r=>r.actif && r.id!==rituelDraft.id && r.moment!=='hebdo' && rituelDraft.moment!=='hebdo' && ((myM&&(r.moment==='matin'||r.moment==='both'))||(myS&&(r.moment==='soir'||r.moment==='both')))).map(r=>r.id);
+      if(offIds.length) await sb.from('rituels').update({actif:false}).in('id', offIds);
+    }catch(e){}
+    let savedId = rituelDraft.id || null;
+    if(rituelDraft.id){
+      await sb.from('rituels').update({ nom, moment:rituelDraft.moment, produits:rituelDraft.produits, actif:true, rappels:rdCollectRappels() }).eq('id', rituelDraft.id);
+    } else {
+      const { data: existing } = await sb.from('rituels').select('id').eq('user_id', currentUser.id);
+      const position = existing ? existing.length : 0;
+      const { data: _ins } = await sb.from('rituels').insert({ user_id:currentUser.id, nom, moment:rituelDraft.moment, produits:rituelDraft.produits, position, actif:true , rappels:rdCollectRappels() }).select('id').maybeSingle(); savedId = _ins ? _ins.id : savedId;
+    }
+    await recomputeRituelType();
+    closeRituelSheet();
+    showToast('Rituel enregistré ✓');
+    window.__allRituels=null;
+    loadRituels();
+    loadHomeRoutine();
+    if(savedId) setTimeout(function(){ openRituelChemin(savedId); }, 200);
+  }
+
+  function closeLeaPop(){ const p=document.getElementById('lea-pop'); if(p) p.classList.remove('show'); const m=document.getElementById('lea-pop-menu'); if(m) m.classList.remove('open'); }
+  function leaPopMenu(ev){ if(ev) ev.stopPropagation(); const m=document.getElementById('lea-pop-menu'); if(m) m.classList.toggle('open'); }
+  function leaPopChat(){ closeLeaPop(); if(typeof openChat==='function') openChat(); }
+  function toggleLeaPop(){
+    const b=document.getElementById('lea-bubble'); if(!b) return;
+    let p=document.getElementById('lea-pop');
+    if(!p){ p=document.createElement('div'); p.id='lea-pop'; p.className='lea-pop'; document.body.appendChild(p); }
+    if(p.classList.contains('show')){ closeLeaPop(); return; }
+    const nm=(typeof coachName==='function'? coachName() : 'Léa');
+    p.innerHTML='<div class="lea-pop-head"><span class="lea-pop-av">'+nm.charAt(0).toUpperCase()+'</span><span class="lea-pop-name">'+nm+'</span>'+
+      '<button class="lea-pop-ic" aria-label="Options" onclick="leaPopMenu(event)">⋯</button>'+
+      '<button class="lea-pop-ic" aria-label="Fermer" onclick="closeLeaPop()">×</button>'+
+      '<div class="lea-pop-menu" id="lea-pop-menu"><button onclick="leaPopChat()">💬 Ouvrir la messagerie</button></div></div>'+
+      '<div class="lea-pop-msg">Coucou 🌸 Une question sur ta peau, un produit ou ta routine ? Je suis là.</div>'+
+      '<div class="lea-pop-hint">Touche ⋯ pour ouvrir la messagerie</div>';
+    const W=238; p.style.width=W+'px'; p.style.visibility='hidden'; p.classList.add('show');
+    const r=b.getBoundingClientRect();
+    let left=r.left+r.width/2-W/2; left=Math.max(10, Math.min(left, window.innerWidth-W-10));
+    const ph=p.offsetHeight||160;
+    let top=r.top-ph-10; if(top<64) top=Math.min(r.bottom+10, window.innerHeight-ph-14);
+    p.style.left=left+'px'; p.style.top=top+'px'; p.style.visibility='';
+  }
+  document.addEventListener('click', function(e){
+    const p=document.getElementById('lea-pop');
+    if(!p || !p.classList.contains('show')) return;
+    if(e.target.closest && (e.target.closest('.lea-pop') || e.target.closest('.lea-bubble'))) return;
+    closeLeaPop();
+  });
+
+  // ===== Bulle Léa flottante (déplaçable, se colle aux bords) =====
+  function placeBubble(x,y){
+    const b=document.getElementById('lea-bubble'); if(!b) return;
+    x = Math.max(8, Math.min(x, window.innerWidth - 46 - 8));
+    y = Math.max(60, Math.min(y, window.innerHeight - 46 - 84));
+    b.style.left = x+'px'; b.style.top = y+'px'; b.style.right='auto'; b.style.bottom='auto';
+  }
+  let bubbleInit=false;
+  function initLeaBubble(){
+    const b=document.getElementById('lea-bubble'); if(!b || bubbleInit) return;
+    bubbleInit=true;
+    placeBubble(window.innerWidth - 46 - 14, window.innerHeight - 46 - 176);
+    let dragging=false, moved=false, sx=0, sy=0, ox=0, oy=0;
+    b.addEventListener('pointerdown', e=>{
+      dragging=true; moved=false; closeLeaPop();
+      try{ b.setPointerCapture(e.pointerId); }catch(_){}
+      sx=e.clientX; sy=e.clientY;
+      const r=b.getBoundingClientRect(); ox=r.left; oy=r.top;
+      b.style.transition='none';
+    });
+    b.addEventListener('pointermove', e=>{
+      if(!dragging) return;
+      const dx=e.clientX-sx, dy=e.clientY-sy;
+      if(Math.abs(dx)>4 || Math.abs(dy)>4) moved=true;
+      placeBubble(ox+dx, oy+dy);
+    });
+    b.addEventListener('pointerup', e=>{
+      if(!dragging) return; dragging=false;
+      b.style.transition='left .25s ease, top .25s ease';
+      if(!moved){ toggleLeaPop(); return; }
+      const r=b.getBoundingClientRect();
+      const toLeft = (r.left + r.width/2) < window.innerWidth/2;
+      placeBubble(toLeft ? 14 : (window.innerWidth - 46 - 14), r.top);
+    });
+  }
+
+  // ===== Thèmes de couleur =====
+  const THEMES = {
+    terracotta: { name:'Terracotta', vars:{ '--accent':'#C95A3F','--accent-deep':'#8E3C26','--accent-soft':'#EBCDC0','--blush':'#E8A6A0','--blush-soft':'#F6E0DC' }, swatch:['#C95A3F','#E8A6A0','#F6E0DC'] },
+    rose:       { name:'Rose poudré', vars:{ '--accent':'#D2638A','--accent-deep':'#A8456A','--accent-soft':'#F0CBD9','--blush':'#E89BB4','--blush-soft':'#FBE4EC' }, swatch:['#D2638A','#E89BB4','#FBE4EC'] },
+    sauge:      { name:'Sauge', vars:{ '--accent':'#7A9468','--accent-deep':'#5C7650','--accent-soft':'#CEDCC2','--blush':'#A7C291','--blush-soft':'#E9F0E2' }, swatch:['#7A9468','#A7C291','#E9F0E2'] },
+    lavande:    { name:'Lavande', vars:{ '--accent':'#8B7CC4','--accent-deep':'#6B5CA6','--accent-soft':'#D9D0EE','--blush':'#B3A4E0','--blush-soft':'#EDE7F7' }, swatch:['#8B7CC4','#B3A4E0','#EDE7F7'] },
+    bleu:       { name:'Bleu doux', vars:{ '--accent':'#5B89BE','--accent-deep':'#426A9C','--accent-soft':'#C7DAEE','--blush':'#9BBEE0','--blush-soft':'#E5EEF8' }, swatch:['#5B89BE','#9BBEE0','#E5EEF8'] }
+  };
+  function currentTheme(){ try{ return localStorage.getItem('rituel_theme') || 'terracotta'; }catch(e){ return 'terracotta'; } }
+  function applyTheme(key){
+    const t = THEMES[key] || THEMES.terracotta;
+    Object.entries(t.vars).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
+    // Synchroniser la barre système (theme-color) avec le thème choisi
+    try{
+      let meta=document.querySelector('meta[name="theme-color"]');
+      if(meta) meta.setAttribute('content', t.vars['--blush-soft'] || '#F7F1EA');
+    }catch(e){}
+    try{ localStorage.setItem('rituel_theme', key); }catch(e){}
+  }
+  function openThemeSheet(){
+    const cur=currentTheme();
+    document.getElementById('theme-list').innerHTML = Object.entries(THEMES).map(([k,t])=>`<button class="theme-opt${k===cur?' selected':''}" onclick="pickTheme('${k}')"><div class="theme-swatch">${t.swatch.map(c=>`<span style="background:${c};"></span>`).join('')}</div><div class="theme-name">${t.name}</div><div class="theme-check"></div></button>`).join('');
+    document.getElementById('theme-sheet').classList.add('open');
+  }
+  function pickTheme(k){ applyTheme(k); openThemeSheet(); showToast('Thème appliqué 🌸'); }
+  function closeThemeSheet(){ document.getElementById('theme-sheet').classList.remove('open'); }
+  applyTheme(currentTheme());
+
+  // ===== Habitudes (trackers perso) =====
+  const HABIT_EMOJIS = ['💧','🏃','🧘','🧖','💊','🥗','😴','📖','🚶','🧴','☀️','🦷','💪','🌙','🍎','✍️','🚭','🧹'];
+  let editingHabitId = null;
+  let hfEmoji = '💧';
+  function streakFromSet(set){
+    let s=0; const d=new Date();
+    if(!set.has(d.toISOString().slice(0,10))) d.setDate(d.getDate()-1);
+    for(let i=0;i<400;i++){ const ds=d.toISOString().slice(0,10); if(set.has(ds)){ s++; d.setDate(d.getDate()-1); } else break; }
+    return s;
+  }
+  async function loadHabits(){
+    if(!currentUser) return;
+    const list=document.getElementById('habits-list'); if(!list) return;
+    const { data: habits } = await sb.from('habits').select('*').eq('user_id', currentUser.id).order('position',{ascending:true});
+    const hs = habits || [];
+    if(!hs.length){ list.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:13px;padding:14px;line-height:1.5;">Aucune habitude pour l'instant.<br>Suis ce que tu veux : eau, sport, masque… 🌸</div>`; return; }
+    const since=new Date(); since.setDate(since.getDate()-400);
+    const { data: logs } = await sb.from('habit_logs').select('habit_id,date').eq('user_id', currentUser.id).gte('date', since.toISOString().slice(0,10));
+    const byHabit={}; (logs||[]).forEach(l=>{ (byHabit[l.habit_id] = byHabit[l.habit_id] || new Set()).add(l.date); });
+    const today=todayStr();
+    let html='';
+    hs.forEach(h=>{
+      const set=byHabit[h.id] || new Set();
+      const streak=streakFromSet(set);
+      const done=set.has(today);
+      html += `<div class="habit-card">
+        <div class="habit-emoji" onclick="openHabitForm('${h.id}')">${h.emoji||'✨'}</div>
+        <div class="habit-info" onclick="openHabitForm('${h.id}')"><div class="habit-name">${escapeHtml(h.nom||'')}</div><div class="habit-streak">${streak>0?('🔥 '+streak+' jour'+(streak>1?'s':'')):'Pas encore de série'}</div></div>
+        <button class="habit-toggle${done?' done':''}" onclick="toggleHabitToday('${h.id}',${done?'true':'false'})">${done?'✓':''}</button>
+      </div>`;
+    });
+    list.innerHTML = html;
+  }
+  async function toggleHabitToday(id, done){
+    if(!currentUser) return;
+    const today=todayStr();
+    if(done){ await sb.from('habit_logs').delete().eq('user_id', currentUser.id).eq('habit_id', id).eq('date', today); }
+    else { await sb.from('habit_logs').insert({ user_id: currentUser.id, habit_id: id, date: today }); }
+    loadHabits();
+  }
+  function renderHabitEmoji(){
+    document.getElementById('habit-emoji-picker').innerHTML = HABIT_EMOJIS.map(e=>`<button type="button" class="emoji-opt${e===hfEmoji?' selected':''}" onclick="pickHabitEmoji('${e}')">${e}</button>`).join('');
+  }
+  function pickHabitEmoji(e){ hfEmoji=e; renderHabitEmoji(); }
+  function closeHabitSheet(){ document.getElementById('habit-sheet').classList.remove('open'); }
+  async function openHabitForm(id){
+    editingHabitId = id || null;
+    hfEmoji = '💧';
+    document.getElementById('hf-error').textContent='';
+    document.getElementById('hf-nom').value='';
+    document.getElementById('hf-delete').style.display = id ? 'block' : 'none';
+    document.getElementById('habit-sheet-title').textContent = id ? "Modifier l'habitude" : 'Nouvelle habitude';
+    renderHabitEmoji();
+    document.getElementById('habit-sheet').classList.add('open');
+    if(id){
+      const { data: h } = await sb.from('habits').select('*').eq('id', id).maybeSingle();
+      if(h){ document.getElementById('hf-nom').value=h.nom||''; hfEmoji=h.emoji||'💧'; renderHabitEmoji(); }
+    }
+  }
+  async function saveHabit(){
+    if(!currentUser) return;
+    const nom=document.getElementById('hf-nom').value.trim();
+    if(!nom){ document.getElementById('hf-error').textContent='Donne un nom à ton habitude.'; return; }
+    showToast('Enregistrement…');
+    if(editingHabitId){
+      await sb.from('habits').update({ nom, emoji: hfEmoji }).eq('id', editingHabitId);
+    } else {
+      const { data: existing } = await sb.from('habits').select('id').eq('user_id', currentUser.id);
+      await sb.from('habits').insert({ user_id: currentUser.id, nom, emoji: hfEmoji, position: existing ? existing.length : 0 });
+    }
+    closeHabitSheet();
+    showToast('Habitude enregistrée ✓');
+    loadHabits();
+  }
+  async function deleteHabit(){
+    if(!editingHabitId) return;
+    if(!await cmAsk({titre:'Supprimer cette habitude ?',texte:'Son historique complet sera effacé.',ok:'Supprimer',annuler:'Annuler',danger:true})) return;
+    await sb.from('habits').delete().eq('id', editingHabitId);
+    closeHabitSheet();
+    showToast('Habitude supprimée');
+    loadHabits();
+  }
+  // Habitudes dans la fiche d'un jour du calendrier
+  async function renderDayHabits(ds){
+    const host=document.getElementById('dd-habits'); if(!host || !currentUser) return;
+    const { data: habits } = await sb.from('habits').select('*').eq('user_id', currentUser.id).order('position',{ascending:true});
+    const hs=habits||[];
+    if(!hs.length){ host.innerHTML='<div style="color:var(--muted);font-size:13px;">Aucune habitude. Crée-en sur l\'accueil 🌸</div>'; return; }
+    const { data: logs } = await sb.from('habit_logs').select('habit_id').eq('user_id', currentUser.id).eq('date', ds);
+    const doneSet=new Set((logs||[]).map(l=>l.habit_id));
+    host.innerHTML = hs.map(h=>`<div class="rem-row" style="padding:10px 0;"><div class="rem-label">${h.emoji||'✨'} ${escapeHtml(h.nom||'')}</div><button class="habit-toggle${doneSet.has(h.id)?' done':''}" onclick="toggleHabitDate('${h.id}','${ds}',this)">${doneSet.has(h.id)?'✓':''}</button></div>`).join('');
+  }
+  async function toggleHabitDate(id, ds, btn){
+    if(!currentUser) return;
+    const isDone=btn.classList.contains('done');
+    if(isDone){ await sb.from('habit_logs').delete().eq('user_id', currentUser.id).eq('habit_id', id).eq('date', ds); btn.classList.remove('done'); btn.textContent=''; }
+    else { await sb.from('habit_logs').insert({ user_id: currentUser.id, habit_id: id, date: ds }); btn.classList.add('done'); btn.textContent='✓'; }
+  }
+
+  // ===== Limite IA bêta : message doux + bandeau =====
+  function leaLimitMsg(){
+    return "Je dois faire une petite pause pour aujourd'hui 🌸\n\nLéa est offerte à raison de 5 échanges par jour. Avec Rituel+, elle devient illimitée 🌸";
+  }
+  function showLimitToast(){
+    if(isPremium){ showToast("Oups, réessaie dans un instant 🌸"); return; }
+    showToast("Tes 5 échanges du jour sont utilisés 🌸");
+    setTimeout(()=>openPlusSheet('Léa illimitée avec Rituel+ 💬'), 900);
+  }
+
+  // ===== Chat · vraie Léa via le backend sécurisé (/api/lea) =====
+  function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function formatMessage(text){
+    let t = escapeHtml((text||'').trim());
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');           // **gras**
+    t = t.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');           // *italique*
+    t = t.replace(/^\s*[\-•]\s+/gm, '• ');                              // puces propres
+    t = t.replace(/\n{2,}/g, '<br><br>').replace(/\n/g, '<br>');        // sauts de ligne
+    return t;
+  }
+  let leaHistory = [];
+  let leaBusy = false;
+  function typingBubble(){ const t=document.createElement('div'); t.className='typing'; t.id='typing'; t.innerHTML='<span></span><span></span><span></span>'; return t; }
+  function leaQuick(text){ const s=document.getElementById('chat-starter'); if(s) s.remove(); sendMsg(text); }
+
+  // Rassemble le contexte (données perso) envoyé à Léa pour des conseils personnalisés
+  async function buildLeaContext(){
+    const GOAL_GUIDE={ constance:"L'utilisateur veut surtout TENIR SA ROUTINE. Encourage la régularité, les petites victoires quotidiennes, et aide à ancrer l'habitude. Valorise la constance plus que la performance.", comprendre:"L'utilisateur veut surtout COMPRENDRE SA PEAU. Aide à identifier ce qui marche et ce qui aggrave, fais des liens entre ses habitudes (sommeil, produits, contexte) et l'état de sa peau.", deux:"L'utilisateur veut À LA FOIS tenir sa routine ET comprendre sa peau. Encourage la régularité au quotidien, tout en l'aidant à identifier ce qui marche et à faire des liens entre ses habitudes et l'état de sa peau.", resultats:"L'utilisateur veut surtout VOIR DES RÉSULTATS. Aide à repérer l'évolution dans le temps, encourage le suivi photo, et donne un retour honnête sur ce qui semble fonctionner ou non au fil des jours." };
+    const ctx = {
+      name: state.name || '',
+      goal: (state.goal && GOAL_GUIDE[state.goal]) ? GOAL_GUIDE[state.goal] : null,
+      skin: SKIN_LABELS[state.skinType] || 'non précisé',
+      concern: (state.concerns||[]).map(c=>CONCERN_LABELS[c]||c).join(', ') || 'aucune en particulier',
+      coach: 'femme',
+      coachName: coachName(),
+      userGenre: state.genre || null
+    };
+    if(!currentUser) return ctx;
+    try{
+      const since=new Date(); since.setDate(since.getDate()-7);
+      const sinceStr=since.toISOString().slice(0,10);
+      const [streak, tdRes, weekRes, prodRes] = await Promise.all([
+        computeStreak(),
+        sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1),
+        sb.from('entries').select('sommeil,hydratation,alimentation,routine_matin,routine_soir').eq('user_id', currentUser.id).gte('date', sinceStr),
+        sb.from('products').select('nom,moment,position').eq('user_id', currentUser.id).order('position',{ascending:true})
+      ]);
+      ctx.streak = streak;
+      const e = (tdRes.data && tdRes.data.length) ? tdRes.data[0] : null;
+      if(e){
+        const MOOD=['','difficile','moyenne','bien','top','sublime'];
+        ctx.today = {
+          humeur: e.humeur ? MOOD[e.humeur] : null,
+          humeur_intensite: e.humeur_intensite,
+          sommeil: e.sommeil,
+          hydratation: e.hydratation,
+          alimentation: e.alimentation!=null ? ALIM_LABELS[e.alimentation] : null,
+          routine_matin: !!e.routine_matin,
+          routine_soir: !!e.routine_soir
+        };
+      }
+      if(e && e.score_peau!=null) ctx.eclat_photo = e.score_peau;
+      try{ const ci=cyclePhaseInfo(); if(ci) ctx.cycle = { jour: ci.day, phase: ci.phase }; }catch(_e){}
+      try{ const obs=localStorage.getItem('rituel_last_obs'); if(obs) ctx.derniere_observation_photo = obs; }catch(_e){}
+      const week = weekRes.data || [];
+      if(week.length){
+        const avg=(arr)=>{ const v=arr.filter(x=>x!=null).map(parseFloat); return v.length ? (v.reduce((a,b)=>a+b,0)/v.length) : null; };
+        ctx.semaine = {
+          sommeil_moyen: avg(week.map(w=>w.sommeil)),
+          hydratation_moyenne: avg(week.map(w=>w.hydratation)),
+          jours_routine_complete: week.filter(w=>w.routine_matin && w.routine_soir).length,
+          jours_notes: week.length
+        };
+      }
+      const prods = prodRes.data || [];
+      if(prods.length){
+        ctx.routine = {
+          matin: prods.filter(p=>p.moment==='matin').map(p=>p.nom),
+          soir: prods.filter(p=>p.moment==='soir').map(p=>p.nom)
+        };
+      }
+    }catch(e){ /* en cas d'erreur, on envoie au moins le profil de base */ }
+    return ctx;
+  }
+
+  // Conseil du jour de Léa sur l'accueil · vrai conseil personnalisé, mis en cache 1×/jour
+  async function loadLeaTip(){
+    const body=document.getElementById('lea-tip-body');
+    if(!body) return;
+    if(!currentUser){ body.textContent="Ajoute tes infos et je te donnerai des conseils rien que pour toi 🌸"; return; }
+    const key='rituel_tip_'+currentUser.id+'_'+todayStr();
+    try{ const cached=localStorage.getItem(key); if(cached){ body.innerHTML=formatMessage(cached); return; } }catch(e){}
+    const ctx=await buildLeaContext();
+    const hasData = (ctx.skin && ctx.skin!=='non précisé') || (ctx.concern && ctx.concern!=='aucune en particulier') || ctx.today || ctx.routine || (ctx.streak>0);
+    if(!hasData){
+      body.textContent="Ajoute tes infos du jour (peau, sommeil, routine) et je te donnerai des conseils rien que pour toi 🌸";
+      return;
+    }
+    body.textContent='Ton conseil du jour arrive… 🌸';
+    try{
+      const res=await fetch('/api/lea',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+        messages:[{ role:'user', content:"(Message automatique de l'app, ce n'est pas une vraie question de la personne.) Donne UN seul conseil du jour : court (1 à 2 phrases maximum), chaleureux et personnalisé d'après mes données. Commence directement par le conseil, sans salutation et sans poser de question à la fin." }],
+        profile: ctx, user_id: currentUser?currentUser.id:null
+      }) });
+      const data=await res.json();
+      if(data && data.limited){ body.textContent="Léa fait une pause aujourd'hui 🌸 (limite bêta atteinte)"; return; }
+      if(data && data.reply){
+        const tip=data.reply.trim();
+        try{ localStorage.setItem(key, tip); }catch(e){}
+        body.innerHTML=formatMessage(tip);
+      } else {
+        body.textContent="Pose-moi ta question quand tu veux, je suis là 🌸";
+      }
+    }catch(e){
+      body.textContent="Pose-moi ta question quand tu veux, je suis là 🌸";
+    }
+  }
+
+  async function sendMsg(text){
+    if(leaBusy) return;
+    const feed=document.getElementById('chat-feed');
+    const starter=document.getElementById('chat-starter'); if(starter) starter.remove();
+    const u=document.createElement('div'); u.className='msg msg-user'; u.textContent=text; feed.appendChild(u); feed.scrollTop=feed.scrollHeight;
+    leaHistory.push({ role:'user', content:text });
+    feed.appendChild(typingBubble()); feed.scrollTop=feed.scrollHeight;
+    leaBusy=true;
+    try{
+      const ctx = await buildLeaContext();
+      const res=await fetch('/api/lea',{
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({
+          messages: leaHistory,
+          profile: ctx, user_id: currentUser?currentUser.id:null
+        })
+      });
+      const data=await res.json();
+      const tp=document.getElementById('typing'); if(tp) tp.remove();
+      if(data && data.limited){ const lim=document.createElement('div'); lim.className='msg msg-ai'; lim.innerHTML=formatMessage(leaLimitMsg()); feed.appendChild(lim); feed.scrollTop=feed.scrollHeight; setChatLocked(true); leaBusy=false; return; }
+      if(data && data.reply){
+        leaHistory.push({ role:'assistant', content:data.reply });
+        const a=document.createElement('div'); a.className='msg msg-ai'; a.innerHTML=formatMessage(data.reply); feed.appendChild(a);
+      } else {
+        const e=document.createElement('div'); e.className='msg msg-ai'; e.textContent="Désolée, je n'arrive pas à répondre là 🌿 Réessayez dans un instant.";
+        feed.appendChild(e);
+      }
+    }catch(err){
+      const tp=document.getElementById('typing'); if(tp) tp.remove();
+      const e=document.createElement('div'); e.className='msg msg-ai'; e.textContent="Connexion à Léa impossible pour l'instant 🌿 (Le service IA n'est peut-être pas encore activé.)";
+      feed.appendChild(e);
+    }finally{
+      leaBusy=false; feed.scrollTop=feed.scrollHeight;
+    }
+  }
+  // ===== Verrou de la barre de chat quand la limite IA est atteinte =====
+  // Information neutre : combien d'échanges il reste aujourd'hui (offre gratuite)
+  const LEA_FREE_PER_DAY = 5;
+  function leaUsedToday(){
+    try{
+      const k='rituel_lea_'+(currentUser?currentUser.id:'x')+'_'+todayStr();
+      return parseInt(localStorage.getItem(k)||'0', 10) || 0;
+    }catch(e){ return 0; }
+  }
+  function leaBumpUsed(){
+    try{
+      const k='rituel_lea_'+(currentUser?currentUser.id:'x')+'_'+todayStr();
+      localStorage.setItem(k, String(leaUsedToday()+1));
+    }catch(e){}
+    refreshChatQuota();
+  }
+  function refreshChatQuota(){
+    const el=document.getElementById('chat-quota');
+    if(!el) return;
+    if(isPremium){ el.style.display='none'; return; }
+    const reste = Math.max(0, LEA_FREE_PER_DAY - leaUsedToday());
+    if(reste<=0){ el.style.display='none'; return; }  // le bandeau prend le relais
+    el.textContent = reste + ' échange' + (reste>1?'s':'') + ' offert' + (reste>1?'s':'') + ' aujourd\'hui sur ' + LEA_FREE_PER_DAY + ' 🌸';
+    el.style.display='block';
+  }
+
+  function setChatLocked(locked){
+    refreshChatQuota();
+    const bar=document.querySelector('.chat-input-bar');
+    const note=document.getElementById('chat-locked-note');
+    const inp=document.getElementById('chat-input');
+    if(bar) bar.classList.toggle('locked', !!locked);
+    if(note) note.classList.toggle('show', !!locked);
+    if(inp){ inp.disabled=!!locked; if(locked){ inp.blur(); } }
+    try{
+      if(locked) localStorage.setItem('rituel_ailock_'+(currentUser?currentUser.id:'x'), todayStr());
+    }catch(e){}
+  }
+  function refreshChatLock(){
+    // grise si le serveur nous a déjà dit "limited" aujourd'hui
+    let locked=false;
+    try{ locked = localStorage.getItem('rituel_ailock_'+(currentUser?currentUser.id:'x'))===todayStr(); }catch(e){}
+    setChatLocked(locked);
+  }
+
+  function sendUserMsg(){ const i=document.getElementById('chat-input'); const t=i.value.trim(); if(!t) return; i.value=''; i.style.height='44px'; if(!isPremium) leaBumpUsed(); sendMsg(t); }
+  function resizeChat(el){ el.style.height='44px'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+  document.getElementById('chat-input').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendUserMsg(); } });
+
+  // ===== Routine tabs =====
+
+  // ===== Journal =====
+  function renderJournal(){
+    const grid=document.getElementById('journal-grid'); if(!grid) return;
+    grid.innerHTML = '<div class="jr-empty"><div class="jr-empty-ico">📷</div>'+
+      '<div class="jr-empty-title">Ta première photo</div>'+
+      '<div class="jr-empty-sub">Prends-la en lumière naturelle. Dans quelques semaines,<br>tu verras le chemin parcouru 🌸</div>'+
+      '<button class="jr-empty-btn" onclick="openPhotoChoice()">Ajouter une photo</button></div>';
+  }
+  function openEntry(day){ showToast(`Entrée du ${day} · vue détaillée bientôt`); }
+
+  // Charge les vraies entrées du journal depuis Supabase
+  // ===== Récap de la semaine (7 derniers jours) =====
+  async function loadWeekRecap(){
+    const sec=document.getElementById('week-recap'); if(!sec) return;
+    if(!currentUser){ sec.style.display='none'; return; }
+    try{
+      const since=new Date(); since.setDate(since.getDate()-6); const sinceStr=since.toISOString().slice(0,10);
+      const { data } = await sb.from('entries').select('*').eq('user_id',currentUser.id).gte('date',sinceStr);
+      const es=data||[];
+      const byDate={}; es.forEach(e=>{ byDate[e.date] = byDate[e.date] ? {...byDate[e.date], ...e} : e; });
+      const days=Object.values(byDate);
+      let rituelDays=0, sleepSum=0,sleepN=0, hydSum=0,hydN=0, eclatSum=0,eclatN=0; const moodCount={};
+      days.forEach(e=>{
+        if(dayComplete(e)) rituelDays++;
+        if(e.sommeil!=null){ sleepSum+=Number(e.sommeil); sleepN++; }
+        if(e.hydratation!=null){ hydSum+=Number(e.hydratation); hydN++; }
+        if(e.score_peau!=null){ eclatSum+=Number(e.score_peau); eclatN++; }
+        if(e.humeur){ moodCount[e.humeur]=(moodCount[e.humeur]||0)+1; }
+      });
+      const MOJI=['','😣','😕','😌','😊','✨'];
+      let domMood=null,domN=0; Object.keys(moodCount).forEach(k=>{ if(moodCount[k]>domN){domN=moodCount[k];domMood=k;} });
+      const tiles=[];
+      tiles.push(['🔥', rituelDays+'/7', 'jours de rituel']);
+      if(eclatN) tiles.push(['✨', Math.round(eclatSum/eclatN), 'éclat moyen']);
+      if(sleepN) tiles.push(['😴', fmtSleep(sleepSum/sleepN), 'sommeil moyen']);
+      if(hydN) tiles.push(['💧', Math.round(hydSum/hydN), 'verres / jour']);
+      if(domMood) tiles.push([MOJI[domMood]||'🌸', '', 'humeur dominante']);
+      document.getElementById('wr-tiles').innerHTML = tiles.map(t=>`<div style="background:var(--surface-warm);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:22px;">${t[0]}</div>${t[1]!==''?`<div style="font-family:var(--serif);font-size:18px;margin-top:2px;">${t[1]}</div>`:'<div style="height:6px;"></div>'}<div style="font-size:11px;color:var(--muted);margin-top:2px;">${t[2]}</div></div>`).join('');
+      let sum;
+      if(!days.length) sum='Commence à noter tes journées pour voir ton récap 🌸';
+      else if(rituelDays>=6) sum='Quelle régularité · '+rituelDays+' jours de rituel cette semaine ! Ta peau te dit merci 🌸';
+      else if(rituelDays>=3) sum='Belle semaine : '+rituelDays+' jours de rituel. On continue en douceur 🌿';
+      else if(rituelDays>=1) sum='Un début, c\'est déjà ça ('+rituelDays+' jour'+(rituelDays>1?'s':'')+'). Cette semaine est une nouvelle chance ✨';
+      else sum='Rien de noté côté rituel cette semaine · sans culpabilité, on repart tout doucement 🌸';
+      document.getElementById('wr-summary').textContent=sum;
+      sec.style.display='block';
+    }catch(e){ sec.style.display='none'; }
+  }
+
+  // ===== Avis de Léa sur la photo (vision IA, non médical) =====
+  async function getTodayPhotoB64(){
+    const { data } = await sb.from('entries').select('photo_path').eq('user_id',currentUser.id).eq('date',todayStr()).not('photo_path','is',null).order('created_at',{ascending:false}).limit(1);
+    if(!data || !data.length || !data[0].photo_path) return null;
+    const url = await signedPhoto(data[0].photo_path);
+    if(!url) return null;
+    try{
+      const resp = await fetch(url); const blob = await resp.blob();
+      const b64 = await new Promise(r=>{ const fr=new FileReader(); fr.onloadend=()=>r(String(fr.result).split(',')[1]); fr.readAsDataURL(blob); });
+      return { b64, type: blob.type || 'image/jpeg' };
+    }catch(e){ return null; }
+  }
+  function acceptPhotoConsent(){ try{ localStorage.setItem('rituel_photo_consent_'+currentUser.id,'oui'); }catch(e){} askLeaPhoto(); }
+  async function askLeaPhoto(){
+    if(!requirePlus('Léa analyse ta photo et te dit ce qu\'elle observe sur ta peau 📸')) return;
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    const box=document.getElementById('lea-photo-result'); if(!box) return;
+    box.style.display='block';
+    if(localStorage.getItem('rituel_photo_consent_'+currentUser.id)!=='oui'){
+      box.innerHTML='<div style="background:var(--surface-warm);border-radius:14px;padding:14px;font-size:12.5px;color:var(--ink-soft);line-height:1.55;">Pour te donner son avis, '+coachName()+' envoie ta photo de manière sécurisée à notre partenaire d\'analyse (Anthropic). Elle n\'est ni publiée, ni utilisée pour entraîner des modèles, et tu peux supprimer tes données à tout moment.<div style="display:flex;gap:8px;margin-top:12px;"><button class="btn btn-accent" style="padding:10px;font-size:13px;" onclick="acceptPhotoConsent()">D\'accord ✨</button><button class="btn" style="padding:10px;font-size:13px;background:var(--surface);color:var(--muted);" onclick="this.closest(\'#lea-photo-result\').style.display=\'none\'">Pas maintenant</button></div></div>';
+      return;
+    }
+    box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">'+coachName()+' regarde ta photo… 🌸</div>';
+    const photo=await getTodayPhotoB64();
+    if(!photo){ box.style.display='none'; box.innerHTML=''; showToast('Prends d\'abord ta photo du jour 🌸'); return; }
+    try{
+      const ctx=await buildLeaContext();
+      const r=await fetch('/api/analyze-photo',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ image:photo.b64, media_type:photo.type, profile:ctx, user_id: currentUser?currentUser.id:null }) });
+      if(!r.ok){
+        const msg = r.status===404
+          ? "L'analyse photo n'est pas encore activée sur le serveur 🌿 (fichier api/analyze-photo.js à déployer)"
+          : 'Oups, réessaie un peu plus tard 🌿';
+        box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;line-height:1.5;">'+msg+'</div>'; return;
+      }
+      const d=await r.json();
+      if(d && d.limited){ showLimitToast(); const b=document.getElementById('lea-photo-result'); if(b){ b.style.display='block'; b.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0;">'+leaLimitMsg().split('\n')[0]+'</div>'; } return; }
+      if(d.error){ box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Oups, réessaie un peu plus tard 🌿</div>'; return; }
+      const eclat = (typeof d.eclat==='number') ? d.eclat : null;
+      let html='<div class="msg-card" style="margin:0;max-width:100%;">';
+      html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-family:var(--serif);font-style:italic;font-size:13px;">'+coachName()[0]+'</div><div class="eyebrow">'+coachName()+' regarde ta peau</div></div>';
+      if(eclat!=null) html+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;"><div style="font-family:var(--serif);font-style:italic;font-size:32px;color:var(--accent);line-height:1;">'+eclat+'</div><div><div style="font-family:var(--serif);font-size:14px;">Éclat du jour</div><div style="font-size:11px;color:var(--muted);">un petit repère, pas une note 🌸</div></div></div>';
+      html+='<div class="msg-card-body">'+escapeHtml(d.observation||'')+'</div>';
+      if(d.conseil) html+='<div style="margin-top:8px;font-size:13px;color:var(--ink-soft);line-height:1.5;">💡 '+escapeHtml(d.conseil)+'</div>';
+      html+='<div style="margin-top:10px;font-size:11px;color:var(--muted);">Ce n\'est pas un avis médical.</div>';
+      html+='</div>';
+      box.innerHTML=html;
+      if(eclat!=null){ try{ await updateTodayEntry({ score_peau: eclat }); }catch(e){} }
+      try{ if(d.observation) localStorage.setItem('rituel_last_obs', String(d.observation)); }catch(e){}
+    }catch(e){ box.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Oups, réessaie 🌿</div>'; }
+  }
+
+  // ===== Graphe d'évolution de l'éclat (Journal) =====
+  async function loadEclatGraph(){
+    const sec=document.getElementById('eclat-section'); if(!sec) return;
+    sec.style.display='none';
+    if(!currentUser) return;
+    try{
+      const { data } = await sb.from('entries').select('date,score_peau').eq('user_id',currentUser.id).not('score_peau','is',null).order('date',{ascending:true});
+      const pts=(data||[]).filter(e=>e.score_peau!=null);
+      if(pts.length<2) return;
+      const recent=pts.slice(-14);
+      const W=300,H=92,pad=12;
+      const vals=recent.map(p=>p.score_peau);
+      const min=Math.min(...vals), max=Math.max(...vals); const range=(max-min)||1;
+      const stepX=(W-pad*2)/(recent.length-1);
+      const coords=recent.map((p,i)=>{ const x=pad+i*stepX; const y=H-pad-((p.score_peau-min)/range)*(H-pad*2); return [x,y]; });
+      const line=coords.map((c,i)=>(i?'L':'M')+c[0].toFixed(1)+' '+c[1].toFixed(1)).join(' ');
+      const area=line+' L '+coords[coords.length-1][0].toFixed(1)+' '+(H-pad)+' L '+coords[0][0].toFixed(1)+' '+(H-pad)+' Z';
+      const dots=coords.map(c=>'<circle cx="'+c[0].toFixed(1)+'" cy="'+c[1].toFixed(1)+'" r="3" fill="var(--accent)"/>').join('');
+      document.getElementById('eclat-graph').innerHTML='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;"><path d="'+area+'" fill="var(--blush-soft)" opacity="0.6"/><path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+dots+'</svg>';
+      document.getElementById('eclat-last').textContent=vals[vals.length-1];
+      sec.style.display='block';
+    }catch(e){}
+  }
+
+  // ===== Export PDF · « Mon carnet de peau » =====
+  function loadScript(src){ return new Promise((res,rej)=>{ if(document.querySelector('script[data-src="'+src+'"]')){res();return;} const s=document.createElement('script'); s.src=src; s.setAttribute('data-src',src); s.onload=()=>res(); s.onerror=()=>rej(new Error('load fail')); document.head.appendChild(s); }); }
+  async function photoToDataURL(path){ try{ const url=await signedPhoto(path); if(!url) return null; const resp=await fetch(url); const blob=await resp.blob(); return await new Promise(r=>{ const fr=new FileReader(); fr.onloadend=()=>r(String(fr.result)); fr.readAsDataURL(blob); }); }catch(e){ return null; } }
+  async function exportCarnetPDF(){
+    if(!requirePlus('Ton carnet de peau, tout beau, à garder ou imprimer 📄')) return;
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    showToast('Préparation de ton carnet…');
+    try{
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      const jsPDF = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (window.jsPDF||null);
+      if(!jsPDF){ showToast('Export indisponible'); return; }
+      const doc=new jsPDF({ unit:'mm', format:'a4' });
+      const W=210, M=18; let y=24;
+      const terr=[193,90,63], ink=[46,33,28], muted=[150,128,118], line=[232,222,212];
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(terr[0],terr[1],terr[2]); doc.setFontSize(11); doc.text('RITUEL', M, y);
+      doc.setTextColor(ink[0],ink[1],ink[2]); doc.setFontSize(26); doc.text('Mon carnet de peau', M, y+12);
+      doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFontSize(10); doc.text(fmtDateLong(todayStr()), M, y+20);
+      y+=33; doc.setDrawColor(line[0],line[1],line[2]); doc.line(M,y,W-M,y); y+=11;
+      const name=state.name||'…';
+      const skin=SKIN_LABELS[state.skinType]||'non précisé';
+      const concerns=(state.concerns||[]).map(c=>CONCERN_LABELS[c]||c).join(', ')||'…';
+      doc.setTextColor(ink[0],ink[1],ink[2]); doc.setFontSize(14); doc.text(name, M, y); y+=8;
+      doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFontSize(11);
+      doc.text('Type de peau : '+skin, M, y); y+=6;
+      const concLines=doc.splitTextToSize('Préoccupations : '+concerns, W-2*M); doc.text(concLines, M, y); y+=6*concLines.length+8;
+      let streak=0,best=0; try{ streak=await computeStreak(); }catch(e){} try{ best=await bestStreak(); }catch(e){}
+      let eclatTxt='…'; try{ const { data }=await sb.from('entries').select('score_peau').eq('user_id',currentUser.id).not('score_peau','is',null).order('date',{ascending:false}).limit(1); if(data&&data.length) eclatTxt=data[0].score_peau+'/100'; }catch(e){}
+      doc.setTextColor(terr[0],terr[1],terr[2]); doc.setFontSize(20);
+      doc.text(String(streak), M, y); doc.text(String(best), M+62, y); doc.text(eclatTxt, M+124, y);
+      doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFontSize(9);
+      doc.text('Série actuelle (jours)', M, y+6); doc.text('Record (jours)', M+62, y+6); doc.text('Éclat récent', M+124, y+6);
+      y+=16; doc.setDrawColor(line[0],line[1],line[2]); doc.line(M,y,W-M,y); y+=11;
+      doc.setTextColor(ink[0],ink[1],ink[2]); doc.setFontSize(14); doc.text('Mes produits', M, y); y+=8;
+      let prods=[]; try{ const { data }=await sb.from('products').select('nom,effets,prix').eq('user_id',currentUser.id).order('position',{ascending:true}); prods=data||[]; }catch(e){}
+      doc.setFontSize(11);
+      if(!prods.length){ doc.setTextColor(muted[0],muted[1],muted[2]); doc.text('Aucun produit pour l\'instant.', M, y); y+=8; }
+      prods.forEach(p=>{
+        if(y>272){ doc.addPage(); y=24; }
+        doc.setTextColor(ink[0],ink[1],ink[2]); doc.setFontSize(11); doc.text('• '+(p.nom||''), M, y);
+        const extra=[p.effets||'', (p.prix!=null&&p.prix!=='')?(p.prix+' €'):''].filter(Boolean).join('  ·  ');
+        if(extra){ y+=4.8; doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFontSize(9.5); const ex=doc.splitTextToSize(extra, W-2*M-4); doc.text(ex, M+4, y); y+=4.8*ex.length+3.5; } else { y+=7.5; }
+      });
+      let ph=[]; try{ const { data }=await sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).order('date',{ascending:true}); ph=(data||[]).filter(x=>x.photo_path); }catch(e){}
+      if(ph.length>=1){
+        if(y>165){ doc.addPage(); y=24; }
+        y+=4; doc.setDrawColor(line[0],line[1],line[2]); doc.line(M,y,W-M,y); y+=11;
+        doc.setTextColor(ink[0],ink[1],ink[2]); doc.setFontSize(14); doc.text('Avant / après', M, y); y+=8;
+        const iw=72, ih=96;
+        const first=await photoToDataURL(ph[0].photo_path);
+        const last=ph.length>1 ? await photoToDataURL(ph[ph.length-1].photo_path) : null;
+        if(first){ try{ doc.addImage(first, first.includes('image/png')?'PNG':'JPEG', M, y, iw, ih); doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFontSize(9); doc.text(fmtDateLong(ph[0].date), M, y+ih+5); }catch(e){} }
+        if(last){ try{ doc.addImage(last, last.includes('image/png')?'PNG':'JPEG', M+iw+12, y, iw, ih); doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFontSize(9); doc.text(fmtDateLong(ph[ph.length-1].date), M+iw+12, y+ih+5); }catch(e){} }
+        y+=ih+12;
+      }
+      const pages=doc.getNumberOfPages();
+      for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFontSize(9); doc.text('monrituel.app', M, 289); doc.text('· ton carnet de peau ·', W-M, 289, {align:'right'}); }
+      doc.save('mon-carnet-rituel.pdf');
+      showToast('Carnet PDF prêt ✨');
+    }catch(e){ showToast('Oups, export PDF impossible'); }
+  }
+
+  // ===== Programme Éclat 30 jours (localStorage, gratuit) =====
+  const ECLAT=["Masse ton visage 1 min en appliquant ta crème 🤲","Bois un grand verre d\'eau au réveil 💧","Applique ton SPF même s\'il fait gris ☀️","Couche-toi 30 min plus tôt ce soir 😴","Nettoie tes pinceaux ou éponges 🧼","Prends ta photo du jour 📷","Masse ton cou en remontant, il fait partie du visage 🦢","Change ta taie d\'oreiller 🛏️","Lis l\'étiquette d\'un de tes produits 🔍","Tapote ton contour des yeux à l\'annulaire 👁️","Zéro nouveau produit aujourd\'hui · la constance d\'abord 🌿","Bois une tisane à la place d\'un café ☕","Fais ton rituel en pleine conscience, sans téléphone 🧘","Hydrate tes lèvres 3 fois aujourd\'hui 💋","Mange un fruit riche en vitamine C 🍊","Dors sur le dos si tu peux cette nuit 🌙","Nettoie ton écran de téléphone 📱","Massage lymphatique : du centre vers les oreilles ✋","Crème sur les mains après chaque lavage 🤲","Pas de touche-visage aujourd\'hui ✋","Ajoute une étape plaisir à ton rituel du soir 🌸","Aère ta chambre 10 minutes 🪟","Compare ta photo d\'aujourd\'hui au jour 1 ↔️","Étire-toi 2 minutes au réveil 🌅","Double nettoyage ce soir si tu portes du SPF/maquillage 🫧","Note 1 chose que tu aimes chez ta peau 💛","Un jour sans sucre ajouté, ta peau te dira merci 🍬","Masse ton cuir chevelu 1 minute 💆","Prépare ton rituel de demain ce soir 🌙","Célèbre : 30 jours de douceur. Regarde ton avant/après ✨"];
+  function eclatKey(){ return 'rituel_eclat_'+(currentUser?currentUser.id:'x'); }
+  function eclatState(){ try{ const s=localStorage.getItem(eclatKey()); return s?JSON.parse(s):null; }catch(e){ return null; } }
+  function eclatDay(st){ return Math.floor((new Date(todayStr())-new Date(st.start))/86400000)+1; }
+  function openEclatSheet(){ renderEclatSheet(); document.getElementById('eclat-sheet').classList.add('open'); }
+  function closeEclatSheet(){ document.getElementById('eclat-sheet').classList.remove('open'); }
+  function startEclat(){ try{ localStorage.setItem(eclatKey(), JSON.stringify({ start: todayStr(), done: [] })); }catch(e){} renderEclatSheet(); loadEclatProgram(); showToast('C\'est parti pour 30 jours ✨'); }
+  async function eclatRestart(){
+    if(await cmAsk({titre:'Recommencer le programme ?',texte:'Tu repartiras du jour 1. Ta progression actuelle sera perdue.',ok:'Recommencer',annuler:'Annuler'})) startEclat();
+  }
+  function eclatDone(){ const st=eclatState(); if(!st) return; const d=eclatDay(st); if(!st.done.includes(d)) st.done.push(d); try{ localStorage.setItem(eclatKey(), JSON.stringify(st)); }catch(e){} renderEclatSheet(); loadEclatProgram(); showToast('Bravo 🌸'); }
+  function renderEclatSheet(){
+    const b=document.getElementById('eclat-body'); if(!b) return;
+    const st=eclatState();
+    if(!st){ b.innerHTML='<p style="color:var(--ink-soft);font-size:13.5px;line-height:1.6;margin:0 0 16px;">30 jours, un micro-geste par jour, 2 minutes max. Pas de pression : juste de petites attentions qui s\'additionnent 🌿</p><button class="btn btn-accent" onclick="startEclat()">Commencer le programme ✨</button>'; return; }
+    const d=eclatDay(st);
+    if(d>30){ b.innerHTML='<div style="text-align:center;padding:8px 0 4px;"><div style="font-size:42px;">🎉</div><div class="serif" style="font-size:20px;margin:8px 0;">Programme terminé !</div><div style="color:var(--muted);font-size:13px;line-height:1.5;">'+st.done.length+'/30 gestes accomplis. Va voir ton avant/après dans le Journal ↔️</div></div><button class="btn btn-accent" style="margin-top:14px;" onclick="eclatRestart()">Refaire 30 jours</button>'; return; }
+    const did=st.done.includes(d);
+    b.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline;"><span class="eyebrow">JOUR '+d+'/30</span><span style="font-size:11px;color:var(--muted);">'+st.done.length+' geste'+(st.done.length>1?'s':'')+' fait'+(st.done.length>1?'s':'')+'</span></div>'
+      +'<div style="height:6px;background:var(--surface-warm);border-radius:100px;margin:10px 0 16px;overflow:hidden;"><div style="height:100%;width:'+Math.round(d/30*100)+'%;background:linear-gradient(90deg,var(--blush),var(--accent));border-radius:100px;"></div></div>'
+      +'<div class="ba-card" style="gap:12px;"><div style="font-size:26px;flex-shrink:0;">🗓️</div><div style="font-size:14px;color:var(--ink-soft);line-height:1.55;">'+ECLAT[d-1]+'</div></div>'
+      +'<button class="btn '+(did?'':'btn-accent')+'" style="margin-top:14px;'+(did?'background:var(--surface-warm);color:var(--ink);':'')+'" onclick="eclatDone()" '+(did?'disabled':'')+'>'+(did?'✓ Fait pour aujourd\'hui':'✓ C\'est fait')+'</button>'
+      +'<button onclick="eclatRestart()" class="btn-soft" style="display:block;margin:12px auto 0;">Recommencer</button>';
+  }
+  function loadEclatProgram(){
+    const card=document.getElementById('eclat-card'); const meta=document.getElementById('menu-eclat-meta');
+    const st=eclatState();
+    if(meta) meta.textContent = st ? (eclatDay(st)>30?'terminé 🎉':'jour '+Math.min(eclatDay(st),30)) : '…';
+    if(!card) return;
+    if(!st || eclatDay(st)>30){ card.style.display='none'; return; }
+    const d=eclatDay(st); const did=st.done.includes(d);
+    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:11px 14px;box-shadow:var(--shadow);cursor:pointer;" onclick="openEclatSheet()"><div style="font-size:24px;flex-shrink:0;">'+(did?'✅':'🗓️')+'</div><div style="flex:1;min-width:0;"><span class="eyebrow">ÉCLAT · JOUR '+d+'/30</span><div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">'+ECLAT[d-1]+'</div></div></div>';
+    card.style.display='block';
+  }
+
+  function openPlusSheet(raison){
+    const r=document.getElementById('plus-reason');
+    if(r) r.textContent = raison || 'Pour aller plus loin avec ta compagne de soin, sans limite 🌸';
+    document.querySelectorAll('.plus-buy').forEach(b=>{ b.disabled=false; });
+    document.getElementById('plus-sheet').classList.add('open');
+  }
+  function closePlusSheet(){ document.getElementById('plus-sheet').classList.remove('open'); }
+
+  // ===== Badges & souvenirs (calculés depuis l'historique) =====
+  const BADGES=[
+    { e:'📷', n:'Première photo',   c:'Prends ta photo du jour',        t:s=>s.photos>=1 },
+    { e:'🎞️', n:'Album vivant',     c:'10 photos au journal',           t:s=>s.photos>=10 },
+    { e:'🪻', n:'Premier élan',     c:'3 jours de série',               t:s=>s.best>=3 },
+    { e:'🔥', n:'Une semaine',      c:'7 jours de série',               t:s=>s.best>=7 },
+    { e:'🌹', n:'Trente jours',     c:'30 jours de série',              t:s=>s.best>=30 },
+    { e:'☁️', n:"L'art du repos",   c:'Prends un jour de repos',        t:s=>s.repos },
+    { e:'🧴', n:'Vanity rempli',    c:'5 produits ajoutés',             t:s=>s.prod>=5 },
+    { e:'🌸', n:'Architecte',       c:'Crée ton premier rituel',        t:s=>s.rit>=1 },
+    { e:'📔', n:'Fidèle au carnet', c:'7 jours notés',                  t:s=>s.days>=7 },
+  ];
+  async function openBadgesSheet(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
+    document.getElementById('badges-grid').innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:13px;text-align:center;padding:10px;">Un instant… 🌸</div>';
+    document.getElementById('badges-sheet').classList.add('open');
+    const [ent, prods, rits, best] = await Promise.all([
+      sb.from('entries').select('date,photo_path,repos').eq('user_id',currentUser.id),
+      sb.from('products').select('id').eq('user_id',currentUser.id),
+      sb.from('rituels').select('id').eq('user_id',currentUser.id),
+      bestStreak()
+    ]);
+    const es=(ent&&ent.data)||[];
+    const s={ photos:es.filter(x=>x.photo_path).length, days:new Set(es.map(x=>x.date)).size, repos:es.some(x=>x.repos), prod:((prods&&prods.data)||[]).length, rit:((rits&&rits.data)||[]).length, best };
+    let got=0;
+    document.getElementById('badges-grid').innerHTML = BADGES.map(b=>{
+      const on=b.t(s); if(on) got++;
+      return '<div style="background:'+(on?'var(--blush-soft)':'var(--surface)')+';border:1.5px solid '+(on?'var(--accent)':'var(--line)')+';border-radius:16px;padding:12px 6px;text-align:center;'+(on?'':'opacity:0.55;')+'">'
+        + '<div style="font-size:26px;'+(on?'':'filter:grayscale(1);')+'">'+(on?b.e:'🔒')+'</div>'
+        + '<div style="font-size:11.5px;font-weight:600;margin-top:5px;line-height:1.25;">'+b.n+'</div>'
+        + '<div style="font-size:10px;color:var(--muted);margin-top:3px;line-height:1.3;">'+b.c+'</div>'
+        + '</div>';
+    }).join('');
+    document.getElementById('badges-count').textContent = got+'/'+BADGES.length+' débloqués · ils se gagnent en vivant ton rituel 🌿';
+  }
+  function closeBadgesSheet(){ document.getElementById('badges-sheet').classList.remove('open'); }
+
+  // ===== Léa dans la messagerie (badge + message du jour) =====
+  function leaSeenKey(){ return 'rituel_leaseen_'+(currentUser?currentUser.id:'x')+'_'+todayStr(); }
+  function bellTap(){
+    let seen=false; try{ seen=!!localStorage.getItem(leaSeenKey()); }catch(e){}
+    if(currentUser && !seen){ navTo('chat'); } else { openReminderSheet(); }
+  }
+  function updateChatBadge(){
+    const b=document.getElementById('chat-badge'); if(!b) return;
+    let seen=false; try{ seen=!!localStorage.getItem(leaSeenKey()); }catch(e){}
+    b.style.display = (currentUser && !seen) ? 'inline-block' : 'none';
+  }
+  let __leaTries=0;
+  function leaInjectDaily(){
+    if(!currentUser) return;
+    const feed=document.getElementById('chat-feed'); if(!feed) return;
+    if(feed.querySelector('[data-lea-daily="'+todayStr()+'"]')) { markLeaSeen(); return; }
+    const pro=(document.getElementById('lea-proactive-line')||{}).textContent||'';
+    let tip=''; try{ tip=localStorage.getItem('rituel_tip_'+currentUser.id+'_'+todayStr())||''; }catch(e){}
+    if(!tip){ const tb=document.getElementById('lea-tip-body'); tip=tb?tb.textContent:''; if(tip==='Ton conseil du jour arrive… 🌸') tip=''; }
+    const full=[pro, tip].filter(Boolean).join('\n\n');
+    if(!full){ if(__leaTries<5){ __leaTries++; setTimeout(leaInjectDaily, 1500); } return; }
+    const st=document.getElementById('chat-starter'); if(st) st.remove();
+    const dv=document.createElement('div'); dv.className='msg msg-ai'; dv.setAttribute('data-lea-daily', todayStr());
+    dv.innerHTML=formatMessage(full);
+    feed.insertBefore(dv, feed.children[1]||null);
+    feed.scrollTop=0;
+    markLeaSeen();
+  }
+  function markLeaSeen(){
+    try{ localStorage.setItem(leaSeenKey(),'1'); }catch(e){}
+    updateChatBadge();
+  }
+
+  // ===== Premier bilan de peau (J+5, calcul local, une seule fois) =====
+  function bilan5Key(){ return 'rituel_bilan5_'+(currentUser?currentUser.id:'x'); }
+  async function maybeShowBilan5(){
+    const el=document.getElementById('bilan5-cta'); if(!el) return;
+    if(!currentUser){ el.style.display='none'; return; }
+    try{ if(localStorage.getItem(bilan5Key())){ el.style.display='none'; return; } }catch(e){}
+    try{
+      const { data } = await sb.from('entries').select('date').eq('user_id', currentUser.id).order('date',{ascending:true}).limit(40);
+      const n=new Set((data||[]).map(e=>e.date)).size;
+      el.style.display = n>=5 ? 'block' : 'none';
+    }catch(e){ el.style.display='none'; }
+  }
+  async function openBilan5(){
+    const body=document.getElementById('bilan5-body');
+    document.getElementById('bilan5-sheet').classList.add('open');
+    body.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:14px 0;">On rassemble tes journées… 🌿</div>';
+    try{
+      const { data } = await sb.from('entries').select('date,humeur,score_peau,routine_matin,routine_soir,repos,sommeil').eq('user_id', currentUser.id).order('date',{ascending:true}).limit(40);
+      const byDate={}; (data||[]).forEach(e=>{ byDate[e.date] = byDate[e.date] ? {...byDate[e.date], ...e} : e; });
+      const days=Object.keys(byDate).sort().map(k=>byDate[k]);
+      const n=days.length;
+      let done=0; const moods=[]; let eclatSum=0, eclatN=0; const prodCount={};
+      days.forEach(e=>{
+        if(dayComplete(e)) done++;
+        if(e.humeur) moods.push(Number(e.humeur));
+        if(e.score_peau!=null){ eclatSum+=Number(e.score_peau); eclatN++; }
+        [e.routine_matin, e.routine_soir].forEach(arr=>{ if(Array.isArray(arr)) arr.forEach(id=>{ prodCount[id]=(prodCount[id]||0)+1; }); });
+      });
+      let moodLine=null;
+      if(moods.length>=3){
+        const h=Math.floor(moods.length/2);
+        const a=moods.slice(0,h).reduce((x,y)=>x+y,0)/h;
+        const b=moods.slice(h).reduce((x,y)=>x+y,0)/(moods.length-h);
+        moodLine = b-a>0.4 ? 'Ton moral a l\u2019air en hausse sur la période 🌸' : (a-b>0.4 ? 'Période douce-amère côté moral · prends soin de toi 🤍' : 'Ton moral est resté stable 🌿');
+      }
+      let topProd=null, topN=0; Object.keys(prodCount).forEach(k=>{ if(prodCount[k]>topN){ topN=prodCount[k]; topProd=k; } });
+      let topName=null;
+      if(topProd && topN>=3){
+        try{ const { data: p } = await sb.from('products').select('nom').eq('id', topProd).single(); topName=p&&p.nom; }catch(e){}
+      }
+      const ratio=n?done/n:0;
+      const conseil = ratio>=0.8
+        ? 'Ta régularité est ta vraie force. Garde exactement cette routine encore quelques jours avant de changer quoi que ce soit, c\u2019est comme ça qu\u2019on voit ce qui marche 🌸'
+        : (ratio>=0.4
+          ? 'De belles bases ! Pour gagner en constance, accroche ton rituel à une habitude déjà installée, juste après le brossage de dents par exemple 🌿'
+          : 'On simplifie : vise seulement 3 étapes cette semaine. La constance compte plus que la quantité, le reste viendra tout seul ✨');
+      const rows=[];
+      rows.push(['📅','<b>'+n+' jours</b> de suivi · bravo, c\u2019est le plus dur qui est fait']);
+      rows.push(['🔥','Rituel complet <b>'+done+' jour'+(done>1?'s':'')+' sur '+n+'</b>']);
+      if(moodLine) rows.push(['💛', moodLine]);
+      if(eclatN) rows.push(['✨','Éclat moyen : <b>'+Math.round(eclatSum/eclatN)+'</b>']);
+      if(topName) rows.push(['🧴','Ton produit le plus régulier : <b>'+escapeHtml(topName)+'</b>']);
+      rows.push(['💬','<i>'+conseil+' · '+coachName()+'</i>']);
+      body.innerHTML = rows.map(r=>'<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);"><span style="font-size:18px;">'+r[0]+'</span><span style="flex:1;">'+r[1]+'</span></div>').join('');
+    }catch(e){
+      body.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:14px 0;">Oups, réessaie dans un instant 🌿</div>';
+    }
+  }
+  function closeBilan5(){
+    document.getElementById('bilan5-sheet').classList.remove('open');
+    try{ localStorage.setItem(bilan5Key(),'1'); }catch(e){}
+    const el=document.getElementById('bilan5-cta'); if(el) el.style.display='none';
+  }
+
+  // ===== Lettre du mois (fin de mois, popup, archive dans Moi) =====
+  function lettreYM(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1); }
+  function lettreSeen(){ try{ return !!localStorage.getItem('rituel_lettreseen_'+(currentUser?currentUser.id:'x')+'_'+lettreYM()); }catch(e){ return false; } }
+  function lettreArchive(){ try{ return JSON.parse(localStorage.getItem('rituel_lettres_'+currentUser.id)||'[]'); }catch(e){ return []; } }
+  function maybeShowLettreCta(){
+    const el=document.getElementById('lettre-cta'); if(!el) return;
+    if(!currentUser){ el.style.display='none'; return; }
+    const now=new Date(); const last=new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    const fin = now.getDate() >= last-2;
+    const M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const t=document.getElementById('lettre-cta-title'); if(t) t.textContent='Ta lettre de '+M[now.getMonth()]+' est prête 💌';
+    el.style.display = (fin && !lettreSeen()) ? 'block' : 'none';
+  }
+  async function fetchLettre(){
+    try{ const cached=localStorage.getItem(bilanKey()); if(cached) return cached; }catch(e){}
+    const ctx=await buildLeaContext();
+    const res=await fetch('/api/lea',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+      messages:[{ role:'user', content:"(Message automatique de l'app, ce n'est pas une vraie question de la personne.) Écris ta petite lettre du mois : un bilan chaleureux en 4 à 6 phrases d'après mes données (série, éclat, habitudes, peau), avec un encouragement doux pour le mois qui commence. Pas de question à la fin. Termine par une signature courte avec ton prénom." }],
+      profile: ctx, user_id: currentUser?currentUser.id:null
+    })});
+    const d=await res.json();
+    const txt=(d && d.reply) ? d.reply : null;
+    if(txt){ try{ localStorage.setItem(bilanKey(), txt); }catch(e){} }
+    return txt;
+  }
+  async function openLettre(arch){
+    if(!requirePlus('Ta lettre du mois : le bilan doux de ton parcours 💌')) return;
+    const body=document.getElementById('lettre-body');
+    document.getElementById('lettre-sheet').classList.add('open');
+    if(typeof arch==='string'){ body.innerHTML=formatMessage(arch); return; }
+    body.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:14px 0;">'+coachName()+' écrit ta lettre… ✍️</div>';
+    const txt=await fetchLettre();
+    if(!txt){ body.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:14px 0;">Oups, réessaie dans un instant 🌿</div>'; return; }
+    body.innerHTML=formatMessage(txt);
+    try{
+      const a=lettreArchive();
+      if(!a.some(x=>x.k===lettreYM())){ a.unshift({ k:lettreYM(), t:txt }); localStorage.setItem('rituel_lettres_'+currentUser.id, JSON.stringify(a)); }
+    }catch(e){}
+  }
+  function closeLettre(){
+    document.getElementById('lettre-sheet').classList.remove('open');
+    try{ localStorage.setItem('rituel_lettreseen_'+currentUser.id+'_'+lettreYM(),'1'); }catch(e){}
+    maybeShowLettreCta();
+  }
+  function openLettreAt(i){ const a=lettreArchive(); if(a[i]) openLettre(a[i].t); }
+  function openLettresList(){
+    const host=document.getElementById('lettres-list');
+    const a=lettreArchive();
+    const M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    host.innerHTML = a.length ? a.map(function(x,i){ const p=x.k.split('-'); return '<button class="btn-soft" style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:12px 14px;border-radius:14px;" onclick="openLettreAt('+i+')">💌 Lettre de '+M[parseInt(p[1],10)-1]+' '+p[0]+'</button>'; }).join('')
+      : '<p style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0;">Ta première lettre arrivera à la fin du mois 🌸</p>';
+    document.getElementById('lettres-sheet').classList.add('open');
+  }
+  function closeLettresList(){ document.getElementById('lettres-sheet').classList.remove('open'); }
+
+  // ===== Rituel du jour (parcours 4 étapes + récompense) =====
+  let rjStep=0, rjEntry=null, rjPeriod='matin';
+  const rjData={ tags:new Set(), mood:null, sommeil:null, eau:null, checked:new Set() };
+  const RJ_TAGS=[['nette','✨ Nette'],['boutons','🫧 Boutons'],['rougeurs','🌹 Rougeurs'],['seche','🏜️ Sèche'],['grasse','💧 Grasse'],['terne','🌫️ Terne'],['sensible','🪶 Sensible']];
+  async function rjLoadItems(period){
+    try{
+      const { data: rits } = await sb.from('rituels').select('moment,produits,position').eq('user_id', currentUser.id).order('position',{ascending:true});
+      const all=rits||[]; window.__rjHasAny = all.length>0;
+      const mine=all.filter(r=>r.moment===period||r.moment==='both');
+      const ids=[]; mine.forEach(r=>(r.produits||[]).forEach(id=>ids.push(id)));
+      if(!ids.length) return [];
+      const { data: prods } = await sb.from('products').select('id,nom,emoji,effets,categorie').in('id', ids);
+      const pmap={}; (prods||[]).forEach(p=>pmap[p.id]=p);
+      return ids.map(id=>pmap[id]).filter(Boolean);
+    }catch(e){ return (window.__homeRoutine&&window.__homeRoutine[period])||[]; }
+  }
+  async function openRituelJour(){
+    if(!currentUser){ showToast('Connecte-toi d\'abord 🌸'); return; }
+    const h=new Date().getHours(); rjPeriod = h<17 ? 'matin' : 'soir';
+    rjStep=0; rjData.tags.clear(); rjData.checked.clear(); rjData.mood=null; rjData.sommeil=null; rjData.eau=null;
+    rjEntry=null;
+    try{ const { data } = await sb.from('entries').select('*').eq('user_id',currentUser.id).eq('date',todayStr()).limit(1); rjEntry=(data&&data[0])||null; }catch(e){}
+    window.__rjItems = await rjLoadItems(rjPeriod);
+    document.getElementById('rj-sheet').style.display='flex';
+    rjRender();
+  }
+  function closeRituelJour(){ document.getElementById('rj-sheet').style.display='none'; }
+  function rjProgress(){
+    document.getElementById('rj-count').textContent='ÉTAPE '+(rjStep+1)+'/4 · '+(rjPeriod==='soir'?'SOIR 🌙':'MATIN ☀️');
+    document.getElementById('rj-progress').innerHTML=[0,1,2,3].map(i=>'<div class="onb-dot'+(i<rjStep?' done':(i===rjStep?' active':''))+'"></div>').join('');
+  }
+  function rjRefreshPhoto(){ if(document.getElementById('rj-sheet').style.display!=='none' && rjStep===0){ if(!rjEntry) rjEntry={}; rjEntry.photo_path='ok'; rjRender(); } }
+  function rjToggleTag(el,t){ if(rjData.tags.has(t)){ rjData.tags.delete(t); el.classList.remove('selected'); } else { rjData.tags.add(t); el.classList.add('selected'); } }
+  function rjPick(el,key,val){ rjData[key]=val; el.parentElement.querySelectorAll('.rj-chip').forEach(b=>b.classList.remove('selected')); el.classList.add('selected'); }
+  function rjToggleItem(el,i){ if(rjData.checked.has(i)){ rjData.checked.delete(i); el.classList.remove('done'); } else { rjData.checked.add(i); el.classList.add('done'); } }
+  function rjCheckAll(){ document.querySelectorAll('#rj-body .rj-item').forEach((el,i)=>{ rjData.checked.add(i); el.classList.add('done'); }); }
+  function rjRender(){
+    rjProgress();
+    const b=document.getElementById('rj-body');
+    const next=document.getElementById('rj-next'), skip=document.getElementById('rj-skip');
+    document.getElementById('rj-footer').style.display='block';
+    if(rjStep===0){
+      const has=rjEntry && rjEntry.photo_path;
+      b.innerHTML='<div style="text-align:center;margin-top:8px;"><div class="serif" style="font-size:26px;">Ta photo du <em style="font-style:italic;color:var(--accent);">jour</em></div><p style="color:var(--muted);font-size:13px;line-height:1.5;margin:8px 0 20px;">Lumière naturelle, même angle chaque jour si tu peux 🌤️</p>'
+        +(has?'<div style="font-size:54px;margin:6px 0;">📷✓</div><p style="color:var(--accent-deep);font-size:13.5px;font-weight:600;">Photo du jour déjà prise ✨</p><button class="btn-outline-sm" style="margin-top:10px;" onclick="camOpen()">Reprendre</button>'
+             :'<button class="btn btn-accent" style="margin-bottom:10px;" onclick="camOpen()">📷 Prendre ma photo</button><button class="btn" style="background:var(--surface-warm);color:var(--ink);" onclick="document.getElementById(\'photo-input\').click()">🖼️ Choisir dans la galerie</button>')
+        +'</div>';
+      next.textContent='Continuer'; skip.style.display = has ? 'none' : 'block';
+    }
+    if(rjStep===1){
+      b.innerHTML='<div class="serif" style="font-size:24px;text-align:center;margin-top:8px;">Comment est ta <em style="font-style:italic;color:var(--accent);">peau</em> aujourd\'hui ?</div><p style="color:var(--muted);font-size:12.5px;text-align:center;margin:6px 0 18px;">Choisis tout ce qui te parle</p><div style="display:flex;flex-wrap:wrap;gap:9px;justify-content:center;">'
+        +RJ_TAGS.map(t=>'<button class="rj-chip'+(rjData.tags.has(t[0])?' selected':'')+'" onclick="rjToggleTag(this,\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div>';
+      next.textContent='Continuer'; skip.style.display='block';
+    }
+    if(rjStep===2){
+      const moods=['😣','😕','😐','🙂','✨'];
+      b.innerHTML='<div class="serif" style="font-size:24px;text-align:center;margin-top:8px;">Ton <em style="font-style:italic;color:var(--accent);">contexte</em></div><p style="color:var(--muted);font-size:12.5px;text-align:center;margin:6px 0 16px;">30 secondes · c\'est ce qui rend '+coachName()+' vraiment utile</p>'
+        +'<div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin:6px 0 8px;">Humeur</div><div style="display:flex;gap:8px;justify-content:center;">'+moods.map((m,i)=>'<button class="rj-chip'+(rjData.mood===i+1?' selected':'')+'" style="font-size:19px;padding:9px 12px;" onclick="rjPick(this,\'mood\','+(i+1)+')">'+m+'</button>').join('')+'</div>'
+        +'<div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin:16px 0 8px;">Sommeil</div><div style="display:flex;gap:8px;justify-content:center;"><button class="rj-chip" onclick="rjPick(this,\'sommeil\',5)">😴 Mauvais</button><button class="rj-chip" onclick="rjPick(this,\'sommeil\',7)">Moyen</button><button class="rj-chip" onclick="rjPick(this,\'sommeil\',8)">Bon ✨</button></div>'
+        +'<div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin:16px 0 8px;">Eau aujourd\'hui</div><div style="display:flex;gap:8px;justify-content:center;"><button class="rj-chip" onclick="rjPick(this,\'eau\',2)">Peu</button><button class="rj-chip" onclick="rjPick(this,\'eau\',5)">Normal</button><button class="rj-chip" onclick="rjPick(this,\'eau\',8)">Beaucoup 💧</button></div>';
+      next.textContent='Continuer'; skip.style.display='block';
+    }
+    if(rjStep===3){
+      const items=(window.__rjItems)||[];
+      b.innerHTML='<div class="serif" style="font-size:24px;text-align:center;margin-top:8px;">Ton rituel du <em style="font-style:italic;color:var(--accent);">'+rjPeriod+'</em></div>'
+        +(items.length
+          ? '<p style="color:var(--muted);font-size:12.5px;text-align:center;margin:6px 0 14px;">Coche ce que tu as utilisé · <button class="btn-soft" style="padding:7px 14px;font-size:11.5px;margin-top:8px;" onclick="rjCheckAll()">tout cocher</button></p>'+items.map((p,i)=>'<div class="rj-item'+(rjData.checked.has(i)?' done':'')+'" onclick="rjToggleItem(this,'+i+')"><div class="rj-check">✓</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">'+(p.emoji||'🧴')+' '+(p.nom||'')+'</div>'+(p.categorie?'<div style="font-size:10.5px;color:var(--muted);margin-top:2px;">'+catLabel(p.categorie)+'</div>':'')+(p.effets?'<div style="font-size:11.5px;color:var(--muted);">'+p.effets+'</div>':'')+'</div></div>').join('')
+          : '<p style="color:var(--muted);font-size:13px;text-align:center;line-height:1.6;margin:24px 0;">'+(window.__rjHasAny?'Pas de rituel pour le '+rjPeriod+' pour le moment 🌱':'Tu n\'as pas encore créé de rituel 🌱<br>Tu pourras le faire dans l\'onglet Rituel')+'<br>Valide quand même ta journée, elle compte ✨</p>')
+        +'';
+      next.textContent='Valider mon rituel ✨'; skip.style.display='none';
+    }
+  }
+  async function rjNext(skipped){
+    if(rjStep<3){ rjStep++; rjRender(); window.scrollTo(0,0); return; }
+    await rjFinish();
+  }
+  async function rjFinish(){
+    document.getElementById('rj-footer').style.display='none';
+    const b=document.getElementById('rj-body');
+    b.innerHTML='<div style="text-align:center;margin-top:30px;color:var(--muted);font-size:13px;">Un instant… 🌸</div>';
+    const fields={}; fields[rjPeriod==='soir'?'routine_soir':'routine_matin']=true;
+    if(rjData.tags.size) fields.peau_jour=[...rjData.tags];
+    if(rjData.mood!=null) fields.humeur=rjData.mood;
+    if(rjData.sommeil!=null) fields.sommeil=rjData.sommeil;
+    if(rjData.eau!=null) fields.hydratation=rjData.eau;
+    try{
+      const id=await getTodayEntryId();
+      if(id){
+        let { error } = await sb.from('entries').update(fields).eq('id', id);
+        if(error && fields.peau_jour){ delete fields.peau_jour; await sb.from('entries').update(fields).eq('id', id); }
+      }
+    }catch(e){}
+    applyRoutineState(rjPeriod, true);
+    bustStreak(); renderStreak(); loadHomeData();
+    document.getElementById('rj-count').textContent='RITUEL TERMINÉ';
+    document.getElementById('rj-progress').innerHTML=[0,1,2,3].map(()=>'<div class="onb-dot done"></div>').join('');
+    b.innerHTML='<div style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;">'
+      +'<div style="font-size:64px;">🌱</div>'
+      +'<div class="serif" style="font-size:28px;margin:10px 0 4px;">Rituel <em style="font-style:italic;color:var(--accent);">terminé</em></div>'
+      +'<p style="color:var(--accent-deep);font-size:13.5px;font-weight:600;">Ta plante a grandi 🌿</p>'
+      +'<div class="msg-card" style="margin:18px 0 0;max-width:100%;text-align:left;"><div class="eyebrow">'+coachName().toUpperCase()+'</div><div style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin-top:6px;">'+rjSummary()+'</div></div>'
+      +'<button class="btn btn-accent" style="margin-top:20px;" onclick="closeRituelJour();navTo(\'journal\')">Voir mon évolution</button>'
+      +'<button class="btn btn-ghost" style="margin-top:6px;" onclick="closeRituelJour()">À demain 🌙</button>'
+      +'</div>';
+  }
+  function rjSummary(){
+    const t=rjData.tags; const out=[];
+    if(t.has('rougeurs')||t.has('sensible')) out.push('Ta peau semble un peu sensible aujourd\'hui · garde un rituel tout doux, sans nouvel actif.');
+    else if(t.has('seche')||t.has('terne')) out.push('Ta peau réclame de l\'hydratation · une couche généreuse ce soir lui fera du bien 💧');
+    else if(t.has('grasse')||t.has('boutons')) out.push('Côté brillance ou petits boutons : nettoyage doux et constance, jamais d\'agressivité.');
+    else if(t.has('nette')) out.push('Ta peau a l\'air en forme · continue exactement comme ça ✨');
+    if(rjData.sommeil!=null && rjData.sommeil<=5) out.push('Avec une nuit courte, mise sur la simplicité aujourd\'hui.');
+    if(rjData.eau!=null && rjData.eau<=3) out.push('Et pense à boire un peu plus d\'eau au fil de la journée.');
+    if(!out.length) out.push('Jour après jour, c\'est ta régularité qui fait toute la différence.');
+    out.push('Le plus important, c\'est la régularité, pas la perfection 🌸');
+    return out.slice(0,3).join(' ');
+  }
+
+  // ===== Rituel guidé (plein écran, pas à pas) =====
+  let gdItems=[], gdIdx=0, gdPeriod='matin';
+  function openGuided(){
+    const soirVisible = document.getElementById('routine-soir') && getComputedStyle(document.getElementById('routine-soir')).display!=='none';
+    gdPeriod = soirVisible ? 'soir' : 'matin';
+    const items = (window.__homeRoutine && window.__homeRoutine[gdPeriod]) || [];
+    if(!items.length){ showToast('Ajoute d\'abord des produits à ton rituel 🌸'); return; }
+    gdItems=items; gdIdx=0;
+    document.getElementById('guided-sheet').style.display='flex';
+    gdShow();
+  }
+  function gdShow(){
+    const p=gdItems[gdIdx]; if(!p) return;
+    document.getElementById('gd-count').textContent='ÉTAPE '+(gdIdx+1)+'/'+gdItems.length+' · '+(gdPeriod==='soir'?'SOIR 🌙':'MATIN ☀️');
+    document.getElementById('gd-emoji').textContent=p.emoji||'🧴';
+    document.getElementById('gd-name').textContent=p.nom||'';
+    document.getElementById('gd-effets').textContent=p.effets||'';
+    document.getElementById('gd-progress').innerHTML=gdItems.map((_,k)=>'<div class="onb-dot'+(k<gdIdx?' done':(k===gdIdx?' active':''))+'"></div>').join('');
+    document.getElementById('gd-prev').style.visibility = gdIdx===0 ? 'hidden' : 'visible';
+    document.getElementById('gd-next').textContent = gdIdx===gdItems.length-1 ? '✨ Terminer mon rituel' : 'Étape suivante';
+  }
+  function guidedPrev(){ if(gdIdx>0){ gdIdx--; gdShow(); } }
+  async function guidedNext(){
+    if(gdIdx < gdItems.length-1){ gdIdx++; gdShow(); return; }
+    closeGuided();
+    await updateTodayEntry(gdPeriod==='soir' ? { routine_soir:true } : { routine_matin:true });
+    applyRoutineState(gdPeriod, true);
+    bustStreak(); renderStreak();
+    showToast('Rituel terminé, ta peau te dit merci ✨');
+  }
+  function closeGuided(){ document.getElementById('guided-sheet').style.display='none'; }
+
+  // ===== Caméra HD intégrée (photo du jour) =====
+  let camStream=null, camFacing='user';
+  function openPhotoChoice(){ document.getElementById('photo-choice').classList.add('open'); }
+  function closePhotoChoice(){ document.getElementById('photo-choice').classList.remove('open'); }
+  async function camOpen(){
+    const sheet=document.getElementById('cam-sheet');
+    try{
+      camStream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:camFacing, width:{ideal:1920}, height:{ideal:1440} }, audio:false });
+      const v=document.getElementById('cam-video'); v.srcObject=camStream;
+      v.style.transform = camFacing==='user' ? 'scaleX(-1)' : 'none';
+      sheet.style.display='block';
+    }catch(e){ showToast('Caméra indisponible · essaie la galerie 🖼️'); }
+  }
+  function camStop(){ if(camStream){ try{ camStream.getTracks().forEach(t=>t.stop()); }catch(e){} camStream=null; } }
+  function camClose(){ camStop(); document.getElementById('cam-sheet').style.display='none'; }
+  async function camFlip(){ camFacing = camFacing==='user' ? 'environment' : 'user'; camStop(); await camOpen(); }
+  function camCapture(){
+    const v=document.getElementById('cam-video');
+    if(!v || !v.videoWidth){ showToast('Un instant…'); return; }
+    const cv=document.createElement('canvas'); cv.width=v.videoWidth; cv.height=v.videoHeight;
+    const ctx=cv.getContext('2d');
+    if(camFacing==='user'){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
+    ctx.drawImage(v,0,0);
+    cv.toBlob(async (blob)=>{
+      camClose();
+      if(!blob){ showToast('Oups, réessaie'); return; }
+      const img=document.getElementById('photo-img');
+      if(img){ img.src=URL.createObjectURL(blob); document.getElementById('photo-empty').classList.add('hidden'); document.getElementById('photo-display').classList.remove('hidden'); }
+      await uploadDayPhoto(blob,'jpg');
+    },'image/jpeg',0.92);
+  }
+  async function uploadDayPhoto(fileOrBlob, ext){
+    if(!currentUser){ showToast('Connecte-toi pour sauvegarder'); return; }
+    showToast('Envoi de la photo… 🌸');
+    const path = `${currentUser.id}/${Date.now()}.${ext}`;
+    const opts = (fileOrBlob instanceof File) ? { upsert:true } : { upsert:true, contentType:'image/jpeg' };
+    const { error: upErr } = await sb.storage.from('photos').upload(path, fileOrBlob, opts);
+    if(upErr){ showToast('Erreur upload : '+upErr.message); return; }
+    await updateTodayEntry({ photo_path: path });
+    showToast('Photo du jour enregistrée 🌸');
+    loadTodayPhoto();
+    loadJournalFromDB();
+    try{ rjRefreshPhoto(); }catch(e){}
+  }
+
+  // ===== Landing publique =====
+  function startAuth(m){
+    const l=document.getElementById('landing'); if(l) l.classList.add('hidden');
+    const b=document.getElementById('auth-back'); if(b) b.classList.remove('hidden');
+    document.querySelector('.auth-toggle').classList.remove('hidden');
+    switchAuth(m);
+  }
+  function backToLanding(){
+    const l=document.getElementById('landing'); if(l) l.classList.remove('hidden');
+    const b=document.getElementById('auth-back'); if(b) b.classList.add('hidden');
+    document.querySelector('.auth-toggle').classList.add('hidden');
+    document.getElementById('form-login').classList.add('hidden');
+    document.getElementById('form-signup').classList.add('hidden');
+  }
+
+  // ===== Notifications push (service worker + abonnement) =====
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(function(){}); }
+  function urlB64ToU8(s){ const pad='='.repeat((4-s.length%4)%4); const b=(s+pad).replace(/-/g,'+').replace(/_/g,'/'); const raw=atob(b); const a=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++) a[i]=raw.charCodeAt(i); return a; }
+  async function refreshPushBtn(){
+    const b=document.getElementById('push-btn'), st=document.getElementById('push-status'); if(!b) return;
+    if(!('serviceWorker' in navigator) || !('PushManager' in window)){ b.style.display='none'; if(st) st.textContent='Non supporté sur ce navigateur (sur iPhone : installe d\'abord l\'app sur l\'écran d\'accueil).'; return; }
+    try{
+      const reg=await navigator.serviceWorker.ready;
+      const s=await reg.pushManager.getSubscription();
+      b.textContent = s ? 'Désactiver les notifications' : 'Activer les notifications';
+      if(st) st.textContent = s ? 'Activées ✓ · aux jours et heures de tes rituels 🌸' : '';
+    }catch(e){}
+  }
+  async function togglePush(){
+    try{
+      if(!('serviceWorker' in navigator) || !('PushManager' in window)){ showToast('Non supporté ici 🌿'); return; }
+      const reg=await navigator.serviceWorker.ready;
+      let sub=await reg.pushManager.getSubscription();
+      if(sub){
+        try{ await fetch('/api/push',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'unsubscribe', endpoint:sub.endpoint }) }); }catch(e){}
+        await sub.unsubscribe();
+        showToast('Notifications désactivées'); refreshPushBtn(); return;
+      }
+      const perm=await Notification.requestPermission();
+      if(perm!=='granted'){ showToast('Autorise les notifications pour continuer 🌸'); return; }
+      const r=await fetch('/api/push'); const d=await r.json();
+      if(!d || !d.publicKey){ showToast('Push pas encore configuré côté serveur 🔧'); return; }
+      sub=await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlB64ToU8(d.publicKey) });
+      const j=sub.toJSON();
+      await fetch('/api/push',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'subscribe', endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, user_id: currentUser?currentUser.id:null, tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || null) }) });
+      showToast('Notifications activées 🔔'); refreshPushBtn();
+    }catch(e){ showToast('Oups : '+(e.message||'réessaie')); }
+  }
+
+  // ===== Tap en dehors d'une fenêtre = fermeture (smooth) =====
+  document.addEventListener('click', (e)=>{
+    const t=e.target;
+    if(t && t.classList && t.classList.contains('sheet-overlay') && t.classList.contains('open')){
+      t.classList.remove('open');
+      try{ stopBcCamera(); }catch(_e){}
+      try{ tlStop(); }catch(_e){}
+      try{ camStop(); }catch(_e){}
+    }
+  });
+
+  // ===== Scan code-barres (détection sur images canvas + 3 bases) =====
+  let bcStream=null, bcTimer=null, bcBusy=false, bcT0=0;
+  async function openBarcodeSheet(){
+    document.getElementById('barcode-sheet').classList.add('open');
+    const wrap=document.getElementById('bc-video-wrap');
+    const status=document.getElementById('bc-status');
+    const manual=document.getElementById('bc-manual'); if(manual) manual.value='';
+    if(!('BarcodeDetector' in window) || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      wrap.style.display='none';
+      status.textContent='Le scan caméra n\'est pas supporté sur ce navigateur · tape le code à la main 👇';
+      return;
+    }
+    try{
+      bcStream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} }, audio:false });
+      try{ const tr=bcStream.getVideoTracks()[0]; if(tr && tr.applyConstraints) await tr.applyConstraints({ advanced:[{ focusMode:'continuous' }] }); }catch(e){}
+      const v=document.getElementById('bc-video'); v.srcObject=bcStream;
+      wrap.style.display='block';
+      status.textContent='Vise le code-barres, bien à plat et éclairé 📷';
+      bcT0=Date.now();
+      const det=new BarcodeDetector({ formats:['ean_13','ean_8','upc_a','upc_e','code_128'] });
+      const cv=document.createElement('canvas'); const cx=cv.getContext('2d',{ willReadFrequently:true });
+      bcTimer=setInterval(async ()=>{
+        if(bcBusy || !v.videoWidth) return; bcBusy=true;
+        try{
+          cv.width=v.videoWidth; cv.height=v.videoHeight;
+          cx.drawImage(v,0,0);
+          const codes=await det.detect(cv);
+          if(codes && codes.length && codes[0].rawValue){ const code=codes[0].rawValue; stopBcCamera(); status.textContent='Code détecté ✓'; bcLookup(code); }
+          else if(Date.now()-bcT0>7000){ status.textContent='Rapproche-toi du code et stabilise 🤳 (ou tape-le en dessous)'; }
+        }catch(err){}
+        bcBusy=false;
+      }, 300);
+    }catch(e){
+      wrap.style.display='none';
+      status.textContent='Caméra refusée ou indisponible · tape le code à la main 👇';
+    }
+  }
+  function stopBcCamera(){ if(bcTimer){ clearInterval(bcTimer); bcTimer=null; } if(bcStream){ try{ bcStream.getTracks().forEach(t=>t.stop()); }catch(e){} bcStream=null; } }
+  function closeBarcodeSheet(){ stopBcCamera(); document.getElementById('barcode-sheet').classList.remove('open'); }
+  function bcLookupManual(){ const v=(document.getElementById('bc-manual').value||'').trim(); if(v) bcLookup(v); }
+  async function bcFetchProduct(base, code){
+    try{
+      const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(), 6000);
+      const r=await fetch(base+encodeURIComponent(code)+'.json',{ signal:ctl.signal }); clearTimeout(t);
+      const d=await r.json(); if(d && d.status===1 && d.product) return d.product;
+    }catch(e){}
+    return null;
+  }
+  async function bcLookup(code){
+    const status=document.getElementById('bc-status');
+    const g=document.getElementById('bc-google'); if(g) g.style.display='none';
+    status.textContent='Recherche du produit…';
+    let d=null;
+    try{
+      const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(), 9000);
+      const r=await fetch('/api/barcode?code='+encodeURIComponent(code), { signal: ctl.signal });
+      clearTimeout(t);
+      d=await r.json();
+    }catch(e){}
+    if(!d || !d.found){
+      status.textContent='Produit introuvable dans les bases 😕 (fréquent en cosmétique). Tape son nom à la main, ou jette un œil en ligne :';
+      if(g){ g.href='https://www.google.com/search?q='+encodeURIComponent(code); g.style.display='inline-block'; }
+      return;
+    }
+    // Pré-remplir la fiche produit avec les infos trouvées
+    closeBarcodeSheet();
+    openProductForm();
+    setTimeout(function(){
+      const cap=function(s){ if(!s) return ''; s=s.trim(); return s.charAt(0).toUpperCase()+s.slice(1); };
+      const nomEl=document.getElementById('pf-nom'); if(nomEl && d.nom) nomEl.value=cap(d.nom);
+      const mqEl=document.getElementById('pf-marque'); if(mqEl && d.marque) mqEl.value=cap(d.marque);
+      if(d.effets) pfEffetsSet(d.effets.charAt(0).toUpperCase()+d.effets.slice(1));
+      // Catégorie devinée
+      if(d.categorie){
+        const catBtn=document.querySelector('#pf-cats .rj-chip[data-cat="'+d.categorie+'"]');
+        if(catBtn){ pfSetCat(catBtn, d.categorie); }
+      }
+    }, 120);
+    showToast('Produit trouvé ✨ Vérifie et complète 🌸');
+  }
+
+  // ===== Suivi de cycle (opt-in, discret) =====
+  let cyTmp={ enabled:false };
+  function cyclePhaseInfo(){
+    if(!state.cycleEnabled || !state.cycleLastStart) return null;
+    const len=Math.max(20, Math.min(45, parseInt(state.cycleLength,10)||28));
+    const start=new Date(state.cycleLastStart+'T00:00:00');
+    const today=new Date(todayStr()+'T00:00:00');
+    const diff=Math.floor((today-start)/86400000);
+    if(isNaN(diff) || diff<0) return null;
+    if(diff >= len*2) return { stale:true };
+    const day=(diff % len)+1;
+    const ovu=len-14;
+    let phase, emoji, tip;
+    if(day<=5){ phase='menstruelle'; emoji='🌙'; tip='Peau souvent plus sensible · douceur et hydratation aujourd\'hui.'; }
+    else if(day<ovu-1){ phase='folliculaire'; emoji='🌱'; tip='Ta peau est en forme · bon moment pour tes actifs.'; }
+    else if(day<=ovu+1){ phase='ovulation'; emoji='☀️'; tip='Éclat naturel au rendez-vous ✨'; }
+    else { phase='lutéale'; emoji='🍂'; tip='Imperfections possibles · nettoyage doux et patience.'; }
+    return { day, phase, emoji, tip, len };
+  }
+  function loadCycleCard(){
+    const sec=document.getElementById('cycle-section'), card=document.getElementById('cycle-card');
+    if(!sec || !card) return;
+    const i=cyclePhaseInfo();
+    if(!i){ sec.style.display='none'; return; }
+    if(i.stale){
+      card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);cursor:pointer;" onclick="openCycleSheet()"><div style="font-size:24px;flex-shrink:0;">🌸</div><div style="flex:1;min-width:0;"><span class="eyebrow">SUIVI DE CYCLE</span><div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">Ça fait un moment · mets à jour la date de tes dernières règles pour des repères justes.</div></div></div>';
+      sec.style.display='block'; return;
+    }
+    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:11px 14px;box-shadow:var(--shadow);" onclick="openCycleSheet()">'
+      + '<div style="font-size:24px;flex-shrink:0;">'+i.emoji+'</div>'
+      + '<div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:8px;"><span class="eyebrow">CYCLE · JOUR '+i.day+'</span><span style="font-size:11px;font-weight:600;color:var(--accent-deep);text-transform:capitalize;">'+i.phase+'</span></div>'
+      + '<div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">'+i.tip+'</div></div>'
+      + '</div>';
+    sec.style.display='block';
+  }
+  function updateCycleMenuMeta(){ const m=document.getElementById('menu-cycle-meta'); if(m) m.textContent = state.cycleEnabled ? 'activé' : '…'; }
+  function cySetEnabled(on){
+    cyTmp.enabled=on;
+    const a=document.getElementById('cy-on'), b=document.getElementById('cy-off'), body=document.getElementById('cy-body');
+    if(a) a.classList.toggle('selected', on);
+    if(b) b.classList.toggle('selected', !on);
+    if(body) body.style.display = on ? 'block' : 'none';
+  }
+  function cyToday(){ const el=document.getElementById('cy-start'); if(el){ const t=todayStr(); el.setAttribute('data-iso',t); el.value=dpFmtDisplay(t); } }
+  function openCycleSheet(){
+    cyTmp={ enabled: !!state.cycleEnabled };
+    const st=document.getElementById('cy-start'); if(st){ const _v=state.cycleLastStart||''; st.setAttribute('data-iso',_v); st.value=_v?dpFmtDisplay(_v):''; }
+    const ln=document.getElementById('cy-length'); if(ln) ln.value = state.cycleLength || 28;
+    cySetEnabled(cyTmp.enabled);
+    document.getElementById('cycle-sheet').classList.add('open');
+  }
+  function closeCycleSheet(){ document.getElementById('cycle-sheet').classList.remove('open'); }
+  async function saveCycle(){
+    state.cycleEnabled = cyTmp.enabled;
+    const st=((document.getElementById('cy-start').getAttribute('data-iso')||'')||'').trim();
+    state.cycleLastStart = st || null;
+    state.cycleLength = Math.max(20, Math.min(45, parseInt(document.getElementById('cy-length').value,10)||28));
+    if(currentUser){
+      try{ await sb.from('profiles').update({ cycle_enabled: state.cycleEnabled, cycle_last_start: state.cycleLastStart, cycle_length: state.cycleLength }).eq('id', currentUser.id); }catch(e){}
+    }
+    closeCycleSheet();
+    updateCycleMenuMeta();
+    loadCycleCard();
+    if(state.cycleEnabled && !state.cycleLastStart) showToast('Pense à noter le 1er jour de tes règles 🌸');
+    else showToast(state.cycleEnabled ? 'Suivi de cycle activé 🌸' : 'Suivi de cycle désactivé');
+  }
+
+  // ===== Indice UV du jour (géoloc + Open-Meteo, au tap, mis en cache) =====
+  function uvInfo(uv){
+    if(uv<3) return {label:'Faible', color:'#5DAE63', advice:'UV faible aujourd\'hui. Un SPF léger suffit si tu restes longtemps dehors.'};
+    if(uv<6) return {label:'Modéré', color:'#D99A1C', advice:'UV modéré · pense à ta crème solaire SPF 30 avant de sortir ☀️'};
+    if(uv<8) return {label:'Élevé', color:'#E0722C', advice:'UV élevé · SPF 50 recommandé, chapeau et lunettes si tu peux.'};
+    if(uv<11) return {label:'Très élevé', color:'#D6453F', advice:'UV très élevé · SPF 50, et évite le soleil entre 12h et 16h.'};
+    return {label:'Extrême', color:'#9B3B6E', advice:'UV extrême · protection maximale, reste à l\'ombre au maximum.'};
+  }
+  function renderUV(uv, t, h){
+    const card=document.getElementById('uv-card'); if(!card) return;
+    const info=uvInfo(uv);
+    let extra='';
+    if(h!=null && h<35) extra='Air sec ('+h+'%) · couche d\'hydratant généreuse aujourd\'hui 💧';
+    else if(h!=null && h>80) extra='Air très humide ('+h+'%) · textures légères, ta peau respirera mieux 🌫️';
+    if(t!=null && t<=3) extra=(extra?extra+' · ':'')+'Froid dehors · protège bien les joues et les lèvres 🧣';
+    const meteo = (t!=null||h!=null) ? '<div style="font-size:11px;color:var(--muted);margin-top:5px;">'+(t!=null?t+'°':'')+(t!=null&&h!=null?' · ':'')+(h!=null?h+'% d\'humidité':'')+'</div>' : '';
+    const extraHtml = extra ? '<div style="font-size:12.5px;color:var(--ink-soft);line-height:1.45;margin-top:5px;">'+extra+'</div>' : '';
+    card.innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);">'
+      + '<div style="width:52px;height:52px;border-radius:50%;background:'+info.color+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="font-family:var(--serif);font-size:23px;color:'+info.color+';line-height:1;">'+Math.round(uv)+'</div></div>'
+      + '<div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:8px;"><span class="eyebrow">INDICE UV</span><span style="font-size:11px;font-weight:600;color:'+info.color+';">'+info.label+'</span></div><div style="font-size:13px;color:var(--ink-soft);line-height:1.45;margin-top:3px;">'+info.advice+'</div></div>'
+      + '</div>';
+  }
+  async function activateUV(){
+    const card=document.getElementById('uv-card'); if(!card) return;
+    if(!navigator.geolocation){ showToast('Géolocalisation indisponible'); return; }
+    card.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Localisation en cours…</div>';
+    navigator.geolocation.getCurrentPosition(async (pos)=>{
+      const lat=pos.coords.latitude.toFixed(2), lon=pos.coords.longitude.toFixed(2);
+      try{
+        const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&daily=uv_index_max&current=temperature_2m,relative_humidity_2m&timezone=auto');
+        const d=await r.json();
+        const uv = (d && d.daily && Array.isArray(d.daily.uv_index_max)) ? d.daily.uv_index_max[0] : null;
+        const t = (d && d.current && typeof d.current.temperature_2m==='number') ? Math.round(d.current.temperature_2m) : null;
+        const h = (d && d.current && typeof d.current.relative_humidity_2m==='number') ? Math.round(d.current.relative_humidity_2m) : null;
+        if(uv==null){ card.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Indice UV indisponible pour le moment 🌿</div>'; return; }
+        try{ localStorage.setItem('rituel_uv', JSON.stringify({ d: todayStr(), uv, t, h })); }catch(e){}
+        renderUV(uv, t, h);
+      }catch(e){ card.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;">Indice UV indisponible 🌿</div>'; }
+    }, ()=>{
+      card.innerHTML='<div style="padding:14px;color:var(--muted);font-size:13px;line-height:1.5;">Localisation refusée. <button class="btn-soft" style="padding:7px 14px;font-size:11.5px;margin-top:8px;" onclick="activateUV()">Réessayer</button></div>';
+    }, { timeout:8000, maximumAge:3600000 });
+  }
+  function loadUV(){
+    const card=document.getElementById('uv-card'); if(!card) return;
+    try{ const c=localStorage.getItem('rituel_uv'); if(c){ const o=JSON.parse(c); if(o && o.d===todayStr() && typeof o.uv==='number'){ renderUV(o.uv, o.t, o.h); return; } } }catch(e){}
+    card.innerHTML='<button class="add-product-card" style="margin-top:0;" onclick="activateUV()">☀️ Voir l\'indice UV du jour</button>';
+  }
+
+  // ===== Timelapse des photos =====
+  let tlPhotos=[], tlIdx=0, tlTimer=null, tlPlaying=false;
+  function fmtDateLong(ds){ try{ const d=new Date(ds+'T00:00:00'); const M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']; return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear(); }catch(e){ return ds; } }
+  async function openTimelapse(){
+    if(!requirePlus('Revois toute ton évolution en accéléré, jour après jour 🎞️')) return;
+    if(!currentUser) return;
+    showToast('Chargement de ton évolution…');
+    const { data } = await sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).order('date',{ascending:true});
+    const rows=(data||[]).filter(r=>r.photo_path);
+    if(rows.length<2){ showToast('Il faut au moins 2 photos 🌸'); return; }
+    tlPhotos=[];
+    for(const r of rows){ const url=await signedPhoto(r.photo_path); if(url) tlPhotos.push({url,date:r.date}); }
+    if(tlPhotos.length<2){ showToast('Photos indisponibles'); return; }
+    const rg=document.getElementById('tl-range'); rg.max=String(tlPhotos.length-1); rg.value='0';
+    rg.oninput=(ev)=>{ tlStop(); tlShow(parseInt(ev.target.value,10)); };
+    document.getElementById('timelapse-sheet').classList.add('open');
+    tlShow(0); tlStart();
+  }
+  function tlShow(i){ tlIdx=i; const p=tlPhotos[i]; if(!p) return; const img=document.getElementById('tl-img'); if(img) img.src=p.url; const dt=document.getElementById('tl-date'); if(dt) dt.textContent=fmtDateLong(p.date)+'  ·  '+(i+1)+'/'+tlPhotos.length; const rg=document.getElementById('tl-range'); if(rg) rg.value=String(i); }
+  function tlStart(){ tlPlaying=true; const b=document.getElementById('tl-play'); if(b) b.textContent='⏸ Pause'; tlTimer=setInterval(()=>{ let n=tlIdx+1; if(n>=tlPhotos.length) n=0; tlShow(n); }, 850); }
+  function tlStop(){ tlPlaying=false; const b=document.getElementById('tl-play'); if(b) b.textContent='▶ Lire'; if(tlTimer){ clearInterval(tlTimer); tlTimer=null; } }
+  function tlToggle(){ tlPlaying ? tlStop() : tlStart(); }
+  function closeTimelapse(){ tlStop(); document.getElementById('timelapse-sheet').classList.remove('open'); }
+
+  // ===== Petit mot proactif de Léa (1×/jour, doux, jamais culpabilisant) =====
+  async function loadLeaProactive(e){
+    const line=document.getElementById('lea-proactive-line'); if(!line) return;
+    if(!currentUser){ line.textContent=''; return; }
+    let streak=0; try{ streak=await computeStreak(); }catch(err){}
+    const h=new Date().getHours();
+    const done = e && dayComplete(e);
+    const hasPhoto = e && e.photo_path;
+    const fier = 'fière';
+    let msg;
+    if(streak>0 && streak%7===0){ msg='Waouh, '+streak+' jours de rituel · je suis si '+fier+' de toi 🌟'; }
+    else if(done && !hasPhoto){ msg='Rituel fait, bravo ✨ Une petite photo pour garder une trace ?'; }
+    else if(done){ msg='Ton rituel est fait pour aujourd\'hui, bravo 💛'; }
+    else if(h<12){ msg='Coucou 🌸 Un petit rituel pour bien démarrer la journée ?'; }
+    else if(h<18){ msg='Ta peau attend son petit moment rituel aujourd\'hui 🌿'; }
+    else { msg='Bonsoir 🌙 Un rituel du soir avant de dormir ?'; }
+    line.textContent=msg;
+  }
+
+  function baSlide(v){
+    v=Number(v);
+    const b=document.getElementById('ba-before-img'); if(b) b.style.clipPath='inset(0 '+(100-v)+'% 0 0)';
+    const l=document.getElementById('ba-line'); if(l) l.style.left=v+'%';
+    const k=document.getElementById('ba-knob'); if(k) k.style.left=v+'%';
+  }
+  // ===== La lettre du mois (1 appel IA/mois, en cache) =====
+  function bilanKey(){ const d=new Date(); return 'rituel_bilan_'+(currentUser?currentUser.id:'x')+'_'+d.getFullYear()+'-'+(d.getMonth()+1); }
+
+  // ===== Souvenir : une photo d'il y a un moment =====
+  async function loadMemory(){
+    const sec=document.getElementById('memory-section'); if(!sec) return;
+    sec.style.display='none';
+    if(!currentUser) return;
+    try{
+      const lim=new Date(); lim.setDate(lim.getDate()-30);
+      const { data } = await sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).lte('date',lim.toISOString().slice(0,10)).order('date',{ascending:false}).limit(1);
+      const row=(data&&data[0])||null; if(!row) return;
+      const url=await signedPhoto(row.photo_path); if(!url) return;
+      const days=Math.round((new Date(todayStr())-new Date(row.date))/86400000);
+      document.getElementById('memory-img').src=url;
+      document.getElementById('memory-caption').textContent='Cette photo date d\'il y a '+days+' jours · regarde le chemin parcouru 🌸';
+      sec.style.display='block';
+    }catch(e){}
+  }
+
+  // ===== Tes découvertes (corrélations douces, jamais culpabilisantes) =====
+  async function loadInsights(){
+    if(!isPremium){ const s=document.getElementById('insights-section'); if(s) s.style.display='none'; return; }
+    const sec=document.getElementById('insights-section'); if(!sec) return;
+    sec.style.display='none';
+    if(!currentUser) return;
+    try{
+      const since=new Date(); since.setDate(since.getDate()-60);
+      const { data } = await sb.from('entries').select('date,sommeil,hydratation,score_peau,humeur,routine_matin,routine_soir,repos').eq('user_id',currentUser.id).gte('date',since.toISOString().slice(0,10));
+      const byDate={}; (data||[]).forEach(e=>{ byDate[e.date]=byDate[e.date]?{...byDate[e.date],...e}:e; });
+      const days=Object.values(byDate);
+      const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+      const out=[];
+      const sHi=days.filter(d=>d.sommeil!=null&&d.score_peau!=null&&Number(d.sommeil)>=7).map(d=>Number(d.score_peau));
+      const sLo=days.filter(d=>d.sommeil!=null&&d.score_peau!=null&&Number(d.sommeil)<7).map(d=>Number(d.score_peau));
+      if(sHi.length>=3&&sLo.length>=3){ const diff=Math.round(avg(sHi)-avg(sLo)); if(diff>=4) out.push(['😴','Les jours où tu dors 7 h ou plus, ton éclat est en moyenne '+diff+' points plus haut. Ton sommeil te va bien ✨']); }
+      const hHi=days.filter(d=>d.hydratation!=null&&d.score_peau!=null&&Number(d.hydratation)>=6).map(d=>Number(d.score_peau));
+      const hLo=days.filter(d=>d.hydratation!=null&&d.score_peau!=null&&Number(d.hydratation)<6).map(d=>Number(d.score_peau));
+      if(hHi.length>=3&&hLo.length>=3){ const diff=Math.round(avg(hHi)-avg(hLo)); if(diff>=4) out.push(['💧','Quand tu bois 6 verres ou plus, ton éclat gagne souvent '+diff+' points. Ta peau aime l\'eau 🌊']); }
+      const mOn=days.filter(d=>dayComplete(d)&&d.humeur).map(d=>Number(d.humeur));
+      const mOff=days.filter(d=>!dayComplete(d)&&d.humeur).map(d=>Number(d.humeur));
+      if(mOn.length>=3&&mOff.length>=3){ const diff=avg(mOn)-avg(mOff); if(diff>=0.5) out.push(['🌸','Les jours de rituel, ton humeur est souvent plus douce. Prendre soin de soi, ça se sent 💛']); }
+      if(!out.length) return;
+      document.getElementById('insights-list').innerHTML=out.slice(0,2).map(i=>'<div class="ba-card" style="gap:12px;"><div style="font-size:24px;flex-shrink:0;">'+i[0]+'</div><div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5;">'+i[1]+'</div></div>').join('');
+      sec.style.display='block';
+    }catch(e){}
+  }
+
+  // ===== Avant / Après (première photo vs dernière) =====
+  async function loadBeforeAfter(){
+    const sec=document.getElementById('ba-section'); if(!sec) return;
+    sec.style.display='none';
+    if(!currentUser) return;
+    try{
+      const [firstR, lastR] = await Promise.all([
+        sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).order('date',{ascending:true}).limit(1),
+        sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).order('date',{ascending:false}).limit(1)
+      ]);
+      const first=(firstR.data&&firstR.data[0])||null;
+      const last=(lastR.data&&lastR.data[0])||null;
+      if(!first || !last || first.date===last.date) return; // besoin de 2 jours différents
+      const [u1,u2]=await Promise.all([signedPhoto(first.photo_path), signedPhoto(last.photo_path)]);
+      if(!u1 || !u2) return;
+      document.getElementById('ba-before-img').src=u1;
+      document.getElementById('ba-after-img').src=u2;
+      const rg=document.getElementById('ba-range'); if(rg) rg.value=50;
+      baSlide(50);
+      const fmt=(d)=>{ const p=d.split('-'); return p[2]+'/'+p[1]; };
+      const days=Math.round((new Date(last.date)-new Date(first.date))/86400000);
+      document.getElementById('ba-before-label').textContent='Jour 1 · '+fmt(first.date);
+      document.getElementById('ba-after-label').textContent="Aujourd'hui · "+fmt(last.date);
+      document.getElementById('ba-caption').textContent='+'+days+' jour'+(days>1?'s':'')+' entre les deux 🌸';
+      sec.style.display='block';
+    }catch(e){}
+  }
+
+  // ═══ Vue d'ensemble + Évolution de la peau (Journal) ═══
+  let evEntries = [];
+  let evMetric = 'score_peau';
+  let evPeriod = 7;   // 7 jours, 30 jours ou 365 jours
+
+  async function loadOverview(){
+    const ovSec=document.getElementById('ov-section'), evSec=document.getElementById('ev-section');
+    if(!ovSec) return;
+    if(!currentUser){ ovSec.style.display='none'; if(evSec) evSec.style.display='none'; return; }
+    const since=new Date(); since.setDate(since.getDate()-6);
+    const sinceStr=since.toISOString().slice(0,10);
+    let es=[];
+    try{
+      const { data } = await sb.from('entries').select('*').eq('user_id',currentUser.id).gte('date',sinceStr).order('date',{ascending:true});
+      es=data||[];
+    }catch(e){ es=[]; }
+    // fusion par date
+    const byDate={}; es.forEach(e=>{ byDate[e.date]=byDate[e.date]?{...byDate[e.date],...e}:e; });
+    const days=Object.values(byDate);
+
+    // ── 4 tuiles ──
+    let rituelDays=0, photoN=0, scoreSum=0,scoreN=0; const moodCount={};
+    days.forEach(e=>{
+      if(dayComplete(e)) rituelDays++;
+      if(e.photo_path) photoN++;
+      if(e.score_peau!=null){ scoreSum+=Number(e.score_peau); scoreN++; }
+      if(e.humeur){ moodCount[e.humeur]=(moodCount[e.humeur]||0)+1; }
+    });
+    const regularite = Math.round((rituelDays/7)*100);
+    const MOODS={1:'Difficile',2:'Mitigée',3:'Correcte',4:'Bonne',5:'Rayonnante'};
+    let domMood=null,domN=0; Object.keys(moodCount).forEach(k=>{ if(moodCount[k]>domN){domN=moodCount[k];domMood=k;} });
+    const moodLabel = domMood ? (MOODS[domMood]||'—') : '—';
+
+    const sparkScore = sparkline(days.map(e=>e.score_peau!=null?Number(e.score_peau):null));
+    const sparkReg = sparkline(days.map(e=>dayComplete(e)?1:0), true);
+
+    const tiles=[
+      {ico:'🌿', val:rituelDays, sub:'Rituels réalisés<br>/ 7 jours', spark:sparkReg},
+      {ico:'📊', val:regularite+'%', sub:'Régularité', spark:sparkScore},
+      {ico:'📸', val:photoN, sub:'Photos ajoutées', spark:''},
+      {ico:'🌸', val:moodLabel, sub:'Humeur<br>dominante', spark:'', small:true}
+    ];
+    document.getElementById('ov-tiles').innerHTML = tiles.map(t=>
+      '<div class="ov-tile"><div class="top"><div class="ov-ico">'+t.ico+'</div>'+(t.spark||'')+'</div>'+
+      '<div class="ov-val"'+(t.small?' style="font-size:19px;margin-top:12px;"':'')+'>'+t.val+'</div>'+
+      '<div class="ov-lbl">'+t.sub+'</div></div>'
+    ).join('');
+    ovSec.style.display='block';
+
+    // ── Évolution ──
+    if(evSec){ evSec.style.display='block'; loadEvData(); }
+  }
+
+  function sparkline(vals, isBinary){
+    const pts = vals.filter(v=>v!=null);
+    if(pts.length<2) return '';
+    const max = isBinary?1:Math.max(...pts), min=isBinary?0:Math.min(...pts);
+    const range = (max-min)||1;
+    const W=54,H=30;
+    const step = W/(vals.length-1);
+    let d='', started=false, x=0;
+    vals.forEach((v,i)=>{
+      x=i*step;
+      if(v==null){ return; }
+      const y = H-2 - ((v-min)/range)*(H-4);
+      d += (started?'L':'M')+x.toFixed(1)+','+y.toFixed(1)+' ';
+      started=true;
+    });
+    return '<svg class="ov-spark" viewBox="0 0 '+W+' '+H+'"><path d="'+d+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
+  // Charge les données du graphe selon la période choisie (7 j, 1 mois, 1 an)
+  async function loadEvData(){
+    if(!currentUser){ evEntries=[]; renderEvChart(); return; }
+    const since=new Date(); since.setDate(since.getDate()-(evPeriod-1));
+    try{
+      const { data } = await sb.from('entries')
+        .select('date,score_peau,hydratation,humeur')
+        .eq('user_id',currentUser.id)
+        .gte('date', since.toISOString().slice(0,10))
+        .order('date',{ascending:true});
+      // Une entrée par date (on fusionne les doublons)
+      const byDate={};
+      (data||[]).forEach(e=>{ byDate[e.date] = byDate[e.date] ? {...byDate[e.date], ...e} : e; });
+      evEntries = Object.keys(byDate).sort().map(k=>byDate[k]);
+    }catch(e){ evEntries=[]; }
+    renderEvChart();
+  }
+
+  function evSetPeriod(p){
+    evPeriod = p;
+    document.querySelectorAll('.ev-p').forEach(b=>b.classList.toggle('sel', Number(b.dataset.p)===p));
+    loadEvData();
+  }
+
+  // Prépare les points à tracer : jour par jour, ou moyenne par mois sur un an
+  function evPoints(){
+    const MOIS=['J','F','M','A','M','J','J','A','S','O','N','D'];
+    const val = e => {
+      const v = e[evMetric];
+      return (v!==null && v!==undefined && v!=='') ? Number(v) : null;
+    };
+    if(evPeriod <= 31){
+      return evEntries.map(e=>({ label: String(parseInt(e.date.slice(8,10),10)), v: val(e) }));
+    }
+    // Un an : on moyenne par mois pour rester lisible
+    const parMois={};
+    evEntries.forEach(e=>{
+      const v=val(e); if(v===null) return;
+      const m=e.date.slice(0,7);
+      if(!parMois[m]) parMois[m]={somme:0, n:0};
+      parMois[m].somme+=v; parMois[m].n++;
+    });
+    return Object.keys(parMois).sort().map(m=>({
+      label: MOIS[parseInt(m.slice(5,7),10)-1],
+      v: Math.round((parMois[m].somme/parMois[m].n)*10)/10
+    }));
+  }
+
+  function evSetMetric(m){
+    evMetric=m;
+    document.querySelectorAll('.ev-tab').forEach(b=>b.classList.toggle('sel', b.dataset.metric===m));
+    renderEvChart();
+  }
+
+  function renderEvChart(){
+    const host=document.getElementById('ev-card'); if(!host) return;
+    const pts = evPoints();
+    const avecValeur = pts.filter(p=>p.v!==null);
+
+    if(avecValeur.length < 1){
+      const quand = evPeriod===7 ? 'cette semaine' : (evPeriod===30 ? 'ce mois-ci' : 'cette année');
+      host.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12.5px;padding:26px 0;">Pas encore de données '+quand+' 🌸<br>Note l\'état de ta peau pour voir ta courbe apparaître.</div>';
+      return;
+    }
+
+    const isMood = evMetric==='humeur';
+    const max = isMood ? 5 : 100;
+    const min = isMood ? 1 : 0;
+    const W=300, H=126, padL=10, padR=10, padT=16, padB=24;
+    const iw=W-padL-padR, ih=H-padT-padB;
+    const n=pts.length;
+    const xOf = i => padL + (n<=1 ? iw/2 : (i/(n-1))*iw);
+    const yOf = v => padT + ih - ((v-min)/((max-min)||1))*ih;
+
+    // Courbe + aire (on ne relie que les points renseignés)
+    let line='';
+    avecValeur.forEach((p,k)=>{
+      const i = pts.indexOf(p);
+      line += (k?'L':'M') + xOf(i).toFixed(1) + ',' + yOf(p.v).toFixed(1) + ' ';
+    });
+    const iPremier = pts.indexOf(avecValeur[0]);
+    const iDernier = pts.indexOf(avecValeur[avecValeur.length-1]);
+    const area = 'M'+xOf(iPremier).toFixed(1)+','+(padT+ih)+' '+line.replace(/^M/,'L')+' L'+xOf(iDernier).toFixed(1)+','+(padT+ih)+' Z';
+
+    // Points : discrets si nombreux
+    const gros = avecValeur.length <= 14;
+    let dots='';
+    avecValeur.forEach(p=>{
+      const i=pts.indexOf(p);
+      dots += '<circle cx="'+xOf(i).toFixed(1)+'" cy="'+yOf(p.v).toFixed(1)+'" r="'+(gros?3.5:2)+'" fill="var(--accent)"/>';
+    });
+
+    // Libellés de l'axe : on en saute si trop nombreux
+    const pas = n<=8 ? 1 : Math.ceil(n/7);
+    let labels='';
+    pts.forEach((p,i)=>{
+      if(i % pas !== 0 && i !== n-1) return;
+      labels += '<text x="'+xOf(i).toFixed(1)+'" y="'+(H-7)+'" font-size="9" fill="var(--muted)" text-anchor="middle">'+p.label+'</text>';
+    });
+
+    const dernier = avecValeur[avecValeur.length-1];
+    const valeurTxt = isMood
+      ? ['','Difficile','Mitigée','Correcte','Bonne','Rayonnante'][Math.round(dernier.v)] || ''
+      : dernier.v + '/100';
+    const entete = '<text x="'+(W-padR)+'" y="11" font-size="11" fill="var(--accent)" text-anchor="end" font-weight="600">'+valeurTxt+'</text>';
+
+    host.innerHTML =
+      '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;overflow:visible;">'+
+        '<path d="'+area+'" fill="var(--blush-soft)" opacity="0.5"/>'+
+        '<path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+
+        dots + labels + entete +
+      '</svg>';
+  }
+
+  async function loadSuiviAccroche(){
+    const host=document.getElementById('suivi-accroche'); if(!host) return;
+    if(!currentUser){ host.style.display='none'; return; }
+    const since=new Date(); since.setDate(since.getDate()-13);
+    let es=[];
+    try{
+      const { data } = await sb.from('entries').select('date,score_peau').eq('user_id',currentUser.id).gte('date',since.toISOString().slice(0,10)).order('date',{ascending:true});
+      es=data||[];
+    }catch(e){ es=[]; }
+    const byDate={}; es.forEach(e=>{ if(e.score_peau!=null) byDate[e.date]=Number(e.score_peau); });
+    const vals=Object.keys(byDate).sort().map(k=>byDate[k]);
+    if(vals.length<2){ host.style.display='none'; return; }
+    const first=vals[0], last=vals[vals.length-1], delta=last-first;
+    let phrase, emoji;
+    if(delta>=5){ phrase='Ta peau progresse joliment'; emoji='🌿'; }
+    else if(delta>=0){ phrase='Ta peau reste stable, continue'; emoji='🌸'; }
+    else { phrase='Chaque jour compte, garde le rythme'; emoji='💧'; }
+    const max=Math.max(...vals), min=Math.min(...vals), range=(max-min)||1;
+    const W=300,H=54, step=W/(vals.length-1);
+    let d='';
+    vals.forEach((v,i)=>{ const x=i*step, y=H-4-((v-min)/range)*(H-8); d+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1)+' '; });
+    const area='M0,'+H+' '+d.replace(/^M/,'L')+' L'+W+','+H+' Z';
+    host.innerHTML =
+      '<div style="background:linear-gradient(150deg,#FFFEFB,#FAF3EA);border-radius:20px;padding:16px 18px;box-shadow:0 12px 30px rgba(46,33,28,0.08);">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'+
+          '<div style="display:flex;align-items:center;gap:9px;"><span style="font-size:22px;">'+emoji+'</span><span style="font-family:var(--serif);font-size:16px;color:var(--ink);">'+phrase+'</span></div>'+
+          (delta!==0?'<span style="font-size:12px;font-weight:600;color:'+(delta>0?'#3E7A4E':'var(--accent)')+';">'+(delta>0?'+':'')+delta+'</span>':'')+
+        '</div>'+
+        '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;overflow:visible;">'+
+          '<path d="'+area+'" fill="var(--blush-soft)" opacity="0.5"/>'+
+          '<path d="'+d+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+
+          '<circle cx="'+((vals.length-1)*step).toFixed(1)+'" cy="'+(H-4-((last-min)/range)*(H-8)).toFixed(1)+'" r="4" fill="var(--accent)"/>'+
+        '</svg>'+
+      '</div>';
+    host.style.display='block';
+  }
+
+      async function loadJournalFromDB(){
+    const grid=document.getElementById('journal-grid'); if(!grid) return;
+    loadSuiviAccroche();
+    loadOverview();
+    loadWeekRecap();
+    loadMemory();
+    loadInsights();
+    loadBeforeAfter();
+    loadEclatGraph();
+    if(!currentUser){ renderJournal(); return; }
+    const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).order('date',{ascending:false}).limit(30);
+    if(!data || !data.length){ renderJournal(); return; }
+    // On ne montre QUE les vraies photos : pas de fausses vignettes de peau.
+    let html='';
+    let nbPhotos=0;
+    for(const e of data){
+      const url = await signedPhoto(e.photo_path);
+      if(!url) continue;
+      nbPhotos++;
+      const day = e.date ? parseInt(e.date.slice(8,10),10) : '';
+      const sc = e.score_peau||0;
+      const dot = sc>=80?'var(--sage)':(sc>=70?'var(--gold)':'var(--accent)');
+      html+=`<div class="journal-cell" onclick="openEntry('${e.date}')"><img src="${url}" alt="Photo du ${day}" style="width:100%;height:100%;object-fit:cover;"><div class="journal-cell-date">${day}</div><div class="journal-cell-dot" style="background:${dot};"></div></div>`;
+    }
+
+    if(!nbPhotos){
+      // Aucune photo encore : une invitation douce, pas une grille vide
+      grid.innerHTML = '<div class="jr-empty"><div class="jr-empty-ico">📷</div>'+
+        '<div class="jr-empty-title">Ta première photo</div>'+
+        '<div class="jr-empty-sub">Prends-la en lumière naturelle. Dans quelques semaines,<br>tu verras le chemin parcouru 🌸</div>'+
+        '<button class="jr-empty-btn" onclick="openPhotoChoice()">Ajouter une photo</button></div>';
+      return;
+    }
+
+    html += '<div class="journal-cell add" onclick="openPhotoChoice()"><span>+</span></div>';
+    grid.innerHTML = html;
+  }
+
+  // ===== Calendrier du Journal =====
+  const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  let calRef = (function(){ const d=new Date(); d.setDate(1); return d; })();
+  function calMonth(delta){ calRef.setMonth(calRef.getMonth()+delta); renderCalendar(); }
+  function pad2(n){ return n<10 ? ('0'+n) : (''+n); }
+  async function renderCalendar(){
+    const grid=document.getElementById('cal-grid'); if(!grid || !currentUser) return;
+    const year=calRef.getFullYear(), month=calRef.getMonth();
+    document.getElementById('cal-title').textContent = MONTHS_FR[month]+' '+year;
+    const first=new Date(year, month, 1);
+    const lastDay=new Date(year, month+1, 0).getDate();
+    const startStr=year+'-'+pad2(month+1)+'-01';
+    const endStr=year+'-'+pad2(month+1)+'-'+pad2(lastDay);
+    const { data } = await sb.from('entries').select('date,photo_path,humeur,routine_matin,routine_soir,sommeil,hydratation,alimentation,note,repos').eq('user_id', currentUser.id).gte('date', startStr).lte('date', endStr);
+    const map={}; (data||[]).forEach(e=>{ map[e.date]=e; });
+    const { data: hlogs } = await sb.from('habit_logs').select('date').eq('user_id', currentUser.id).gte('date', startStr).lte('date', endStr);
+    const habitDays=new Set((hlogs||[]).map(l=>l.date));
+    let wd=first.getDay(); const offset=(wd===0)?6:(wd-1); // lundi en 1er
+    const tStr=todayStr();
+    let html='';
+    for(let i=0;i<offset;i++) html+='<div class="cal-cell empty"></div>';
+    for(let d=1; d<=lastDay; d++){
+      const ds=year+'-'+pad2(month+1)+'-'+pad2(d);
+      const e=map[ds];
+      const isFuture=ds>tStr, isToday=ds===tStr;
+      const complete = dayComplete(e);
+      const hasEntry = (e && (e.photo_path || e.humeur || e.sommeil!=null || e.hydratation!=null || e.alimentation!=null || e.routine_matin || e.routine_soir || e.note)) || habitDays.has(ds);
+      let cls='cal-cell';
+      if(complete) cls+=' complete';
+      if(isToday) cls+=' today';
+      if(isFuture) cls+=' cal-future';
+      const tappable = !isFuture;
+      if(tappable) cls+=' has';
+      const cam = (e && e.photo_path) ? '<span class="cal-cam">📷</span>' : '';
+      const rest = (e && e.repos) ? '<span class="cal-rest">☁️</span>' : '';
+      const dot = (hasEntry && !complete) ? '<span class="cal-dot"></span>' : '';
+      const oc = tappable ? ` onclick="openDayDetail('${ds}')"` : '';
+      html += `<div class="${cls}"${oc}>${cam}${rest}<span>${d}</span>${dot}</div>`;
+    }
+    grid.innerHTML=html;
+  }
+  // ===== Fiche d'un jour (modifiable) =====
+  let ddState = { date:null, mood:null, photoFile:null, photoPath:null, hadSom:false, hadHyd:false, hadAli:false, somTouched:false, hydTouched:false, aliTouched:false };
+  async function getEntryIdForDate(ds){
+    if(!currentUser) return null;
+    const { data } = await sb.from('entries').select('id').eq('user_id', currentUser.id).eq('date', ds).order('created_at',{ascending:true}).limit(1);
+    if(data && data.length) return data[0].id;
+    const { data: ins, error } = await sb.from('entries').insert({ user_id: currentUser.id, date: ds }).select('id').single();
+    if(error){ console.warn('getEntryIdForDate:', error.message); return null; }
+    return ins ? ins.id : null;
+  }
+  function ddTouch(k){ if(k==='som') ddState.somTouched=true; if(k==='hyd') ddState.hydTouched=true; if(k==='ali') ddState.aliTouched=true; }
+  function ddHydraLbl(v){ const n=parseInt(v,10); document.getElementById('dd-hydra-val').textContent = n+(n>1?' verres':' verre'); }
+  function ddPickMood(el,val){
+    document.querySelectorAll('#dd-mood-row .mood-btn').forEach(b=>b.classList.remove('selected'));
+    el.classList.add('selected');
+    ddState.mood = val;
+    document.getElementById('dd-intensity-box').classList.remove('hidden');
+  }
+  function ddPhotoPreview(input){
+    const f=input.files[0]; if(!f) return;
+    ddState.photoFile=f;
+    const r=new FileReader(); r.onload=ev=>{ document.getElementById('dd-photo-wrap').innerHTML=`<img src="${ev.target.result}" style="width:100%;border-radius:16px;display:block;">`; }; r.readAsDataURL(f);
+  }
+  async function openDayDetail(ds){
+    if(!currentUser) return;
+    const { data } = await sb.from('entries').select('*').eq('user_id', currentUser.id).eq('date', ds).order('created_at',{ascending:true}).limit(1);
+    const e=(data && data.length)?data[0]:null;
+    const [y,m,d]=ds.split('-').map(Number);
+    const dObj=new Date(y, m-1, d);
+    const jours=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    document.getElementById('dd-title').textContent = jours[dObj.getDay()]+' '+d+' '+MONTHS_FR[m-1].toLowerCase();
+
+    ddState = { date:ds, mood:(e&&e.humeur)||null, photoFile:null, photoPath:(e&&e.photo_path)||null,
+      hadSom: !!(e && e.sommeil!=null), hadHyd: !!(e && e.hydratation!=null), hadAli: !!(e && e.alimentation!=null),
+      somTouched:false, hydTouched:false, aliTouched:false };
+
+    // photo
+    const pw=document.getElementById('dd-photo-wrap');
+    if(e && e.photo_path){ const url=await signedPhoto(e.photo_path); pw.innerHTML = url?`<img src="${url}" style="width:100%;border-radius:16px;display:block;">`:''; }
+    else pw.innerHTML = `<div style="background:var(--surface-warm);border-radius:16px;padding:24px;text-align:center;color:var(--muted);font-size:13px;">Pas de photo ce jour</div>`;
+
+    // humeur
+    document.querySelectorAll('#dd-mood-row .mood-btn').forEach(b=>b.classList.remove('selected'));
+    const ibox=document.getElementById('dd-intensity-box');
+    if(e && e.humeur){
+      const btns=document.querySelectorAll('#dd-mood-row .mood-btn'); if(btns[e.humeur-1]) btns[e.humeur-1].classList.add('selected');
+      ibox.classList.remove('hidden');
+      document.getElementById('dd-intensity').value = e.humeur_intensite!=null ? e.humeur_intensite : 50;
+      document.getElementById('dd-intensity-val').textContent = (e.humeur_intensite!=null?e.humeur_intensite:50)+'%';
+    } else { ibox.classList.add('hidden'); document.getElementById('dd-intensity').value=50; document.getElementById('dd-intensity-val').textContent='50%'; }
+
+    // sommeil / hydra / alim
+    const som = (e&&e.sommeil!=null)?e.sommeil:7; document.getElementById('dd-sommeil').value=som; document.getElementById('dd-sommeil-val').textContent=fmtSleep(som);
+    const hyd = (e&&e.hydratation!=null)?e.hydratation:6; document.getElementById('dd-hydra').value=hyd; ddHydraLbl(hyd);
+    const ali = (e&&e.alimentation!=null)?e.alimentation:3; document.getElementById('dd-alim').value=ali; document.getElementById('dd-alim-val').textContent=ALIM_LABELS[ali]||'…';
+
+    // routines + note
+    document.getElementById('dd-matin').checked = !!(e && e.routine_matin);
+    document.getElementById('dd-soir').checked = !!(e && e.routine_soir);
+    document.getElementById('dd-note').value = (e && e.note) ? e.note : '';
+    await renderDayHabits(ds);
+
+    document.getElementById('day-detail').classList.add('open');
+  }
+  async function saveDayDetail(){
+    if(!currentUser || !ddState.date) return;
+    showToast('Enregistrement…');
+    const fields = {
+      humeur: ddState.mood,
+      humeur_intensite: ddState.mood ? parseInt(document.getElementById('dd-intensity').value,10) : null,
+      routine_matin: document.getElementById('dd-matin').checked,
+      routine_soir: document.getElementById('dd-soir').checked,
+      note: document.getElementById('dd-note').value.trim()
+    };
+    if(ddState.hadSom || ddState.somTouched) fields.sommeil = parseFloat(document.getElementById('dd-sommeil').value);
+    if(ddState.hadHyd || ddState.hydTouched) fields.hydratation = parseInt(document.getElementById('dd-hydra').value,10);
+    if(ddState.hadAli || ddState.aliTouched) fields.alimentation = parseInt(document.getElementById('dd-alim').value,10);
+    if(ddState.photoFile){
+      const ext=(ddState.photoFile.name.split('.').pop()||'jpg').toLowerCase();
+      const path=`${currentUser.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await sb.storage.from('photos').upload(path, ddState.photoFile, { upsert:true });
+      if(!upErr) fields.photo_path = path;
+    }
+    const id = await getEntryIdForDate(ddState.date);
+    if(id) await sb.from('entries').update(fields).eq('id', id);
+    closeDayDetail();
+    showToast('Jour enregistré 🌸');
+    bustStreak();
+    renderCalendar();
+    if(ddState.date===todayStr()){ loadHomeData(); loadJournalFromDB(); }
+  }
+  function closeDayDetail(){ document.getElementById('day-detail').classList.remove('open'); }
+
+  // ===== Rappels (notifications) =====
+  const REMINDER_ITEMS = [
+    { id:'matin', body:'☀️ C\'est l\'heure de ton rituel du matin 🌸', defTime:'08:00' },
+    { id:'eau',   body:'💧 Pense à boire un verre d\'eau, ta peau te dira merci', defTime:'14:00' },
+    { id:'soir',  body:'🌙 Petit rappel : ton rituel du soir t\'attend 💛', defTime:'21:00' }
+  ];
+  function remKey(){ return 'rituel_reminders_'+(currentUser?currentUser.id:'anon'); }
+  function getReminders(){
+    try{ const r=JSON.parse(localStorage.getItem(remKey())||'null'); if(r && r.items) return r; }catch(e){}
+    return { enabled:false, items: REMINDER_ITEMS.map(it=>({ id:it.id, time:it.defTime, on:true, lastFired:null })) };
+  }
+  function saveReminders(cfg){ try{ localStorage.setItem(remKey(), JSON.stringify(cfg)); }catch(e){} }
+  function updateBellDot(){ const d=document.getElementById('bell-dot'); if(d) d.style.display = getReminders().enabled ? 'block' : 'none'; }
+
+  function refreshPermLabel(){
+    const sub=document.getElementById('rem-perm-sub'); if(!sub) return;
+    if(!('Notification' in window)){ sub.textContent='Non supporté sur ce navigateur'; return; }
+    if(Notification.permission==='granted') sub.textContent='Notifications autorisées ✓';
+    else if(Notification.permission==='denied') sub.textContent='Notifications bloquées (à réactiver dans le navigateur)';
+    else sub.textContent='Autoriser les notifications';
+  }
+  function openReminderSheet(){
+    document.getElementById('reminder-sheet').classList.add('open');
+    refreshPushBtn();
+  }
+  async function onReminderMaster(el){
+    if(el.checked && ('Notification' in window) && Notification.permission==='default'){
+      const p = await Notification.requestPermission();
+      refreshPermLabel();
+      if(p!=='granted'){ el.checked=false; showToast('Autorise les notifications pour activer les rappels'); }
+    } else { refreshPermLabel(); }
+  }
+  function closeReminderSheet(){ document.getElementById('reminder-sheet').classList.remove('open'); }
+  function saveReminderSheet(){
+    const enabled = document.getElementById('rem-enabled').checked;
+    const items = REMINDER_ITEMS.map(it=>({
+      id: it.id,
+      time: document.getElementById('rem-'+it.id+'-time').value || it.defTime,
+      on: document.getElementById('rem-'+it.id+'-on').checked,
+      lastFired: null
+    }));
+    saveReminders({ enabled, items });
+    updateBellDot();
+    startReminderScheduler();
+    closeReminderSheet();
+    showToast(enabled ? 'Rappels activés 🔔' : 'Rappels enregistrés');
+  }
+  let reminderTimer=null;
+  function startReminderScheduler(){
+    if(reminderTimer) clearInterval(reminderTimer);
+    reminderTimer = setInterval(checkReminders, 30000);
+    checkReminders();
+  }
+  function checkReminders(){
+    const cfg=getReminders();
+    if(!cfg.enabled) return;
+    if(!('Notification' in window) || Notification.permission!=='granted') return;
+    const now=new Date();
+    const hhmm = pad2(now.getHours())+':'+pad2(now.getMinutes());
+    const today = todayStr();
+    let changed=false;
+    cfg.items.forEach(it=>{
+      if(it.on && it.time===hhmm && it.lastFired!==today){
+        const def = REMINDER_ITEMS.find(x=>x.id===it.id);
+        try{ new Notification('Rituel', { body: (def && def.body) || 'Petit rappel 🌸' }); }catch(e){}
+        it.lastFired = today; changed=true;
+      }
+    });
+    if(changed) saveReminders(cfg);
+  }
+  let toastTimer;
+  function showToast(msg){ if(!msg) return; const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2400); }
+
+  // ===== Reset (déconnexion + nettoyage local) =====
+
+  // ===== Init : on regarde si une session existe déjà =====
+  renderJournal(); // rendu de secours par défaut
+  setTimeout(function(){
+    var a=document.getElementById('auth'), ap=document.getElementById('app'), ob=document.getElementById('onboarding');
+    var anyVisible=[a,ap,ob].some(function(el){ return el && getComputedStyle(el).visibility==='visible' && !el.classList.contains('hidden'); });
+    if(!anyVisible && a){ a.style.visibility='visible'; }
+  }, 2000);
+  (async function init(){
+    let session=null;
+    try{ const r=await sb.auth.getSession(); session=r.data.session; }catch(e){}
+    if(session && session.user){
+      currentUser = session.user;
+      let profile = await loadProfile();
+      // filet de sécurité : si la base ne renvoie pas le profil, on lit la copie locale
+      let fromCache = false;
+      if(!profile || !profile.type_peau){
+        try{
+          const cached = JSON.parse(localStorage.getItem('rituel_profile_'+currentUser.id) || 'null');
+          if(cached && cached.type_peau){
+            profile = { prenom: (profile&&profile.prenom)||cached.prenom, type_peau: cached.type_peau, objectifs: JSON.stringify(cached.objectifs||[]), is_premium: (profile&&profile.is_premium)||false };
+            fromCache = true;
+          }
+        }catch(e){}
+      }
+      applyProfile(profile);
+      if(!state.name && currentUser.user_metadata && currentUser.user_metadata.prenom){
+        state.name = currentUser.user_metadata.prenom;
+      }
+      if(fromCache){ saveProfile(); } // on tente de réparer la base en arrière-plan
+      if(profile && profile.type_peau){
+        enterApp();
+      } else {
+        // connectée mais onboarding pas terminé
+        document.getElementById('auth').classList.add('hidden');
+        const onbEl=document.getElementById('onboarding');
+        onbEl.classList.add('active'); 
+      }
+    } else {
+      // PAS de session : on révèle l'écran de connexion (et lui seul)
+      }
+  })();
+  document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});

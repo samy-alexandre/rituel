@@ -1,0 +1,7 @@
+# Dépendances & build
+node_modules/
+dist/
+# Logs & divers
+*.log
+.DS_Store
+.vercel/
