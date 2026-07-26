@@ -5950,17 +5950,23 @@
 
   function cmProductsForPhase(key){ const cats=CM_PHASE_CATS[key]||[]; return (window.__cmProds||[]).filter(function(p){ return cats.indexOf(p.categorie)>=0 || p.categorie==='autre'; }); }
 
+  // Charge les produits de l'utilisateur en mémoire (__cmProds + photos signées).
+  // INDISPENSABLE avant cmComputeFilled : sans ça, aucune station ne retrouve son produit.
+  async function cmLoadProducts(){
+    if(!currentUser){ window.__cmProds=window.__cmProds||[]; return; }
+    let prods=[];
+    try{ const r=await sb.from('products').select('id,nom,emoji,categorie,photo_path,effets,prix').eq('user_id',currentUser.id); prods=r.data||[]; }catch(e){}
+    window.__cmPhotos=window.__cmPhotos||{};
+    for(const _p of prods){ if(_p.photo_path && !window.__cmPhotos[_p.id]){ try{ const _u=await signedPhoto(_p.photo_path); if(_u) window.__cmPhotos[_p.id]=_u; }catch(e){} } }
+    window.__cmProds=prods; window.__allProducts=prods;
+  }
+
   async function openRituelChemin(id, presetMoment, mode){
    try{
     const el=document.getElementById('rituel-chemin');
     if(!el) throw new Error('conteneur #rituel-chemin absent');
     if(!currentUser) throw new Error('pas connecte (currentUser null)');
-    let prods=[];
-    try{ const r=await sb.from('products').select('id,nom,emoji,categorie,photo_path,effets,prix').eq('user_id',currentUser.id); prods=r.data||[]; }catch(e){}
-    window.__cmPhotos={};
-    for(const _p of prods){ if(_p.photo_path){ try{ const _u=await signedPhoto(_p.photo_path); if(_u) window.__cmPhotos[_p.id]=_u; }catch(e){} } }
-    window.__cmProds=prods; window.__allProducts=prods;
-    const pmap={}; prods.forEach(function(p){ pmap[p.id]=p; });
+    await cmLoadProducts();
     let r=null;
     if(id){ try{ const rr=await sb.from('rituels').select('*').eq('id',id); r=(rr.data&&rr.data[0])||null; }catch(e){} }
     const moment=r?(r.moment||'matin'):(presetMoment||'matin');
@@ -6001,11 +6007,18 @@
   // sinon un léger fondu (déjà géré par .cm-overlay) le temps du premier chargement.
   function cmEnterRitual(){
     const el=document.getElementById('rituel-chemin'); if(!el) return;
-    if(window.__allRituels) cmShowSlot(rpSlotView);
-    else el.innerHTML='<div class="cm-loading"><span>🌸</span></div>';
     el.classList.add('show');
     document.body.style.overflow='hidden';
     cmNavTuck(false); cmNavGlass(true); // footer en verre dépoli, posé sur le décor
+    // On n'affiche le chemin que lorsque rituels ET produits sont en mémoire, sinon
+    // cmComputeFilled renverrait des stations vides (produits pas chargés).
+    if(window.__allRituels && window.__cmProds){ cmShowSlot(rpSlotView); return; }
+    el.innerHTML='<div class="cm-loading"><span>🌸</span></div>';
+    (async function(){
+      if(!window.__allRituels && typeof loadRituels==='function') await loadRituels();
+      if(!window.__cmProds) await cmLoadProducts();
+      if(el.classList.contains('show')) cmShowSlot(rpSlotView);
+    })();
   }
 
   // Construit le HTML complet d'un volet (scène + stations + tête). Utilisé pour le volet
@@ -6632,6 +6645,9 @@
   // aucun changement de mode. C'est la brique de l'enregistrement automatique.
   async function cmPersist(){
     if(!chDraft) return;
+    // GARDE-FOU : si les produits ne sont pas chargés, chDraft.filled n'est pas fiable
+    // (il serait vide) → on refuse de sauvegarder pour ne JAMAIS écraser les produits du rituel.
+    if(!window.__cmProds){ return; }
     const set=CM_SETS[chDraft.moment]||CM_SETS.matin;
     const produits=set.map(function(k){ return chDraft.filled[k]; }).filter(Boolean);
     const meta=cmMomentMeta(chDraft.moment);
