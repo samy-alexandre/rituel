@@ -1,7 +1,4 @@
-  // ===== Connexion au backend Supabase =====
-  const SUPABASE_URL = 'https://cozidiruigjtfzgzvjhe.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvemlkaXJ1aWdqdGZ6Z3p2amhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzMwNjQsImV4cCI6MjA5NjMwOTA2NH0.BmVSbWAt9HAXlntY9TdgCcxlLoUNFt9zKe6QQ0VV_eg';
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  // Supabase (client sb), config et utilitaires : voir src/core/. Exposés sur window par main.js.
   let currentUser = null; // la personne connectée
 
   // ===== State (cache local de l'écran courant) =====
@@ -4886,7 +4883,6 @@
   }
 
   // ===== Chat · vraie Léa via le backend sécurisé (/api/lea) =====
-  function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function formatMessage(text){
     let t = escapeHtml((text||'').trim());
     t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');           // **gras**
@@ -5205,7 +5201,6 @@
   }
 
   // ===== Export PDF · « Mon carnet de peau » =====
-  function loadScript(src){ return new Promise((res,rej)=>{ if(document.querySelector('script[data-src="'+src+'"]')){res();return;} const s=document.createElement('script'); s.src=src; s.setAttribute('data-src',src); s.onload=()=>res(); s.onerror=()=>rej(new Error('load fail')); document.head.appendChild(s); }); }
   async function photoToDataURL(path){ try{ const url=await signedPhoto(path); if(!url) return null; const resp=await fetch(url); const blob=await resp.blob(); return await new Promise(r=>{ const fr=new FileReader(); fr.onloadend=()=>r(String(fr.result)); fr.readAsDataURL(blob); }); }catch(e){ return null; } }
   async function exportCarnetPDF(){
     if(!requirePlus('Ton carnet de peau, tout beau, à garder ou imprimer 📄')) return;
