@@ -11,7 +11,6 @@
     document.getElementById('form-login').classList.toggle('hidden', mode!=='login');
     document.getElementById('form-signup').classList.toggle('hidden', mode!=='signup');
   }
-  function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
   // ===== Politique de confidentialité =====
   function openPolicy(){

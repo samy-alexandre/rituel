@@ -32,8 +32,14 @@ export function pad2(n) {
   return n < 10 ? '0' + n : '' + n;
 }
 
+// Validation d'adresse e-mail (suffisante pour un contrôle de formulaire côté client).
+export function validEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+
 // Pont transitoire : le code hérité appelle ces fonctions en identifiant nu.
 window.escapeHtml = escapeHtml;
 window.loadScript = loadScript;
 window.todayStr = todayStr;
 window.pad2 = pad2;
+window.validEmail = validEmail;
