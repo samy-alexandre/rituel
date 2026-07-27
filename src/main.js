@@ -16,7 +16,6 @@ import './core/utils.js'; // escapeHtml, loadScript
 import './data/photos.js';
 import './ui/toast.js';
 import './ui/dialog.js';
-import './features/chat/chat.js';
 import './features/datepicker/datepicker.js';
 import './styles/index.css';
 

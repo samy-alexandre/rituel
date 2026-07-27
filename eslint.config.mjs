@@ -20,18 +20,5 @@ export default [
       'no-console': 'off',
     },
   },
-  {
-    // Modules features/ = domaines déplacés VERBATIM du monolithe (Phase B), qui s'appuient
-    // encore sur le pont window (globales sb/currentUser/showToast…) et conservent des patterns
-    // hérités (catch vides…). On assouplit le temps de leur modularisation complète ; le code
-    // NEUF que j'écris (core/, ui/, data/) reste sous les règles strictes ci-dessus.
-    files: ['src/features/**/*.js'],
-    rules: {
-      'no-undef': 'off',
-      'no-empty': 'off',
-      'no-unused-vars': 'off',
-      'no-useless-escape': 'off',
-    },
-  },
   prettier, // désactive les règles ESLint qui entreraient en conflit avec Prettier
 ];
