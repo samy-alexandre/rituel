@@ -6437,8 +6437,7 @@
     });
     if(changed) saveReminders(cfg);
   }
-  let toastTimer;
-  function showToast(msg){ if(!msg) return; const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2400); }
+  // Toast : extrait dans src/ui/toast.js (exposé sur window par main.js).
 
   // ===== Reset (déconnexion + nettoyage local) =====
 
