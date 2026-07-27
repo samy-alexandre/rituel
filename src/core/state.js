@@ -10,6 +10,10 @@
 // Cible finale : un véritable store observable dans core/. Ceci est le pont qui permet d'y
 // arriver progressivement.
 window.currentUser = window.currentUser ?? null;
+window.isPremium = window.isPremium ?? false;
+window.premiumUntil = window.premiumUntil ?? null;
+window.premiumCancel = window.premiumCancel ?? false;
+
 window.chDraft = window.chDraft ?? null;
 window.state = window.state ?? {
   skinType: null,

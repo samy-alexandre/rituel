@@ -1356,9 +1356,7 @@
 
   let rpForceWelcome = false;
   let rpSlotView = 'matin';   // onglet actif : matin | soir | hebdo  // 'matin' | 'soir' | 'hebdo' : sous-vue d'un créneau  // afficher l'écran d'accueil de création même avec des rituels
-  let isPremium = false;
-  let premiumUntil = null;
-  let premiumCancel = false;  // activable plus tard avec le paiement
+  // isPremium / premiumUntil / premiumCancel : état partagé global (src/core/state.js).
       let productSort = 'cat';  // 'fav', 'alpha', 'perem'
   function setProductSort(s){
     productSort = s;
