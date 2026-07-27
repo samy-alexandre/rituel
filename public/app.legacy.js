@@ -405,6 +405,7 @@
   // ===== Profil : badges + édition de la peau =====
   const SKIN_LABELS = { seche:'Peau sèche', mixte:'Peau mixte', grasse:'Peau grasse', sensible:'Peau sensible', normale:'Peau normale' };
   const CONCERN_LABELS = { acne:'Acné', taches:'Taches', rides:'Rides', eclat:'Éclat', pores:'Pores', cernes:'Cernes' };
+  window.SKIN_LABELS = SKIN_LABELS; window.CONCERN_LABELS = CONCERN_LABELS; // partagés (ex. contexte chat)
   const SKIN_TYPES = [['seche','🌾','Sèche'],['mixte','🍯','Mixte'],['grasse','✨','Grasse'],['sensible','🌸','Sensible'],['normale','🌿','Normale']];
   const CONCERNS = [['acne','🌷','Acné, imperfections'],['taches','🍃','Taches, pigmentation'],['rides','🌹','Rides, fermeté'],['eclat','💫','Éclat, teint terne'],['pores','🌼','Pores dilatés'],['cernes','👁️','Cernes']];
 
@@ -1098,6 +1099,7 @@
 
   // ===== Ma journée (sommeil / hydratation / alimentation) =====
   const ALIM_LABELS = ['', 'À améliorer', 'Correcte', 'Équilibrée', 'Bonne', 'Parfaite'];
+  window.ALIM_LABELS = ALIM_LABELS; // partagé (contexte chat)
   function fmtSleep(v){
     v = parseFloat(v); const h=Math.floor(v); const m=Math.round((v-h)*60);
     return m ? (h+'h'+(m<10?'0'+m:m)) : (h+'h');
