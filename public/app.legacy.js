@@ -592,7 +592,6 @@
   function closeChat(){ navTo(window._lastScreen || 'home'); }
 
   // ===== Entrée du jour (une ligne par jour dans 'entries') =====
-  function todayStr(){ return new Date().toISOString().slice(0,10); }
   async function getTodayEntryId(){
     if(!currentUser) return null;
     const { data } = await sb.from('entries').select('id').eq('user_id', currentUser.id).eq('date', todayStr()).order('created_at',{ascending:true}).limit(1);
@@ -1179,11 +1178,6 @@
       document.getElementById('photo-empty').classList.remove('hidden');
       if(sec) sec.style.display='none';
     }
-  }
-  async function signedPhoto(path){
-    if(!path) return null;
-    const { data } = await sb.storage.from('photos').createSignedUrl(path, 3600);
-    return data ? data.signedUrl : null;
   }
 
   // ===== Rituel : produits perso =====
@@ -6237,7 +6231,6 @@
   const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   let calRef = (function(){ const d=new Date(); d.setDate(1); return d; })();
   function calMonth(delta){ calRef.setMonth(calRef.getMonth()+delta); renderCalendar(); }
-  function pad2(n){ return n<10 ? ('0'+n) : (''+n); }
   async function renderCalendar(){
     const grid=document.getElementById('cal-grid'); if(!grid || !currentUser) return;
     const year=calRef.getFullYear(), month=calRef.getMonth();

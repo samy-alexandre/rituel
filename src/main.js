@@ -13,6 +13,7 @@ import './core/state.js'; // état partagé (currentUser, chDraft, state) expos�
 import './core/supabase.js'; // crée le client `sb` (bundlé) et l'expose sur window.sb
 import './core/utils.js'; // escapeHtml, loadScript
 // Features extraites du monolithe (Phase B). Chaque module s'expose sur window (pont transitoire).
+import './data/photos.js';
 import './ui/toast.js';
 import './features/datepicker/datepicker.js';
 import './styles/index.css';

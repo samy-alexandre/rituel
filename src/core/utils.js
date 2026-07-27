@@ -22,6 +22,18 @@ export function loadScript(src) {
   });
 }
 
+// Date du jour au format ISO court (YYYY-MM-DD), en heure locale du navigateur.
+export function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// Zéro-padding sur deux chiffres (9 → "09").
+export function pad2(n) {
+  return n < 10 ? '0' + n : '' + n;
+}
+
 // Pont transitoire : le code hérité appelle ces fonctions en identifiant nu.
 window.escapeHtml = escapeHtml;
 window.loadScript = loadScript;
+window.todayStr = todayStr;
+window.pad2 = pad2;
