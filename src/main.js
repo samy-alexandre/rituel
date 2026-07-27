@@ -9,6 +9,7 @@
 //     dépendent. Les phases suivantes le découperont en modules `src/features/*`.
 // Couche core/ (modules ESM propres) importée AVANT le code hérité : chaque module s'expose
 // aussi sur window pour rester accessible au script classique hérité (pont transitoire).
+import './core/state.js'; // état partagé (currentUser, chDraft, state) exposé sur window
 import './core/supabase.js'; // crée le client `sb` (bundlé) et l'expose sur window.sb
 import './core/utils.js'; // escapeHtml, loadScript
 // Features extraites du monolithe (Phase B). Chaque module s'expose sur window (pont transitoire).

@@ -1,8 +1,8 @@
   // Supabase (client sb), config et utilitaires : voir src/core/. Exposés sur window par main.js.
-  let currentUser = null; // la personne connectée
+  // currentUser : état partagé global (voir src/core/state.js), exposé par main.js.
 
   // ===== State (cache local de l'écran courant) =====
-  let state = { skinType:null, concerns:[], goal:null, name:'', email:'', genre:null, coachGenre:'femme', onbStep:0 };
+  // state (onboarding) : état partagé global (voir src/core/state.js).
 
   // ===== Auth =====
   function switchAuth(mode){
@@ -2710,7 +2710,7 @@
     for(let i=0;i<set.length;i++){ const cats=CM_PHASE_CATS[set[i]]; if(cats && cats.indexOf(cat)>=0) return set[i]; }
     return null;
   }
-  let chDraft=null;
+  // chDraft : état partagé global (voir src/core/state.js).
 
   const CM_IMG_W=760, CM_IMG_H=1460;
   const CM_BLD = {"depart":{"w":126.2,"h":74,"op":0.634,"oc":0.463},"nettoyer":{"w":91.8,"h":80},"equilibrer":{"w":79.7,"h":96},"traiter":{"w":88.7,"h":86},"yeux":{"w":62.7,"h":104},"hydrater":{"w":103.5,"h":88},"proteger":{"w":66.9,"h":110},"masque":{"w":114.9,"h":88},"arrivee":{"w":122.7,"h":94}};
