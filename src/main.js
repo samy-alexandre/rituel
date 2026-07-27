@@ -18,6 +18,7 @@ import './ui/toast.js';
 import './ui/dialog.js';
 import './features/chat/chat.js';
 import './features/datepicker/datepicker.js';
+import './features/reminders/reminders.js';
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
