@@ -15,6 +15,7 @@ import './core/utils.js'; // escapeHtml, loadScript
 // Features extraites du monolithe (Phase B). Chaque module s'expose sur window (pont transitoire).
 import './data/photos.js';
 import './ui/toast.js';
+import './ui/dialog.js';
 import './features/datepicker/datepicker.js';
 import './styles/index.css';
 
