@@ -31,6 +31,7 @@ import './features/cycle/cycle.js';
 import './features/uv/uv.js';
 import './features/product-book/product-book.js';
 import './features/product-effects/product-effects.js';
+import './features/product-form/product-form.js';
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
