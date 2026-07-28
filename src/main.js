@@ -40,6 +40,7 @@ import './features/ritual/ritual.js';
 import './features/habits/habits.js';
 import './features/lea-bubble/lea-bubble.js';
 import './features/themes/themes.js';
+import './features/push/push.js';
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
