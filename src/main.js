@@ -36,6 +36,7 @@ import './features/product-cards/product-cards.js';
 import './features/product-flipbook/product-flipbook.js';
 import './features/product-favorites/product-favorites.js';
 import './features/ritual-editor/ritual-editor.js';
+import './features/ritual/ritual.js';
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
