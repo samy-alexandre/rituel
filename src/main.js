@@ -38,6 +38,7 @@ import './features/product-favorites/product-favorites.js';
 import './features/ritual-editor/ritual-editor.js';
 import './features/ritual/ritual.js';
 import './features/habits/habits.js';
+import './features/lea-bubble/lea-bubble.js';
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
