@@ -42,6 +42,7 @@ import './features/lea-bubble/lea-bubble.js';
 import './features/themes/themes.js';
 import './features/push/push.js';
 import './features/pdf-export/pdf-export.js';
+import './features/photo-advice/photo-advice.js';
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
