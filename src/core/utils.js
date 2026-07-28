@@ -37,9 +37,22 @@ export function validEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
+// Formatte une date ISO courte (YYYY-MM-DD) en français long (« 3 avril 2026 »).
+// Utilitaire partagé (timelapse, export PDF, souvenirs…). Logique héritée conservée.
+export function fmtDateLong(ds) {
+  try {
+    const d = new Date(ds + 'T00:00:00');
+    const M = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    return d.getDate() + ' ' + M[d.getMonth()] + ' ' + d.getFullYear();
+  } catch {
+    return ds;
+  }
+}
+
 // Pont transitoire : le code hérité appelle ces fonctions en identifiant nu.
 window.escapeHtml = escapeHtml;
 window.loadScript = loadScript;
 window.todayStr = todayStr;
 window.pad2 = pad2;
 window.validEmail = validEmail;
+window.fmtDateLong = fmtDateLong;
