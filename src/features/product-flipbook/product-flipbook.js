@@ -150,5 +150,5 @@
 // hérités (loadProducts appelle renderProductsBook/getProdView). Résolution via window.
 Object.assign(window, {
   getProdView, setProdView, toggleProductView, pbkToggleFav, pbkGoTo,
-  bkSommairePage, bkRoman, bkRow, bkDateRows, pbkPage, renderProductsBook,
+  bkSommairePage, bkRoman, bkRow, bkDateRows, pbkPage, renderProductsBook, loadProducts,
 });
