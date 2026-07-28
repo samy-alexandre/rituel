@@ -26,6 +26,7 @@ import './features/voyage/voyage.js';
 import './features/quiz/quiz.js';
 import './features/eclat/eclat.js';
 import './features/timelapse/timelapse.js';
+import './features/barcode/barcode.js';
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
