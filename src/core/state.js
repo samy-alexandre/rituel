@@ -14,6 +14,10 @@ window.isPremium = window.isPremium ?? false;
 window.premiumUntil = window.premiumUntil ?? null;
 window.premiumCancel = window.premiumCancel ?? false;
 
+// Moment courant de l'accueil (matin / soir / hebdo) — état partagé lu par le domaine
+// Voyage (module) et écrit par switchPeriod (hérité), qui le met en miroir ici.
+window.currentPeriod = window.currentPeriod ?? 'matin';
+
 window.chDraft = window.chDraft ?? null;
 window.state = window.state ?? {
   skinType: null,
