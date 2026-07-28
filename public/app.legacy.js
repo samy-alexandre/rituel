@@ -3727,8 +3727,10 @@
       }
       const toggle='<button class="cm-rcard-actif'+(cur.actif?' on':'')+'" onclick="cmPanelToggleActif()" title="'+(cur.actif?'Mettre en pause':'Activer ce rituel')+'">'+
         '<span class="cm-rcard-dot"></span>'+(cur.actif?'Actif':'En pause')+'</button>';
+      const hasRem=!!(cur.rappels&&cur.rappels.on);
+      const bell='<button class="cm-rbell'+(hasRem?' on':'')+'" onclick="cmPanelRappel()" title="Rappels" aria-label="Régler les rappels">'+(hasRem?'🔔':'🔕')+'</button>';
       card='<div class="cm-rcard">'+
-        '<div class="cm-rcard-top"><div class="cm-rcard-name">'+escapeHtml(cur.nom||cmMomentMeta(moment).ph)+'</div>'+toggle+'</div>'+
+        '<div class="cm-rcard-top"><div class="cm-rcard-name">'+escapeHtml(cur.nom||cmMomentMeta(moment).ph)+'</div>'+bell+toggle+'</div>'+
         stepsHtml+
         '<div class="cm-ractions">'+
           '<button class="cm-ract primary" onclick="cmPanelEdit()"><span class="cm-ract-e">✏️</span>Modifier</button>'+
@@ -3828,6 +3830,13 @@
     if(typeof loadRituels==='function') loadRituels();
     if(typeof loadHomeRoutine==='function') loadHomeRoutine();
     if(typeof showToast==='function') showToast(turnOn?'Rituel activé ✨':'Rituel mis en pause 🌙');
+  }
+  // Ouvre le réglage des rappels (semainier + heure) pour le rituel courant. L'overlay des
+  // rappels (module src/features/reminders/) se superpose au panneau ; à la fermeture, on
+  // recompose la carte pour rafraîchir l'état de la cloche.
+  function cmPanelRappel(){
+    const cur=cmCurrentRitual(); if(!cur||!cur.id) return;
+    if(typeof window.rhOpenRappel==='function') window.rhOpenRappel(null, cur.id);
   }
   // Modifier le rituel courant : on referme le panneau et on bascule le chemin en édition.
   function cmPanelEdit(){

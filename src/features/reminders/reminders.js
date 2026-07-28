@@ -11,7 +11,11 @@ function rhOpenRappel(ev, id) {
     ev.stopPropagation();
     ev.preventDefault();
   }
-  const r = (window.__rhRituels || []).find(function (x) {
+  // Cherche le rituel dans le cache du hub hérité, avec repli sur le cache global
+  // (__allRituels) qu'utilise le nouveau panneau de la fleur — même source de vérité,
+  // champ `rappels` inclus (loadRituels fait select('*,rappels')).
+  const pool = (window.__rhRituels && window.__rhRituels.length ? window.__rhRituels : window.__allRituels) || [];
+  const r = pool.find(function (x) {
     return String(x.id) === String(id);
   });
   if (!r) return;
@@ -141,13 +145,25 @@ async function rapSave() {
     rap = { on: true, days: rapDraft.days, matin: rapDraft.heure };
   }
   const _on = rap.on;
+  const _rid = rapDraft.id;
   try {
-    await sb.from('rituels').update({ rappels: rap }).eq('id', rapDraft.id);
+    await sb.from('rituels').update({ rappels: rap }).eq('id', _rid);
   } catch (e) {}
+  // Reflète le rappel dans les caches mémoire (in-memory sync plutôt que null → refetch) pour
+  // un rendu immédiat de la cloche, côté panneau de la fleur comme côté hub.
+  [window.__allRituels, window.__rhRituels].forEach(function (l) {
+    if (Array.isArray(l)) {
+      const it = l.find(function (x) {
+        return String(x.id) === String(_rid);
+      });
+      if (it) it.rappels = rap;
+    }
+  });
   rapClose();
   if (typeof showToast === 'function') showToast(_on ? 'Rappel enregistré 🔔' : 'Rappel désactivé');
-  window.__allRituels = null;
   if (typeof loadRituels === 'function') loadRituels();
+  // Rafraîchit la carte du panneau (état de la cloche) si celui-ci est ouvert.
+  if (typeof cmPanelRender === 'function' && document.getElementById('cm-panel')) cmPanelRender();
 }
 
 // Pont transitoire : ces fonctions sont invoquées par des handlers onclick inline

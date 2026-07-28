@@ -427,6 +427,13 @@
   .cm-rcard-actif.on{color:#4E7A3E;background:rgba(120,170,90,0.16);border-color:rgba(120,170,90,0.42);}
   .cm-rcard-actif.on .cm-rcard-dot{background:#5FA043;box-shadow:0 0 6px rgba(95,160,67,0.75);}
   .cm-rcard-actif:active{transform:scale(0.94);}
+  /* Cloche de rappel : ouvre le semainier + heure pour ce rituel (module reminders). */
+  .cm-rbell{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+    width:32px;height:32px;cursor:pointer;font-size:15px;line-height:1;border-radius:50%;
+    background:rgba(120,80,54,0.09);border:1px solid rgba(120,80,54,0.18);
+    transition:background .16s ease,border-color .16s ease,transform .1s ease;}
+  .cm-rbell.on{background:rgba(214,158,74,0.18);border-color:rgba(214,158,74,0.5);}
+  .cm-rbell:active{transform:scale(0.9);}
   .cm-rsteps{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
   .cm-rstep{display:flex;align-items:center;gap:10px;}
   .cm-rstep-ic{flex:0 0 auto;width:30px;height:30px;border-radius:10px;display:flex;

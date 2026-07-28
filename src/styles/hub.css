@@ -29,7 +29,7 @@
   .rh-name{font-family:var(--serif);font-size:16.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .rh-bellbtn{background:none;border:none;font-size:15px;cursor:pointer;padding:2px 4px;line-height:1;opacity:.45;filter:grayscale(1);}
   .rh-bellbtn.on{opacity:1;filter:none;}
-  .rap-overlay{position:fixed;inset:0;z-index:420;background:rgba(46,33,28,0.45);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:24px;}
+  .rap-overlay{position:fixed;inset:0;z-index:3100;background:rgba(46,33,28,0.45);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:24px;}
   .rap-overlay.show{display:flex;}
   .rap-card{width:100%;max-width:330px;background:var(--surface);border-radius:22px;padding:20px 20px 18px;box-shadow:0 26px 60px rgba(46,33,28,0.32);}
   .rap-head{display:flex;align-items:center;gap:9px;}
