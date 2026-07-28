@@ -46,6 +46,7 @@ import './features/photo-advice/photo-advice.js';
 import './features/monthly-letter/monthly-letter.js';
 import './features/onboarding/onboarding.js';
 import './features/badges/badges.js';
+import './features/eclat-graph/eclat-graph.js';
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
