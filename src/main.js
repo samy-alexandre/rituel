@@ -28,6 +28,7 @@ import './features/eclat/eclat.js';
 import './features/timelapse/timelapse.js';
 import './features/barcode/barcode.js';
 import './features/cycle/cycle.js';
+import './features/uv/uv.js';
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
