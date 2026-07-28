@@ -24,6 +24,14 @@ window.currentPeriod = window.currentPeriod ?? 'matin';
 window.productCatFilter = window.productCatFilter ?? 'all';
 window.productSort = window.productSort ?? 'cat';
 
+// État de vue du cœur rituel — créneau/onglet affiché (matin/soir/hebdo), vue routine,
+// et forçage de l'écran d'accueil de création. Partagé entre la liste produits, l'éditeur
+// de rituel et le domaine cm (chemin + panneau fleur). Promu ici pour une source unique ;
+// les lectures/écritures en identifiant nu du code hérité s'y résolvent (script non-strict).
+window.rpSlotView = window.rpSlotView ?? 'matin';
+window.rpForceWelcome = window.rpForceWelcome ?? false;
+window.currentRoutineView = window.currentRoutineView ?? 'matin';
+
 window.chDraft = window.chDraft ?? null;
 window.state = window.state ?? {
   skinType: null,

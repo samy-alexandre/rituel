@@ -1102,7 +1102,7 @@
   }
 
   // ===== Rituel : produits perso =====
-  let currentRoutineView = 'matin';
+  // currentRoutineView : état partagé promu dans src/core/state.js (window.currentRoutineView).
 
   // productCatFilter : état partagé promu dans src/core/state.js (window.productCatFilter).
   function toggleCatFilter(){
@@ -1222,8 +1222,8 @@
     loadProducts();
   }
 
-  let rpForceWelcome = false;
-  let rpSlotView = 'matin';   // onglet actif : matin | soir | hebdo  // 'matin' | 'soir' | 'hebdo' : sous-vue d'un créneau  // afficher l'écran d'accueil de création même avec des rituels
+  // rpForceWelcome : état partagé promu dans src/core/state.js (window.rpForceWelcome).
+  // rpSlotView : état partagé promu dans src/core/state.js (window.rpSlotView).
   // isPremium / premiumUntil / premiumCancel : état partagé global (src/core/state.js).
       // productSort : état partagé promu dans src/core/state.js (window.productSort).
   function setProductSort(s){
