@@ -18,6 +18,12 @@ window.premiumCancel = window.premiumCancel ?? false;
 // Voyage (module) et écrit par switchPeriod (hérité), qui le met en miroir ici.
 window.currentPeriod = window.currentPeriod ?? 'matin';
 
+// Filtre catégorie et tri de la liste produits — état partagé lu par le rendu du carnet
+// (modules) et écrit par les contrôles de tri/filtre (hérité). Promu ici pour une source
+// unique ; les lectures/écritures en identifiant nu du code hérité s'y résolvent (non-strict).
+window.productCatFilter = window.productCatFilter ?? 'all';
+window.productSort = window.productSort ?? 'cat';
+
 window.chDraft = window.chDraft ?? null;
 window.state = window.state ?? {
   skinType: null,
