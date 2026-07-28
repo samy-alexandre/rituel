@@ -21,6 +21,7 @@ import './features/datepicker/datepicker.js';
 import './features/reminders/reminders.js';
 import './features/camera/camera.js';
 import './features/journal/journal.js';
+import './features/guided/guided.js';
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
