@@ -1,12 +1,119 @@
-# Rituel — Analyse d'architecture (état des lieux)
+# Rituel — Architecture
 
-> Étape 1 du chantier de refactorisation. Ce document décrit l'existant tel
-> qu'il est aujourd'hui, sans le juger à l'excès : il sert de base partagée
-> avant de définir l'architecture cible (Étape 2) et de la mettre en œuvre par
-> étapes indépendantes et réversibles.
+> **Refactorisation RÉALISÉE.** Le monolithe `index.html` (~9 600 lignes) est
+> devenu un projet **Vite modulaire** : le monstre de logique a été extrait en
+> **33 modules de domaine** (`src/features/*`) + une couche partagée
+> (`src/core`, `src/ui`, `src/data`), le CSS découpé par domaine, et l'état
+> centralisé. Comportement et rendu **préservés à l'identique** (déplacements
+> verbatim, byte-identiques vérifiés sur les gros domaines).
+>
+> - **§0** ci-dessous = **structure actuelle + carte « où trouver quoi »** (à lire en premier).
+> - **§1–7** = l'analyse d'origine du monolithe et le plan (conservés comme historique).
 
-Date : 2026-07 · Périmètre : application front `index.html` + PWA + fonctions
-serverless `api/`.
+---
+
+## 0. Structure actuelle — carte de navigation
+
+### Arborescence
+
+```
+index.html            markup pur (~1250 l) : structure DOM de tous les écrans/overlays.
+                      0 CSS, 0 logique — juste <script type="module" src="/src/main.js">
+                      + handlers onclick inline qui appellent des fonctions exposées sur window.
+src/
+  main.js             point d'entrée Vite : importe core → ui → data → features, PUIS injecte
+                      public/app.legacy.js (le shell restant) une fois la couche prête.
+  core/
+    state.js          ÉTAT PARTAGÉ (source unique) : currentUser, chDraft, rpSlotView,
+                      currentPeriod, currentRoutineView, productSort, productCatFilter, premium…
+    supabase.js       client Supabase bundlé → export `sb` (+ window.sb)
+    utils.js          escapeHtml, loadScript, todayStr, pad2, validEmail, fmtDateLong
+    config.js         SUPABASE_URL / SUPABASE_ANON
+  ui/
+    toast.js          showToast          dialog.js  cmAsk (modale de confirmation)
+  data/
+    photos.js         signedPhoto (URL signée Storage)
+  features/           33 domaines isolés (voir table ci-dessous)
+  styles/             index.css + 12 fichiers CSS par domaine (@import ordonné)
+public/
+  app.legacy.js       LE SHELL restant (~2000 l) : accueil, streak/plante, journal (vue
+                      d'ensemble/évolution/calendrier), auth/session, profil, navigation, RGPD,
+                      « ma journée » (sommeil/humeur). Script classique global, pont transitoire.
+api/                  9 fonctions serverless Vercel (lea, analyze-photo, barcode, stripe, push…)
+```
+
+### Carte « je veux changer X → j'ouvre ce fichier »
+
+| Domaine | Fichier | Ce qu'il contient |
+|---|---|---|
+| **Le rituel (cœur)** | `features/ritual/ritual.js` | chemin de la fleur, panneau, décor peint, stations, gestes, hub, cartes parcours (119 fns, consts `CM_*`) |
+| Éditeur de rituel | `features/ritual-editor/` | feuille `rituel-sheet` (repli hérité) : produits, rappels, conflits |
+| Rappels d'un rituel | `features/reminders/` | semainier + heure (cloche du panneau) |
+| Rituel guidé | `features/guided/` | parcours plein écran pas-à-pas |
+| Voyage du jour | `features/voyage/` | scène jardin peinte, médaillons (consts `VY_POLY`, lit `CM_PAINT`) |
+| **Produits — formulaire** | `features/product-form/` | création/édition fiche (photo, catégorie, dates, péremption) |
+| Produits — liste/carnet | `features/product-flipbook/` | `loadProducts` (orchestrateur), tri, vue livre feuilletable |
+| Produits — cartes | `features/product-cards/` | rendu des cartes du carnet (`CN_TINT`) |
+| Produits — fiche | `features/product-book/` | fiche produit plein écran |
+| Produits — effets | `features/product-effects/` | sélecteur multi-pastilles d'effets |
+| Produits — favoris/fraîcheur | `features/product-favorites/` | `favSet/favSave`, `productDateInfo` |
+| Scan code-barres | `features/barcode/` | détection + pré-remplissage fiche |
+| **Chat / Léa** | `features/chat/` | messagerie `/api/lea`, quota gratuit |
+| Bulle Léa flottante | `features/lea-bubble/` | pastille déplaçable + popup |
+| Avis photo (vision IA) | `features/photo-advice/` | `/api/analyze-photo` |
+| Lettre du mois | `features/monthly-letter/` | bilan mensuel `/api/lea` |
+| **Journal — check-in** | `features/journal/` | « rituel du jour » (4 étapes) |
+| Timelapse photos | `features/timelapse/` | diaporama d'évolution |
+| Avant / Après | `features/before-after/` | comparateur 1re vs dernière photo |
+| Graphe éclat | `features/eclat-graph/` | courbe du score de peau |
+| **Caméra** | `features/camera/` | capture HD + upload photo du jour |
+| Habitudes | `features/habits/` | trackers perso (CRUD + séries) |
+| Cycle | `features/cycle/` | phases du cycle → conseil peau |
+| Indice UV | `features/uv/` | géoloc + Open-Meteo |
+| Programme Éclat | `features/eclat/` | défi 30 jours (localStorage) |
+| Badges | `features/badges/` | récompenses calculées |
+| Export PDF | `features/pdf-export/` | « Mon carnet de peau » (jsPDF) |
+| Image à partager | `features/share-image/` | story récap |
+| **Onboarding** | `features/onboarding/` | parcours d'accueil |
+| Quiz type de peau | `features/quiz/` | questionnaire dermato |
+| Thèmes de couleur | `features/themes/` | palettes accent (CSS vars) |
+| Notifications push | `features/push/` | SW + abonnement Web Push |
+| Sélecteur de date | `features/datepicker/` | widget calendrier |
+| **Le reste (accueil, journal-overview, auth, profil, nav, streak…)** | `public/app.legacy.js` | shell applicatif à découper plus tard |
+
+### Le pont transitoire (à connaître avant de modifier)
+
+Les modules sont en ESM **strict**, mais `index.html` a **224 handlers `onclick=""`
+inline** et le shell hérité (`app.legacy.js`) appelle des fonctions par identifiant nu.
+Pour que tout se résolve pendant la transition :
+
+- chaque module **expose ses fonctions publiques sur `window`** (`Object.assign(window, {…})`
+  en fin de fichier) — c'est ce qui rend les `onclick` inline et les appels hérités valides ;
+- l'**état partagé** (currentUser, chDraft, rpSlotView…) vit sur `window` via `core/state.js` :
+  une lecture/écriture en identifiant nu s'y résout (module strict comme script hérité) ;
+- quelques constantes partagées entre deux mondes sont laissées côté hérité et **exposées sur
+  window** (`CATS`, `CAT_RANK`, `SKIN_LABELS`…), ou re-exposées par le module qui les détient
+  (`CM_PAINT`, `VY_POLY` par `features/ritual`, lues par `features/voyage`).
+
+**Règle en ajoutant/déplaçant une fonction :** si elle est appelée depuis un `onclick` inline,
+depuis `app.legacy.js`, ou depuis un autre module → elle DOIT figurer dans le `Object.assign(window, …)`
+de son fichier. (Un audit d'exposition automatique existe : cf. commits « audit d'exposition ».)
+
+### Dette assumée (restante, non bloquante)
+
+1. **`app.legacy.js` (~2000 l)** : le shell accueil/journal/auth, encore couplé (`state`, rendu
+   de l'accueil, logique de série). Découpable en `home`/`journal`/`auth` plus tard, prudemment.
+2. **224 `onclick=""` inline** : à migrer progressivement vers des `addEventListener` dans les
+   modules → supprimerait le besoin d'exposer sur `window` (vraie autonomie des modules + CSP stricte).
+
+Aucune n'est urgente : l'app est modulaire, buildée (Vite), lintée et maintenable en l'état.
+
+---
+
+## Historique — analyse du monolithe (état des lieux d'origine)
+
+> Ce qui suit est le document d'origine (2026-07) qui décrivait le monolithe
+> AVANT extraction et posait le plan. Conservé pour la traçabilité des décisions.
 
 ---
 
