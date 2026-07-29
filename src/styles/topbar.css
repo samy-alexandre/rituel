@@ -14,9 +14,9 @@
   .photo-empty-title em { font-style: italic; color: var(--accent-deep); font-variation-settings: "SOFT" 100, "WONK" 1; }
   .photo-display { position: relative; background: var(--bg-soft); }
   .photo-display img { width:100%; height:auto; display:block; }
-  .photo-chip { background: rgba(46,33,28,0.7); backdrop-filter: blur(10px); color: white; padding: 8px 14px; border-radius: 100px; font-size: 12px; font-weight: 500; }
+  .photo-chip { background: rgba(46,33,28,0.7); backdrop-filter: blur(10px); color: white; padding: 8px 14px; border-radius: var(--r-pill); font-size: 12px; font-weight: 500; }
 
-  .streak { display: flex; align-items: center; gap: 16px; margin: 0 20px 28px; padding: 18px 20px; background: var(--surface-warm); border-radius: 18px; border: 1px solid var(--line); }
+  .streak { display: flex; align-items: center; gap: 16px; margin: 0 20px 28px; padding: 18px 20px; background: var(--surface-warm); border-radius: var(--r-lg); border: 1px solid var(--line); }
   .streak-flame { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #F5C892, var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
   .streak-text { flex: 1; }
   .streak-num { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1; }
@@ -34,7 +34,7 @@
   .section-more { font-size: 13px; color: var(--muted); cursor: pointer; }
 
   .mood-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .mood-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; cursor: pointer; transition: all .2s; font-family: var(--sans); }
+  .mood-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 4px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); cursor: pointer; transition: all .2s; font-family: var(--sans); }
   .mood-btn:active { transform: scale(0.95); }
   .mood-btn.selected { background: var(--blush-soft); border-color: var(--accent); }
   .mood-emoji { font-size: 24px; }
@@ -42,7 +42,7 @@
   .mood-btn.selected .mood-label { color: var(--accent-deep); font-weight: 500; }
 
   /* Intensité de l'humeur */
-  .intensity { margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .intensity { margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px 16px; }
   .intensity-head { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-soft); margin-bottom: 10px; font-weight: 500; }
   .intensity-head span:last-child { color: var(--accent-deep); font-family: var(--serif); font-size: 15px; }
   .intensity-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 6px; background: var(--blush-soft); outline: none; touch-action: pan-y; }
@@ -50,13 +50,13 @@
   .intensity-slider::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: var(--accent); cursor: pointer; }
 
   /* Switch Matin / Soir */
-  .period-switch { display: flex; gap: 8px; background: var(--surface-warm); border-radius: 14px; padding: 4px; margin-bottom: 14px; }
+  .period-switch { display: flex; gap: 8px; background: var(--surface-warm); border-radius: var(--r-md); padding: 4px; margin-bottom: 14px; }
   .moment-chip { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); font-size: 17px; cursor: pointer; opacity: 0.38; transition: all .15s; }
   .moment-chip.on { opacity: 1; border-color: var(--accent); background: var(--blush-soft); }
-  .rd-card { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 10px; }
+  .rd-card { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px 10px; }
   .rd-card.dragging { transition:none; opacity:0.95; position:relative; z-index:6; box-shadow:0 12px 26px rgba(46,33,28,0.22); border-color:rgba(201,90,63,0.4); }
   .rd-handle { cursor: grab; color: var(--muted); font-size: 22px; padding: 4px 4px; touch-action: none; user-select: none; line-height: 1; }
   .rd-remove { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px; }
-  .rd-emoji { width: 38px; height: 38px; border-radius: 10px; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-  .period-btn { flex: 1; padding: 11px; border: none; background: transparent; border-radius: 10px; font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .2s; }
+  .rd-emoji { width: 38px; height: 38px; border-radius: var(--r-sm); background: var(--surface-warm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .period-btn { flex: 1; padding: 11px; border: none; background: transparent; border-radius: var(--r-sm); font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .2s; }
   .period-btn.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }

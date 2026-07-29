@@ -28,7 +28,7 @@
     --r-sm: 12px;   /* champs, petites cartes */
     --r-md: 16px;   /* cartes standard */
     --r-lg: 20px;   /* grandes cartes, feuilles */
-    --r-xl: 28px;   /* cartes héro, grandes feuilles */
+    --r-xl: 26px;   /* cartes héro, grandes feuilles */
     --r-pill: 999px;/* pilules, bascules, ronds */
 
     /* Espacement — échelle 4px (pour marges/paddings cohérents). */
