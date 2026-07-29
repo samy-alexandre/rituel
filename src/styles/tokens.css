@@ -18,8 +18,23 @@
     --rose: #D98B86;
     --sage: #7A9468;
     --gold: #BD9A52;
+    /* Élévation — 3 niveaux (subtil / carte / modale). À terme, toute ombre passe par l'un d'eux. */
+    --shadow-sm: 0 1px 2px rgba(46,33,28,0.05);
     --shadow: 0 1px 2px rgba(46,33,28,0.04), 0 8px 24px rgba(46,33,28,0.06);
     --shadow-lg: 0 4px 12px rgba(46,33,28,0.08), 0 24px 48px rgba(46,33,28,0.12);
+
+    /* Rayons — échelle unique (remplace les 23 valeurs éparpillées). */
+    --r-xs: 8px;    /* pastilles, petits boutons */
+    --r-sm: 12px;   /* champs, petites cartes */
+    --r-md: 16px;   /* cartes standard */
+    --r-lg: 20px;   /* grandes cartes, feuilles */
+    --r-xl: 28px;   /* cartes héro, grandes feuilles */
+    --r-pill: 999px;/* pilules, bascules, ronds */
+
+    /* Espacement — échelle 4px (pour marges/paddings cohérents). */
+    --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+    --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+
     --serif: 'Newsreader', Georgia, serif;
     --sans: 'Manrope', -apple-system, sans-serif;
   }
