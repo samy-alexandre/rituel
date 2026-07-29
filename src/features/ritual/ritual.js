@@ -1031,7 +1031,7 @@
 
   const CM_THEME = {
     matin:{img:'img/chemin-matin.jpg',ink:'#3A2418',scrim:'rgba(255,244,228,0.88)',glow:'rgba(255,246,228,0.95)'},
-    soir: {img:'img/jardin-soir.jpg', ink:'#FCEDDC',scrim:'rgba(48,28,58,0.62)',  glow:'rgba(48,28,58,0.9)'},
+    soir: {img:'img/jardin-soir.webp', ink:'#FCEDDC',scrim:'rgba(48,28,58,0.62)',  glow:'rgba(48,28,58,0.9)'},
     hebdo:{img:'img/chemin-hebdo.jpg',ink:'#33402F',scrim:'rgba(246,246,234,0.9)',glow:'rgba(246,246,234,0.95)'}
   };
   function cmTheme(m){ return CM_THEME[m]||CM_THEME.matin; }
@@ -1354,7 +1354,7 @@
   const CM_BUILD = 'b31';
 
   const CM_PAINT = {
-    matin:{ img:'img/jardin-matin.jpg', w:853, h:1844, top:22, panels:true, pos:{
+    matin:{ img:'img/jardin-matin.webp', w:853, h:1844, top:22, panels:true, pos:{
       // x,y,h,r = médaillon (utilisé par le Voyage) ; cx,cy,pw,ph,rot = panneau posé sur le support (Chemin).
       depart  :{x:40, y:93, h:21.78, r:1.30},
       nettoyer:{x:20, y:64, h:13.85, r:1.50, cx:15.4, cy:43.0, pw:15,   ph:5.2, rot:0},   // 1 → Nettoyer
@@ -1363,13 +1363,13 @@
       proteger:{x:72, y:37, h:12.87, r:1.60, cx:77.3, cy:22.8, pw:17,   ph:5,   rot:0},   // 4 → Protéger
       arrivee :{x:52, y:22, h:3.17,  r:1.60}
     }},
-    soir:{ img:'img/jardin-soir.jpg', w:853, h:1844, top:22, panels:true, pos:{
+    soir:{ img:'img/jardin-soir.webp', w:853, h:1844, top:22, panels:true, pos:{
       // Même jardin (de nuit) que le matin → mêmes emplacements produits.
       nettoyer:{x:20, y:64, h:13.85, r:1.50, cx:15.4, cy:43.0, pw:15,   ph:5.2, rot:0},   // 1 → Nettoyer
       traiter :{x:73, y:65, h:18.31, r:1.40, cx:87.7, cy:64.6, pw:12.5, ph:7.5, rot:0},   // 2 → Traiter
       hydrater:{x:30, y:35, h:11.97, r:1.50, cx:28.7, cy:30.3, pw:13.5, ph:4.6, rot:0}    // 3 → Hydrater
     }},
-    hebdo:{ img:'img/clairiere.jpg', w:853, h:1844, top:22, panels:true, pos:{
+    hebdo:{ img:'img/clairiere.webp', w:853, h:1844, top:22, panels:true, pos:{
       // cx,cy = centre du médaillon produit (calibré). pw/ph = zone cliquable.
       nettoyer:{x:12, y:72, h:13, r:1.4, cx:13.3, cy:72.8, pw:15, ph:8, rot:0},   // 1 → Nettoyer
       masque  :{x:80, y:70, h:13, r:1.4, cx:82.3, cy:69.7, pw:15, ph:8, rot:0},   // 2 → Masque & Soins
