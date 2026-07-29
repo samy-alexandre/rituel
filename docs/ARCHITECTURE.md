@@ -284,3 +284,49 @@ natifs, ou introduire un bundler type Vite pour minification + code-splitting
 mobile-first). Ce choix conditionne toutes les étapes suivantes
 (réorganisation de l'arborescence, refactorisation, extraction de services) et
 sera arbitré avec le porteur du projet avant toute modification invasive.
+
+---
+
+## 8. Cartographie des z-index (documentation, pas un design system)
+
+> Analyse conservée comme **référence d'architecture**. Décision explicite : on
+> **ne construit pas** de design system de z-index pour l'instant (ROI trop
+> faible vs. les gros chantiers). Ce tableau sert de garde-fou : avant de poser
+> un nouveau calque, on regarde ici pour ne pas casser un empilement existant.
+
+**Fait structurant :** `#rituel-chemin` (`.cm-overlay`, z 210) a
+`opacity:0`+`transform` → il **crée un contexte d'empilement isolé**. Tout ce
+qui est inséré *dedans* n'ordonne que l'intérieur du composer et **ne rivalise
+jamais avec le global**, quelle que soit sa valeur.
+
+### Couches globales réelles (éléments `body`-appendus ou fixed plein écran)
+
+| Couche | Valeur(s) | Éléments |
+|---|---|---|
+| contenu | (auto) | flux normal |
+| nav | 100 | `.nav` |
+| overlay immersif | 210 / 220 | `.cm-overlay` (composer), `.pb-overlay` (flipbook) |
+| toast | 300 | `.toast` |
+| assistant (Léa) | 350 / 360 | `.lea-bubble`, `.lea-pop` |
+| overlay/voile plein écran | 400 | `.sheet-overlay`, `.policy`, `.sort-menu`, `.vy-petal` |
+| drawer / panel | 3000 / 3001 / 3100 | `.cm-panel-veil`, `.cm-rpanel`, `.rap-overlay` |
+| modal | 9000 | `.cm-modal` (dialogue générique `ui/dialog.js`), `.dp-overlay` |
+| debug | 99999 | boîte dev inline (`ritual.js:856`) |
+
+### Locaux — **hors** design system (détails de composant)
+Isolés dans `.cm-overlay` ou `absolute` dans un parent positionné :
+`cm-firefly`, `cm-hint`, `cm-save`, `cm-build`, `cm-node`, `cm-panel*`,
+`cm-links`, `cm-layer`, `cm-pop`, `cm-pop-veil`, `cm-menu`, `cm-sheet*`,
+`cat-dd-menu`, `pc-node`, `pb-close/fav`, `vy-walker`, `onb-back`, `rd-card`…
+`cm-wow`/`cm-spark` sont body-appendus mais restent des **effets de célébration
+du composer**, pas une couche applicative.
+
+### Exceptions historiques à connaître
+- **`.nav-glass` (215)** flotte *au-dessus* de l'overlay immersif (210) —
+  intentionnel, casse l'ordre naturel « nav sous overlay ».
+- Les valeurs actuelles **ne se rangent pas** dans un barème simple
+  (`nav<overlay<toast<…`) : ex. le toast (300) est *sous* les voiles plein
+  écran (400). Un barème propre exigerait un **renumérotage = réordonnancements
+  visibles** → hors périmètre « zéro-comportement ». À traiter comme une
+  décision de design assumée, pas comme un refactor sûr, le jour où le besoin
+  se présentera.
