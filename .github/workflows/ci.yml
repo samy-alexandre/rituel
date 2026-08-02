@@ -1,0 +1,43 @@
+# .github/workflows/ci.yml
+# CI minimale : garde-fou à chaque push/PR.
+#  1. npm ci          → installe les dépendances épinglées (package-lock.json)
+#  2. lint            → eslint src
+#  3. format:check    → prettier --check (cohérence du code source)
+#  4. build           → vite build + minify-legacy
+#  5. smoke           → vérifie statiquement que le build est sain
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: Build & lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Récupère le code
+        uses: actions/checkout@v4
+
+      - name: Configure Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Installe les dépendances (verrouillées)
+        run: npm ci
+
+      - name: ESLint (src/)
+        run: npm run lint
+
+      - name: Prettier (format:check)
+        run: npm run format:check
+
+      - name: Build Vite
+        run: npm run build
+
+      - name: Test de fumée (build sain)
+        run: npm run smoke

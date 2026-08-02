@@ -46,7 +46,7 @@ async function rjLoadItems(period) {
 }
 async function openRituelJour() {
   if (!currentUser) {
-    showToast('Connecte-toi d\'abord 🌸');
+    showToast("Connecte-toi d'abord 🌸");
     return;
   }
   const h = new Date().getHours();
@@ -78,7 +78,10 @@ function rjProgress() {
   document.getElementById('rj-count').textContent =
     'ÉTAPE ' + (rjStep + 1) + '/4 · ' + (rjPeriod === 'soir' ? 'SOIR 🌙' : 'MATIN ☀️');
   document.getElementById('rj-progress').innerHTML = [0, 1, 2, 3]
-    .map((i) => '<div class="onb-dot' + (i < rjStep ? ' done' : i === rjStep ? ' active' : '') + '"></div>')
+    .map(
+      (i) =>
+        '<div class="onb-dot' + (i < rjStep ? ' done' : i === rjStep ? ' active' : '') + '"></div>'
+    )
     .join('');
 }
 function rjRefreshPhoto() {
@@ -210,7 +213,7 @@ function rjRender() {
         : '<p style="color:var(--muted);font-size:13px;text-align:center;line-height:1.6;margin:24px 0;">' +
           (window.__rjHasAny
             ? 'Pas de rituel pour le ' + rjPeriod + ' pour le moment 🌱'
-            : 'Tu n\'as pas encore créé de rituel 🌱<br>Tu pourras le faire dans l\'onglet Rituel') +
+            : "Tu n'as pas encore créé de rituel 🌱<br>Tu pourras le faire dans l'onglet Rituel") +
           '<br>Valide quand même ta journée, elle compte ✨</p>') +
       '';
     next.textContent = 'Valider mon rituel ✨';
@@ -274,19 +277,21 @@ function rjSummary() {
   const out = [];
   if (t.has('rougeurs') || t.has('sensible'))
     out.push(
-      'Ta peau semble un peu sensible aujourd\'hui · garde un rituel tout doux, sans nouvel actif.'
+      "Ta peau semble un peu sensible aujourd'hui · garde un rituel tout doux, sans nouvel actif."
     );
   else if (t.has('seche') || t.has('terne'))
-    out.push('Ta peau réclame de l\'hydratation · une couche généreuse ce soir lui fera du bien 💧');
+    out.push("Ta peau réclame de l'hydratation · une couche généreuse ce soir lui fera du bien 💧");
   else if (t.has('grasse') || t.has('boutons'))
-    out.push('Côté brillance ou petits boutons : nettoyage doux et constance, jamais d\'agressivité.');
-  else if (t.has('nette')) out.push('Ta peau a l\'air en forme · continue exactement comme ça ✨');
+    out.push(
+      "Côté brillance ou petits boutons : nettoyage doux et constance, jamais d'agressivité."
+    );
+  else if (t.has('nette')) out.push("Ta peau a l'air en forme · continue exactement comme ça ✨");
   if (rjData.sommeil != null && rjData.sommeil <= 5)
-    out.push('Avec une nuit courte, mise sur la simplicité aujourd\'hui.');
+    out.push("Avec une nuit courte, mise sur la simplicité aujourd'hui.");
   if (rjData.eau != null && rjData.eau <= 3)
-    out.push('Et pense à boire un peu plus d\'eau au fil de la journée.');
-  if (!out.length) out.push('Jour après jour, c\'est ta régularité qui fait toute la différence.');
-  out.push('Le plus important, c\'est la régularité, pas la perfection 🌸');
+    out.push("Et pense à boire un peu plus d'eau au fil de la journée.");
+  if (!out.length) out.push("Jour après jour, c'est ta régularité qui fait toute la différence.");
+  out.push("Le plus important, c'est la régularité, pas la perfection 🌸");
   return out.slice(0, 3).join(' ');
 }
 
