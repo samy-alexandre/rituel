@@ -14,7 +14,9 @@
 
   // ===== Politique de confidentialité =====
   function openPolicy(){
-    try{ var pd=document.getElementById('policy-date'); if(pd) pd.textContent=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }catch(e){} document.getElementById('policy').classList.add('open'); }
+    try{ var pd=document.getElementById('policy-date'); if(pd) pd.textContent=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+} document.getElementById('policy').classList.add('open'); }
   function closePolicy(){ document.getElementById('policy').classList.remove('open'); }
 
   function setBtnLoading(btn, loading, labelIdle){
@@ -206,7 +208,9 @@
       try{
         const prof=await loadProfile();
         if(prof && !!prof.is_premium !== isPremium){ applyProfile(prof); }
-      }catch(e){}
+      }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     }
   });
 
@@ -294,7 +298,9 @@
       });
       const data = await res.json();
       if(data && data.success){
-        try{ localStorage.removeItem('rituel_profile_'+currentUser.id); }catch(e){}
+        try{ localStorage.removeItem('rituel_profile_'+currentUser.id); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
         await sb.auth.signOut();
         alert('Ton compte et toutes tes données ont été définitivement supprimés.');
         location.reload();
@@ -382,7 +388,9 @@
     state.skinType = tmpSkin;
     state.concerns = tmpConcerns;
     await saveProfile();
-    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: { concerns: state.concerns||[], goal: state.goal||null } })); }catch(e){}
+    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: { concerns: state.concerns||[], goal: state.goal||null } })); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     closeSkinSheet();
     renderProfileBadges();
     showToast('Profil peau mis à jour 🌸');
@@ -409,7 +417,11 @@
     if(prev==='ritual' && screen!=='ritual') closeRituelChemin(); // sinon l'aperçu reste affiché par-dessus les autres onglets
     document.querySelectorAll('.screen, .chat-screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(screen).classList.add('active');
-    if(screen==='chat'){ try{ leaInjectDaily(); }catch(e){} try{ refreshChatLock(); }catch(e){} }
+    if(screen==='chat'){ try{ leaInjectDaily(); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+} try{ refreshChatLock(); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+} }
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.screen===screen));
     document.getElementById('app').setAttribute('data-screen', screen);
     const host=document.getElementById('scroll-host'); if(host) host.scrollTo(0,0);
@@ -710,7 +722,9 @@
         showToast(msgs[st]||'Ta plante a poussé 🌿');
       }
       if(st!==prev) localStorage.setItem(key, String(st));
-    }catch(e){}
+    }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     // Déblocage de nouvelles plantes selon la série (notif au passage d'un palier)
     try{
       const uid = currentUser ? currentUser.id : 'anon';
@@ -723,7 +737,9 @@
         const newly=Object.values(PLANT_TYPES).filter(v=>v.unlock>prevU && v.unlock<=n).sort((a,b)=>a.unlock-b.unlock);
         if(newly.length){ const last=newly[newly.length-1]; showToast(last.emoji+' Nouvelle plante débloquée : '+last.name+' !'); localStorage.setItem(ukey, String(last.unlock)); }
       }
-    }catch(e){}
+    }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
   }
 
   async function bestStreak(){
@@ -761,7 +777,9 @@
     }).join('');
     document.getElementById('plant-sheet').classList.add('open');
   }
-  function pickPlant(k){ try{ localStorage.setItem('rituel_plant', k); }catch(e){} renderPlant(); openPlantSheet(); showToast(PLANT_TYPES[k].emoji+' Jolie plante !'); }
+  function pickPlant(k){ try{ localStorage.setItem('rituel_plant', k); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+} renderPlant(); openPlantSheet(); showToast(PLANT_TYPES[k].emoji+' Jolie plante !'); }
   function closePlantSheet(){ document.getElementById('plant-sheet').classList.remove('open'); }
 
   // ===== Chargement de l'accueil =====
@@ -878,7 +896,9 @@
         })();
         if(allDone) gi2.textContent='Ton rituel du jour est fait, bravo 🌸';
       }
-    }catch(e){}
+    }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     const { data: prods } = await sb.from('products').select('id,nom,effets,emoji,categorie,photo_path').eq('user_id', currentUser.id);
     const pmap={}; (prods||[]).forEach(p=>{ pmap[p.id]=p; });
     // Étapes déjà cochées aujourd'hui (mémorisées en base)
@@ -887,7 +907,9 @@
       const { data: te } = await sb.from('entries').select('steps').eq('user_id', currentUser.id).eq('date', todayStr()).limit(1);
       const st = (te && te.length && te[0].steps) ? te[0].steps : null;
       if(st){ window.__homeSteps = { matin: Array.isArray(st.matin)?st.matin:[], soir: Array.isArray(st.soir)?st.soir:[] }; }
-    }catch(e){}
+    }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     for(const moment of ['matin','soir']){
       const list = document.getElementById('routine-'+moment);
       const src = act[moment];
@@ -934,7 +956,9 @@
       if(e.alimentation!=null) ali=e.alimentation;
     }
     const s=document.getElementById('ds-sommeil'); s.value=som; onDaySommeil(som);
-    try{ sb.from('entries').select('humeur').eq('user_id',currentUser.id).eq('date',todayStr()).limit(1).then(({data})=>{ const hv=(data&&data[0])?data[0].humeur:null; document.querySelectorAll('#ds-mood .mood-btn').forEach((bt,i)=>bt.classList.toggle('selected', hv===i+1)); }); }catch(_e){}
+    try{ sb.from('entries').select('humeur').eq('user_id',currentUser.id).eq('date',todayStr()).limit(1).then(({data})=>{ const hv=(data&&data[0])?data[0].humeur:null; document.querySelectorAll('#ds-mood .mood-btn').forEach((bt,i)=>bt.classList.toggle('selected', hv===i+1)); }); }catch (_e) {
+    console.error("catch silencieux (app.legacy.js):", _e);
+}
     const h=document.getElementById('ds-hydra'); h.value=hyd; onDayHydra(hyd);
     const a=document.getElementById('ds-alim'); a.value=ali; onDayAlim(ali);
     document.getElementById('day-sheet').classList.add('open');
@@ -1365,12 +1389,16 @@
   // ===== Léa dans la messagerie (badge + message du jour) =====
   function leaSeenKey(){ return 'rituel_leaseen_'+(currentUser?currentUser.id:'x')+'_'+todayStr(); }
   function bellTap(){
-    let seen=false; try{ seen=!!localStorage.getItem(leaSeenKey()); }catch(e){}
+    let seen=false; try{ seen=!!localStorage.getItem(leaSeenKey()); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     if(currentUser && !seen){ navTo('chat'); } else { openReminderSheet(); }
   }
   function updateChatBadge(){
     const b=document.getElementById('chat-badge'); if(!b) return;
-    let seen=false; try{ seen=!!localStorage.getItem(leaSeenKey()); }catch(e){}
+    let seen=false; try{ seen=!!localStorage.getItem(leaSeenKey()); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     b.style.display = (currentUser && !seen) ? 'inline-block' : 'none';
   }
   let __leaTries=0;
@@ -1379,7 +1407,9 @@
     const feed=document.getElementById('chat-feed'); if(!feed) return;
     if(feed.querySelector('[data-lea-daily="'+todayStr()+'"]')) { markLeaSeen(); return; }
     const pro=(document.getElementById('lea-proactive-line')||{}).textContent||'';
-    let tip=''; try{ tip=localStorage.getItem('rituel_tip_'+currentUser.id+'_'+todayStr())||''; }catch(e){}
+    let tip=''; try{ tip=localStorage.getItem('rituel_tip_'+currentUser.id+'_'+todayStr())||''; }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     if(!tip){ const tb=document.getElementById('lea-tip-body'); tip=tb?tb.textContent:''; if(tip==='Ton conseil du jour arrive… 🌸') tip=''; }
     const full=[pro, tip].filter(Boolean).join('\n\n');
     if(!full){ if(__leaTries<5){ __leaTries++; setTimeout(leaInjectDaily, 1500); } return; }
@@ -1391,7 +1421,9 @@
     markLeaSeen();
   }
   function markLeaSeen(){
-    try{ localStorage.setItem(leaSeenKey(),'1'); }catch(e){}
+    try{ localStorage.setItem(leaSeenKey(),'1'); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     updateChatBadge();
   }
 
@@ -1400,7 +1432,9 @@
   async function maybeShowBilan5(){
     const el=document.getElementById('bilan5-cta'); if(!el) return;
     if(!currentUser){ el.style.display='none'; return; }
-    try{ if(localStorage.getItem(bilan5Key())){ el.style.display='none'; return; } }catch(e){}
+    try{ if(localStorage.getItem(bilan5Key())){ el.style.display='none'; return; } }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     try{
       const { data } = await sb.from('entries').select('date').eq('user_id', currentUser.id).order('date',{ascending:true}).limit(40);
       const n=new Set((data||[]).map(e=>e.date)).size;
@@ -1433,7 +1467,9 @@
       let topProd=null, topN=0; Object.keys(prodCount).forEach(k=>{ if(prodCount[k]>topN){ topN=prodCount[k]; topProd=k; } });
       let topName=null;
       if(topProd && topN>=3){
-        try{ const { data: p } = await sb.from('products').select('nom').eq('id', topProd).single(); topName=p&&p.nom; }catch(e){}
+        try{ const { data: p } = await sb.from('products').select('nom').eq('id', topProd).single(); topName=p&&p.nom; }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
       }
       const ratio=n?done/n:0;
       const conseil = ratio>=0.8
@@ -1455,7 +1491,9 @@
   }
   function closeBilan5(){
     document.getElementById('bilan5-sheet').classList.remove('open');
-    try{ localStorage.setItem(bilan5Key(),'1'); }catch(e){}
+    try{ localStorage.setItem(bilan5Key(),'1'); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     const el=document.getElementById('bilan5-cta'); if(el) el.style.display='none';
   }
 
@@ -1479,9 +1517,15 @@
     const t=e.target;
     if(t && t.classList && t.classList.contains('sheet-overlay') && t.classList.contains('open')){
       t.classList.remove('open');
-      try{ stopBcCamera(); }catch(_e){}
-      try{ tlStop(); }catch(_e){}
-      try{ camStop(); }catch(_e){}
+      try{ stopBcCamera(); }catch (_e) {
+    console.error("catch silencieux (app.legacy.js):", _e);
+}
+      try{ tlStop(); }catch (_e) {
+    console.error("catch silencieux (app.legacy.js):", _e);
+}
+      try{ camStop(); }catch (_e) {
+    console.error("catch silencieux (app.legacy.js):", _e);
+}
     }
   });
 
@@ -1489,7 +1533,9 @@
   async function loadLeaProactive(e){
     const line=document.getElementById('lea-proactive-line'); if(!line) return;
     if(!currentUser){ line.textContent=''; return; }
-    let streak=0; try{ streak=await computeStreak(); }catch(err){}
+    let streak=0; try{ streak=await computeStreak(); }catch (err) {
+    console.error("catch silencieux (app.legacy.js):", err);
+}
     const h=new Date().getHours();
     const done = e && dayComplete(e);
     const hasPhoto = e && e.photo_path;
@@ -1527,7 +1573,9 @@
       document.getElementById('memory-img').src=url;
       document.getElementById('memory-caption').textContent='Cette photo date d\'il y a '+days+' jours · regarde le chemin parcouru 🌸';
       sec.style.display='block';
-    }catch(e){}
+    }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
   }
 
   // ===== Tes découvertes (corrélations douces, jamais culpabilisantes) =====
@@ -1555,7 +1603,9 @@
       if(!out.length) return;
       document.getElementById('insights-list').innerHTML=out.slice(0,2).map(i=>'<div class="ba-card" style="gap:12px;"><div style="font-size:24px;flex-shrink:0;">'+i[0]+'</div><div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5;">'+i[1]+'</div></div>').join('');
       sec.style.display='block';
-    }catch(e){}
+    }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
   }
 
   // ═══ Vue d'ensemble + Évolution de la peau (Journal) ═══
@@ -1959,10 +2009,14 @@
   ];
   function remKey(){ return 'rituel_reminders_'+(currentUser?currentUser.id:'anon'); }
   function getReminders(){
-    try{ const r=JSON.parse(localStorage.getItem(remKey())||'null'); if(r && r.items) return r; }catch(e){}
+    try{ const r=JSON.parse(localStorage.getItem(remKey())||'null'); if(r && r.items) return r; }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     return { enabled:false, items: REMINDER_ITEMS.map(it=>({ id:it.id, time:it.defTime, on:true, lastFired:null })) };
   }
-  function saveReminders(cfg){ try{ localStorage.setItem(remKey(), JSON.stringify(cfg)); }catch(e){} }
+  function saveReminders(cfg){ try{ localStorage.setItem(remKey(), JSON.stringify(cfg)); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+} }
   function updateBellDot(){ const d=document.getElementById('bell-dot'); if(d) d.style.display = getReminders().enabled ? 'block' : 'none'; }
 
   function refreshPermLabel(){
@@ -2015,7 +2069,9 @@
     cfg.items.forEach(it=>{
       if(it.on && it.time===hhmm && it.lastFired!==today){
         const def = REMINDER_ITEMS.find(x=>x.id===it.id);
-        try{ new Notification('Rituel', { body: (def && def.body) || 'Petit rappel 🌸' }); }catch(e){}
+        try{ new Notification('Rituel', { body: (def && def.body) || 'Petit rappel 🌸' }); }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
         it.lastFired = today; changed=true;
       }
     });
@@ -2034,7 +2090,9 @@
   }, 2000);
   (async function init(){
     let session=null;
-    try{ const r=await sb.auth.getSession(); session=r.data.session; }catch(e){}
+    try{ const r=await sb.auth.getSession(); session=r.data.session; }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
     if(session && session.user){
       currentUser = session.user;
       let profile = await loadProfile();
@@ -2047,7 +2105,9 @@
             profile = { prenom: (profile&&profile.prenom)||cached.prenom, type_peau: cached.type_peau, objectifs: JSON.stringify(cached.objectifs||[]), is_premium: (profile&&profile.is_premium)||false };
             fromCache = true;
           }
-        }catch(e){}
+        }catch (e) {
+    console.error("catch silencieux (app.legacy.js):", e);
+}
       }
       applyProfile(profile);
       if(!state.name && currentUser.user_metadata && currentUser.user_metadata.prenom){
