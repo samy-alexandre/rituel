@@ -74,19 +74,25 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans aucun texte autour, sans bac
 
     const data = await r.json();
     if (data.error) {
-      return res.status(500).json({ error: data.error.message || 'Erreur IA' });
+      return res.status(500).json({ error: data.error.message || 'Erreur côté IA' });
     }
-    const content = data.content && data.content[0] && data.content[0].text;
-    if (!content) return res.status(500).json({ error: 'Réponse IA vide' });
-    let parsed = null;
+    let text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+    let out = { observation: text, eclat: null, conseil: '' };
     try {
-      parsed = JSON.parse(content);
-    } catch (e) {
-      const m = content.match(/\{[\s\S]*\}/);
-      if (m) try { parsed = JSON.parse(m[0]); } catch (e2) { parsed = null; }
-    }
-    if (!parsed) return res.status(202).json({ retry: true, message: "L'IA n'a pas donné un format exploitable." });
-    return res.status(200).json(parsed);
+      const m = text.match(/\{[\s\S]*\}/);
+      if (m) {
+        const j = JSON.parse(m[0]);
+        if (j.observation) out.observation = String(j.observation);
+        if (typeof j.eclat === 'number') out.eclat = Math.max(0, Math.min(100, Math.round(j.eclat)));
+        out.conseil = j.conseil ? String(j.conseil) : '';
+      }
+    } catch (e) { /* on garde le texte brut en observation */ }
+
+    // Filet anti-tiret long sur les textes renvoyés
+    ['observation','conseil'].forEach(function(k){
+      if (typeof out[k] === 'string') out[k] = out[k].replace(/\s*[—–]\s*/g, ', ').replace(/\s+,/g, ',');
+    });
+    return res.status(200).json(out);
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Erreur serveur' });
   }

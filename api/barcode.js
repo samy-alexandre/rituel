@@ -87,5 +87,5 @@ module.exports = async function handler(req, res) {
   }
 
   if (!hit) { res.status(200).json({ found: false }); return; }
-  res.status(200).json({ found: true, nom: hit.nom, marque: hit.marque, effets: hit.effets, categorie: hit.categorie, source: hit.source });
+  res.status(200).json({ found: true, ...hit });
 };
