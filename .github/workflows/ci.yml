@@ -4,7 +4,7 @@
 #  2. lint            → eslint src
 #  3. format:check    → prettier --check (cohérence du code source)
 #  4. build           → vite build + minify-legacy
-#  5. test:smoke      → vérifie statiquement que le build est sain
+#  5. smoke           → vérifie statiquement que le build est sain
 name: CI
 
 on:
@@ -40,4 +40,4 @@ jobs:
         run: npm run build
 
       - name: Test de fumée (build sain)
-        run: npm run test:smoke
+        run: npm run smoke

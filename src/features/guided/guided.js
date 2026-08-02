@@ -14,7 +14,7 @@ function openGuided() {
   gdPeriod = soirVisible ? 'soir' : 'matin';
   const items = (window.__homeRoutine && window.__homeRoutine[gdPeriod]) || [];
   if (!items.length) {
-    showToast('Ajoute d\'abord des produits à ton rituel 🌸');
+    showToast("Ajoute d'abord des produits à ton rituel 🌸");
     return;
   }
   gdItems = items;
@@ -26,12 +26,20 @@ function gdShow() {
   const p = gdItems[gdIdx];
   if (!p) return;
   document.getElementById('gd-count').textContent =
-    'ÉTAPE ' + (gdIdx + 1) + '/' + gdItems.length + ' · ' + (gdPeriod === 'soir' ? 'SOIR 🌙' : 'MATIN ☀️');
+    'ÉTAPE ' +
+    (gdIdx + 1) +
+    '/' +
+    gdItems.length +
+    ' · ' +
+    (gdPeriod === 'soir' ? 'SOIR 🌙' : 'MATIN ☀️');
   document.getElementById('gd-emoji').textContent = p.emoji || '🧴';
   document.getElementById('gd-name').textContent = p.nom || '';
   document.getElementById('gd-effets').textContent = p.effets || '';
   document.getElementById('gd-progress').innerHTML = gdItems
-    .map((_, k) => '<div class="onb-dot' + (k < gdIdx ? ' done' : k === gdIdx ? ' active' : '') + '"></div>')
+    .map(
+      (_, k) =>
+        '<div class="onb-dot' + (k < gdIdx ? ' done' : k === gdIdx ? ' active' : '') + '"></div>'
+    )
     .join('');
   document.getElementById('gd-prev').style.visibility = gdIdx === 0 ? 'hidden' : 'visible';
   document.getElementById('gd-next').textContent =

@@ -42,7 +42,20 @@ export function validEmail(e) {
 export function fmtDateLong(ds) {
   try {
     const d = new Date(ds + 'T00:00:00');
-    const M = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const M = [
+      'janvier',
+      'février',
+      'mars',
+      'avril',
+      'mai',
+      'juin',
+      'juillet',
+      'août',
+      'septembre',
+      'octobre',
+      'novembre',
+      'décembre',
+    ];
     return d.getDate() + ' ' + M[d.getMonth()] + ' ' + d.getFullYear();
   } catch {
     return ds;

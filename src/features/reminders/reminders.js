@@ -14,7 +14,9 @@ function rhOpenRappel(ev, id) {
   // Cherche le rituel dans le cache du hub hérité, avec repli sur le cache global
   // (__allRituels) qu'utilise le nouveau panneau de la fleur — même source de vérité,
   // champ `rappels` inclus (loadRituels fait select('*,rappels')).
-  const pool = (window.__rhRituels && window.__rhRituels.length ? window.__rhRituels : window.__allRituels) || [];
+  const pool =
+    (window.__rhRituels && window.__rhRituels.length ? window.__rhRituels : window.__allRituels) ||
+    [];
   const r = pool.find(function (x) {
     return String(x.id) === String(id);
   });
@@ -22,7 +24,11 @@ function rhOpenRappel(ev, id) {
   const rap = r.rappels || {};
   const mo = r.moment || 'matin';
   const heure =
-    mo === 'soir' ? rap.soir || '21:00' : mo === 'hebdo' ? rap.soir || '20:00' : rap.matin || '08:00';
+    mo === 'soir'
+      ? rap.soir || '21:00'
+      : mo === 'hebdo'
+        ? rap.soir || '20:00'
+        : rap.matin || '08:00';
   const days =
     rap.days && rap.days.length
       ? rap.days.slice()
