@@ -2,7 +2,7 @@
 // Léa, la coach beauté de Rituel. Appel sécurisé à l'IA (clé cachée côté serveur).
 // Reçoit le contexte perso (profil + données du jour/semaine + produits) pour des conseils personnalisés.
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { messages = [], profile = {}, user_id = null } = req.body || {};
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée' });
@@ -181,4 +181,4 @@ Réponds toujours en français, avec le cœur. Sois cette présence rassurante e
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Erreur serveur' });
   }
-}
+};

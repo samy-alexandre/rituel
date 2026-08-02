@@ -1,7 +1,7 @@
 // api/barcode.js : recherche d'un produit par code-barres (EAN/UPC)
 // 1) Open Beauty/Food/Products Facts en parallèle  2) filet UPCitemdb (gratuit, 100/jour)
 // Récupère nom, marque, et (si dispo) une courte description + catégorie. Cache CDN 7 jours.
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   const code = String((req.query && req.query.code) || '').replace(/[^0-9]/g, '');
   if (!code || code.length < 8 || code.length > 14) {
@@ -88,4 +88,4 @@ export default async function handler(req, res) {
 
   if (!hit) { res.status(200).json({ found: false }); return; }
   res.status(200).json({ found: true, ...hit });
-}
+};

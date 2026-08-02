@@ -1,5 +1,5 @@
 // api/push.js — cle publique (GET) + abonnements (POST), sans dependance
-export default async function handler(req, res){
+module.exports = async function handler(req, res){
   const SB = process.env.SUPABASE_URL, KEY = process.env.SUPABASE_SERVICE_ROLE;
   if (req.method === 'GET') return res.status(200).json({ publicKey: process.env.VAPID_PUBLIC_KEY || null });
   if (req.method !== 'POST') return res.status(405).json({ error:'method' });
@@ -23,4 +23,4 @@ export default async function handler(req, res){
     }
     return res.status(400).json({ error:'bad request' });
   }catch(e){ return res.status(500).json({ error:e.message }); }
-}
+};

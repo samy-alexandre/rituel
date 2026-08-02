@@ -3,7 +3,7 @@
 // La clé service_role (pleins pouvoirs) reste cachée ici, jamais dans l'app.
 // Pas de dépendance externe : on appelle Supabase directement via fetch.
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
@@ -88,4 +88,4 @@ export default async function handler(req, res) {
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Erreur serveur' });
   }
-}
+};

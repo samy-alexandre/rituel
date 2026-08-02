@@ -2,7 +2,7 @@
 // Regard bienveillant (NON médical) de Léa/Léo sur la photo du jour.
 // La clé API reste cachée côté serveur. Renvoie { observation, eclat, conseil }.
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { image, media_type = 'image/jpeg', profile = {}, user_id = null } = req.body || {};
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée' });
@@ -96,4 +96,4 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans aucun texte autour, sans bac
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Erreur serveur' });
   }
-}
+};
