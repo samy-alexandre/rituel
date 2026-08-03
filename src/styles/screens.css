@@ -6,8 +6,8 @@
     #plant-host { min-height: 150px; display: flex; align-items: center; justify-content: center; }
   .plant-card { margin: 0 20px 14px; background: linear-gradient(180deg, var(--surface), var(--surface-warm)); border-radius: var(--r-xl); box-shadow: var(--shadow); padding: 18px 20px 16px; display: flex; flex-direction: column; align-items: center; }
   .plant-card svg { display: block; }
-  .plant-caption { font-family: var(--serif); font-size: 15px; font-style: italic; color: var(--ink-soft); text-align: center; margin-top: 4px; }
-  .plant-change { margin-top: 10px; background: transparent; border: none; color: var(--accent-deep); font-size: 12px; cursor: pointer; opacity: 0.85; }
+  .plant-caption { font-family: var(--serif); font-size: var(--fs-base); font-style: italic; color: var(--ink-soft); text-align: center; margin-top: 4px; }
+  .plant-change { margin-top: 10px; background: transparent; border: none; color: var(--accent-deep); font-size: var(--fs-xs); cursor: pointer; opacity: 0.85; }
   .plant-change:active { opacity: 0.5; }
   .plant-actions { display: flex; gap: 20px; justify-content: center; }
   .photo-mini { margin: 0 20px 24px; background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 12px 14px; display: flex; align-items: center; gap: 14px; cursor: pointer; }
@@ -16,8 +16,8 @@
   .pm-display { width: 100%; height: 100%; }
   .pm-display img { width: 100%; height: 100%; object-fit: cover; }
   .photo-mini-text { flex: 1; }
-  .photo-mini-title { font-family: var(--serif); font-size: 16px; }
-  .photo-mini-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .photo-mini-title { font-family: var(--serif); font-size: var(--fs-md); }
+  .photo-mini-sub { font-size: var(--fs-xs); color: var(--muted); margin-top: 2px; }
   .screen.active { display: block; }
   .screen.active > * { animation: softRise .55s cubic-bezier(.22,.61,.36,1) both; }
   .screen.active > *:nth-child(1){ animation-delay:0s }
