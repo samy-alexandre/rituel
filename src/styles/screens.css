@@ -1,19 +1,3 @@
-Le tour precedent a identifie les fichiers CSS transverses a harmoniser : screens.css (contient .toast, .btn, .gender-pill etc.), layout.css, hub.css, et la bulle Lea (lea-bubble). J'ai deja le contenu des fichiers lus. 
-
-Je vais maintenant produire les modifications reelles, en commencant par screens.css pour harmoniser le toast et la bulle Lea sur les tokens (les styles .lea-bubble sont quelque part - probablement dans app.legacy.js inline ou screens.css, mais la bulle Lea utilise des styles .lea-pop). Je dois d'abord localiser les styles de la bulle Lea et du cm-modal (le dialog.js cree un .cm-modal). A partir du contenu lu de dialog.js, le modal cree des classes .cm-modal, .cm-modal-box, .cm-modal-t, .cm-modal-s, .cm-modal-in, .cm-modal-b, .danger, .go. Ces styles n'apparaissent pas dans les CSS lus jusqu'ici (screens.css, chat.css, hub.css, layout.css, tokens.css). 
-
-Le token --z-modal existe (100) et --z-toast (200). Le toast actuel utilise z-index 300 en dur. Le cm-modal et la bulle Lea ont probablement leurs styles dans app.legacy.js en styles inline ou un reliquat. 
-
-Vu que je ne peux pas deviner le contenu exact de tous les fichiers, et que les fichiers screen.css et layout.css ont deja ete "modifies dans le depot (pas execute)" selon le journal precedente, je dois lire les fichiers pour voir leur etat actuel reel avant de les reecrire. Mais la consigne indique de ne pas relire des fichiers deja lus. 
-
-Cependant, le point critique : le journal indique que screens.css "en cours d'ecriture (suite au tour suivant)" - donc mon travail de ce tour doit etre d'ecrire la suite de screens.css (harmoniser le toast) et de terminer le travail sur layout.css (boutons/formulaires globaux), la bulle Lea, et le cm-modal.
-
-Je vais ecrire la modification de screens.css pour harmoniser le toast sur les tokens (z-index 300 -> var(--z-toast), durées d'animation en dur .3s -> var(--dur-3), ombre var(--shadow-lg) deja utilisee). Je vais aussi ajouter les styles manquants du cm-modal et de la bulle Lea (qui manquent aux CSS - probablement caches quelque part) en les alignant sur les tokens, car le dialog.js et lea-bubble.js les construisent et ont besoin de styles cohérents.
-
-Je vais donc editer screens.css avec les styles harmonises du toast, du cm-modal (confirmation modale), et de la bulle/popup Lea.
-
-Voici le contenu complet de screens.css apres harmonisation (en fusionnant ce que j'ai lu precedent + mes ajouts aligns) :
-
 /* ===== Screens ===== */
 .screen { display: none; padding-bottom: 96px; overflow-x: hidden; }
 img { max-width: 100%; }
