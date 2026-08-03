@@ -1368,24 +1368,7 @@
     console.error("catch silencieux (app.legacy.js):", e);
 }
     const el=document.getElementById('bilan5-cta'); if(el) el.style.display='none';
-  }
-
-  // ===== Landing publique =====
-  function startAuth(m){
-    const l=document.getElementById('landing'); if(l) l.classList.add('hidden');
-    const b=document.getElementById('auth-back'); if(b) b.classList.remove('hidden');
-    document.querySelector('.auth-toggle').classList.remove('hidden');
-    switchAuth(m);
-  }
-  function backToLanding(){
-    const l=document.getElementById('landing'); if(l) l.classList.remove('hidden');
-    const b=document.getElementById('auth-back'); if(b) b.classList.add('hidden');
-    document.querySelector('.auth-toggle').classList.add('hidden');
-    document.getElementById('form-login').classList.add('hidden');
-    document.getElementById('form-signup').classList.add('hidden');
-  }
-
-  // ===== Tap en dehors d'une fenêtre = fermeture (smooth) =====
+  }  // ===== Tap en dehors d'une fenêtre = fermeture (smooth) =====
   document.addEventListener('click', (e)=>{
     const t=e.target;
     if(t && t.classList && t.classList.contains('sheet-overlay') && t.classList.contains('open')){
