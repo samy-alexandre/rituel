@@ -267,22 +267,8 @@
     closeSkinSheet();
     renderProfileBadges();
     showToast('Profil peau mis à jour 🌸');
-  }
+  }  // ===== Navigation =====
 
-  // ===== Navigation =====
-  // ===== Bouton + flottant (FAB) =====
-  function fabAction(){
-    const cur = document.getElementById('app').getAttribute('data-screen');
-    if(cur==='routine'){ openProductForm(); }
-    else if(cur==='ritual'){ openRituelChemin(null, (typeof rhActiveTab!=='undefined' && rhActiveTab) || 'matin'); }
-  }
-  function updateFab(screen){
-    const fab=document.getElementById('fab-add');
-    if(!fab) return;
-    const cur = screen || document.getElementById('app').getAttribute('data-screen');
-    let show = (cur==='routine' || cur==='ritual');   // + visible sur Produits et Rituel
-    fab.classList.toggle('show', show);
-  }
 
     function navTo(screen){
     const prev = document.getElementById('app').getAttribute('data-screen');
