@@ -269,9 +269,11 @@
     showToast('Profil peau mis à jour 🌸');
   }  // ===== Streak (selon le type de rituel choisi) =====  let _stkCache=null;
 
-  async  // ===== Jour de repos (joker hebdo qui protège la série) ===== // ===== Ma journée (sommeil / hydratation / alimentation) =====
+  // ===== Jour de repos (joker hebdo qui protège la série) =====
+  // ===== Ma journée (sommeil / hydratation / alimentation) =====
   const ALIM_LABELS = ['', 'À améliorer', 'Correcte', 'Équilibrée', 'Bonne', 'Parfaite'];
-  window.ALIM_LABELS = ALIM_LABELS; // partagé (contexte chat)  function onDaySommeil(v){ document.getElementById('ds-sommeil-val').textContent = fmtSleep(v); }
+  window.ALIM_LABELS = ALIM_LABELS; // partagé (contexte chat)
+  function onDaySommeil(v){ document.getElementById('ds-sommeil-val').textContent = fmtSleep(v); }
   function onDayHydra(v){ const n=parseInt(v,10); document.getElementById('ds-hydra-val').textContent = n+(n>1?' verres':' verre'); }
   function onDayAlim(v){ document.getElementById('ds-alim-val').textContent = ALIM_LABELS[parseInt(v,10)]||'…'; }
 
