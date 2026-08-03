@@ -45,3 +45,378 @@
   .display { font-family: var(--serif); font-weight: 300; font-variation-settings: "SOFT" 50, "WONK" 1; letter-spacing: -0.03em; line-height: 1; }
   .italic { font-style: italic; }
   .eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+
+  /* =====================================================================
+     OUTILS TRANSVERSES HARMONISÉS — design system Rituel
+     Boutons, champs de formulaire, inputs : même langage que les écrans
+     refactorés (tokens --sp-*/--r-*/--shadow-*/--dur-*/--fs-*).
+     Comportement inchangé : seul le ressenti est unifié.
+     ===================================================================== */
+
+  /* ─── Boutons base ─────────────────────────────────────────────────── */
+  .btn {
+    appearance: none;
+    border: 1px solid transparent;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: var(--fs-base);
+    font-weight: 600;
+    line-height: 1.2;
+    padding: 13px 20px;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: background-color var(--dur-2) var(--ease-out),
+                border-color var(--dur-2) var(--ease-out),
+                color var(--dur-2) var(--ease-out),
+                transform var(--dur-2) var(--ease-out),
+                box-shadow var(--dur-2) var(--ease-out);
+    touch-action: manipulation;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-accent {
+    background: var(--accent);
+    color: #FFFFFF;
+    border-color: var(--accent);
+    box-shadow: 0 6px 18px rgba(201,90,63,0.28);
+  }
+  .btn-accent:active { box-shadow: 0 3px 10px rgba(201,90,63,0.22); }
+
+  .btn-soft {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-family: var(--sans);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    padding: 12px 18px;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: background-color var(--dur-2) var(--ease-out),
+                border-color var(--dur-2) var(--ease-out),
+                color var(--dur-2) var(--ease-out),
+                transform var(--dur-2) var(--ease-out);
+    touch-action: manipulation;
+  }
+  .btn-soft:active { background: var(--surface-warm); transform: scale(0.97); }
+
+  .btn-ghost {
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: background-color var(--dur-1) var(--ease-out),
+                color var(--dur-1) var(--ease-out);
+    touch-action: manipulation;
+  }
+  .btn-ghost:active { background: var(--surface-warm); }
+
+  /* Bouton danger (suppression, etc.) */
+  .btn-danger {
+    background: var(--surface);
+    color: var(--accent-deep);
+    border-color: var(--accent-soft);
+    border-radius: var(--r-md);
+    font-family: var(--sans);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 12px 18px;
+    box-shadow: var(--shadow);
+    transition: background-color var(--dur-2) var(--ease-out),
+                border-color var(--dur-2) var(--ease-out),
+                transform var(--dur-2) var(--ease-out);
+  }
+  .btn-danger:active { transform: scale(0.97); background: var(--blush-soft); }
+
+  /* Disabled */
+  .btn:disabled, .btn-accent:disabled, .btn-soft:disabled, .btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ─── Champs de formulaire : cohérence partout ─────────────────────── */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="time"],
+  textarea,
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: var(--fs-base);
+    padding: 12px 14px;
+    line-height: 1.4;
+    transition: border-color var(--dur-2) var(--ease-out),
+                box-shadow var(--dur-2) var(--ease-out),
+                background-color var(--dur-2) var(--ease-out);
+  }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(201,90,63,0.14);
+  }
+  input:disabled, textarea:disabled, select:disabled {
+    background: var(--bg-soft);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  /* Variante champ doux (fond crème) */
+  input.field-soft, textarea.field-soft, select.field-soft {
+    background: var(--surface-warm);
+  }
+
+  /* ─── Libellés ─────────────────────────────────────────────────────── */
+  label, .field-label {
+    font-family: var(--sans);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  /* ─── Modale cm-modal (dialogue de confirmation / saisie) ──────────── */
+  .cm-modal {
+    position: fixed; inset: 0;
+    z-index: var(--z-modal);
+    background: rgba(42,30,24,0.42);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    padding: var(--sp-6);
+    opacity: 0; pointer-events: none;
+    transition: opacity var(--dur-3) var(--ease-out);
+  }
+  .cm-modal.show { opacity: 1; pointer-events: auto; }
+  .cm-modal-box {
+    width: 100%; max-width: 330px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 22px 20px 18px;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(10px) scale(0.98);
+    transition: transform var(--dur-3) var(--ease-spring);
+  }
+  .cm-modal.show .cm-modal-box { transform: translateY(0) scale(1); }
+  .cm-modal-t {
+    font-family: var(--serif);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .cm-modal-s {
+    margin-top: 8px;
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .cm-modal-in {
+    margin-top: 14px;
+    font-size: var(--fs-base);
+    padding: 12px 14px;
+  }
+  .cm-modal-b {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+  .cm-modal-b button {
+    appearance: none;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    padding: 11px 18px;
+    border-radius: var(--r-sm);
+    transition: background-color var(--dur-2) var(--ease-out),
+                border-color var(--dur-2) var(--ease-out),
+                color var(--dur-2) var(--ease-out),
+                transform var(--dur-2) var(--ease-out);
+    touch-action: manipulation;
+  }
+  .cm-modal-b button:active { transform: scale(0.96); }
+  .cm-modal-b #cm-modal-no {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+  .cm-modal-b #cm-modal-no:active { background: var(--surface-warm); }
+  .cm-modal-b #cm-modal-ok {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: #FFFFFF;
+    box-shadow: 0 6px 18px rgba(201,90,63,0.28);
+  }
+  .cm-modal-b #cm-modal-ok.danger {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+    box-shadow: 0 6px 18px rgba(142,60,38,0.28);
+  }
+  .cm-modal-b #cm-modal-ok:active { box-shadow: none; }
+
+  /* ─── Toast : même gestalt, tokens doux ────────────────────────────── */
+  /* (Couleur de fond unifiée sur --ink, comme le mur du chat) */
+  .toast {
+    position: fixed;
+    top: 20px; left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 12px 20px;
+    border-radius: var(--r-pill);
+    font-family: var(--sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    z-index: var(--z-toast);
+    opacity: 0;
+    max-width: 90%;
+    box-shadow: var(--shadow-lg);
+    pointer-events: none;
+    transition: opacity var(--dur-3) var(--ease-out), transform var(--dur-3) var(--ease-out);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ─── Bulle Léa flottante : alignée sur l'ambiance ─────────────────── */
+  .lea-bubble {
+    position: fixed;
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blush), var(--accent));
+    box-shadow: var(--shadow-float), 0 0 0 4px rgba(255,255,255,0.28);
+    color: #FFFFFF;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: var(--fs-lg);
+    cursor: pointer;
+    z-index: var(--z-sticky);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: box-shadow var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+  }
+  .lea-bubble:active { transform: scale(0.94); }
+  .lea-bubble::after {
+    content: '';
+    position: absolute;
+    right: 2px; bottom: 2px;
+    width: 11px; height: 11px;
+    background: var(--sage);
+    border: 2px solid #FFFFFF;
+    border-radius: 50%;
+  }
+
+  /* Popup Léa : carte flottante sur le referentiel */
+  .lea-pop {
+    position: fixed;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 16px 16px 12px;
+    opacity: 0; pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity var(--dur-3) var(--ease-out), transform var(--dur-3) var(--ease-out);
+    z-index: var(--z-modal);
+  }
+  .lea-pop.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+  .lea-pop-head { display: flex; align-items: center; gap: 9px; }
+  .lea-pop-av {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blush), var(--accent));
+    color: #FFFFFF;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .lea-pop-name {
+    flex: 1;
+    font-family: var(--serif);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .lea-pop-ic {
+    appearance: none;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: var(--r-xs);
+    transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+  }
+  .lea-pop-ic:active { background: var(--surface-warm); color: var(--ink); }
+  .lea-pop-msg {
+    margin-top: 12px;
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .lea-pop-hint {
+    margin-top: 10px;
+    font-size: var(--fs-2xs);
+    color: var(--muted);
+  }
+  .lea-pop-menu {
+    position: absolute;
+    top: 40px; right: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow);
+    padding: 4px;
+    display: none;
+    z-index: 1;
+  }
+  .lea-pop-menu.open { display: block; }
+  .lea-pop-menu button {
+    appearance: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 9px 12px;
+    font-family: var(--sans);
+    font-size: var(--fs-sm);
+    color: var(--ink-soft);
+    border-radius: var(--r-xs);
+    cursor: pointer;
+    transition: background-color var(--dur-1) var(--ease-out);
+    white-space: nowrap;
+  }
+  .lea-pop-menu button:hover { background: var(--surface-warm); }
+  .lea-pop-menu button:active { background: var(--bg-soft); }

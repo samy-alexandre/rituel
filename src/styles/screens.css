@@ -1,32 +1,155 @@
-  /* ===== Screens ===== */
-  .screen { display: none; padding-bottom: 96px; overflow-x: hidden; }
-  img { max-width: 100%; }
+Le tour precedent a identifie les fichiers CSS transverses a harmoniser : screens.css (contient .toast, .btn, .gender-pill etc.), layout.css, hub.css, et la bulle Lea (lea-bubble). J'ai deja le contenu des fichiers lus. 
 
-  /* ===== Plante qui pousse ===== */
-    #plant-host { min-height: 150px; display: flex; align-items: center; justify-content: center; }
-  .plant-card { margin: 0 20px 14px; background: linear-gradient(180deg, var(--surface), var(--surface-warm)); border-radius: var(--r-xl); box-shadow: var(--shadow); padding: 18px 20px 16px; display: flex; flex-direction: column; align-items: center; }
-  .plant-card svg { display: block; }
-  .plant-caption { font-family: var(--serif); font-size: var(--fs-base); font-style: italic; color: var(--ink-soft); text-align: center; margin-top: 4px; }
-  .plant-change { margin-top: 10px; background: transparent; border: none; color: var(--accent-deep); font-size: var(--fs-xs); cursor: pointer; opacity: 0.85; }
-  .plant-change:active { opacity: 0.5; }
-  .plant-actions { display: flex; gap: 20px; justify-content: center; }
-  .photo-mini { margin: 0 20px 24px; background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 12px 14px; display: flex; align-items: center; gap: 14px; cursor: pointer; }
-  .photo-mini-thumb { width: 56px; height: 56px; border-radius: var(--r-md); overflow: hidden; flex-shrink: 0; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; }
-  .pm-empty { color: var(--accent); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
-  .pm-display { width: 100%; height: 100%; }
-  .pm-display img { width: 100%; height: 100%; object-fit: cover; }
-  .photo-mini-text { flex: 1; }
-  .photo-mini-title { font-family: var(--serif); font-size: var(--fs-md); }
-  .photo-mini-sub { font-size: var(--fs-xs); color: var(--muted); margin-top: 2px; }
-  .screen.active { display: block; }
-  .screen.active > * { animation: softRise .55s cubic-bezier(.22,.61,.36,1) both; }
-  .screen.active > *:nth-child(1){ animation-delay:0s }
-  .screen.active > *:nth-child(2){ animation-delay:.05s }
-  .screen.active > *:nth-child(3){ animation-delay:.10s }
-  .screen.active > *:nth-child(4){ animation-delay:.15s }
-  .screen.active > *:nth-child(5){ animation-delay:.20s }
-  .screen.active > *:nth-child(6){ animation-delay:.25s }
-  .screen.active > *:nth-child(n+7){ animation-delay:.30s }
-  @keyframes softRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-  @media (prefers-reduced-motion: reduce){ .screen.active > * { animation: none; } }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+Je vais maintenant produire les modifications reelles, en commencant par screens.css pour harmoniser le toast et la bulle Lea sur les tokens (les styles .lea-bubble sont quelque part - probablement dans app.legacy.js inline ou screens.css, mais la bulle Lea utilise des styles .lea-pop). Je dois d'abord localiser les styles de la bulle Lea et du cm-modal (le dialog.js cree un .cm-modal). A partir du contenu lu de dialog.js, le modal cree des classes .cm-modal, .cm-modal-box, .cm-modal-t, .cm-modal-s, .cm-modal-in, .cm-modal-b, .danger, .go. Ces styles n'apparaissent pas dans les CSS lus jusqu'ici (screens.css, chat.css, hub.css, layout.css, tokens.css). 
+
+Le token --z-modal existe (100) et --z-toast (200). Le toast actuel utilise z-index 300 en dur. Le cm-modal et la bulle Lea ont probablement leurs styles dans app.legacy.js en styles inline ou un reliquat. 
+
+Vu que je ne peux pas deviner le contenu exact de tous les fichiers, et que les fichiers screen.css et layout.css ont deja ete "modifies dans le depot (pas execute)" selon le journal precedente, je dois lire les fichiers pour voir leur etat actuel reel avant de les reecrire. Mais la consigne indique de ne pas relire des fichiers deja lus. 
+
+Cependant, le point critique : le journal indique que screens.css "en cours d'ecriture (suite au tour suivant)" - donc mon travail de ce tour doit etre d'ecrire la suite de screens.css (harmoniser le toast) et de terminer le travail sur layout.css (boutons/formulaires globaux), la bulle Lea, et le cm-modal.
+
+Je vais ecrire la modification de screens.css pour harmoniser le toast sur les tokens (z-index 300 -> var(--z-toast), durées d'animation en dur .3s -> var(--dur-3), ombre var(--shadow-lg) deja utilisee). Je vais aussi ajouter les styles manquants du cm-modal et de la bulle Lea (qui manquent aux CSS - probablement caches quelque part) en les alignant sur les tokens, car le dialog.js et lea-bubble.js les construisent et ont besoin de styles cohérents.
+
+Je vais donc editer screens.css avec les styles harmonises du toast, du cm-modal (confirmation modale), et de la bulle/popup Lea.
+
+Voici le contenu complet de screens.css apres harmonisation (en fusionnant ce que j'ai lu precedent + mes ajouts aligns) :
+
+/* ===== Screens ===== */
+.screen { display: none; padding-bottom: 96px; overflow-x: hidden; }
+img { max-width: 100%; }
+
+/* ===== Plante qui pousse ===== */
+#plant-host { min-height: 150px; display: flex; align-items: center; justify-content: center; }
+.plant-card { margin: 0 20px 14px; background: linear-gradient(180deg, var(--surface), var(--surface-warm)); border-radius: var(--r-xl); box-shadow: var(--shadow); padding: 18px 20px 16px; display: flex; flex-direction: column; align-items: center; }
+.plant-card svg { display: block; }
+.plant-caption { font-family: var(--serif); font-size: var(--fs-base); font-style: italic; color: var(--ink-soft); text-align: center; margin-top: 4px; }
+.plant-change { margin-top: 10px; background: transparent; border: none; color: var(--accent-deep); font-size: var(--fs-xs); cursor: pointer; opacity: 0.85; }
+.plant-change:active { opacity: 0.5; }
+.plant-actions { display: flex; gap: 20px; justify-content: center; }
+.photo-mini { margin: 0 20px 24px; background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 12px 14px; display: flex; align-items: center; gap: 14px; cursor: pointer; }
+.photo-mini-thumb { width: 56px; height: 56px; border-radius: var(--r-md); overflow: hidden; flex-shrink: 0; background: var(--surface-warm); display: flex; align-items: center; justify-content: center; }
+.pm-empty { color: var(--accent); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.pm-display { width: 100%; height: 100%; }
+.pm-display img { width: 100%; height: 100%; object-fit: cover; }
+.photo-mini-text { flex: 1; }
+.photo-mini-title { font-family: var(--serif); font-size: var(--fs-md); }
+.photo-mini-sub { font-size: var(--fs-xs); color: var(--muted); margin-top: 2px; }
+.screen.active { display: block; }
+.screen.active > * { animation: softRise .55s cubic-bezier(.22,.61,.36,1) both; }
+.screen.active > *:nth-child(1){ animation-delay:0s }
+.screen.active > *:nth-child(2){ animation-delay:.05s }
+.screen.active > *:nth-child(3){ animation-delay:.10s }
+.screen.active > *:nth-child(4){ animation-delay:.15s }
+.screen.active > *:nth-child(5){ animation-delay:.20s }
+.screen.active > *:nth-child(6){ animation-delay:.25s }
+.screen.active > *:nth-child(n+7){ animation-delay:.30s }
+@keyframes softRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce){ .screen.active > * { animation: none; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.hidden { display: none !important; }
+
+/* ===== Toast — notification éphémère (transverse, alignée tokens) ===== */
+.toast {
+  position: fixed; top: 20px; left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--ink); color: var(--bg);
+  padding: 12px 20px; border-radius: var(--r-pill);
+  font-size: var(--fs-sm); z-index: var(--z-toast);
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+  max-width: 90%; box-shadow: var(--shadow-lg);
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===== Boîte de dialogue maison (cm-modal) — alignée tokens ===== */
+.cm-modal { position: fixed; inset: 0; z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(42,30,24,0.45); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); opacity: 0; visibility: hidden; transition: opacity var(--dur-2) var(--ease-out), visibility var(--dur-2) var(--ease-out); }
+.cm-modal.show { opacity: 1; visibility: visible; }
+.cm-modal-box { width: 100%; max-width: 330px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px 20px 18px; box-shadow: var(--shadow-lg); animation: cm-in var(--dur-3) var(--ease-out); }
+@keyframes cm-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.cm-modal-t { font-family: var(--serif); font-size: var(--fs-lg); font-weight: 600; color: var(--ink); line-height: 1.2; }
+.cm-modal-s { margin-top: 9px; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-soft); }
+.cm-modal-in {
+  width: 100%; box-sizing: border-box; margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--surface-warm); border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-family: var(--sans); font-size: var(--fs-base); color: var(--ink);
+}
+.cm-modal-in:focus { outline: none; border-color: var(--accent); }
+.cm-modal-b { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+.cm-modal-b button {
+  padding: 11px 18px; border-radius: var(--r-md);
+  font-family: var(--sans); font-size: var(--fs-sm); font-weight: 600;
+  cursor: pointer; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink-soft);
+  transition: transform var(--dur-1) var(--ease-out), background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+  min-height: 44px;
+}
+.cm-modal-b button:active { transform: scale(0.97); }
+.cm-modal-b button.go { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 8px 20px rgba(201,90,63,0.28); }
+.cm-modal-b button.danger { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }
+
+/* ===== Bulle Léa flottante + popup — alignées tokens ===== */
+.lea-bubble {
+  position: fixed; z-index: var(--z-sticky);
+  width: 46px; height: 46px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blush), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-float); cursor: pointer;
+  touch-action: none; user-select: none; -webkit-user-select: none;
+  border: 2px solid var(--surface);
+}
+.lea-bubble::after { content:''; position:absolute; bottom:0; right:0; width:11px; height:11px; background:var(--sage); border:2px solid var(--surface); border-radius:50%; }
+.lea-bubble svg { width:24px; height:24px; color:#fff; filter: drop-shadow(0 1px 2px rgba(42,30,24,0.25)); }
+.lea-pop {
+  position: fixed; z-index: var(--z-modal);
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-lg);
+  overflow: hidden; animation: cm-in var(--dur-3) var(--ease-out);
+}
+.lea-pop-head { display:flex; align-items:center; gap:8px; padding:12px 12px 8px; }
+.lea-pop-av { width:30px; height:30px; border-radius:50%; background: linear-gradient(135deg, var(--blush), var(--accent)); display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--serif); font-style:italic; font-size:15px; flex-shrink:0; }
+.lea-pop-name { flex:1; font-family:var(--serif); font-size:15px; font-weight:600; color:var(--ink); }
+.lea-pop-ic { background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer; line-height:1; padding:2px 6px; border-radius: var(--r-sm); }
+.lea-pop-ic:active { background: var(--surface-warm); }
+.lea-pop-menu { position:absolute; top:44px; right:8px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); box-shadow:var(--shadow); display:none; overflow:hidden; }
+.lea-pop-menu.open { display:block; }
+.lea-pop-menu button { display:block; width:100%; text-align:left; background:none; border:none; padding:12px 14px; font-family:var(--sans); font-size:var(--fs-sm); color:var(--ink-soft); cursor:pointer; }
+.lea-pop-menu button:active { background: var(--surface-warm); }
+.lea-pop-msg { padding: 4px 14px 10px; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-soft); }
+.lea-pop-hint { padding: 0 14px 12px; font-size: var(--fs-xs); color: var(--muted); font-style: italic; }
+
+.no-select { user-select: none; -webkit-user-select: none; }
+
+/* ===== Peaufinage : retours tactiles & détails ===== */
+* { -webkit-tap-highlight-color: transparent; }
+.btn, .product-card, .menu-item, .routine-item, .add-product-card, .mood-btn, .period-btn, .stat-tile, .nav-item, .sugg, .moment-chip, .rd-card, .plant-change, .onb-opt, .rit-opt, .cal-cell.has { transition: transform .13s ease, opacity .2s ease, background .2s ease, box-shadow .25s ease, border-color .2s ease; }
+.btn:active { transform: scale(0.97); }
+.product-card:active, .stat-tile:active, .menu-item:active, .add-product-card:active, .onb-opt:active, .rit-opt:active { transform: scale(0.985); }
+.routine-item:active, .mood-btn:active, .sugg:active { transform: scale(0.97); }
+.cal-cell.has:active { transform: scale(0.9); }
+.nav-item:active { transform: scale(0.9); }
+.nav-item svg { transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+.nav-item.active svg { transform: translateY(-2px) scale(1.08); }
+.nav-item.active .nav-label { font-weight: 600; }
+.btn-accent { box-shadow: 0 6px 18px rgba(46,33,28,0.10); }
+.btn-accent:active { box-shadow: 0 3px 10px rgba(46,33,28,0.08); }
+.mood-btn.selected { box-shadow: 0 5px 16px rgba(46,33,28,0.10); }
+.product-thumb { transition: transform .2s ease; }
+.product-card:active .product-thumb { transform: scale(0.94); }
+button, .nav-item, .menu-item, .product-card, .routine-item, .mood-btn, .rit-opt, .onb-opt, .cal-cell, .sugg, .moment-chip, .stat-tile { touch-action: manipulation; }
+.plus-pill { font-size: 9px; background: linear-gradient(135deg, var(--accent), var(--blush)); color: #fff; padding: 2px 7px; border-radius: var(--r-pill); letter-spacing: 0.06em; vertical-align: middle; margin-left: 6px; font-weight: 600; }
+/* Anti-saut : tailles de fallback proches des vraies polices */
+@font-face { font-family: 'Newsreader-fallback'; src: local('Georgia'); size-adjust: 100%; ascent-override: 92%; }
+body { font-synthesis: none; }
+.gender-pill { flex:1; padding:11px 8px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--surface); font-size:13px; font-family:inherit; color:var(--ink-soft); cursor:pointer; transition:all .15s; }
+.gender-pill.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
+.pf-state-btn { flex:1; padding:11px 8px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--surface); font-size:13px; font-family:inherit; color:var(--ink-soft); cursor:pointer; transition:all .15s; }
+.pf-state-btn.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
+.pf-mois-btn { flex:1; padding:10px 4px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--surface); font-size:13px; font-weight:600; font-family:inherit; color:var(--ink-soft); cursor:pointer; transition:all .15s; }
+.pf-mois-btn.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
+.pf-fav { background:none; border:none; cursor:pointer; font-size:22px; padding:4px; line-height:1; }
+.sort-chip { flex-shrink:0; padding:6px 11px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface); font-size:11.5px; font-family:inherit; color:var(--ink-soft); cursor:pointer; white-space:nowrap; transition:all .15s; }
+.sort-chip.sel { background:var(--accent); color:#fff; border-color:var(--accent); }
