@@ -764,27 +764,6 @@
     }
   });
 
-  // ===== Petit mot proactif de Léa (1×/jour, doux, jamais culpabilisant) =====
-  async function loadLeaProactive(e){
-    const line=document.getElementById('lea-proactive-line'); if(!line) return;
-    if(!currentUser){ line.textContent=''; return; }
-    let streak=0; try{ streak=await computeStreak(); }catch (err) {
-    console.error("catch silencieux (app.legacy.js):", err);
-}
-    const h=new Date().getHours();
-    const done = e && dayComplete(e);
-    const hasPhoto = e && e.photo_path;
-    const fier = 'fière';
-    let msg;
-    if(streak>0 && streak%7===0){ msg='Waouh, '+streak+' jours de rituel · je suis si '+fier+' de toi 🌟'; }
-    else if(done && !hasPhoto){ msg='Rituel fait, bravo ✨ Une petite photo pour garder une trace ?'; }
-    else if(done){ msg='Ton rituel est fait pour aujourd\'hui, bravo 💛'; }
-    else if(h<12){ msg='Coucou 🌸 Un petit rituel pour bien démarrer la journée ?'; }
-    else if(h<18){ msg='Ta peau attend son petit moment rituel aujourd\'hui 🌿'; }
-    else { msg='Bonsoir 🌙 Un rituel du soir avant de dormir ?'; }
-    line.textContent=msg;
-  }
-
   function baSlide(v){
     v=Number(v);
     const b=document.getElementById('ba-before-img'); if(b) b.style.clipPath='inset(0 '+(100-v)+'% 0 0)';
