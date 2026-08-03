@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Rituel · Audit premium — état de la branche</title>
+<style>
+  :root{
+    --bg:#F7F1EA; --card:#FFFDF9; --ink:#3A2E28; --ink-soft:#6E5F55;
+    --terracotta:#C95A3F; --rose:#E8A6A0; --sage:#7C8A74;
+    --line:#E7DDD2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;line-height:1.6;padding:20px 14px 60px}
+  .wrap{max-width:720px;margin:0 auto}
+  h1,h2,h3{font-family:Newsreader,Georgia,serif;font-weight:600;line-height:1.2}
+  h1{font-size:30px;letter-spacing:.2px}
+  h1 small{display:block;font-size:14px;font-style:italic;font-weight:400;color:var(--ink-soft);margin-top:4px}
+  h2{font-size:21px;margin:34px 0 14px;display:flex;align-items:center;gap:8px}
+  h2 .sep{display:inline-block;width:22px;height:1px;background:var(--terracotta)}
+  h3{font-size:16px;margin:18px 0 8px}
+  .intro{font-family:Newsreader,serif;font-style:italic;font-size:16px;color:var(--ink-soft);margin:10px 0 4px}
+  .cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .score{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:14px;text-align:center}
+  .score .n{font-size:34px;font-weight:700;font-family:Newsreader,serif;line-height:1}
+  .score .lbl{font-size:12px;color:var(--ink-soft);margin-top:4px;letter-spacing:.03em;text-transform:uppercase}
+  .score .sub{font-size:11px;color:var(--terracotta);margin-top:6px;font-weight:600}
+  .jauge{height:7px;border-radius:8px;background:#EDE4D9;overflow:hidden;margin-top:8px}
+  .jauge i{display:block;height:100%;border-radius:8px}
+  .semp{width:76%;background:#C95A3F}
+  .note{font-size:12px;color:var(--ink-soft);margin-top:6px;text-align:left}
+  .plate{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft)}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+  .g-plus{background:#C95A3F}
+  .g-hered{background:#C9B4A5}
+  .g-mix{background:#E8A6A0}
+  label{font-size:13px;display:flex;gap:8px;align-items:flex-start;padding:7px 0;cursor:pointer}
+  input[type=checkbox]{margin-top:3px;accent-color:var(--terracotta)}
+  .muted{color:var(--ink-soft);font-size:13px}
+  .pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid var(--line);color:var(--ink-soft);margin:0 4px 6px 0;background:#fff}
+  .pill.hot{border-color:var(--terracotta);color:var(--terracotta);font-weight:700}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-soft);font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Audit premium Rituel<small>état de la branche après tokens · auth · home · topbar — lecture seule, aucun fichier modifié</small></h1>
+
+  <p class="intro">Le travail déjà fait pose une grammaire visuelle forte — palette terreuse, serif Newsreader, décors peints. Mais la refonte est à 1/3 de l'app. Voici, honnêtement, où l'on en est.</p>
+
+  <h2><span class="sep"></span>Notes globales</h2>
+  <div class="cards">
+    <div class="score"><div class="n">7.0</div><div class="lbl">Architecture</div>
+      <div class="jauge"><i class="semp" style="width:70%"></i></div>
+      <div class="sub">solide mais inachevé</div>
+      <div class="note">tokens + état centralisés, Vite. Mais le coeur (ritual.js 2032 l, app.legacy.js 2069 l) n'a pas basculé.</div>
+    </div>
+    <div class="score"><div class="n">7.2</div><div class="lbl">UI</div>
+      <div class="jauge"><i class="semp" style="width:72%"></i></div>
+      <div class="sub">très belle, inégale</div>
+      <div class="note">auth/home/topbar sont irréprochables. Ritual, produits, journal restent sur l'ancien système : douche froide en passant d'un écran à l'autre.</div>
+    </div>
+    <div class="score"><div class="n">6.4</div><div class="lbl">Maintenabilité</div>
+      <div class="jauge"><i class="semp" style="width:64%"></i></div>
+      <div class="sub">deux mondes cohabitent</div>
+      <div class="note">466 couleurs en dur hors tokens, 40 tailles de police distinctes, z-index -1→9000. Le design system n'est appliqué qu'à un tiers de l'app.</div>
+    </div>
+  </div>
+
+  <h2><span class="sep"></span>Matrice de couverture premium</h2>
+  <p class="muted" style="margin-bottom:10px">Chaque zone de l'app est qualifiée : premiumisée (nouvelle grammaire) vs héritée.</p>
+  <div class="plate">
+    <table>
+      <tr><th>Zone</th><th>État</th><th>Détail concret</th></tr>
+      <tr><td><b>Auth / landing</b></td><td><span class="dot g-plus"></span>Refaite</td><td>SVG floraux (#E8A6A0/#C95A3F), serif italique, déco auth 2 SVG. Référentiel.</td></tr>
+      <tr><td><b>Topbar</b></td><td><span class="dot g-plus"></span>Refaite</td><td>Manrope, fond crème #F7F1EA, icônes fines. Cohérente avec auth.</td></tr>
+      <tr><td><b>Home (accueil)</b></td><td><span class="dot g-plus"></span>Refaite</td><td>Décors WebP peints (jardin-matin/soir, clairière), cartes tokenisées.</td></tr>
+      <tr><td><b>Onboarding</b></td><td><span class="dot g-mix"></span>Partielle</td><td>Reprend des tokens mais garde des grilles/encarts non alignés (btn/encarts hérités).</td></tr>
+      <tr><td><b>Rituel (coeur)</b></td><td><span class="dot g-hered"></span>Hérité</td><td>ritual.css encore plein de couleurs en dur ; z-index inline 99999 documenté ; gestes/stations non retouchés.</td></tr>
+      <tr><td><b>Produits</b></td><td><span class="dot g-hered"></span>Hérité</td><td>products.css 23 classes mortes repérées dans AUDIT.md ; flipbook avant/après non premium.</td></tr>
+      <tr><td><b>Journal</b></td><td><span class="dot g-hered"></span>Hérité</td><td>calendrier/vue d'ensemble pilotées par app.legacy.js (2069 l) ; tailles de police variées.</td></tr>
+      <tr><td><b>Voyage</b></td><td><span class="dot g-hered"></span>Hérité</td><td>décors WebP partagés avec home mais UI des médaillons (VY_POLY) pas ré-alignée sur tokens.</td></tr>
+      <tr><td><b>Chat / Léa</b></td><td><span class="dot g-hered"></span>Hérité</td><td>chat.css non adjoint à la nouvelle grammaire ; bulle déplaçable non reliftée.</td></tr>
+    </table>
+  </div>
+
+  <h2><span class="sep"></span>Graphe de cohérence visuelle</h2>
+  <p class="muted" style="margin-bottom:10px">Position des zones sur les 4 axes de la nouvelle grammaire (palette · typo · rayons/tons · décors). Écart = dissonance ressentie au passage d'un écran.</p>
+  <div class="plate">
+    <svg viewBox="0 0 640 250" width="100%" role="img" aria-label="Graphe de cohérence des zones">
+      <!-- axes -->
+      <line x1="320" y1="20" x2="320" y2="230" stroke="#E7DDD2" stroke-width="1"/>
+      <line x1="20" y1="125" x2="620" y2="125" stroke="#E7DDD2" stroke-width="1"/>
+      <text x="620" y="118" font-size="11" fill="#6E5F55" text-anchor="end">nouvelle grammaire →</text>
+      <text x="320" y="14" font-size="11" fill="#6E5F55" text-anchor="middle">ressenti</text>
+
+      <!-- zones premium -->
+      <circle cx="500" cy="70" r="15" fill="#C95A3F" opacity="0.9"/>
+      <text x="500" y="75" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">A</text>
+      <circle cx="480" cy="95" r="15" fill="#C95A3F" opacity="0.75"/>
+      <text x="480" y="100" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">H</text>
+      <circle cx="440" cy="54" r="15" fill="#C95A3F" opacity="0.65"/>
+      <text x="440" y="59" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">T</text>
+
+      <!-- zones héritées -->
+      <circle cx="180" cy="130" r="15" fill="#C9B4A5"/>
+      <text x="180" y="135" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">R</text>
+      <circle cx="230" cy="160" r="15" fill="#C9B4A5"/>
+      <text x="230" y="165" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">P</text>
+      <circle cx="150" cy="175" r="15" fill="#C9B4A5"/>
+      <text x="150" y="180" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">J</text>
+      <circle cx="200" cy="95" r="15" fill="#C9B4A5" opacity="0.8"/>
+      <text x="200" y="100" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">V</text>
+      <circle cx="120" cy="120" r="15" fill="#C9B4A5" opacity="0.85"/>
+      <text x="120" y="125" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">C</text>
+      <circle cx="330" cy="145" r="15" fill="#E8A6A0"/>
+      <text x="330" y="150" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">O</text>
+
+      <!-- légende -->
+      <g font-size="10" fill="#3A2E28">
+        <circle cx="40" cy="20" r="8" fill="#C95A3F"/><text x="54" y="24">Auth (A) · Home (H) · Topbar (T) — refait</text>
+        <circle cx="40" cy="235" r="8" fill="#C9B4A5"/><text x="54" y="239">Ritual (R) · Produits (P) · Journal (J) · Voyage (V) · Chat (C) — hérité</text>
+        <circle cx="340" cy="235" r="8" fill="#E8A6A0"/><text x="354" y="239">Onboarding (O) — partiel</text>
+      </g>
+    </svg>
+    <p class="muted" style="font-size:11px;margin-top:8px">
+      Lire : plus une zone est proche de la nouvelle grammaire (coin haut-droit), plus elle est cohérente avec les 4 chantiers refaits. Le fossé entre le nuage criant (C/R/P/J/V) et les 3 points premium est <b>la dissonance visuelle principale</b> : elle se ressent très vite à l'usage.
+    </p>
+  </div>
+
+  <h2><span class="sep"></span>3 priorités — hiérarchisées</h2>
+
+  <h3>Priorité n°1 — Unifier le « coeur » du rituel sur la nouvelle grammaire</h3>
+  <div class="plate">
+    <p>Le trajet quotidien de l'utilisatrice passe <b>obligatoirement</b> par le panneau rituel (ritual.js + ritual.css le tableau de bord de la fleur). C'est la zone la plus visitée après la home, et c'est celle qui a <b>le plus gros delta visuel</b> : z-index inline jusqu'à 99999 (documenté dans AUDIT.md R1), couleurs en dur, gestes/stations sur l'ancien design. Or c'est le cœur émotionnel de l'app.</p>
+    <p class="muted" style="margin-top:8px"><b>Chantier ressenti, pas technique :</b> resurfacer le panneau, les stations et les gestes avec la même palette crème/terreuse, les mêmes rayons tokenisés et le même ton peints que la home — sans toucher à la logique.</p>
+  </div>
+
+  <h3>Priorité n°2 — Resserrer le fossé « on est passé à un autre produit »</h3>
+  <div class="plate">
+    <p>En circulation réelle, l'app alterne home (refaite) → mais l'utilisatrice clique ensuite sur <b>produits ou journal</b>, qui ont encore 23 classes mortes, 40 tailles de police distinctes et ~466 couleurs en dur (chiffres AUDIT.md). La rupture est perçue comme un <b>changement de qualité</b>, pas comme une simple variation — c'est le plus destructeur de confiance pour un produit « premium ».</p>
+    <p class="muted" style="margin-top:8px"><b>Chantier ciblé :</b> porter les tokens (palette, échelle, rayons, durées) sur <code>products.css</code> et <code>journal</code> (via app.legacy.js est trop risqué — passer par les classes de présentation), pour réconcilier les transitions d'écran.</p>
+  </div>
+
+  <h3>Priorité n°3 — Donner au Voyage et au Chat le même souffle illustré que la home</h3>
+  <div class="plate">
+    <p>Le Voyage partage déjà les décors WebP peints avec la home — la matière première est là, mais les médaillons VY_POLY et le hub restent sur l'ancienne UI. Le Chat/Léa (bulle déplaçable) garde chat.css non aligné. Ces deux zones sont des moments de <b>narration</b> (tu progresses, tu échanges avec ta coach) : c'est là que l'immersion se gagne ou se perd.</p>
+    <p class="muted" style="margin-top:8px"><b>Chantier immersion :</b> ré-harmoniser médaillons du voyage et habillage du chat sur la grammaire serif + tons terreux, pour que toute navigation respire le même univers illustré.</p>
+  </div>
+
+  <h2><span class="sep"></span>Suivi — cohérence premium transversale</h2>
+  <p class="muted" style="margin-bottom:6px">Checklist de maintien de cohérence au fil des prochains chantiers (état sauvegardé localement).</p>
+  <div class="plate">
+    <label><input type="checkbox" data-k="nav-grammaire"> Chaque nouvelle zone suit palette + serif + rayons tokens (pas de nouvelle couleur / taille de police en dur)</label>
+    <label><input type="checkbox" data-k="nav-ecrans"> Transitions home → rituel / produits / chat sans rupture de qualité ressentie</label>
+    <label><input type="checkbox" data-k="nav-decos"> Décors WebP peints utilisés partout où un fond narratif apparaît</label>
+    <label><input type="checkbox" data-k="nav-zindex"> Aucun nouveau z-index inline ; tout passe par l'échelle tokenisée</label>
+    <label><input type="checkbox" data-k="nav-ton"> Ton des textes : serif italique pour le bienveillant, Manrope pour l'action</label>
+  </div>
+
+  <footer>Rituel · Audit visuel premium, branche courante. Données : docs/AUDIT.md, index.html, styles tokens/auth/home/topbar. Aucune modification de fichier n'a été effectuée.</footer>
+</div>
+
+<script>
+  // Sauvegarde en localStorage de l'état des cases (pas de compte, pas de serveur)
+  (function(){
+    try{
+      var boxes = document.querySelectorAll('input[type=checkbox][data-k]');
+      for (var i=0;i<boxes.length;i++){
+        (function(b){
+          var k='rituel-audit-'+b.getAttribute('data-k');
+          if(localStorage.getItem(k)==='1') b.checked=true;
+          b.addEventListener('change',function(){ localStorage.setItem(k, b.checked?'1':'0'); });
+        })(boxes[i]);
+      }
+    }catch(e){/* stockage indisponible : on ignore */}
+  })();
+</script>
+</body>
+</html>
