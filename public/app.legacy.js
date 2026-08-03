@@ -2,28 +2,7 @@
   // currentUser : état partagé global (voir src/core/state.js), exposé par main.js.
 
   // ===== State (cache local de l'écran courant) =====
-  // state (onboarding) : état partagé global (voir src/core/state.js).
-
-  // ===== Auth =====
-  function switchAuth(mode){
-    document.getElementById('tab-login').classList.toggle('active', mode==='login');
-    document.getElementById('tab-signup').classList.toggle('active', mode==='signup');
-    document.getElementById('form-login').classList.toggle('hidden', mode!=='login');
-    document.getElementById('form-signup').classList.toggle('hidden', mode!=='signup');
-  }
-
-  // ===== Politique de confidentialité =====
-  function openPolicy(){
-    try{ var pd=document.getElementById('policy-date'); if(pd) pd.textContent=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }catch (e) {
-    console.error("catch silencieux (app.legacy.js):", e);
-} document.getElementById('policy').classList.add('open'); }
-  function closePolicy(){ document.getElementById('policy').classList.remove('open'); }
-
-  function setBtnLoading(btn, loading, labelIdle){
-    if(!btn) return;
-    btn.disabled = loading;
-    btn.textContent = loading ? 'Un instant…' : labelIdle;
-  }
+  // state (onboarding) : état partagé global (voir src/core/state.js).  // ===== Auth (session/auth) : voir src/features/auth/auth.js =====
 
     function pickSignupGenre(g){
     state.signupGenre=g;
