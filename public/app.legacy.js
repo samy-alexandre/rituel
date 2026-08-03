@@ -771,28 +771,7 @@
     const k=document.getElementById('ba-knob'); if(k) k.style.left=v+'%';
   }
   // ===== La lettre du mois (1 appel IA/mois, en cache) =====
-  function bilanKey(){ const d=new Date(); return 'rituel_bilan_'+(currentUser?currentUser.id:'x')+'_'+d.getFullYear()+'-'+(d.getMonth()+1); }
-
-  // ===== Souvenir : une photo d'il y a un moment =====
-  async function loadMemory(){
-    const sec=document.getElementById('memory-section'); if(!sec) return;
-    sec.style.display='none';
-    if(!currentUser) return;
-    try{
-      const lim=new Date(); lim.setDate(lim.getDate()-30);
-      const { data } = await sb.from('entries').select('date,photo_path').eq('user_id',currentUser.id).not('photo_path','is',null).lte('date',lim.toISOString().slice(0,10)).order('date',{ascending:false}).limit(1);
-      const row=(data&&data[0])||null; if(!row) return;
-      const url=await signedPhoto(row.photo_path); if(!url) return;
-      const days=Math.round((new Date(todayStr())-new Date(row.date))/86400000);
-      document.getElementById('memory-img').src=url;
-      document.getElementById('memory-caption').textContent='Cette photo date d\'il y a '+days+' jours · regarde le chemin parcouru 🌸';
-      sec.style.display='block';
-    }catch (e) {
-    console.error("catch silencieux (app.legacy.js):", e);
-}
-  }
-
-  // ===== Tes découvertes (corrélations douces, jamais culpabilisantes) =====
+  function bilanKey(){ const d=new Date(); return 'rituel_bilan_'+(currentUser?currentUser.id:'x')+'_'+d.getFullYear()+'-'+(d.getMonth()+1); }  // ===== Tes découvertes (corrélations douces, jamais culpabilisantes) =====
   async function loadInsights(){
     if(!isPremium){ const s=document.getElementById('insights-section'); if(s) s.style.display='none'; return; }
     const sec=document.getElementById('insights-section'); if(!sec) return;
