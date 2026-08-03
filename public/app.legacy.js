@@ -269,32 +269,7 @@
     showToast('Profil peau mis à jour 🌸');
   }  // ===== Streak (selon le type de rituel choisi) =====  let _stkCache=null;
 
-  async  // ===== Plante qui pousse avec la série =====
-  function plantLockedToast(d){ showToast('🔒 Plante à débloquer dès '+d+' jours de série 🌱'); }
-  async function openPlantSheet(){
-    const cur=currentPlant();
-    let best=0;
-    try{ best=await bestStreak(); }catch(e){ best=0; }
-    document.getElementById('plant-list').innerHTML = Object.keys(PLANT_TYPES).map(k=>{
-      const v=PLANT_TYPES[k];
-      const locked = best < (v.unlock||0);
-      const onclick = locked ? ('plantLockedToast('+v.unlock+')') : ("pickPlant('"+k+"')");
-      const border = (k===cur && !locked) ? 'var(--accent)' : 'var(--line)';
-      const bg = (k===cur && !locked) ? 'var(--blush-soft)' : 'var(--surface)';
-      const right = locked
-        ? '<div style="font-size:11px;color:var(--muted);text-align:right;line-height:1.3;flex-shrink:0;">🔒<br>dès '+v.unlock+' j</div>'
-        : (k===cur ? '<div style="font-size:13px;color:var(--accent-deep);flex-shrink:0;">✓</div>' : '');
-      return '<button onclick="'+onclick+'" style="display:flex;align-items:center;gap:14px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid '+border+';background:'+bg+';cursor:pointer;text-align:left;'+(locked?'opacity:0.55;':'')+'">'+
-        '<div style="width:54px;height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--surface-warm);border-radius:12px;"><div style="transform:scale(0.36);transform-origin:center;">'+plantSVG(5,k)+'</div></div>'+
-        '<div style="flex:1;font-family:var(--serif);font-size:16px;">'+v.emoji+' '+v.name+'</div>'+ right +
-      '</button>';
-    }).join('');
-    document.getElementById('plant-sheet').classList.add('open');
-  }
-  function pickPlant(k){ try{ localStorage.setItem('rituel_plant', k); }catch (e) {
-    console.error("catch silencieux (app.legacy.js):", e);
-} renderPlant(); openPlantSheet(); showToast(PLANT_TYPES[k].emoji+' Jolie plante !'); }
-  function closePlantSheet(){ document.getElementById('plant-sheet').classList.remove('open'); }
+  async
 
   // ===== Chargement de l'accueil =====
   async function loadHomeData(){
