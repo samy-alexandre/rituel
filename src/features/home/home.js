@@ -1,975 +1,465 @@
-// src/features/home/home.js
-// Domaine Home : accueil, humeur, routine matin/soir, streak, plante, « ma journée »,
-// photo du jour, jour de repos, petit mot de Léa. Extrait verbatim de public/app.legacy.js.
-// Le pont transitoire window.* est conservé pour les handlers onclick inline du HTML.
+Je dois analyser la situation en profondeur pour finaliser le câblage. Les étapes précédentes ont déjà été tentées mais les fichiers n'ont peut-être pas été réellement modifiés (les tours "Fichier modifié dans le dépôt (pas exécuté)" suggèrent un état incertain).
 
-// ===== Entrée du jour (une ligne par jour dans 'entries') =====
-async function getTodayEntryId() {
-  if (!currentUser) return null;
-  const { data } = await sb
-    .from('entries')
-    .select('id')
-    .eq('user_id', currentUser.id)
-    .eq('date', todayStr())
-    .order('created_at', { ascending: true })
-    .limit(1);
-  if (data && data.length) return data[0].id;
-  const { data: ins, error } = await sb
-    .from('entries')
-    .insert({ user_id: currentUser.id, date: todayStr() })
-    .select('id')
-    .single();
-  if (error) {
-    console.warn('getTodayEntryId:', error.message);
-    return null;
-  }
-  return ins ? ins.id : null;
-}
+Analysons ce qui est nécessaire :
 
-async function updateTodayEntry(fields) {
-  const id = await getTodayEntryId();
-  if (!id) return;
-  const { error } = await sb.from('entries').update(fields).eq('id', id);
-  if (error) console.warn('updateTodayEntry:', error.message);
-}
+1. **src/main.js** : Il faut ajouter les imports des 3 modules : `./features/auth/auth.js`, `./features/home/home.js`, `./features/navigation/navigation.js` dans le bon ordre.
 
-// ===== Humeur + intensité =====
-let currentMood = null;
+Ordre d'import : 
+- `auth` doit venir tôt (il s'enregistre sur `window.sb.auth.onAuthStateChange` et définit les fonctions auth)
+- `navigation` utilise `refreshChatQuota`, `leaInjectDaily` etc. du chat (déjà importé plus tôt), `refreshPremiumUI`, `renderProfileBadges` (legacy), `loadHomeData`, `loadProducts`, `loadRitual`, `loadJournalFromDB`, `renderCalendar`, `cmEnterRitual`, `closeRituelChemin`, `rpSlotView` (state), `openProductForm`, `openRituelChemin`, `rhActiveTab` — toutes définies ailleurs (modules déjà importés ou legacy)
+- `home` utilise `sb`, `todayStr`, `currentUser`, `showToast`, `signedPhoto`, `escapeHtml`, `renderHomeVoyage`, `loadHabits`, `loadLeaTip`, `updateChatBadge`, `maybeShowLettreCta`, `maybeShowBilan5`, `loadUV`, `loadCycleCard`, `loadEclatProgram`, `uploadDayPhoto`, `ensureActiveRituels`, `pickActive`, `state`, `dayComplete` — certaines définies dans legacy, d'autres dans des modules importés plus tôt
 
-function selectMood(el, val) {
-  el.parentElement.querySelectorAll('.mood-btn').forEach((b) => b.classList.remove('selected'));
-  el.classList.add('selected');
-  currentMood = val;
-  document.getElementById('intensity-box').classList.remove('hidden');
-  saveMood();
-}
+Ordre d'import dans main.js : `auth` → `navigation` → `home` (cohérent avec l'ordre où ces fonctions apparaissent dans le legacy, et où home utilise des fonctions de navigation comme `navTo`, et navigation utilise `loadHomeData`/`loadTodayPhoto` définies dans home — mais ces appels sont à l'exécution, pas à l'import, donc l'ordre import ne pose pas de problème d'évaluation).
 
-function onIntensity(v) {
-  document.getElementById('intensity-val').textContent = v + '%';
-}
+Le schéma d'imports existant suit les modules dans un ordre logique. Je placerai :
+- `auth` proche du début (après core/ui/data, avant les autres features)
+- `navigation` et `home` parmi les features
 
-async function saveMood() {
-  if (!currentUser || !currentMood) return;
-  const intensite = parseInt(document.getElementById('intensity-slider').value, 10);
-  await updateTodayEntry({ humeur: currentMood, humeur_intensite: intensite });
-  showToast('Humeur enregistrée ✓');
-}
+En fait, pour minimiser les risques, je vais les insérer de façon cohérente avec l'ordre existant. Le mieux : ajouter `./features/auth/auth.js` juste après `./data/photos.js` et `./ui/dialog.js` — non, plus naturellement au début de la liste features. Les imports existants commencent par `./data/photos.js`, `./ui/toast.js`, `./ui/dialog.js`, puis `./features/chat/chat.js`...
 
-// ===== Routine matin / soir =====
-let currentPeriod = 'matin';
+Je vais insérer :
+- `./features/auth/auth.js` juste après `./ui/dialog.js` (avant chat), car l'auth est un domaine fondamental
+- `./features/navigation/navigation.js` et `./features/home/home.js` plus tard, dans un ordre logique. Mais en fait, import order n'a pas d'importance fonctionnelle (tous s'exécutent dans l'ordre mais ne dépendent pas les uns des autres à l'évaluation). Le plus simple et le plus propre : les insérer à la suite des autres features.
 
-function switchPeriod(p) {
-  currentPeriod = p;
-  window.currentPeriod = p; // miroir pour le module Voyage (lit window.currentPeriod)
-  document.getElementById('pb-matin').classList.toggle('active', p === 'matin');
-  document.getElementById('pb-soir').classList.toggle('active', p === 'soir');
-  const em = document.getElementById('hr-emoji');
-  const ti = document.getElementById('hr-title');
-  if (em) {
-    em.textContent = p === 'soir' ? '🌙' : '☀️';
-    em.classList.toggle('soir', p === 'soir');
-  }
-  if (ti) ti.textContent = p === 'soir' ? 'Rituel du soir' : 'Rituel du matin';
-  document.getElementById('routine-matin').classList.toggle('hidden', p !== 'matin');
-  document.getElementById('routine-soir').classList.toggle('hidden', p !== 'soir');
-  updateRoutineCount();
-  if (typeof renderHomeVoyage === 'function') renderHomeVoyage();
-}
+Regardons la structure actuelle de main.js (du contenu déjà lu) :
 
-function listStats(period) {
-  const list = document.getElementById('routine-' + period);
-  const total = list.querySelectorAll('.routine-item').length;
-  const done = list.querySelectorAll('.routine-item.done').length;
-  return { done, total, complete: total > 0 && done === total };
-}
+```
+import './core/state.js';
+import './core/supabase.js';
+import './core/utils.js';
+// Features extraites du monolithe (Phase B)
+import './data/photos.js';
+import './ui/toast.js';
+import './ui/dialog.js';
+import './features/chat/chat.js';
+import './features/datepicker/datepicker.js';
+import './features/reminders/reminders.js';
+import './features/camera/camera.js';
+import './features/journal/journal.js';
+import './features/guided/guided.js';
+import './features/voyage/voyage.js';
+import './features/quiz/quiz.js';
+import './features/eclat/eclat.js';
+import './features/timelapse/timelapse.js';
+import './features/barcode/barcode.js';
+import './features/cycle/cycle.js';
+import './features/uv/uv.js';
+import './features/product-book/product-book.js';
+import './features/product-effects/product-effects.js';
+import './features/product-form/product-form.js';
+import './features/product-cards/product-cards.js';
+import './features/product-flipbook/product-flipbook.js';
+import './features/product-favorites/product-favorites.js';
+import './features/ritual-editor/ritual-editor.js';
+import './features/ritual/ritual.js';
+import './features/habits/habits.js';
+import './features/lea-bubble/lea-bubble.js';
+import './features/themes/themes.js';
+import './features/push/push.js';
+import './features/pdf-export/pdf-export.js';
+import './features/photo-advice/photo-advice.js';
+import './features/monthly-letter/monthly-letter.js';
+import './features/onboarding/onboarding.js';
+import './features/badges/badges.js';
+import './features/eclat-graph/eclat-graph.js';
+import './features/share-image/share-image.js';
+import './features/before-after/before-after.js';
+import './styles/index.css';
+```
 
-function updateRoutineCount() {
-  const s = listStats(currentPeriod);
-  const fill = document.getElementById('hr-bar-fill');
-  const sub = document.getElementById('hr-sub');
-  const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
-  if (fill) fill.style.width = pct + '%';
-  if (sub) {
-    if (!s.total) sub.textContent = "Aucune étape pour l'instant";
-    else if (s.complete) sub.textContent = 'Terminé, bravo 🌸';
-    else sub.textContent = s.done + ' sur ' + s.total + (s.done === 0 ? ' · c\'est parti 🌸' : ' · continue 🌿');
-  }
-}
+Le bon ordre tel que demandé "auth → navigation → home" (dans cet ordre). Je vais les ajouter après `./features/before-after/before-after.js` : `./features/auth/auth.js`, `./features/navigation/navigation.js`, `./features/home/home.js`.
 
-async function toggleRoutine(el) {
-  el.classList.toggle('done');
-  const list = el.closest('.routine-list');
-  const period = list && list.id === 'routine-soir' ? 'soir' : 'matin';
-  if (navigator.vibrate) navigator.vibrate(10);
-  updateRoutineCount();
-  // Mémoriser les étapes cochées de ce créneau
-  const doneIds = [...list.querySelectorAll('.routine-item.done')].map((x) => x.dataset.pid).filter(Boolean);
-  window.__homeSteps = window.__homeSteps || { matin: [], soir: [] };
-  window.__homeSteps[period] = doneIds;
-  const complete = listStats(period).complete;
-  const fields = period === 'soir' ? { routine_soir: complete } : { routine_matin: complete };
-  fields.steps = { matin: window.__homeSteps.matin || [], soir: window.__homeSteps.soir || [] };
-  try {
-    await updateTodayEntry(fields);
-  } catch (e) {
-    await updateTodayEntry(period === 'soir' ? { routine_soir: complete } : { routine_matin: complete });
-  }
-  bustStreak();
-  renderStreak();
-  if (typeof renderHomeVoyage === 'function') renderHomeVoyage();
-}
+2. **public/app.legacy.js** : Je dois supprimer les blocs dupliqués :
+- Section auth (switchAuth, openPolicy, closePolicy, setBtnLoading, pickSignupGenre, doSignup, doLogin, forgotPassword, pwUpdate, sb.auth.onAuthStateChange handler, doLogout, startAuth, backToLanding) — MAIS attention, `startAuth` et `backToLanding` apparaissent AUSSI plus bas dans le legacy (section "Landing publique") à la fin. Donc si je supprime tout, je dois supprimer aussi celles-là (elles sont déplacées dans auth.js).
+- Section navigation (fabAction, updateFab, navTo, coachName, coachTitre, updateChatIntro, applyCoachIdentity, openChat, closeChat)
+- Section home/streak/plante (getTodayEntryId, updateTodayEntry, currentMood, selectMood, onIntensity, saveMood, currentPeriod, switchPeriod, listStats, updateRoutineCount, toggleRoutine, applyRoutineState, dayComplete, _stkCache, bustStreak, computeStreak, renderStreak, plantStage, PLANT_TYPES, currentPlant, bloomSVG, plantSVG, renderPlant, bestStreak, plantLockedToast, openPlantSheet, pickPlant, closePlantSheet, loadHomeData, updateRestBtn, takeRestDay, applyRituelTypeToHome, loadHomeRoutine, ALIM_LABELS, fmtSleep, onDaySommeil, onDayHydra, onDayAlim, openDaySheet, closeDaySheet, saveDay, renderDayTiles, handlePhoto, loadTodayPhoto, loadLeaProactive, loadMemory)
 
-function applyRoutineState(period, complete) {
-  const list = document.getElementById('routine-' + period);
-  if (!list) return;
-  list.querySelectorAll('.routine-item').forEach((it) => {
-    it.classList.toggle('done', !!complete);
-    const _rt = it.querySelector('.routine-time');
-    if (_rt) _rt.textContent = complete ? '✓' : '…';
-  });
-}
+Mais attention ! Certaines de ces fonctions sont référencées ailleurs dans le legacy ou dans d'autres modules. Il faut vérifier :
+- `dayComplete` est utilisée dans le legacy (loadWeekRecap, openBilan5, loadInsights, loadOverview) — et dans le module home.js elle est définie (fonction interne). Mais le legacy utilise `dayComplete` comme fonction globale (sans window.). Or home.js définit `dayComplete` comme fonction de module (pas exposée sur window). Donc si je supprime `dayComplete` du legacy, les autres fonctions du legacy qui l'utilisent casseront !
+  
+  C'est un problème crucial. Regardons home.js : `dayComplete` y est définie mais PAS exposée sur window (le pont window n'expose que getTodayEntryId, updateTodayEntry, selectMood, onIntensity, saveMood, switchPeriod, toggleRoutine, bustStreak, computeStreak, renderStreak, renderPlant, openPlantSheet, pickPlant, closePlantSheet, plantLockedToast, loadHomeData, takeRestDay, loadHomeRoutine, openDaySheet, closeDaySheet, saveDay, handlePhoto, loadTodayPhoto, loadLeaProactive, loadMemory).
 
-// ===== Streak (selon le type de rituel choisi) =====
-function dayComplete(e) {
-  if (!e) return false;
-  if (e.repos) return true;
-  const t = state.rituelType || 'both';
-  if (t === 'matin') return !!e.routine_matin;
-  if (t === 'soir') return !!e.routine_soir;
-  return !!(e.routine_matin && e.routine_soir);
-}
+  `dayComplete` n'est PAS dans le pont window de home.js. Donc si je supprime du legacy les fonctions du home qui utilisaient `dayComplete` — non, `dayComplete` reste utilisé par d'autres fonctions du legacy (renderStreak dans legacy utilise dayComplete, mais renderStreak est déplacée dans home.js). Mais loadWeekRecap, openBilan5, loadInsights, loadOverview (tous dans legacy) utilisent `dayComplete`. Si je supprime `dayComplete` du legacy, il faudra que `dayComplete` soit exposée sur window par home.js.
 
-let _stkCache = null;
-function bustStreak() {
-  _stkCache = null;
-}
-async function computeStreak() {
-  if (!currentUser) return 0;
-  if (_stkCache && _stkCache.d === todayStr()) return _stkCache.v;
-  const { data } = await sb
-    .from('entries')
-    .select('date,routine_matin,routine_soir,repos')
-    .eq('user_id', currentUser.id)
-    .order('date', { ascending: false })
-    .limit(90);
-  if (!data || !data.length) return 0;
-  const done = {};
-  data.forEach((e) => {
-    done[e.date] = dayComplete(e);
-  });
-  let streak = 0;
-  const d = new Date();
-  if (!done[d.toISOString().slice(0, 10)]) d.setDate(d.getDate() - 1);
-  for (let i = 0; i < 90; i++) {
-    const ds = d.toISOString().slice(0, 10);
-    if (done[ds]) {
-      streak++;
-      d.setDate(d.getDate() - 1);
-    } else break;
-  }
-  _stkCache = { d: todayStr(), v: streak };
-  return streak;
-}
+  Dans home.js, `dayComplete` n'est pas exposée sur window. C'est une différence par rapport au legacy. Le module home.js dépend donc de `dayComplete` défini... dans le legacy ! En fait, le module home.js définit SA PROPRE `dayComplete` (fonction de module). Mais le legacy définit aussi la sienne. Les autres fonctions du legacy (loadWeekRecap etc.) utilisent la version legacy. Donc si je supprime la version legacy de dayComplete, loadWeekRecap etc. casseront car home.js's dayComplete n'est pas sur window.
 
-async function renderStreak() {
-  if (!currentUser) return;
-  const n = await computeStreak();
-  document.getElementById('streak-num').textContent = n;
-  document.getElementById('streak-unit').textContent = n > 1 ? "jours d'affilée" : 'jour';
-  document.getElementById('streak-flame').textContent = n === 0 ? '🌱' : n >= 7 ? '🔥' : '🌸';
-  const label = document.getElementById('streak-label');
-  if (n === 0) label.textContent = 'Fais ton rituel pour démarrer ta série ✨';
-  else if (n < 3) label.textContent = 'Beau début, continue comme ça 🌸';
-  else if (n < 7) label.textContent = 'Belle régularité, ça se voit sur la peau ✨';
-  else label.textContent = 'Tu es rayonnante de constance 🔥';
-  const { data } = await sb
-    .from('entries')
-    .select('date,routine_matin,routine_soir')
-    .eq('user_id', currentUser.id)
-    .order('date', { ascending: false })
-    .limit(14);
-  const done = {};
-  (data || []).forEach((e) => {
-    done[e.date] = dayComplete(e);
-  });
-  // Semainier : lundi → dimanche, avec l'initiale du jour
-  const LETTRES = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-  const today = new Date();
-  const jour = today.getDay(); // 0 = dimanche
-  const depuisLundi = jour === 0 ? 6 : jour - 1; // recule jusqu'au lundi
-  let mini = '';
-  for (let i = 0; i < 7; i++) {
-    const dd = new Date();
-    dd.setDate(dd.getDate() - depuisLundi + i);
-    const ds = dd.toISOString().slice(0, 10);
-    const futur = dd > today && ds !== todayStr();
-    const cls = done[ds] ? 'active' : futur ? 'futur' : '';
-    const auj = ds === todayStr() ? ' auj' : '';
-    mini += '<div class="sk-day ' + cls + auj + '"><span class="sk-l">' + LETTRES[dd.getDay()] + '</span><span class="sk-p">' + (done[ds] ? '✓' : '') + '</span></div>';
-  }
-  document.getElementById('streak-mini').innerHTML = mini;
-  renderPlant(n);
-}
+  Solution : ajouter `dayComplete` et les autres fonctions nécessaires au pont window de home.js ? Mais ça change le module home.js... La mission dit "ne change rien au comportement", et ces fonctions doivent rester accessibles pour les autres parties du legacy.
 
-// ===== Plante qui pousse avec la série =====
-function plantStage(n) {
-  if (n <= 0) return 0;
-  if (n < 3) return 1;
-  if (n < 7) return 2;
-  if (n < 14) return 3;
-  if (n < 21) return 4;
-  return 5;
-}
+  Regardons plus précisément quelles fonctions home.js définit et lesquelles doivent rester globales pour le legacy :
+  
+  Functions définies dans home.js qui SONT utilisées par d'autres parties du legacy (hors home) :
+  - `dayComplete` : utilisée par loadWeekRecap, openBilan5, loadInsights, loadOverview (toutes legacy)
+  - `fmtSleep` : utilisée par loadWeekRecap et renderEvChart (legacy), et openDayDetail (legacy)
+  - `ALIM_LABELS` : utilisée par openDayDetail (legacy) — et était exposée sur window par legacy (`window.ALIM_LABELS = ALIM_LABELS`). home.js fait `window.ALIM_LABELS = ALIM_LABELS;` ✓ donc OK.
+  - `fmtSleep` : PAS exposée sur window par home.js. Mais legacy l'utilise en fonction globale. Donc il faut l'exposer.
+  - `renderDayTiles` : utilisée par saveDay (home) et ailleurs ? Dans legacy, saveDay appelle renderDayTiles — saveDay est dans home.js donc OK.
+  - `updateRoutineCount`, `listStats` : utilisées par switchPeriod, toggleRoutine (home seulement) — OK.
+  - `loadHomeRoutine` : appelée ailleurs ? Dans le navTo (navigation legacy), on appelle loadHomeData et loadTodayPhoto — dans home.js.
+  - `computeStreak` : utilisé par renderProfileBadges (legacy), loadLeaProactive (home), renderStreak (home) — renderProfileBadges est dans legacy, il faut donc que computeStreak soit global. home.js l'expose sur window ✓.
+  - `getTodayEntryId` : utilisé par getEntryIdForDate (legacy) ? Non, getEntryIdForDate a sa propre logique. Regardons... Non getEntryIdForDate est une fonction différente dans le legacy.
+  - `loadHomeData` : utilisé par navTo (legacy) et legacynavTo — window exposé ✓.
+  - `loadTodayPhoto` : utilisé par navTo (legacy) — window exposé ✓.
 
-const PLANT_TYPES = {
-  fleur: { name: 'Fleur', emoji: '🌸', unlock: 0 },
-  lavande: { name: 'Lavande', emoji: '🪻', unlock: 3 },
-  tournesol: { name: 'Tournesol', emoji: '🌻', unlock: 7 },
-  cactus: { name: 'Cactus', emoji: '🌵', unlock: 14 },
-  rose: { name: 'Rose', emoji: '🌹', unlock: 30 },
-};
-window.PLANT_TYPES = PLANT_TYPES;
+  Donc problèmes critiques si je supprime le home du legacy :
+  1. `dayComplete` — doit être exposée sur window pour loadWeekRecap, openBilan5, loadInsights, loadOverview
+  2. `fmtSleep` — doit être exposée sur window pour loadWeekRecap, renderEvChart, openDayDetail
+  
+  Ces deux fonctions ne sont PAS exposées sur window par home.js actuellement. 
 
-function currentPlant() {
-  try {
-    return localStorage.getItem('rituel_plant') || 'fleur';
-  } catch (e) {
-    return 'fleur';
-  }
-}
+  Donc pour une suppression sûre, je dois d'abord modifier home.js pour exposer `dayComplete` et `fmtSleep` sur window. C'est un ajout compatible : ça ne change pas le comportement, ça rend juste disponibles des fonctions déjà définies. Ces ajouts sont nécessaires pour que le legacy continue de fonctionner après suppression.
 
-function bloomSVG(type, topY, stage) {
-  const P = [];
-  if (type === 'lavande') {
-    const count = stage >= 5 ? 6 : stage >= 4 ? 3 : 0;
-    for (let i = 0; i < count; i++) {
-      const yy = topY - i * 8;
-      P.push('<ellipse cx="100" cy="' + yy + '" rx="5.5" ry="6.5" fill="' + (i % 2 ? '#9B82D6' : '#8B7CC4') + '"/>');
-    }
-    return P.join('');
-  }
-  if (type === 'cactus') {
-    if (stage >= 5) {
-      for (let k = 0; k < 5; k++) {
-        const a = (-Math.PI / 2 + k * ((2 * Math.PI) / 5));
-        const px = Math.round(100 + Math.cos(a) * 7);
-        const py = Math.round(topY + Math.sin(a) * 7);
-        P.push('<circle cx="' + px + '" cy="' + py + '" r="5" fill="#E8729B"/>');
-      }
-      P.push('<circle cx="100" cy="' + topY + '" r="3.5" fill="#F4C84B"/>');
-    }
-    return P.join('');
-  }
-  if (type === 'rose') {
-    if (stage >= 5) {
-      for (let k = 0; k < 8; k++) {
-        const a = k * (Math.PI / 4);
-        const px = Math.round(100 + Math.cos(a) * 14);
-        const py = Math.round(topY + Math.sin(a) * 14);
-        P.push('<circle cx="' + px + '" cy="' + py + '" r="8" fill="#D6457B"/>');
-      }
-      for (let k = 0; k < 5; k++) {
-        const a = k * ((2 * Math.PI) / 5) + 0.4;
-        const px = Math.round(100 + Math.cos(a) * 7);
-        const py = Math.round(topY + Math.sin(a) * 7);
-        P.push('<circle cx="' + px + '" cy="' + py + '" r="6" fill="#B83266"/>');
-      }
-      P.push('<circle cx="100" cy="' + topY + '" r="4" fill="#8E2150"/>');
-    } else if (stage >= 4) {
-      P.push('<circle cx="100" cy="' + topY + '" r="9" fill="#E59ABA"/>');
-      P.push('<path d="M100 ' + (topY - 9) + ' Q109 ' + topY + ' 100 ' + (topY + 9) + ' Q91 ' + topY + ' 100 ' + (topY - 9) + ' Z" fill="#C85084"/>');
-    }
-    return P.join('');
-  }
-  if (stage >= 5) {
-    const r = type === 'tournesol' ? 14 : 13;
-    const pr = type === 'tournesol' ? 6 : 9;
-    const petalColor = type === 'tournesol' ? '#F4C026' : 'var(--blush)';
-    const centerColor = type === 'tournesol' ? '#7A5230' : 'var(--gold)';
-    for (let k = 0; k < petals; k++) {
-      const a = k * ((2 * Math.PI) / petals);
-      const px = Math.round(100 + Math.cos(a) * r);
-      const py = Math.round(topY + Math.sin(a) * r);
-      P.push('<circle cx="' + px + '" cy="' + py + '" r="' + pr + '" fill="' + petalColor + '"/>');
-    }
-    P.push('<circle cx="100" cy="' + topY + '" r="8" fill="' + centerColor + '"/>');
-  } else if (stage >= 4) {
-    const c = type === 'tournesol' ? '#E8C25A' : 'var(--accent-soft)';
-    const c2 = type === 'tournesol' ? '#C99B2E' : 'var(--accent)';
-    P.push('<circle cx="100" cy="' + topY + '" r="9" fill="' + c + '"/>');
-    P.push('<path d="M100 ' + (topY - 9) + ' Q109 ' + topY + ' 100 ' + (topY + 9) + ' Q91 ' + topY + ' 100 ' + (topY - 9) + ' Z" fill="' + c2 + '"/>');
-  }
-  return P.join('');
-}
+  Vérifions aussi navigation.js : il utilise `rpSlotView`, `refreshPremiumUI`, `renderProfileBadges`, `cmEnterRitual`, `closeRituelChemin`, `openRituelChemin`, `rhActiveTab`, `openProductForm`, `leaInjectDaily`, `refreshChatLock`, `refreshChatQuota`, `closeLeaPop`, `loadHomeData`, `loadTodayPhoto`, `loadProducts`, `loadRitual`, `loadJournalFromDB`, `renderCalendar`, `renderProfileBadges`, `currentUser`. Ces fonctions sont définies ailleurs (modules importés ou legacy). navigation.js n'expose pas `navTo` sur window ? Si, il l'expose : `window.navTo = navTo` etc.
 
-function plantSVG(stage, type) {
-  type = type || 'fleur';
-  const soilY = 150;
-  const stemH = 10 + stage * 22;
-  const topY = soilY - stemH;
-  const isCactus = type === 'cactus';
-  const stemW = isCactus ? 13 : 4;
-  const stemColor = isCactus ? '#6FA368' : 'var(--sage)';
-  const parts = [];
-  parts.push('<path d="M70 150 L75 182 Q76 188 82 188 L118 188 Q124 188 125 182 L130 150 Z" fill="#D7A286"/>');
-  parts.push('<path d="M64 144 H136 L134 154 H66 Z" fill="#C68E70"/>');
-  parts.push('<ellipse cx="100" cy="150" rx="32" ry="5" fill="#7C5A44"/>');
-  if (stage === 0) {
-    parts.push('<path d="M100 150 C95 143 87 142 83 145 C88 150 96 151 100 150 Z" fill="var(--sage)"/>');
-    parts.push('<path d="M100 150 C105 143 113 142 117 145 C112 150 104 151 100 150 Z" fill="var(--sage)"/>');
-  } else {
-    const midY = Math.round((soilY + topY) / 2);
-    parts.push('<path d="M100 ' + soilY + ' Q' + (isCactus ? 100 : 97) + ' ' + midY + ' 100 ' + topY + '" stroke="' + stemColor + '" stroke-width="' + stemW + '" fill="none" stroke-linecap="round"/>');
-    const pairs = Math.min(stage, 4);
-    for (let i = 0; i < pairs; i++) {
-      const ly = Math.round(soilY - (stemH * (i + 1)) / (pairs + 1));
-      if (isCactus) {
-        parts.push('<ellipse cx="89" cy="' + ly + '" rx="7" ry="11" fill="#6FA368"/>');
-        parts.push('<ellipse cx="111" cy="' + (ly - 4) + '" rx="7" ry="11" fill="#6FA368"/>');
-      } else {
-        parts.push('<path d="M100 ' + ly + ' C84 ' + (ly - 9) + ' 73 ' + (ly - 3) + ' 71 ' + (ly + 6) + ' C84 ' + (ly + 8) + ' 96 ' + (ly + 4) + ' 100 ' + ly + ' Z" fill="var(--sage)"/>');
-        parts.push('<path d="M100 ' + ly + ' C116 ' + (ly - 9) + ' 127 ' + (ly - 3) + ' 129 ' + (ly + 6) + ' C116 ' + (ly + 8) + ' 104 ' + (ly + 4) + ' 100 ' + ly + ' Z" fill="var(--sage)"/>');
-      }
-    }
-    parts.push(bloomSVG(type, topY, stage));
-  }
-  return '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:150px;height:150px;">' + parts.join('') + '</svg>';
-}
+  MAIS attention : le legacy a sa propre `navTo`, et le module navigation.js a sa propre `navTo`. Après import, window.navTo sera redéfini par navigation.js (exécuté au chargement du module). Si je supprime navTo du legacy, il n'y aura qu'une version (celle de navigation.js) exposée sur window. OK.
 
-async function renderPlant(n) {
-  const host = document.getElementById('plant-host');
-  if (!host) return;
-  if (typeof n !== 'number') {
-    n = currentUser ? await computeStreak() : 0;
-  }
-  const st = plantStage(n);
-  host.innerHTML = plantSVG(st, currentPlant());
-  const cap = document.getElementById('plant-caption');
-  if (cap) {
-    if (n === 0) cap.textContent = 'Fais ton rituel pour faire pousser ta plante 🌱';
-    else if (st >= 5) cap.textContent = 'En fleur ! ' + n + ' jours de rituel 🌸';
-    else cap.textContent = 'Ta plante pousse · ' + n + ' jour' + (n > 1 ? 's' : '') + ' 🌿';
-  }
-  // Félicitations quand la plante change de palier (pas au tout premier affichage)
-  try {
-    const key = currentUser ? 'rituel_plant_stage_' + currentUser.id : 'rituel_plant_stage';
-    const prev = parseInt(localStorage.getItem(key) || '-1', 10);
-    if (st > 0 && prev >= 0 && st > prev) {
-      const msgs = {
-        1: 'Ta graine a germé 🌱',
-        2: 'Ta plante grandit 🌿',
-        3: 'De belles feuilles ! 🍃',
-        4: 'Un bouton apparaît 🌸',
-        5: 'Ta plante est en fleur ! 🌸',
-      };
-      showToast(msgs[st] || 'Ta plante a poussé 🌿');
-    }
-    if (st !== prev) localStorage.setItem(key, String(st));
-  } catch (e) {
-    console.error('renderPlant (stage) :', e);
-  }
-  // Déblocage de nouvelles plantes selon la série (notif au passage d'un palier)
-  try {
-    const uid = currentUser ? currentUser.id : 'anon';
-    const ukey = 'rituel_unlocked_' + uid;
-    if (localStorage.getItem(ukey) === null) {
-      const achieved = Object.values(PLANT_TYPES).reduce((mx, v) => (v.unlock <= n ? Math.max(mx, v.unlock) : mx), 0);
-      localStorage.setItem(ukey, String(achieved));
-    } else {
-      const prevU = parseInt(localStorage.getItem(ukey), 10);
-      const newly = Object.values(PLANT_TYPES)
-        .filter((v) => v.unlock > prevU && v.unlock <= n)
-        .sort((a, b) => a.unlock - b.unlock);
-      if (newly.length) {
-        const last = newly[newly.length - 1];
-        showToast(last.emoji + ' Nouvelle plante débloquée : ' + last.name + ' !');
-        localStorage.setItem(ukey, String(last.unlock));
-      }
-    }
-  } catch (e) {
-    console.error('renderPlant (unlock) :', e);
-  }
-}
+  MAIS un problème : dans le legacy, `navTo` (version legacy) fait quelque chose que la version navigation.js fait aussi ? Comparons :
+  - legacy navTo : même code que navigation navTo (vérifié dans les contenus). Oui identiques.
+  - MAIS attention à l'ordre d'exécution : main.js importe les modules (ESM, exécutés au chargement), PUIS injecte app.legacy.js. Si le legacy définit encore ses fonctions en `function navTo(){}` et navigation.js fait `window.navTo = navTo`, alors : d'abord navigation.js s'exécute (met window.navTo = sa version), puis legacy s'exécute et définit `function navTo(){}` en global scope — ce qui REDÉFINIT window.navTo avec la version legacy ! 
 
-async function bestStreak() {
-  if (!currentUser) return 0;
-  const { data } = await sb
-    .from('entries')
-    .select('date,routine_matin,routine_soir,repos')
-    .eq('user_id', currentUser.id)
-    .order('date', { ascending: true });
-  const es = data || [];
-  const done = new Set();
-  es.forEach((e) => {
-    if (dayComplete(e)) done.add(e.date);
-  });
-  if (!done.size) return 0;
-  const dates = [...done].sort();
-  let best = 0,
-    run = 0,
-    prev = null;
-  for (const d of dates) {
-    if (prev) {
-      const diff = Math.round((new Date(d) - new Date(prev)) / 86400000);
-      run = diff === 1 ? run + 1 : 1;
-    } else run = 1;
-    if (run > best) best = run;
-    prev = d;
-  }
-  return best;
-}
+  En fait dans un script classique, une déclaration `function navTo(){}` au niveau top-level crée une variable globale `navTo` qui devient une propriété de window. Donc le legacy ECRASE la version du module. C'est justement pourquoi il faut SUPPRIMER le code du legacy pour que la version module prenne le dessus.
 
-function plantLockedToast(d) {
-  showToast('🔒 Plante à débloquer dès ' + d + ' jours de série 🌱');
-}
+  Donc la stratégie est correcte : après import des modules dans main.js et suppression des blocs dans legacy, ce sont les versions modules qui sont effectives.
 
-async function openPlantSheet() {
-  const cur = currentPlant();
-  let best = 0;
-  try {
-    best = await bestStreak();
-  } catch (e) {
-    best = 0;
-  }
-  document.getElementById('plant-list').innerHTML = Object.keys(PLANT_TYPES)
-    .map((k) => {
-      const v = PLANT_TYPES[k];
-      const locked = best < (v.unlock || 0);
-      const onclick = locked ? 'plantLockedToast(' + v.unlock + ')' : "pickPlant('" + k + "')";
-      const border = k === cur && !locked ? 'var(--accent)' : 'var(--line)';
-      const bg = k === cur && !locked ? 'var(--blush-soft)' : 'var(--surface)';
-      const right = locked
-        ? '<div style="font-size:11px;color:var(--muted);text-align:right;line-height:1.3;flex-shrink:0;">🔒<br>dès ' + v.unlock + ' j</div>'
-        : k === cur
-          ? '<div style="font-size:13px;color:var(--accent-deep);flex-shrink:0;">✓</div>'
-          : '';
-      return (
-        '<button onclick="' +
-        onclick +
-        '" style="display:flex;align-items:center;gap:14px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid ' +
-        border +
-        ';background:' +
-        bg +
-        ';cursor:pointer;text-align:left;' +
-        (locked ? 'opacity:0.55;' : '') +
-        '">' +
-        '<div style="width:54px;height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--surface-warm);border-radius:12px;"><div style="transform:scale(0.36);transform-origin:center;">' +
-        plantSVG(5, k) +
-        '</div></div>' +
-        '<div style="flex:1;font-family:var(--serif);font-size:16px;">' +
-        v.emoji +
-        ' ' +
-        v.name +
-        '</div>' +
-        right +
-        '</button>'
-      );
-    })
-    .join('');
-  document.getElementById('plant-sheet').classList.add('open');
-}
+  Cependant il y a un piège : certaines fonctions legacy font des choses que les versions modules ne font pas ou vice versa. Il faut s'assurer que les versions modules sont des remplacements exacts.
 
-function pickPlant(k) {
-  try {
-    localStorage.setItem('rituel_plant', k);
-  } catch (e) {
-    console.error('pickPlant :', e);
-  }
-  renderPlant();
-  openPlantSheet();
-  showToast(PLANT_TYPES[k].emoji + ' Jolie plante !');
-}
+  Comparons fonction par fonction entre legacy et modules :
 
-function closePlantSheet() {
-  document.getElementById('plant-sheet').classList.remove('open');
-}
+  **Auth (legacy vs auth.js)** :
+  - switchAuth : legacy identique sauf style. auth.js version moderne (const, formatage). Logique identique. ✓
+  - openPolicy/closePolicy : identiques logiquement. auth.js version moderne avec try/catch documenté. ✓
+  - setBtnLoading : identique. ✓
+  - pickSignupGenre : legacy utilise `state.signupGenre` (global window.state), auth.js utilise `window.state.signupGenre` — identique ✓
+  - doSignup : identique logiquement. auth.js utilise window.state, window.sb, window.currentUser. ✓
+  - doLogin : identique. ✓
+  - forgotPassword : identique. ✓
+  - pwUpdate : identique. ✓
+  - sb.auth.onAuthStateChange : même handler dans les deux. ✓
+  - doLogout : identique ✓
+  - startAuth, backToLanding : dans auth.js, ET dans legacy (section Landing publique). Identiques ? auth.js startAuth : ajoute hidden à landing, retire hidden à auth-back, retire hidden à .auth-toggle, switchAuth(m). Legacy startAuth : même chose. ✓ backToLanding identique ✓
 
-// ===== Chargement de l'accueil =====
-async function loadHomeData() {
-  if (!currentUser) return;
-  // on repart toujours d'une humeur "vierge" à l'affichage…
-  document.querySelectorAll('#home .mood-btn').forEach((b) => b.classList.remove('selected'));
-  document.getElementById('intensity-box').classList.add('hidden');
-  document.getElementById('intensity-slider').value = 50;
-  onIntensity(50);
-  currentMood = null;
+  **Navigation (legacy vs navigation.js)** : identiques (vérifié dans les contenus). ✓
 
-  const { data } = await sb
-    .from('entries')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .eq('date', todayStr())
-    .order('created_at', { ascending: true })
-    .limit(1);
-  const e = data && data.length ? data[0] : null;
-  // …et on ne ré-affiche l'humeur QUE si elle a été notée aujourd'hui
-  if (e && e.humeur) {
-    const btns = document.querySelectorAll('#home .mood-btn');
-    if (btns[e.humeur - 1]) btns[e.humeur - 1].classList.add('selected');
-    currentMood = e.humeur;
-    document.getElementById('intensity-box').classList.remove('hidden');
-    const slider = document.getElementById('intensity-slider');
-    slider.value = e.humeur_intensite || 50;
-    onIntensity(slider.value);
-  }
-  await loadHomeRoutine();
-  applyRoutineState('matin', e ? e.routine_matin : false);
-  applyRoutineState('soir', e ? e.routine_soir : false);
-  applyRituelTypeToHome();
-  renderStreak();
-  renderDayTiles(e);
-  loadHabits();
-  loadLeaTip();
-  updateRestBtn(e);
-  loadLeaProactive(e);
-  updateChatBadge();
-  maybeShowLettreCta();
-  maybeShowBilan5();
-  loadUV();
-  loadCycleCard();
-  loadEclatProgram();
-}
+  **Home (legacy vs home.js)** : La mission dit que home.js a été extrait verbatim. Vérifions quelques fonctions clés.
+  - Dans le contenu legacy de home (l'aperçu), je vois `function bloomSVG(type, topY, stage)` avec une référence `petals` dans la boucle `for(let k=0;k<petals;k++)` — `petals` n'est PAS défini dans la fonction legacy ! C'est un bug dans le legacy (variable non définie). home.js a le même code avec la même référence `petals`. Donc les deux ont le même bug — déplacement verbatim. OK, pas de différence de comportement.
 
-// ===== Jour de repos (joker hebdo qui protège la série) =====
-function updateRestBtn(e) {
-  const btn = document.getElementById('rest-btn');
-  if (!btn) return;
-  const isRepos = e && e.repos;
-  btn.textContent = isRepos ? '☁️ Repos actif' : '☁️ Repos';
-}
+  Donc le plan d'action :
+  1. Modifier `src/features/home/home.js` pour ajouter `window.dayComplete = dayComplete;` et `window.fmtSleep = fmtSleep;` au pont transitoire (nécessaire car ces fonctions sont utilisées par d'autres parties du legacy qui ne sont pas migrées).
+  2. Modifier `src/main.js` pour ajouter les imports de auth, navigation, home.
+  3. Modifier `public/app.legacy.js` pour supprimer les blocs dupliqués.
 
-async function takeRestDay() {
-  if (!currentUser) {
-    showToast("Connecte-toi d'abord");
-    return;
-  }
-  const today = todayStr();
-  const { data } = await sb
-    .from('entries')
-    .select('repos')
-    .eq('user_id', currentUser.id)
-    .eq('date', today)
-    .order('created_at', { ascending: true })
-    .limit(1);
-  const isRepos = data && data.length && data[0].repos;
-  if (isRepos) {
-    await updateTodayEntry({ repos: false });
-    showToast('Jour de repos annulé');
-  } else {
-    const since = new Date();
-    since.setDate(since.getDate() - 6);
-    const sinceStr = since.toISOString().slice(0, 10);
-    const { data: wk } = await sb
-      .from('entries')
-      .select('date')
-      .eq('user_id', currentUser.id)
-      .eq('repos', true)
-      .gte('date', sinceStr)
-      .neq('date', today);
-    if (wk && wk.length >= 1) {
-      showToast('Tu as déjà pris ton jour de repos cette semaine 🌸');
-      return;
-    }
-    await updateTodayEntry({ repos: true });
-    showToast('Jour de repos pris · ta série est protégée ☁️');
-  }
-  const { data: d2 } = await sb
-    .from('entries')
-    .select('repos')
-    .eq('user_id', currentUser.id)
-    .eq('date', today)
-    .limit(1);
-  updateRestBtn(d2 && d2.length ? d2[0] : null);
-  bustStreak();
-  renderStreak();
-}
+  Pour app.legacy.js, étant donné sa complexité et le risque de casser quelque chose, la meilleure approche est d'écrire un script Node qui lit le fichier et supprime précisément les plages de lignes correspondant aux sections dupliquées. Mais j'ai besoin du contenu exact complet du legacy pour bien délimiter les plages. 
 
-// Affiche les bons moments sur l'accueil selon le type de rituel choisi
-function applyRituelTypeToHome() {
-  /* géré dynamiquement par loadHomeRoutine selon les rituels existants */
-}
+  Le contenu du legacy est très long (~2000 lignes). Une approche manuelle de réécriture complète est risquée (risque de tronquer). Une meilleure approche : écrire un script qui opère des suppressions ciblées par délimiteurs.
 
-// Construit la checklist de l'accueil à partir des vrais produits du Rituel
-async function loadHomeRoutine() {
-  if (!currentUser) return;
-  const { data: rits } = await sb
-    .from('rituels')
-    .select('id,nom,moment,produits,position,actif')
-    .eq('user_id', currentUser.id)
-    .order('position', { ascending: true })
-    .order('created_at', { ascending: true });
-  const rituels = rits || [];
-  const homeSec = document.getElementById('home-rituel-section');
-  if (homeSec) homeSec.style.display = 'block';
-  const emptyEl = document.getElementById('home-rituel-empty');
-  const partEls = [document.getElementById('hr-card')];
-  if (!rituels.length) {
-    if (emptyEl) emptyEl.style.display = 'block';
-    partEls.forEach((el) => {
-      if (el) el.style.display = 'none';
-    });
-    const cb = document.getElementById('rituel-choose-btn');
-    if (cb) cb.style.display = 'none';
-    return;
-  }
-  if (emptyEl) emptyEl.style.display = 'none';
-  partEls.forEach((el) => {
-    if (el) el.style.display = '';
-  });
-  ensureActiveRituels(rituels);
-  window.__allRituels = rituels;
-  const act = pickActive(rituels);
-  const hasM = !!act.matin;
-  const hasS = !!act.soir;
-  const chooseBtn = document.getElementById('rituel-choose-btn');
-  if (chooseBtn) chooseBtn.style.display = rituels.length > 1 ? 'inline-block' : 'none';
-  // Le sélecteur ☀️/🌙 n'a de sens que si les deux créneaux existent
-  const swEl = homeSec ? homeSec.querySelector('.hr-switch') : null;
-  if (swEl) swEl.style.display = hasM && hasS ? 'flex' : 'none';
-  // Créneau par défaut selon l'heure : le soir à partir de midi
-  const _h = new Date().getHours();
-  const _prefSoir = _h >= 12;
-  let _p = 'matin';
-  if (_prefSoir && hasS) _p = 'soir';
-  else if (hasM) _p = 'matin';
-  else if (hasS) _p = 'soir';
-  switchPeriod(_p);
-  try {
-    const gi2 = document.getElementById('greet-invite');
-    if (gi2) {
-      const allDone = (function () {
-        const mEl = document.getElementById('routine-matin');
-        const sEl = document.getElementById('routine-soir');
-        const items = [].concat(
-          [...(mEl ? mEl.querySelectorAll('.routine-item') : [])],
-          [...(sEl ? sEl.querySelectorAll('.routine-item') : [])]
-        );
-        if (!items.length) return false;
-        return items.every((it) => it.classList.contains('done'));
-      })();
-      if (allDone) gi2.textContent = 'Ton rituel du jour est fait, bravo 🌸';
-    }
-  } catch (e) {
-    console.error('loadHomeRoutine (greet) :', e);
-  }
-  const { data: prods } = await sb
-    .from('products')
-    .select('id,nom,effets,emoji,categorie,photo_path')
-    .eq('user_id', currentUser.id);
-  const pmap = {};
-  (prods || []).forEach((p) => {
-    pmap[p.id] = p;
-  });
-  // Étapes déjà cochées aujourd'hui (mémorisées en base)
-  window.__homeSteps = { matin: [], soir: [] };
-  try {
-    const { data: te } = await sb
-      .from('entries')
-      .select('steps')
-      .eq('user_id', currentUser.id)
-      .eq('date', todayStr())
-      .limit(1);
-    const st = te && te.length && te[0].steps ? te[0].steps : null;
-    if (st) {
-      window.__homeSteps = {
-        matin: Array.isArray(st.matin) ? st.matin : [],
-        soir: Array.isArray(st.soir) ? st.soir : [],
-      };
-    }
-  } catch (e) {
-    console.error('loadHomeRoutine (steps) :', e);
-  }
-  for (const moment of ['matin', 'soir']) {
-    const list = document.getElementById('routine-' + moment);
-    const src = act[moment];
-    const ids = src && Array.isArray(src.produits) ? src.produits : [];
-    const items = ids.map((id) => pmap[id]).filter(Boolean);
-    window.__homeRoutine = window.__homeRoutine || {};
-    window.__homeRoutine[moment] = items;
-    if (!items.length) {
-      list.innerHTML =
-        '<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;">Rien pour le ' +
-        (moment === 'soir' ? 'soir' : 'matin') +
-        " pour l'instant.<br><button class=\"btn-soft\" style=\"padding:7px 14px;font-size:11.5px;margin-top:8px;\" onclick=\"navTo('ritual')\">Complète-le dans l'onglet Rituel →</button></div>";
-    } else {
-      const doneIds = (window.__homeSteps && window.__homeSteps[moment]) || [];
-      list.innerHTML = items
-        .map((p, i) => {
-          const parts = (p.nom || '').split(' · ');
-          const isDone = doneIds.indexOf(p.id) >= 0;
-          return (
-            '<div class="routine-item' +
-            (isDone ? ' done' : '') +
-            '" data-pid="' +
-            p.id +
-            '" onclick="toggleRoutine(this)">' +
-            '<div class="routine-thumb"><span class="n">' +
-            (i + 1) +
-            '</span>' +
-            (p.emoji || '🧴') +
-            '</div>' +
-            '<div class="routine-info"><div class="routine-name">' +
-            escapeHtml(parts[0] || '') +
-            '</div>' +
-            (parts[1]
-              ? '<div class="routine-product">' + escapeHtml(parts[1]) + '</div>'
-              : p.effets
-                ? '<div class="routine-product">' + escapeHtml(p.effets) + '</div>'
-                : '') +
-            '</div>' +
-            '<div class="routine-check"></div></div>'
-          );
-        })
-        .join('');
-    }
-  }
-  if (typeof renderHomeVoyage === 'function') renderHomeVoyage();
-}
+  Sections à supprimer dans legacy :
+  A. Section Auth : de `// ===== Auth =====` jusqu'à `async function doLogout(){...}` (fin de la fonction doLogout). Inclut switchAuth, openPolicy, closePolicy, setBtnLoading, pickSignupGenre, doSignup, doLogin, forgotPassword, pwUpdate, onAuthStateChange, doLogout.
+     
+     Attention : entre openPolicy et le reste il y a des commentaires. Définissons délimiteurs robustes.
+     
+  B. Section Navigation : `// ===== Navigation =====` ... jusqu'à `function closeChat(){...}`.
+     
+  C. Section Home : `// ===== Entrée du jour (une ligne par jour dans 'entries') =====` (getTodayEntryId) jusqu'à `async function loadMemory(){...}` (fin de loadMemory).
+     
+  D. Section "Landing publique" (startAuth, backToLanding en bas du fichier) — car elles sont dans auth.js.
 
-// ===== Ma journée (sommeil / hydratation / alimentation) =====
-const ALIM_LABELS = ['', 'À améliorer', 'Correcte', 'Équilibrée', 'Bonne', 'Parfaite'];
-window.ALIM_LABELS = ALIM_LABELS; // partagé (contexte chat)
+  Problème : le bloc "Landing publique" (`startAuth`, `backToLanding`) est en bas du legacy et est ENCADRÉ par d'autres codes que je ne veux pas supprimer. Donc je dois supprimer UNIQUEMENT les deux fonctions, pas tout le bloc environnant.
 
-function fmtSleep(v) {
-  v = parseFloat(v);
-  const h = Math.floor(v);
-  const m = Math.round((v - h) * 60);
-  return m ? h + 'h' + (m < 10 ? '0' + m : m) : h + 'h';
-}
+  C'est complexe. L'approche la plus sûre : réécrire le fichier legacy complet, en retirant les sections dupliquées, en gardant le reste exactement tel quel. Mais le fichier fait ~2000 lignes et je n'ai qu'un aperçu. Je dois LIRE le fichier complet d'abord pour pouvoir le réécrire précisément.
 
-function onDaySommeil(v) {
-  document.getElementById('ds-sommeil-val').textContent = fmtSleep(v);
-}
+  En fait, j'ai le contenu presque complet du legacy dans l'aperçu (coupé à 4000 caractères mais le contenu fourni dans "Travail déjà accompli" point 7 montre le fichier en quasi-entier, lignes jusqu'à la fin avec init()). Le contenu semble être l'intégralité. Regardons : le point 7 de "Travail déjà accompli" montre le legacy entier jusqu'à `document.addEventListener('touchmove',...)`.
 
-function onDayHydra(v) {
-  const n = parseInt(v, 10);
-  document.getElementById('ds-hydra-val').textContent = n + (n > 1 ? ' verres' : ' verre');
-}
+  Donc j'ai le contenu complet du legacy. Je peux le réécrire avec les sections supprimées.
 
-function onDayAlim(v) {
-  document.getElementById('ds-alim-val').textContent = ALIM_LABELS[parseInt(v, 10)] || '…';
-}
+  Extrayons précisément les blocs à supprimer :
 
-async function openDaySheet() {
-  if (!currentUser) {
-    showToast("Connecte-toi d'abord");
-    return;
-  }
-  let som = 7,
-    hyd = 6,
-    ali = 3;
-  const { data } = await sb
-    .from('entries')
-    .select('sommeil,hydratation,alimentation')
-    .eq('user_id', currentUser.id)
-    .eq('date', todayStr())
-    .order('created_at', { ascending: true })
-    .limit(1);
-  const e = data && data.length ? data[0] : null;
-  if (e) {
-    if (e.sommeil != null) som = e.sommeil;
-    if (e.hydratation != null) hyd = e.hydratation;
-    if (e.alimentation != null) ali = e.alimentation;
-  }
-  const s = document.getElementById('ds-sommeil');
-  s.value = som;
-  onDaySommeil(som);
-  try {
-    sb.from('entries')
-      .select('humeur')
-      .eq('user_id', currentUser.id)
-      .eq('date', todayStr())
-      .limit(1)
-      .then(({ data }) => {
-        const hv = data && data[0] ? data[0].humeur : null;
-        document.querySelectorAll('#ds-mood .mood-btn').forEach((bt, i) => bt.classList.toggle('selected', hv === i + 1));
-      });
-  } catch (e) {
-    console.error('openDaySheet (mood) :', e);
-  }
-  const h = document.getElementById('ds-hydra');
-  h.value = hyd;
-  onDayHydra(hyd);
-  const a = document.getElementById('ds-alim');
-  a.value = ali;
-  onDayAlim(ali);
-  document.getElementById('day-sheet').classList.add('open');
-}
+  **Bloc A (Auth)** :
+  ```
+  // ===== Auth =====
+  function switchAuth(mode){ ... }
+  // ===== Politique de confidentialité =====
+  function openPolicy(){ ... }
+  function closePolicy(){ ... }
+  function setBtnLoading(btn, loading, labelIdle){ ... }
+    function pickSignupGenre(g){ ... }
+  async function doSignup(){ ... }
+  async function doLogin(){ ... }
+  async function forgotPassword(){ ... }
+  async function pwUpdate(){ ... }
+  sb.auth.onAuthStateChange((event)=>{ ... });
+  async function doLogout(){ ... }
+  ```
+  Ce bloc se termine juste avant `// ═══════════ Rituel+ (abonnement Stripe) ═══════════`.
 
-function closeDaySheet() {
-  document.getElementById('day-sheet').classList.remove('open');
-}
+  **Bloc B (Navigation)** :
+  ```
+  // ===== Navigation =====
+  // ===== Bouton + flottant (FAB) =====
+  function fabAction(){ ... }
+  function updateFab(screen){ ... }
+    function navTo(screen){ ... }
+  // ===== Identité du coach =====
+  function coachName(){ ... }
+  function coachTitre(){ ... }
+  function updateChatIntro(){ ... }
+  function applyCoachIdentity(){ ... }
+  function openChat(){ ... }
+  function closeChat(){ ... }
+  ```
+  Ce bloc se termine juste avant `// ===== Entrée du jour (une ligne par jour dans 'entries') =====`.
 
-async function saveDay() {
-  const sommeil = parseFloat(document.getElementById('ds-sommeil').value);
-  const hydratation = parseInt(document.getElementById('ds-hydra').value, 10);
-  const alimentation = parseInt(document.getElementById('ds-alim').value, 10);
-  showToast('Enregistrement…');
-  await updateTodayEntry({ sommeil, hydratation, alimentation });
-  closeDaySheet();
-  showToast('Journée enregistrée 🌸');
-  const { data } = await sb
-    .from('entries')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .eq('date', todayStr())
-    .order('created_at', { ascending: true })
-    .limit(1);
-  renderDayTiles(data && data.length ? data[0] : null);
-}
+  **Bloc C (Home)** : De `// ===== Entrée du jour ...` jusqu'à la fin de `async function loadMemory(){ ... }`. 
+  
+  Attention : le bloc home inclut la fin qui est juste avant `// ===== Rituel : produits perso =====`.
+  
+  Regardons le legacy : après loadMemory (qui est vers la fin du legacy, section "Souvenir"), il y a la suite. En fait loadMemory apparaît DEUX FOIS dans le legacy ! Une fois dans la section home (le "Souvenir" est-il dans home ?). Regardons home.js : il définit loadMemory. Et le legacy a aussi loadMemory dans la section "Souvenir" (plus bas). 
 
-function renderDayTiles(e) {
-  const MOOD_EMOJI = ['', '😣', '😕', '😌', '😊', '✨'];
-  const set = (id, val, sub) => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = '<em>' + val + '</em>';
-    const s = document.getElementById(id + '-sub');
-    if (s && sub != null) s.textContent = sub;
-  };
-  const PLUS = '<span style="color:var(--accent);">+</span>';
-  if (e && e.sommeil != null) set('tile-sommeil', fmtSleep(e.sommeil), "aujourd'hui");
-  else set('tile-sommeil', PLUS, '');
-  if (e && e.hydratation != null) {
-    const n = e.hydratation;
-    set('tile-hydra', n + '<span style="font-size:15px;color:var(--muted);"> ' + (n > 1 ? 'verres' : 'verre') + '</span>', "aujourd'hui");
-  } else set('tile-hydra', PLUS, '');
-  if (e && e.alimentation != null) set('tile-alim', ALIM_LABELS[e.alimentation] || '…', "aujourd'hui");
-  else set('tile-alim', PLUS, '');
-  if (e && e.humeur) set('tile-humeur', MOOD_EMOJI[e.humeur] || '…', e.humeur_intensite != null ? e.humeur_intensite + '%' : "aujourd'hui");
-  else set('tile-humeur', PLUS, '');
-}
+  Donc dans le legacy il y a :
+  - Section home : getTodayEntryId ... loadTodayPhoto (vers le milieu du fichier)
+  - Plus bas : loadLeaProactive (section "Petit mot proactif"), loadMemory (section "Souvenir")
+  
+  En fait, regardons l'ordre dans le legacy réel. Dans l'aperçu du legacy (point 7), l'ordre est :
+  1. Auth (début)
+  2. Rituel+ premium
+  3. loadProfile, applyProfile, saveProfile
+  4. exportData, deleteAccount (RGPD)
+  5. enterApp
+  6. updateUserUI
+  7. renderProfileBadges, openSkinSheet, etc.
+  8. Navigation (fabAction ... closeChat)
+  9. Entrée du jour (getTodayEntryId ... updateTodayEntry)
+  10. Humeur (currentMood ... saveMood)
+  11. Routine (currentPeriod ... applyRoutineState)
+  12. Streak (dayComplete ... renderStreak)
+  13. Plante (plantStage ... closePlantSheet)
+  14. Chargement accueil (loadHomeData) + Repos (updateRestBtn, takeRestDay) + applyRituelTypeToHome + loadHomeRoutine
+  15. Ma journée (ALIM_LABELS ... renderDayTiles)
+  16. Photo du jour (handlePhoto, loadTodayPhoto)
+  17. Rituel produits perso (toggleCatFilter...)
+  18. SORTS, toggleSortMenu...
+  19. selection multiple...
+  20. renderRoutineFooter, swipe...
+  21. CATS...
+  22. chat input listener
+  23. Routine tabs
+  24. Journal (renderJournal, openEntry, loadWeekRecap)
+  25. openPlusSheet, closePlusSheet
+  26. leaSeenKey, bellTap, updateChatBadge, leaInjectDaily, markLeaSeen
+  27. bilan5Key, maybeShowBilan5, openBilan5, closeBilan5
+  28. Landing publique (startAuth, backToLanding)
+  29. Tap en dehors (document listener)
+  30. loadLeaProactive
+  31. baSlide
+  32. bilanKey, loadMemory (Souvenir)
+  33. loadInsights
+  34. loadOverview, sparkline, loadEvData, evSetPeriod, evPoints, evSetMetric, renderEvChart
+  35. loadSuiviAccroche
+  36. loadJournalFromDB
+  37. Calendrier (MONTHS_FR, calRef, calMonth, renderCalendar, ddState, getEntryIdForDate, ... openDayDetail, saveDayDetail, closeDayDetail)
+  38. Rappels (REMINDER_ITEMS ... checkReminders)
+  39. Toast comment, Reset comment
+  40. Init : renderJournal, setTimeout, init() function, touchmove listener
 
-// ===== Photo du jour =====
-async function handlePhoto(input) {
-  const f = input.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = (e) => {
-    document.getElementById('photo-img').src = e.target.result;
-    document.getElementById('photo-empty').classList.add('hidden');
-    document.getElementById('photo-display').classList.remove('hidden');
-  };
-  r.readAsDataURL(f);
-  const ext = (f.name.split('.').pop() || 'jpg').toLowerCase();
-  await uploadDayPhoto(f, ext);
-  input.value = '';
-}
+  Donc l'aperçu legacy est complet jusqu'à la toute fin (init, touchmove). Parfait.
 
-// Recharge la photo du jour si elle existe déjà
-async function loadTodayPhoto() {
-  if (!currentUser) return;
-  const today = new Date().toISOString().slice(0, 10);
-  const { data } = await sb
-    .from('entries')
-    .select('photo_path')
-    .eq('user_id', currentUser.id)
-    .eq('date', today)
-    .order('created_at', { ascending: false })
-    .limit(1);
-  const path = data && data.length ? data[0].photo_path : null;
-  const url = path ? await signedPhoto(path) : null;
-  const sec = document.getElementById('lea-photo-section');
-  if (url) {
-    document.getElementById('photo-img').src = url;
-    document.getElementById('photo-empty').classList.add('hidden');
-    document.getElementById('photo-display').classList.remove('hidden');
-    if (sec) sec.style.display = 'block';
-  } else {
-    document.getElementById('photo-display').classList.add('hidden');
-    document.getElementById('photo-empty').classList.remove('hidden');
-    if (sec) sec.style.display = 'none';
-  }
-}
+  Donc dans le legacy :
+  - getTodayEntryId (étape 9) jusqu'à loadHomeRoutine (étape 14) et "Ma journée" (étape 15) et Photo (étape 16) — tout ça est la section home.
+  - loadLeaProactive apparaît à l'étape 30 (petit mot proactif) — c'est une fonction du home.
+  - loadMemory (Souvenir) apparaît à l'étape 32 — c'est une fonction du home également.
+  
+  home.js contient : getTodayEntryId, updateTodayEntry, currentMood, selectMood, onIntensity, saveMood, currentPeriod, switchPeriod, listStats, updateRoutineCount, toggleRoutine, applyRoutineState, dayComplete, _stkCache, bustStreak, computeStreak, renderStreak, plantStage, PLANT_TYPES, currentPlant, bloomSVG, plantSVG, renderPlant, bestStreak, plantLockedToast, openPlantSheet, pickPlant, closePlantSheet, loadHomeData, updateRestBtn, takeRestDay, applyRituelTypeToHome, loadHomeRoutine, ALIM_LABELS, fmtSleep, onDaySommeil, onDayHydra, onDayAlim, openDaySheet, closeDaySheet, saveDay, renderDayTiles, handlePhoto, loadTodayPhoto, loadLeaProactive, loadMemory.
 
-// ===== Petit mot proactif de Léa (1×/jour, doux, jamais culpabilisant) =====
-async function loadLeaProactive(e) {
-  const line = document.getElementById('lea-proactive-line');
-  if (!line) return;
-  if (!currentUser) {
-    line.textContent = '';
-    return;
-  }
-  let streak = 0;
-  try {
-    streak = await computeStreak();
-  } catch (err) {
-    console.error('loadLeaProactive :', err);
-  }
-  const h = new Date().getHours();
-  const done = e && dayComplete(e);
-  const hasPhoto = e && e.photo_path;
-  const fier = 'fière';
-  let msg;
-  if (streak > 0 && streak % 7 === 0) {
-    msg = 'Waouh, ' + streak + ' jours de rituel · je suis si ' + fier + ' de toi 🌟';
-  } else if (done && !hasPhoto) {
-    msg = 'Rituel fait, bravo ✨ Une petite photo pour garder une trace ?';
-  } else if (done) {
-    msg = "Ton rituel est fait pour aujourd'hui, bravo 💛";
-  } else if (h < 12) {
-    msg = 'Coucou 🌸 Un petit rituel pour bien démarrer la journée ?';
-  } else if (h < 18) {
-    msg = "Ta peau attend son petit moment rituel aujourd'hui 🌿";
-  } else {
-    msg = 'Bonsoir 🌙 Un rituel du soir avant de dormir ?';
-  }
-  line.textContent = msg;
-}
+  Donc je dois supprimer du legacy :
+  - Étape 9-16 complet (getTodayEntryId ... loadTodayPhoto)
+  - loadLeaProactive (étape 30)
+  - loadMemory (étape 32)
+  
+  Si je supprime ces fonctions du legacy, je dois vérifier que les références restantes dans legacy fonctionnent via window (celles exposées par home.js).
 
-// ===== Souvenir : une photo d'il y a un moment =====
-async function loadMemory() {
-  const sec = document.getElementById('memory-section');
-  if (!sec) return;
-  sec.style.display = 'none';
-  if (!currentUser) return;
-  try {
-    const lim = new Date();
-    lim.setDate(lim.getDate() - 30);
-    const { data } = await sb
-      .from('entries')
-      .select('date,photo_path')
-      .eq('user_id', currentUser.id)
-      .not('photo_path', 'is', null)
-      .lte('date', lim.toISOString().slice(0, 10))
-      .order('date', { ascending: false })
-      .limit(1);
-    const row = (data && data[0]) || null;
-    if (!row) return;
-    const url = await signedPhoto(row.photo_path);
-    if (!url) return;
-    const days = Math.round((new Date(todayStr()) - new Date(row.date)) / 86400000);
-    document.getElementById('memory-img').src = url;
-    document.getElementById('memory-caption').textContent =
-      "Cette photo date d'il y a " + days + ' jours · regarde le chemin parcouru 🌸';
-    sec.style.display = 'block';
-  } catch (e) {
-    console.error('loadMemory :', e);
-  }
-}
+  Références dans le legacy restant aux fonctions home :
+  - `renderProfileBadges` (étape 7) appelle `computeStreak()` — home.js l'expose sur window ✓
+  - `loadWeekRecap` (étape 24) appelle `dayComplete()`, `fmtSleep()` — home.js ne les expose PAS. PROBLÈME.
+  - `openBilan5` (étape 27) appelle `dayComplete()`, `coachName()` (navigation wk), `escapeHtml` — `dayComplete` PROBLÈME.
+  - `loadInsights` (étape 33) appelle `dayComplete()` — PROBLÈME.
+  - `loadOverview` (étape 34) appelle `dayComplete()`, `sparkline` — PROBLÈME pour dayComplete.
+  - `renderEvChart` (étape 34) appelle `fmtSleep` ? Non, il utilise evPoints. Pas de fmtSleep dans renderEvChart. Mais `loadEvData`... non.
+  - `openDayDetail` (étape 37) appelle `fmtSleep()`, `ALIM_LABELS` — ALIM_LABELS exposé sur window par home.js ✓, `fmtSleep` PROBLÈME.
+  - `enterApp` (étape 5) appelle `navTo('home')`, `updateUserUI`, `applyCoachIdentity`, `updateBellDot`, `startReminderScheduler`, `initLeaBubble`, `checkPaymentReturn` — navTo (navigation wk via window), applyCoachIdentity (navigation wk). ✓
+  - `navTo` legacy (étape 8) appelle `loadHomeData()`, `loadTodayPhoto()`, `loadProducts()`, `loadRitual()`, `loadJournalFromDB()`, `renderCalendar()` — après suppression de navTo legacy et si navigation.js délivre ces appels, elles sont définies : loadProducts (product-flipbook), loadRitual (ritual), loadJournalFromDB (legacy), renderCalendar (legacy), loadHomeData & loadTodayPhoto (home wk). ✓
 
-// Pont transitoire : ces fonctions sont appelées par les handlers onclick inline de index.html.
-window.getTodayEntryId = getTodayEntryId;
-window.updateTodayEntry = updateTodayEntry;
-window.selectMood = selectMood;
-window.onIntensity = onIntensity;
-window.saveMood = saveMood;
-window.switchPeriod = switchPeriod;
-window.toggleRoutine = toggleRoutine;
-window.bustStreak = bustStreak;
-window.computeStreak = computeStreak;
-window.renderStreak = renderStreak;
-window.renderPlant = renderPlant;
-window.openPlantSheet = openPlantSheet;
-window.pickPlant = pickPlant;
-window.closePlantSheet = closePlantSheet;
-window.plantLockedToast = plantLockedToast;
-window.loadHomeData = loadHomeData;
-window.takeRestDay = takeRestDay;
-window.loadHomeRoutine = loadHomeRoutine;
-window.openDaySheet = openDaySheet;
-window.closeDaySheet = closeDaySheet;
-window.saveDay = saveDay;
-window.handlePhoto = handlePhoto;
-window.loadTodayPhoto = loadTodayPhoto;
-window.loadLeaProactive = loadLeaProactive;
-window.loadMemory = loadMemory;
+  Donc j'ai 4 endroits où dayComplete est utilisée dans le legacy restant, et 2 endroits où fmtSleep est utilisée. Il faut que ces fonctions soient disponibles globalement (sur window). home.js les définit mais ne les expose pas sur window. Je dois donc ajouter `window.dayComplete = dayComplete;` et `window.fmtSleep = fmtSleep;` au pont transitoire de home.js.
+
+  Vérifions aussi `computeStreak` : home.js l'expose ✓. `renderStreak` : exposé ✓. `bustStreak` : exposé ✓. `loadHomeData` : exposé ✓.
+
+  Autres fonctions home utilisées dans le legacy restant ? 
+  - `renderDayTiles` : utilisée par saveDay (home). Sauf si legacy restant l'utilise ailleurs... non.
+  - `PLANT_TYPES` : legacy a `window.PLANT_TYPES = PLANT_TYPES` ? Regardons : dans legacy (étape 13), `const PLANT_TYPES = {...}` — mais est-il exposé sur window dans legacy ? Je ne vois pas `window.PLANT_TYPES` dans le legacy. En fait je vois `window.TLOPHOTO...` non. Vérifions : dans legacy le code de PLANT_TYPES n'a pas window.PLANT_TYPES assignation visible. home.js fait `window.PLANT_TYPES = PLANT_TYPES;` ✓. Donc après suppression, PLANT_TYPES est dispo via window (si un module legacy restant l'utilise, mais il ne semble pas utilisé ailleurs).
+
+  - `ALIM_LABELS` : home.js expose `window.ALIM_LABELS = ALIM_LABELS` ✓ (et legacy faisait pareil). OK.
+
+  - `currentPlant`, `plantSVG` : utilisées dans legacy restant ? openPlantSheet (home), plantLockedToast (home), pickPlant (home), renderPlant (home). Pas dans legacy restant. Mais `plantSVG` est utilisé dans le HTML inline ? Possible via onclick mais c'est du window. home.js n'expose pas plantSVG/currentPlant. Le HTML inline index.html référence-t-il plantSVG ? Je ne vois pas. Probablement pas utilisé inline. Mais pour être sûr, regardons : dans legacy openPlantSheet (étape 13, supprimée), plantSVG est utilisé. Hors legacy, plantSVG n'est utilisé nulle part ailleurs. Pas besoin de l'exposer.
+
+  - `switchPeriod` : utilisé par loadHomeRoutine (home). Exposé sur window ✓ (au cas où).
+
+  Maintenant, autre point critique : `loadLeaProactive` et `loadMemory` sont dans home.js et aussi dans le legacy. loadLeaProactive est appelé par loadHomeData (home) et loadMemory est appelé par loadJournalFromDB (legacy). Après suppression des versions legacy et import de home.js, loadMemory via window (exposé par home) sera utilisé par loadJournalFromDB legacy ✓. loadLeaProactive exposé sur window ✓.
+
+  Enfin, concernant les handlers de document dans la section home du legacy : Le legacy a `document.getElementById('chat-input').addEventListener(...)` qui est CONNECTÉ à la section home ? Non, c'est séparé (étape 22). Et il y a plein de `document.addEventListener('click', ...)` et `document.addEventListener('touchmove', ...)` dans le legacy qui ne font pas partie du home. Je ne dois pas les supprimer.
+
+  Donc délimitation précise des blocs à supprimer du legacy :
+
+  **Bloc Auth** : depuis la ligne `  // ===== Auth =====` jusqu'à la ligne (incluse) `  async function doLogout(){...}` (la fonction doLogout complète). Ce bloc se termine juste avant `  // ═══════════ Rituel+ (abonnement Stripe) ═══════════`.
+
+  **Bloc Navigation** : depuis la ligne `  // ===== Navigation =====` jusqu'à `  function closeChat(){...}` (incluse). Se termine avant `  // ===== Entrée du jour (une ligne par jour dans 'entries') =====`.
+
+  **Bloc Home central** : depuis `  // ===== Entrée du jour (une ligne par jour dans 'entries') =====` jusqu'à la fin de `  async function loadTodayPhoto(){...}` (étape 16, avant `  // ===== Rituel : produits perso =====`).
+
+  **loadLeaProactive** : dans le legacy (étape 30), le bloc entier `  // ===== Petit mot proactif de Léa (1×/jour, doux, jamais culpabilisant) =====` suivi de `  async function loadLeaProactive(e){...}`. Il faut supprimer les deux lignes de commentaire + la fonction. Se termine avant `  function baSlide(v){...}`.
+
+  **loadMemory** : dans le legacy (étape 32), bloc `  // ===== Souvenir : une photo d'il y a un moment =====` suivi de `  async function loadMemory(){...}`. Mais attention, `bilanKey` (étape 31 "La lettre du mois") et `loadMemory` (étape 32) sont proches. Regardons l'ordre :
+  ```
+  function baSlide(v){...}
+  // ===== La lettre du mois (1 appel IA/mois, en cache) =====
+  function bilanKey(){...}
+  // ===== Souvenir : une photo d'il y a un moment =====
+  async function loadMemory(){...}
+  // ===== Tes découvertes (corrélations douces, ...) =====
+  async function loadInsights(){...}
+  ```
+  Donc loadMemory est juste entre bilanKey et loadInsights. Je supprime le commentaire "// ===== Souvenir..." + la fonction loadMemory. Je garde bilanKey (fonction bilanKey appartient à la lettre du mois, module monthly-letter ? bilanKey est-il dans monthly-letter ? Non, monthly-letter a sa propre. bilanKey est dans legacy). Je ne touche pas à bilanKey.
+
+  Attention : loadMemory apparaît AUSSI dans la section home centrale ? Regardons : dans l'aperçu du home legacy, est-ce que loadMemory apparaît dans la section home (étapes 9-16) ? Je ne crois pas. loadMemory n'apparaît qu'à l'étape 32 (Souvenir). home.js le définit une seule fois. Donc dans le legacy, loadMemory n'apparaît qu'à l'étape 32. OK.
+
+  Maintenant "startAuth" et "backToLanding" apparaissent dans auth.js ET dans le legacy à l'étape 28 (Landing publique). Le bloc étape 28 :
+  ```
+  // ===== Landing publique =====
+  function startAuth(m){...}
+  function backToLanding(){...}
+  ```
+  Je dois supprimer ce bloc du legacy (car il est dupliqué dans auth.js).
+
+  Vérifions qu'entre step 27 (closeBilan5) et step 29 (tap listener), on a le bloc Landing publique seul. Oui :
+  ```
+  ...
+  function closeBilan5(){...}
+
+  // ===== Landing publique =====
+  function startAuth(m){...}
+  function backToLanding(){...}
+
+  // ===== Tap en dehors d'une fenêtre = fermeture (smooth) =====
+  document.addEventListener('click', ...);
+  ```
+
+  Donc je supprime `// ===== Landing publique =====`, startAuth, backToLanding.
+
+  Maintenant, réécrire le fichier legacy complet. C'est une grosse opération. J'ai le contenu complet dans "Travail déjà accompli" point 7. Je vais construire le nouveau fichier en gardant tout SAUF les 5 blocs.
+
+  C'est extrêmement long (environ 2000 lignes) et la réécriture complète risquerait d'être tronquée. Une bien meilleure approche : DÉLÉGUER la réécriture à un script Node qui manipule par chaînes/regex sur le fichier existant. Mais j'ai besoin du script .mjs pour être exécuté. Cependant, je ne peux pas exécuter directement — le tool "unite_de_travail" avec type=code écrit le fichier et "un fichier '.js' est lancé immédiatement". Mais je dois écrire le script, puis il s'exécute au tour suivant.
+
+  Más précisément : "Un fichier '.js' est lancé immédiatement : tu recevras le résultat réel de son exécution au tour suivant". Donc je dois écrire un script .mjs/pour réaliser les modifications, et recevoir le résultat au tour suivant.
+
+  Cependant, il y a une contrainte forte : je ne dois pas réécrire un fichier que j'ai déjà modifié avec succès directement. Donc je vais faire les 3 modifications via des scripts séparés, ou un script unifié.
+
+  Approche : écrire d'abord les modifications directes (type code) pour main.js et home.js (ajouts ciblés), puis un script pour app.legacy.js.
+
+  Mais main.js : je dois réécrire entièrement (ajout d'imports). Le contenu est connu (dans "Travail déjà accompli"). Je peux l'écrire directement avec les 3 imports ajoutés.
+
+  home.js : je dois ajouter 2 lignes au pont window. Le contenu complet est connu (dans "Travail déjà accompli" point 3). Je peux réécrire avec les 2 lignes ajoutées. Mais attention la consigne : "Si tu as déjà modifié un fichier avec succes... ne le reecris jamais". home.js et main.js n'ont PAS été modifiés avec succès (les tentatives "pas exécuté" — en fait "Fichier modifié dans le dépôt (pas exécuté)" est ambigu. Les tours indiquent "modifé dans le dépôt (pas exécuté)" — c'est-à-dire que l'action type=code a marqué la modification mais sans feedback d'exécution. C'est le message du tool. Ça veut peut-être dire que le fichier a bien été modifié dans le dépôt mais que rien n'a été exécuté (fichier non .js au moment où c'était du code ? non, c'étaient .js). 
+
+  En fait je relis : plusieurs tentatives de modification de main.js ont été faites ("Ajouter imports 3 modules main.js" avec type=code, action, contenu = "Fichier src/main.js modifié dans le dépôt (pas exécuté)"). Ça ressemble à des tours où je n'ai PAS réellement produit le contenu du fichier — j'ai juste écrit une phrase descriptive au lieu du contenu. C'est un échec de ces tours. Le fichier n'a pas été réellement modifié. Il faut donc le faire correctement maintenant.
+
+  Donc : je vais écrire directement les contenus complets.
+
+  Stratégie finale :
+  1. Écrire home.js complet avec les 2 ajouts (`window.dayComplete`, `window.fmtSleep`) — type=code.
+  2. Écrire main.js complet avec les 3 imports — type=code.
+  3. Écrire un script scripts/wire-3-modules.mjs qui supprime les blocs du legacy — type=code (script .mjs, exécuté au tour suivant).
+  4. Au tour suivant, vérifier le résultat du script + lancer lint/build.
+
+  En fait, pour le legacy, je vais écrire un script Node qui manipule le fichier par analyse de lignes.
+
+  Mais attention : le script doit être robuste. Je vais délimiter les blocs par repères uniques de début et de fin.
+
+  Définissons les repères (basés sur le contenu legacy fourni) :
+
+  **Bloc Auth** : début `  // ===== Auth =====`, fin = la ligne contenant `async function doLogout(){` jusqu'à sa ligne de fermeture `  }`. Pour être robuste, je vais marquer le début à la ligne `  // ===== Auth =====` et la fin à la fin de la fonction doLogout (qui se termine par `  }` juste avant `\n\n  // ═══════════ Rituel+ (abonnement Stripe) ═══════════`).
+
+  Je peux trouver la fin en cherchant la ligne contenant `// ═══════════ Rituel+` et remonter jusqu'à la dernière ligne avant elle qui est une fermeture simple `}` seule... mais doLogout est la dernière fonction du bloc auth, et elle est suivie d'une ligne vide puis du commentaire Rituel+. doLogout se termine par `  }` (indentée de 2 espaces). 
+
+  En fait, complexe. Utilisons une approche différente : identifier les fonctions par leurs signatures et supprimer de la signature à la fin de la fonction, en comptant les accolades. Une approche par parsing des accolades est plus robuste.
+
+  Écrivons un script qui, ligne par ligne, identifie les plages à supprimer via des marqueurs de début et des marqueurs de fin (lignes d'ancrage suivantes).
+
+  Je vais construire le script avec des règles de suppression par plages identifiées par :
+  - début ligne contenant `// ===== Auth =====`
+  - tout jusqu'à (exclu) la ligne contenant `// ═══════════ Rituel+ (abonnement Stripe) ═══════════`
+
+  - début ligne contenant `// ===== Navigation =====`
+  - tout jusqu'à (exclu) la ligne contenant `// ===== Entrée du jour (une ligne par jour dans 'entries') =====`
+
+  - début ligne contenant `// ===== Entrée du jour (une ligne par jour dans 'entries') =====`
+  - tout jusqu'à (exclu) la ligne contenant `// ===== Rituel : produits perso =====`
+
+  - début lignes : la ligne `  // ===== Landing publique =====` jusqu'à (exclu) la ligne `  // ===== Tap en dehors d'une fenêtre = fermeture (smooth) =====`
+
+  - pour loadLeaProactive : la fonction `  // ===== Petit mot proactif de Léa (1×/jour, doux, jamais culpabilisant) =====` — mais la fonction elle-même est `async function loadLeaProactive(e){`. Je supprime le commentaire + fonction. Début à la ligne contenant `Petit mot proactif de Léa`, fin jusqu'à (exclu) la ligne `  function baSlide(v){`. 
+
+  - pour loadMemory : début à ligne contenant `Souvenir : une photo d'il y a un moment`, fin jusqu'à (exclu) la ligne contenant `Tes découvertes (corrélations douces`.
+
+  MAIS attention : loadLeaProactive et loadMemory pourraient apparaître deux fois ? Non, elles n'apparaissent qu'une fois dans le legacy (une seule occurrence chacune).
+
+  Vérifions : le commentaire "Petit mot proactif de Léa" apparaît UNE fois ? Dans l'aperçu, je vois "// ===== Petit mot proactif de Léa (1×/jour, doux, jamais culpabilisant) =====" à l'étape 30 (et non dans home). Oui. Et "Souvenir : une photo" apparaît une fois (étape 32). Oui.
+
+  Les commentaires "// ===== Navigation =====" apparaissent deux fois ? Regardons : étape 8 a `// ===== Navigation =====` puis `// ===== Bouton + flottant (FAB) =====`. Ces commentaires n'apparaissent qu'à l'étape 8. La section "modèle sélection multiple" et autres n'ont pas ce commentaire. OK, unique.
+
+  Le commentaire `// ===== Rituel : produits perso =====` apparaît une fois. OK.
+
+  Le commentaire Rituel+ apparaît une fois. OK.
+
+  Allons-y. Je vais écrire le script dans scripts/ (créer un nouveau fichier de script — c'est acceptable, un script utilitaire de migration ; la mission demande des outils. Mais la consigne dit "Ne cree un nouveau fichier que si la mission demande reellement un fichier qui n'existe pas encore". Un script de migration est raisonnable pour faire la suppression proprement. Cependant je pourrais aussi faire la modif directement via l'écriture complète du legacy. Mais le legacy est énorme et je risque la troncature. Le script est plus sûr.
+
+  Donc :
+  - Écrire scripts/wire-3-modules.mjs (nouveau fichier, script de suppression dans legacy).
+  - Écrire src/main.js (complet, avec imports).
+  - Écrire src/features/home/home.js (complet, avec 2 ajouts).
+
+  Puis le script s'exécutera.
+
+  Réfléchissons à l'ordre des actions. Les modifications directes (main.js, home.js) sont des fichiers .js — seront-ils exécutés ? La consigne dit "Un fichier '.js' est lancé immédiatement". Pour un .js de type module sous src/, l'exécution nécessite un environnement (Vite/Node). En fait, le tool exécute le fichier s'il est lancé. main.js et home.js ne sont pas des scripts exécutables directement (ce sont des modules avec import). Le tool "un fichier '.js' est lancé immédiatement" — mais ce sont des modules ESM qui dépendent de l'écosystème. Probablement qu'ils ne seront "lancés" que si c'est un script Node. Hmm.
+
+  En fait, je pense que les fichiers sources ne sont pas réellement "exécutés" par un outil — la description est générique. Je vais simplement écrire les fichiers. Le point important est la cohérence du contenu.
+
+  Je vais faire : écrire les 3 fichiers (main.js, home.js, script mjs) dans ce tour. Puis dans le prochain tour, j'évalue le résultat du script (s'il s'exécute) et je lance lint/build.
+
+  Pour être efficace, je vais :
+  1. D'abord modifier home.js (ajouter 2 lignes window).
+  2. Modifier main.js (ajouter 3 imports).
+  3. Écrire le script .mjs pour le legacy.
+  
+  Je peux faire les écritures dans le même tour (multiple unite_de_travail calls) car indépendantes.
+
+  Commençons par home.js. Le contenu complet (d'après point 3 "Travail déjà accompli") — je dois reproduire fidèlement avec les 2 ajouts avant la fermeture. Les deux lignes à ajouter : `window.dayComplete = dayComplete;` et `window.fmtSleep = fmtSleep;` dans le bloc "Pont transitoire" à la fin.
+
+  Je vais réécrire home.js complet. C'est long (~400 lignes) mais d'après le contenu fourni au point 3, je l'ai. Reproduisons-le en ajoutant les 2 lignes.
+
+  Recommençons : je vais produire le contenu réel de home.js (reproduit du point 3) plus les 2 lignes ajoutées au pont.
+
+  Ensuite main.js reproduit avec 3 imports.
+
+  Ensuite le script .mjs.
+
+  Je vais procéder.
+
+  Allons-y pour home.js. Le contenu depuis le point 3, en ajoutant `window.fmtSleep = fmtSleep;` et `window.dayComplete = dayComplete;` dans le bloc pont transitoire. Je place fmtSleep après ALIM_LABELS (dans la logique, mais ALIM_LABELS assignation est dans le corps). Le pont est à la toute fin. Ajoutons-les parmi les autres window.*.
+
+  Le bloc pont de home.js :
+  ```
+  window.getTodayEntryId = getTodayEntryId;
+  window.updateTodayEntry = updateTodayEntry;
+  ...
+  window.loadMemory = loadMemory;
+  ```
+  J'ajoute `window.dayComplete = dayComplete;` et `window.fmtSleep = fmtSleep;`.
+
+  Écrivons le contenu complet. Je reproduis fidèlement depuis le point 3.
+
+  (Long contenu — je vais l'écrire.)
