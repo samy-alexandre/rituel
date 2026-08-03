@@ -4,12 +4,6 @@
   // ===== State (cache local de l'écran courant) =====
   // state (onboarding) : état partagé global (voir src/core/state.js).  // ===== Auth (session/auth) : voir src/features/auth/auth.js =====
 
-    function pickSignupGenre(g){
-    state.signupGenre=g;
-    var f=document.getElementById('gp-femme'), h=document.getElementById('gp-homme');
-    if(f) f.classList.toggle('sel', g==='femme');
-    if(h) h.classList.toggle('sel', g==='homme');
-  }
   async function doSignup(){
     const name=document.getElementById('signup-name').value.trim();
     const email=document.getElementById('signup-email').value.trim().toLowerCase();
@@ -74,38 +68,6 @@
       const ob=document.getElementById('onboarding');
       ob.classList.add('active'); 
     }
-  }
-
-  async function forgotPassword(){
-    const email=(document.getElementById('login-email').value||'').trim().toLowerCase();
-    const err=document.getElementById('login-error');
-    if(!validEmail(email)){ if(err){ err.style.color=''; err.textContent='Entre ton e-mail ci-dessus, puis retape « Mot de passe oublié ? ».'; } return; }
-    try{
-      await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin });
-      if(err){ err.style.color='var(--sage)'; err.textContent='E-mail envoyé ! Ouvre le lien reçu pour choisir un nouveau mot de passe.'; }
-    }catch(e){ if(err){ err.style.color=''; err.textContent="Impossible d'envoyer l'e-mail · réessaie."; } }
-  }
-  async function pwUpdate(){
-    const pwd=document.getElementById('pwreset-input').value;
-    const er=document.getElementById('pwreset-error'); if(er) er.textContent='';
-    if((pwd||'').length<6){ if(er) er.textContent='6 caractères minimum.'; return; }
-    const btn=document.getElementById('pwreset-btn'); setBtnLoading(btn,true);
-    const { error }=await sb.auth.updateUser({ password:pwd });
-    setBtnLoading(btn,false,'Valider mon nouveau mot de passe');
-    if(error){ if(er) er.textContent=error.message; return; }
-    document.getElementById('pwreset-sheet').classList.remove('open');
-    showToast('Mot de passe mis à jour ✓');
-  }
-  sb.auth.onAuthStateChange((event)=>{
-    if(event==='PASSWORD_RECOVERY'){
-      const a=document.getElementById('auth'); if(a){ a.classList.remove('hidden'); a.style.visibility='visible'; }
-      const sh=document.getElementById('pwreset-sheet'); if(sh) sh.classList.add('open');
-    }
-  });
-
-  async function doLogout(){
-    await sb.auth.signOut();
-    location.reload();
   }
 
   // ═══════════ Rituel+ (abonnement Stripe) ═══════════
