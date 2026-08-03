@@ -270,61 +270,6 @@
   }  // ===== Streak (selon le type de rituel choisi) =====  let _stkCache=null;
 
   async  // ===== Plante qui pousse avec la série =====
-
-  async function renderPlant(n){
-    const host=document.getElementById('plant-host'); if(!host) return;
-    if(typeof n!=='number'){ n = currentUser ? await computeStreak() : 0; }
-    const st=plantStage(n);
-    host.innerHTML = plantSVG(st, currentPlant());
-    const cap=document.getElementById('plant-caption');
-    if(cap){
-      if(n===0) cap.textContent='Fais ton rituel pour faire pousser ta plante 🌱';
-      else if(st>=5) cap.textContent='En fleur ! '+n+' jours de rituel 🌸';
-      else cap.textContent='Ta plante pousse · '+n+' jour'+(n>1?'s':'')+' 🌿';
-    }
-    // Félicitations quand la plante change de palier (pas au tout premier affichage)
-    try{
-      const key = currentUser ? 'rituel_plant_stage_'+currentUser.id : 'rituel_plant_stage';
-      const prev = parseInt(localStorage.getItem(key)||'-1',10);
-      if(st>0 && prev>=0 && st>prev){
-        const msgs={1:'Ta graine a germé 🌱',2:'Ta plante grandit 🌿',3:'De belles feuilles ! 🍃',4:'Un bouton apparaît 🌸',5:'Ta plante est en fleur ! 🌸'};
-        showToast(msgs[st]||'Ta plante a poussé 🌿');
-      }
-      if(st!==prev) localStorage.setItem(key, String(st));
-    }catch (e) {
-    console.error("catch silencieux (app.legacy.js):", e);
-}
-    // Déblocage de nouvelles plantes selon la série (notif au passage d'un palier)
-    try{
-      const uid = currentUser ? currentUser.id : 'anon';
-      const ukey='rituel_unlocked_'+uid;
-      if(localStorage.getItem(ukey)===null){
-        const achieved=Object.values(PLANT_TYPES).reduce((mx,v)=>(v.unlock<=n?Math.max(mx,v.unlock):mx),0);
-        localStorage.setItem(ukey, String(achieved));
-      } else {
-        const prevU=parseInt(localStorage.getItem(ukey),10);
-        const newly=Object.values(PLANT_TYPES).filter(v=>v.unlock>prevU && v.unlock<=n).sort((a,b)=>a.unlock-b.unlock);
-        if(newly.length){ const last=newly[newly.length-1]; showToast(last.emoji+' Nouvelle plante débloquée : '+last.name+' !'); localStorage.setItem(ukey, String(last.unlock)); }
-      }
-    }catch (e) {
-    console.error("catch silencieux (app.legacy.js):", e);
-}
-  }
-
-  async function bestStreak(){
-    if(!currentUser) return 0;
-    const { data } = await sb.from('entries').select('date,routine_matin,routine_soir,repos').eq('user_id',currentUser.id).order('date',{ascending:true});
-    const es=data||[];
-    const done=new Set(); es.forEach(e=>{ if(dayComplete(e)) done.add(e.date); });
-    if(!done.size) return 0;
-    const dates=[...done].sort();
-    let best=0, run=0, prev=null;
-    for(const d of dates){
-      if(prev){ const diff=Math.round((new Date(d)-new Date(prev))/86400000); run = (diff===1)? run+1 : 1; } else run=1;
-      if(run>best) best=run; prev=d;
-    }
-    return best;
-  }
   function plantLockedToast(d){ showToast('🔒 Plante à débloquer dès '+d+' jours de série 🌱'); }
   async function openPlantSheet(){
     const cur=currentPlant();
