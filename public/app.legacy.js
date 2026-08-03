@@ -2,75 +2,7 @@
   // currentUser : état partagé global (voir src/core/state.js), exposé par main.js.
 
   // ===== State (cache local de l'écran courant) =====
-  // state (onboarding) : état partagé global (voir src/core/state.js).  // ===== Auth (session/auth) : voir src/features/auth/auth.js =====
-
-  async function doSignup(){
-    const name=document.getElementById('signup-name').value.trim();
-    const email=document.getElementById('signup-email').value.trim().toLowerCase();
-    const pass=document.getElementById('signup-pass').value;
-    const age=parseInt(document.getElementById('signup-age').value,10);
-    const err=document.getElementById('signup-error'); err.textContent='';
-    const btn=document.querySelector('#form-signup .btn');
-    if(!name){ err.textContent='Indiquez votre prénom.'; return; }
-    if(!age || age<13 || age>120){ err.textContent='Indique un âge valide.'; return; }
-    if(!state.signupGenre){ err.textContent='Indique si tu es une femme ou un homme.'; return; }
-    if(!validEmail(email)){ err.textContent='E-mail invalide.'; return; }
-    if(pass.length<6){ err.textContent='Mot de passe : 6 caractères minimum.'; return; }
-    if(!document.getElementById('signup-consent').checked){ err.textContent='Veuillez accepter la politique de confidentialité pour continuer.'; return; }
-    setBtnLoading(btn, true);
-    state.age=age; state.genre=state.signupGenre;
-    const { data, error } = await sb.auth.signUp({
-      email, password: pass,
-      options:{ data:{ prenom: name, age: age, genre: state.signupGenre } }
-    });
-    setBtnLoading(btn, false, 'Créer mon carnet Rituel');
-    if(error){
-      if(/already/i.test(error.message)) err.textContent='Un compte existe déjà avec cet e-mail.';
-      else err.textContent = error.message;
-      return;
-    }
-    // Si la confirmation par e-mail est activée, pas de session immédiate
-    if(!data.session){
-      err.style.color='var(--sage)';
-      err.textContent="Compte créé ! Vérifie ton e-mail pour confirmer, puis connecte-toi.";
-      switchAuth('login');
-      err.style.color='';
-      return;
-    }
-    currentUser = data.user;
-    state.name = name;
-    document.getElementById('auth').classList.add('hidden');
-    const ob=document.getElementById('onboarding'); ob.classList.add('active'); 
-  }
-
-  async function doLogin(){
-    const email=document.getElementById('login-email').value.trim().toLowerCase();
-    const pass=document.getElementById('login-pass').value;
-    const err=document.getElementById('login-error'); err.textContent='';
-    const btn=document.querySelector('#form-login .btn');
-    if(!validEmail(email)){ err.textContent='E-mail invalide.'; return; }
-    setBtnLoading(btn, true);
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-    setBtnLoading(btn, false, 'Se connecter');
-    if(error){
-      if(/Invalid login/i.test(error.message)) err.textContent='E-mail ou mot de passe incorrect.';
-      else if(/not confirmed/i.test(error.message)) err.textContent="E-mail pas encore confirmé. Vérifie ta boîte mail.";
-      else err.textContent = error.message;
-      return;
-    }
-    currentUser = data.user;
-    const profile = await loadProfile();
-    applyProfile(profile);
-    if(profile && profile.type_peau){ enterApp(); }
-    else {
-      // connecté mais onboarding pas terminé
-      document.getElementById('auth').classList.add('hidden');
-      const ob=document.getElementById('onboarding');
-      ob.classList.add('active'); 
-    }
-  }
-
-  // ═══════════ Rituel+ (abonnement Stripe) ═══════════
+  // state (onboarding) : état partagé global (voir src/core/state.js).  // ===== Auth (session/auth) : voir src/features/auth/auth.js =====  // ═══════════ Rituel+ (abonnement Stripe) ═══════════
   function refreshPremiumUI(){
     // Carte de vente dans le profil : cachée si déjà abonnée
     const card=document.querySelector('.premium-card');
