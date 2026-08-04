@@ -33,11 +33,10 @@ function applyProfile(p) {
   }
   state.rituelType = p.rituel_type || state.rituelType || 'both';
   if (p.genre) state.genre = p.genre;
-  state.coachGenre = 'femme';
-  state.cycleEnabled = !!p.cycle_enabled;
+  state.coachGenre = 'femme';  state.cycleEnabled = !!p.cycle_enabled;
   state.cycleLastStart = p.cycle_last_start || null;
   state.cycleLength = p.cycle_length || 28;
-  updateCycleMenuMeta();
+  if (typeof window.updateCycleMenuMeta === 'function') window.updateCycleMenuMeta();
   applyCoachIdentity();
   state.email = currentUser ? currentUser.email : '';
 }
