@@ -60,6 +60,7 @@ import './features/badges/badges.js';
 import './features/eclat-graph/eclat-graph.js';
 import './features/share-image/share-image.js';
 import './features/before-after/before-after.js';
+import './core/boot.js'; // orchestration/démarrage : importé EN DERNIER, dépend de tout le reste chargé
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir
