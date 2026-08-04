@@ -51,5 +51,16 @@ async function loadBeforeAfter() {
   } catch (e) {}
 }
 
-// Pont transitoire : appel hérité (loadBeforeAfter au rendu du journal). Résolution via window.
-Object.assign(window, { loadBeforeAfter });
+// ===== Slider Avant / Après (curseur de comparaison) =====
+function baSlide(v) {
+  v = Number(v);
+  const b = document.getElementById('ba-before-img');
+  if (b) b.style.clipPath = 'inset(0 ' + (100 - v) + '% 0 0)';
+  const l = document.getElementById('ba-line');
+  if (l) l.style.left = v + '%';
+  const k = document.getElementById('ba-knob');
+  if (k) k.style.left = v + '%';
+}
+
+// Pont transitoire : appel hérité (loadBeforeAfter/baSlide au rendu du journal). Résolution via window.
+Object.assign(window, { loadBeforeAfter, baSlide });

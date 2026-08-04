@@ -58,32 +58,7 @@
 
   // Chat (Léa) : extrait dans src/features/chat/chat.js (exposé sur window par main.js).
   document.getElementById('chat-input').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendUserMsg(); } });  // ===== Routine tabs =====  // ===== Récap de la semaine (7 derniers jours) : extrait dans src/features/journal/journal.js (exposé sur window par main.js). =====
-  // Léa dans la messagerie (badge + message du jour) : extrait dans src/features/chat/chat.js (exposé sur window par main.js).
-  // ===== Tap en dehors d'une fenêtre = fermeture (smooth) =====
-  document.addEventListener('click', (e)=>{
-    const t=e.target;
-    if(t && t.classList && t.classList.contains('sheet-overlay') && t.classList.contains('open')){
-      t.classList.remove('open');
-      try{ stopBcCamera(); }catch (_e) {
-    console.error("catch silencieux (app.legacy.js):", _e);
-}
-      try{ tlStop(); }catch (_e) {
-    console.error("catch silencieux (app.legacy.js):", _e);
-}
-      try{ camStop(); }catch (_e) {
-    console.error("catch silencieux (app.legacy.js):", _e);
-}
-    }
-  });
-
-  function baSlide(v){
-    v=Number(v);
-    const b=document.getElementById('ba-before-img'); if(b) b.style.clipPath='inset(0 '+(100-v)+'% 0 0)';
-    const l=document.getElementById('ba-line'); if(l) l.style.left=v+'%';
-    const k=document.getElementById('ba-knob'); if(k) k.style.left=v+'%';
-  }
-  // ===== La lettre du mois (1 appel IA/mois, en cache) =====
-  function bilanKey(){ const d=new Date(); return 'rituel_bilan_'+(currentUser?currentUser.id:'x')+'_'+d.getFullYear()+'-'+(d.getMonth()+1); }  // ===== Rappels (notifications) : extrait dans src/features/reminders/reminders.js (exposé sur window par main.js). =====
+  // Léa dans la messagerie (badge + message du jour) : extrait dans src/features/chat/chat.js (exposé sur window par main.js). // ===== Rappels (notifications) : extrait dans src/features/reminders/reminders.js (exposé sur window par main.js). =====
   // Toast : extrait dans src/ui/toast.js (exposé sur window par main.js).
 
   // ===== Reset (déconnexion + nettoyage local) =====

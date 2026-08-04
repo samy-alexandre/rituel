@@ -17,6 +17,7 @@ import './data/photos.js';
 import './ui/toast.js';
 import './ui/dialog.js';
 import './ui/sheet.js';
+import './ui/overlay.js';
 import './features/data-export/data-export.js';
 import './features/auth/auth.js';
 import './features/navigation/navigation.js';
