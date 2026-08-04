@@ -105,44 +105,6 @@
     }
   }
 
-  // ===== Profil (table profiles) =====
-  async function loadProfile(){
-    if(!currentUser) return null;
-    const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
-    return data;
-  }
-  function applyProfile(p){
-    if(!p) return;
-    isPremium = !!p.is_premium;
-    premiumUntil = p.premium_until || null;
-    premiumCancel = !!p.premium_cancel;
-    refreshPremiumUI();
-    if(p.prenom) state.name = p.prenom;
-    if(p.type_peau) state.skinType = p.type_peau;
-    if(p.objectifs){ try{ const o=JSON.parse(p.objectifs); if(Array.isArray(o)){ state.concerns=o; } else { state.concerns=o.concerns||[]; state.goal=o.goal||null; state.age=o.age||null; } }catch(e){ state.concerns=[]; } }
-    state.rituelType = p.rituel_type || state.rituelType || 'both';
-    if(p.genre) state.genre = p.genre;
-    state.coachGenre = 'femme';
-    state.cycleEnabled = !!p.cycle_enabled;
-    state.cycleLastStart = p.cycle_last_start || null;
-    state.cycleLength = p.cycle_length || 28;
-    updateCycleMenuMeta();
-    applyCoachIdentity();
-    state.email = currentUser ? currentUser.email : '';
-  }
-  async function saveProfile(){
-    if(!currentUser) return;
-    const { error } = await sb.from('profiles').upsert({
-      id: currentUser.id,
-      prenom: state.name,
-      type_peau: state.skinType,
-      objectifs: JSON.stringify({ concerns: state.concerns||[], goal: state.goal||null, age: state.age||null }),
-      genre: state.genre,
-      coach_genre: state.coachGenre || 'femme'
-    });
-    if(error) console.warn('saveProfile:', error.message);
-  }
-
   // ===== RGPD : export et suppression =====
   async function exportData(){
     if(!currentUser){ showToast('Connecte-toi d\'abord'); return; }
