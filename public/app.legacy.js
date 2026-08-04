@@ -183,52 +183,6 @@
       const soir = !(h>=5 && h<18);
       gi.textContent = soir ? 'Prêt' + (prenom && prenom!=='toi' ? '' : '') + ' pour ton rituel du soir ?' : 'Prêt pour ton rituel du jour ?';
     }
-  }
-
-  // ===== Profil : badges + édition de la peau =====
-  const SKIN_LABELS = { seche:'Peau sèche', mixte:'Peau mixte', grasse:'Peau grasse', sensible:'Peau sensible', normale:'Peau normale' };
-  const CONCERN_LABELS = { acne:'Acné', taches:'Taches', rides:'Rides', eclat:'Éclat', pores:'Pores', cernes:'Cernes' };
-  window.SKIN_LABELS = SKIN_LABELS; window.CONCERN_LABELS = CONCERN_LABELS; // partagés (ex. contexte chat)
-  const SKIN_TYPES = [['seche','🌾','Sèche'],['mixte','🍯','Mixte'],['grasse','✨','Grasse'],['sensible','🌸','Sensible'],['normale','🌿','Normale']];
-  window.SKIN_TYPES = SKIN_TYPES;   // partagée avec le module Quiz (lecture via window)
-  const CONCERNS = [['acne','🌷','Acné, imperfections'],['taches','🍃','Taches, pigmentation'],['rides','🌹','Rides, fermeté'],['eclat','💫','Éclat, teint terne'],['pores','🌼','Pores dilatés'],['cernes','👁️','Cernes']];
-
-  async function renderProfileBadges(){
-    const el = document.getElementById('profile-badges'); if(!el) return;
-    let html='';
-    if(state.skinType) html += `<span class="badge">${SKIN_LABELS[state.skinType]||'Peau'}</span>`;
-    (state.concerns||[]).forEach(c=>{ if(CONCERN_LABELS[c]) html += `<span class="badge">${CONCERN_LABELS[c]}</span>`; });
-    const n = currentUser ? await computeStreak() : 0;
-    html += `<span class="badge-accent badge">${n>0 ? ('🔥 Série '+n+' j') : '🌱 Pas encore de série'}</span>`;
-    el.innerHTML = html;
-  }
-
-  let tmpSkin=null, tmpConcerns=[];
-  function openSkinSheet(){
-    tmpSkin = state.skinType;
-    tmpConcerns = [...(state.concerns||[])];
-    renderSkinOpts();
-    document.getElementById('skin-sheet').classList.add('open');
-  }
-  function renderSkinOpts(){
-    document.getElementById('skin-type-opts').innerHTML = SKIN_TYPES.map(([v,e,l])=>`<button class="onb-opt${tmpSkin===v?' selected':''}" onclick="pickSkin('${v}')"><span class="onb-opt-emoji">${e}</span><div class="onb-opt-text"><div class="onb-opt-title">${l}</div></div><div class="onb-opt-check"></div></button>`).join('');
-    document.getElementById('skin-concern-opts').innerHTML = CONCERNS.map(([v,e,l])=>`<button class="onb-opt${tmpConcerns.includes(v)?' selected':''}" onclick="toggleConcern('${v}')"><span class="onb-opt-emoji">${e}</span><div class="onb-opt-text"><div class="onb-opt-title">${l}</div></div><div class="onb-opt-check"></div></button>`).join('');
-  }
-  function pickSkin(v){ tmpSkin=v; renderSkinOpts(); }
-  function toggleConcern(v){ tmpConcerns = tmpConcerns.includes(v) ? tmpConcerns.filter(x=>x!==v) : [...tmpConcerns, v]; renderSkinOpts(); }
-  function closeSkinSheet(){ document.getElementById('skin-sheet').classList.remove('open'); }
-
-  async function saveSkinProfile(){
-    if(!tmpSkin){ showToast('Choisis un type de peau'); return; }
-    state.skinType = tmpSkin;
-    state.concerns = tmpConcerns;
-    await saveProfile();
-    try{ localStorage.setItem('rituel_profile_'+currentUser.id, JSON.stringify({ prenom: state.name, type_peau: state.skinType, objectifs: { concerns: state.concerns||[], goal: state.goal||null } })); }catch (e) {
-    console.error("catch silencieux (app.legacy.js):", e);
-}
-    closeSkinSheet();
-    renderProfileBadges();
-    showToast('Profil peau mis à jour 🌸');
   }  // ===== Streak (selon le type de rituel choisi) =====  let _stkCache=null;
 
   // ===== Jour de repos (joker hebdo qui protège la série) =====
