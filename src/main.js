@@ -23,6 +23,7 @@ import './features/navigation/navigation.js';
 import './features/profile/profile.js';
 import './features/premium/premium.js';
 import './features/home/home.js';
+import './features/bilan5/bilan5.js';
 import './features/chat/chat.js';
 import './features/datepicker/datepicker.js';
 import './features/reminders/reminders.js';
