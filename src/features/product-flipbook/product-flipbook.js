@@ -332,6 +332,137 @@ async function loadProducts() {
   renderRoutineFooter();
 }
 
+// ===== Tri / filtres de produits (migré depuis app.legacy.js) =====
+function toggleCatFilter(){
+  const menu=document.getElementById('cat-filter-menu');
+  const open = menu.style.display!=='none';
+  menu.style.display = open ? 'none' : 'flex';
+  document.getElementById('cat-filter-chip').classList.toggle('sel', !open && productCatFilter!=='all');
+}
+// fermer le menu si on clique ailleurs
+document.addEventListener('click', function(e){
+  const dd=document.querySelector('.cat-dd');
+  const menu=document.getElementById('cat-dd-menu');
+  if(dd && menu && !dd.contains(e.target)){ menu.classList.remove('open'); }
+});
+
+  // ═══ Produits : un seul menu, tri + catégorie ═══
+const SORTS = [
+  { id:'cat',   n:'Par catégorie' },
+  { id:'fav',   n:'Favoris d\'abord' },
+  { id:'alpha', n:'De A à Z' },
+  { id:'perem', n:'Par date de péremption' }
+];
+
+function toggleSortMenu(ev){
+  if(ev) ev.stopPropagation();
+  const menu=document.getElementById('sort-menu'); if(!menu) return;
+  if(menu.classList.contains('open')){ menu.classList.remove('open'); return; }
+
+  const prods = window.__allProducts || [];
+  const compte = {};
+  prods.forEach(p=>{ const k=p.categorie||'autre'; compte[k]=(compte[k]||0)+1; });
+
+  let html = '<div class="sort-head">Trier par</div>';
+  html += SORTS.map(s=>
+    '<button type="button" class="sort-opt'+(productSort===s.id?' sel':'')+'" onclick="setProductSort(\''+s.id+'\')">'+
+      '<span class="tick">✓</span><span class="lbl">'+s.n+'</span></button>'
+  ).join('');
+
+  const utilisees = CATS.filter(x=>compte[x[0]]);
+  if(utilisees.length){
+    html += '<div class="sort-sep"></div><div class="sort-head">Catégorie</div>';
+    html += [['all','Toutes']].concat(utilisees.map(x=>[x[0], x[2]])).map(cat=>{
+      const id=cat[0], nom=cat[1];
+      const n = (id==='all') ? prods.length : (compte[id]||0);
+      return '<button type="button" class="sort-opt'+(productCatFilter===id?' sel':'')+'" onclick="pickCat(\''+id+'\')">'+
+        '<span class="tick">✓</span><span class="lbl">'+nom+'</span><span class="cnt">'+n+'</span></button>';
+    }).join('');
+  }
+
+  menu.innerHTML = html;
+
+  // On sort le menu de l'écran produits et on l'attache au body :
+  // tant qu'il reste dedans, il gonfle la hauteur de la page et crée une barre de défilement.
+  if(menu.parentElement !== document.body){
+    document.body.appendChild(menu);
+  }
+
+  const btn = document.getElementById('sort-btn');
+  if(btn){
+    const r = btn.getBoundingClientRect();
+    menu.style.left = Math.max(16, r.left) + 'px';
+    menu.style.top  = (r.bottom + 6) + 'px';
+    menu.style.right = 'auto';
+  }
+  menu.classList.add('open');
+}
+
+function closeSortMenu(){
+  const m=document.getElementById('sort-menu');
+  if(m) m.classList.remove('open');
+}
+
+function refreshSortLabel(){
+  const el=document.getElementById('sort-label'); if(!el) return;
+  if(productCatFilter && productCatFilter!=='all'){
+    const info=CATS.find(x=>x[0]===productCatFilter);
+    el.textContent = info ? info[2] : 'Catégorie';
+    return;
+  }
+  const s=SORTS.find(x=>x.id===productSort);
+  el.textContent = s ? s.n.replace(' d\'abord','').replace('Par date de péremption','Péremption') : 'Trier';
+}
+
+function pickCat(cat){
+  productCatFilter = cat;
+  closeSortMenu();
+  refreshSortLabel();
+  loadProducts();
+}
+
+// Refermer le menu si on tape ailleurs
+document.addEventListener('click', function(e){
+  const menu=document.getElementById('sort-menu');
+  if(!menu || !menu.classList.contains('open')) return;
+  // Le menu vit désormais dans le <body> : il faut aussi l'exclure du "clic extérieur"
+  if(!e.target.closest('.sort-bar') && !e.target.closest('.sort-menu')){
+    menu.classList.remove('open');
+  }
+});
+
+// Le menu est fixé à l'écran : on le referme dès que la page bouge
+window.addEventListener('scroll', function(e){
+  const m=document.getElementById('sort-menu');
+  const t=e.target;
+  if(m && t && t.nodeType===1 && (t===m || (t.closest && t.closest('.sort-menu')))) return;
+  closeSortMenu();
+}, true);
+
+
+
+function setCatFilter(cat){
+  productCatFilter = cat;
+  const sel=document.getElementById('cat-filter-select');
+  if(sel) sel.classList.toggle('active-filter', cat!=='all');
+  loadProducts();
+}
+
+function setProductSort(s){
+  productSort = s;
+  productCatFilter = 'all';   // trier remet la vue complète
+  closeSortMenu();
+  refreshSortLabel();
+  loadProducts();
+}
+
+// ===== Catégories de soins (ordre canonique d'une routine) =====
+const CATS=[['demaquillant','🧼','Démaquillant / baume'],['nettoyant','🫧','Nettoyant'],['toner','💦','Lotion / toner'],['serum','✨','Sérum'],['yeux','👁️','Contour des yeux'],['creme','🧴','Crème hydratante'],['spf','☀️','Protection SPF'],['masque','🎭','Masque / exfoliant'],['cible','🩹','Soin ciblé'],['autre','🌿','Autre']];
+const CAT_RANK={}; CATS.forEach((x,i)=>CAT_RANK[x[0]]=i);
+window.CAT_RANK = CAT_RANK;   // partagée avec le module carnet feuilletable (lecture via window)
+window.CATS = CATS;   // partagée avec le module Fiche produit (lecture via window)
+function catLabel(k){ const f=CATS.find(x=>x[0]===k); return f ? f[1]+' '+f[2] : ''; }
+
 // Pont transitoire : onclick inline (toggleProductView, pbkGoTo, pbkToggleFav…) + appels
 // hérités (loadProducts appelle renderProductsBook/getProdView). Résolution via window.
 Object.assign(window, {
@@ -347,4 +478,12 @@ Object.assign(window, {
   pbkPage,
   renderProductsBook,
   loadProducts,
+  toggleCatFilter,
+  toggleSortMenu,
+  closeSortMenu,
+  refreshSortLabel,
+  pickCat,
+  setCatFilter,
+  setProductSort,
+  catLabel,
 });

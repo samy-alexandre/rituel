@@ -2724,7 +2724,7 @@ function toggleHrList() {
   b.textContent = open ? 'Voir en liste' : 'Masquer la liste';
 }
 window.addEventListener('resize', function () {
-  if (vyState) vyLayout();
+  vyLayout();
 });
 
 window.addEventListener('resize', function () {

@@ -16,6 +16,16 @@ import './core/utils.js'; // escapeHtml, loadScript
 import './data/photos.js';
 import './ui/toast.js';
 import './ui/dialog.js';
+import './ui/sheet.js';
+import './features/overlay/overlay.js';
+import './features/data-export/data-export.js';
+import './features/auth/auth.js';
+import './features/navigation/navigation.js';
+import './features/profile/profile.js';
+import './features/premium/premium.js';
+import './features/home/home.js';
+import './features/insights/insights.js';
+import './features/bilan5/bilan5.js';
 import './features/chat/chat.js';
 import './features/datepicker/datepicker.js';
 import './features/reminders/reminders.js';
@@ -34,6 +44,7 @@ import './features/product-effects/product-effects.js';
 import './features/product-form/product-form.js';
 import './features/product-cards/product-cards.js';
 import './features/product-flipbook/product-flipbook.js';
+import './features/product-selection/product-selection.js';
 import './features/product-favorites/product-favorites.js';
 import './features/ritual-editor/ritual-editor.js';
 import './features/ritual/ritual.js';
@@ -49,6 +60,7 @@ import './features/badges/badges.js';
 import './features/eclat-graph/eclat-graph.js';
 import './features/share-image/share-image.js';
 import './features/before-after/before-after.js';
+import './features/boot/boot.js'; // orchestration/démarrage : importé EN DERNIER, dépend de tout le reste chargé
 import './styles/index.css';
 
 // On injecte le code hérité seulement maintenant, une fois la couche core prête, pour garantir

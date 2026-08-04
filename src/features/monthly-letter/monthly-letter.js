@@ -52,6 +52,10 @@ function maybeShowLettreCta() {
   if (t) t.textContent = 'Ta lettre de ' + M[now.getMonth()] + ' est prête 💌';
   el.style.display = fin && !lettreSeen() ? 'block' : 'none';
 }
+function bilanKey() {
+  const d = new Date();
+  return 'rituel_bilan_' + (currentUser ? currentUser.id : 'x') + '_' + d.getFullYear() + '-' + (d.getMonth() + 1);
+}
 async function fetchLettre() {
   try {
     const cached = localStorage.getItem(bilanKey());
@@ -166,6 +170,7 @@ Object.assign(window, {
   lettreSeen,
   lettreArchive,
   maybeShowLettreCta,
+  bilanKey,
   fetchLettre,
   openLettre,
   closeLettre,
