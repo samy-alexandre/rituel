@@ -111,8 +111,7 @@ async function finishOnboarding() {
     try {
       await sb.from('products').insert(rows);
     } catch (e) {}
-  }
-  // filet de sécurité : on mémorise localement que l'onboarding est fait
+  }  // filet de sécurité : on mémorise localement que l'onboarding est fait
   try {
     localStorage.setItem(
       'rituel_profile_' + currentUser.id,
