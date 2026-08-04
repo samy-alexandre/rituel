@@ -434,14 +434,6 @@
     }catch(e){ sec.style.display='none'; }
   }
 
-  function openPlusSheet(raison){
-    const r=document.getElementById('plus-reason');
-    if(r) r.textContent = raison || 'Pour aller plus loin avec ta compagne de soin, sans limite 🌸';
-    document.querySelectorAll('.plus-buy').forEach(b=>{ b.disabled=false; });
-    document.getElementById('plus-sheet').classList.add('open');
-  }
-  function closePlusSheet(){ document.getElementById('plus-sheet').classList.remove('open'); }
-
   // ===== Léa dans la messagerie (badge + message du jour) =====
   function leaSeenKey(){ return 'rituel_leaseen_'+(currentUser?currentUser.id:'x')+'_'+todayStr(); }
   function bellTap(){
