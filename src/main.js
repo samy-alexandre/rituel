@@ -43,6 +43,7 @@ import './features/product-effects/product-effects.js';
 import './features/product-form/product-form.js';
 import './features/product-cards/product-cards.js';
 import './features/product-flipbook/product-flipbook.js';
+import './features/product-selection/product-selection.js';
 import './features/product-favorites/product-favorites.js';
 import './features/ritual-editor/ritual-editor.js';
 import './features/ritual/ritual.js';
