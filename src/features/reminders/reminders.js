@@ -184,3 +184,128 @@ Object.assign(window, {
   rapClose,
   rapSave,
 });
+
+// ===== Rappels quotidiens (planificateur matin / eau / soir) =====
+// Extrait de app.legacy.js (Phase B), déplacé VERBATIM. Dépend de globales window
+// (currentUser, showToast, pad2, todayStr) exposées par main.js / la couche core.
+const REMINDER_ITEMS = [
+  { id: 'matin', body: '☀️ C\'est l\'heure de ton rituel du matin 🌸', defTime: '08:00' },
+  { id: 'eau',   body: '💧 Pense à boire un verre d\'eau, ta peau te dira merci', defTime: '14:00' },
+  { id: 'soir',  body: '🌙 Petit rappel : ton rituel du soir t\'attend 💛', defTime: '21:00' }
+];
+function remKey() { return 'rituel_reminders_' + (currentUser ? currentUser.id : 'anon'); }
+function getReminders() {
+  try {
+    const r = JSON.parse(localStorage.getItem(remKey()) || 'null');
+    if (r && r.items) return r;
+  } catch (e) {
+    console.error('catch silencieux (app.legacy.js):', e);
+  }
+  return {
+    enabled: false,
+    items: REMINDER_ITEMS.map((it) => ({ id: it.id, time: it.defTime, on: true, lastFired: null })),
+  };
+}
+function saveReminders(cfg) {
+  try {
+    localStorage.setItem(remKey(), JSON.stringify(cfg));
+  } catch (e) {
+    console.error('catch silencieux (app.legacy.js):', e);
+  }
+}
+function updateBellDot() {
+  const d = document.getElementById('bell-dot');
+  if (d) d.style.display = getReminders().enabled ? 'block' : 'none';
+}
+
+function refreshPermLabel() {
+  const sub = document.getElementById('rem-perm-sub');
+  if (!sub) return;
+  if (!('Notification' in window)) {
+    sub.textContent = 'Non supporté sur ce navigateur';
+    return;
+  }
+  if (Notification.permission === 'granted') sub.textContent = 'Notifications autorisées ✓';
+  else if (Notification.permission === 'denied')
+    sub.textContent = 'Notifications bloquées (à réactiver dans le navigateur)';
+  else sub.textContent = 'Autoriser les notifications';
+}
+function openReminderSheet() {
+  document.getElementById('reminder-sheet').classList.add('open');
+  refreshPushBtn();
+}
+async function onReminderMaster(el) {
+  if (el.checked && 'Notification' in window && Notification.permission === 'default') {
+    const p = await Notification.requestPermission();
+    refreshPermLabel();
+    if (p !== 'granted') {
+      el.checked = false;
+      showToast('Autorise les notifications pour activer les rappels');
+    }
+  } else {
+    refreshPermLabel();
+  }
+}
+function closeReminderSheet() {
+  document.getElementById('reminder-sheet').classList.remove('open');
+}
+function saveReminderSheet() {
+  const enabled = document.getElementById('rem-enabled').checked;
+  const items = REMINDER_ITEMS.map((it) => ({
+    id: it.id,
+    time: document.getElementById('rem-' + it.id + '-time').value || it.defTime,
+    on: document.getElementById('rem-' + it.id + '-on').checked,
+    lastFired: null,
+  }));
+  saveReminders({ enabled, items });
+  updateBellDot();
+  startReminderScheduler();
+  closeReminderSheet();
+  showToast(enabled ? 'Rappels activés 🔔' : 'Rappels enregistrés');
+}
+let reminderTimer = null;
+function startReminderScheduler() {
+  if (reminderTimer) clearInterval(reminderTimer);
+  reminderTimer = setInterval(checkReminders, 30000);
+  checkReminders();
+}
+function checkReminders() {
+  const cfg = getReminders();
+  if (!cfg.enabled) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const now = new Date();
+  const hhmm = pad2(now.getHours()) + ':' + pad2(now.getMinutes());
+  const today = todayStr();
+  let changed = false;
+  cfg.items.forEach((it) => {
+    if (it.on && it.time === hhmm && it.lastFired !== today) {
+      const def = REMINDER_ITEMS.find((x) => x.id === it.id);
+      try {
+        new Notification('Rituel', { body: (def && def.body) || 'Petit rappel 🌸' });
+      } catch (e) {
+        console.error('catch silencieux (app.legacy.js):', e);
+      }
+      it.lastFired = today;
+      changed = true;
+    }
+  });
+  if (changed) saveReminders(cfg);
+}
+
+// Pont transitoire : ces fonctions sont invoquées par des handlers onclick inline
+// (déclarés dans index.html) qui se résolvent contre window au moment du clic.
+Object.assign(window, {
+  REMINDER_ITEMS,
+  remKey,
+  getReminders,
+  saveReminders,
+  updateBellDot,
+  refreshPermLabel,
+  openReminderSheet,
+  onReminderMaster,
+  closeReminderSheet,
+  saveReminderSheet,
+  startReminderScheduler,
+  checkReminders,
+});
+
