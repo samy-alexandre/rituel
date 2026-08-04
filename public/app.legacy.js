@@ -922,39 +922,8 @@
           '<path d="'+d+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+
           '<circle cx="'+((vals.length-1)*step).toFixed(1)+'" cy="'+(H-4-((last-min)/range)*(H-8)).toFixed(1)+'" r="4" fill="var(--accent)"/>'+
         '</svg>'+
-      '</div>';
-    host.style.display='block';
+      '</div>';    host.style.display='block';
   }
-  // ===== Fiche d'un jour (modifiable) =====
-  let ddState = { date:null, mood:null, photoFile:null, photoPath:null, hadSom:false, hadHyd:false, hadAli:false, somTouched:false, hydTouched:false, aliTouched:false };
-  async function saveDayDetail(){
-    if(!currentUser || !ddState.date) return;
-    showToast('Enregistrement…');
-    const fields = {
-      humeur: ddState.mood,
-      humeur_intensite: ddState.mood ? parseInt(document.getElementById('dd-intensity').value,10) : null,
-      routine_matin: document.getElementById('dd-matin').checked,
-      routine_soir: document.getElementById('dd-soir').checked,
-      note: document.getElementById('dd-note').value.trim()
-    };
-    if(ddState.hadSom || ddState.somTouched) fields.sommeil = parseFloat(document.getElementById('dd-sommeil').value);
-    if(ddState.hadHyd || ddState.hydTouched) fields.hydratation = parseInt(document.getElementById('dd-hydra').value,10);
-    if(ddState.hadAli || ddState.aliTouched) fields.alimentation = parseInt(document.getElementById('dd-alim').value,10);
-    if(ddState.photoFile){
-      const ext=(ddState.photoFile.name.split('.').pop()||'jpg').toLowerCase();
-      const path=`${currentUser.id}/${Date.now()}.${ext}`;
-      const { error: upErr } = await sb.storage.from('photos').upload(path, ddState.photoFile, { upsert:true });
-      if(!upErr) fields.photo_path = path;
-    }
-    const id = await getEntryIdForDate(ddState.date);
-    if(id) await sb.from('entries').update(fields).eq('id', id);
-    closeDayDetail();
-    showToast('Jour enregistré 🌸');
-    bustStreak();
-    renderCalendar();
-    if(ddState.date===todayStr()){ loadHomeData(); loadJournalFromDB(); }
-  }
-  function closeDayDetail(){ document.getElementById('day-detail').classList.remove('open'); }
 
   // ===== Rappels (notifications) =====
   const REMINDER_ITEMS = [
