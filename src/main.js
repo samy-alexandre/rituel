@@ -16,6 +16,7 @@ import './core/utils.js'; // escapeHtml, loadScript
 import './data/photos.js';
 import './ui/toast.js';
 import './ui/dialog.js';
+import './ui/sheet.js';
 import './features/auth/auth.js';
 import './features/navigation/navigation.js';
 import './features/profile/profile.js';
