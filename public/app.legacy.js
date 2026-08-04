@@ -495,20 +495,7 @@
   // Chat (Léa) : extrait dans src/features/chat/chat.js (exposé sur window par main.js).
   document.getElementById('chat-input').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendUserMsg(); } });
 
-  // ===== Routine tabs =====
-
-  // ===== Journal =====
-  function renderJournal(){
-    const grid=document.getElementById('journal-grid'); if(!grid) return;
-    grid.innerHTML = '<div class="jr-empty"><div class="jr-empty-ico">📷</div>'+
-      '<div class="jr-empty-title">Ta première photo</div>'+
-      '<div class="jr-empty-sub">Prends-la en lumière naturelle. Dans quelques semaines,<br>tu verras le chemin parcouru 🌸</div>'+
-      '<button class="jr-empty-btn" onclick="openPhotoChoice()">Ajouter une photo</button></div>';
-  }
-  function openEntry(day){ showToast(`Entrée du ${day} · vue détaillée bientôt`); }
-
-  // Charge les vraies entrées du journal depuis Supabase
-  // ===== Récap de la semaine (7 derniers jours) =====
+  // ===== Routine tabs =====  // ===== Récap de la semaine (7 derniers jours) =====
   async function loadWeekRecap(){
     const sec=document.getElementById('week-recap'); if(!sec) return;
     if(!currentUser){ sec.style.display='none'; return; }
