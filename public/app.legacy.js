@@ -669,42 +669,6 @@
       '</svg>';
   }
 
-  async function loadSuiviAccroche(){
-    const host=document.getElementById('suivi-accroche'); if(!host) return;
-    if(!currentUser){ host.style.display='none'; return; }
-    const since=new Date(); since.setDate(since.getDate()-13);
-    let es=[];
-    try{
-      const { data } = await sb.from('entries').select('date,score_peau').eq('user_id',currentUser.id).gte('date',since.toISOString().slice(0,10)).order('date',{ascending:true});
-      es=data||[];
-    }catch(e){ es=[]; }
-    const byDate={}; es.forEach(e=>{ if(e.score_peau!=null) byDate[e.date]=Number(e.score_peau); });
-    const vals=Object.keys(byDate).sort().map(k=>byDate[k]);
-    if(vals.length<2){ host.style.display='none'; return; }
-    const first=vals[0], last=vals[vals.length-1], delta=last-first;
-    let phrase, emoji;
-    if(delta>=5){ phrase='Ta peau progresse joliment'; emoji='🌿'; }
-    else if(delta>=0){ phrase='Ta peau reste stable, continue'; emoji='🌸'; }
-    else { phrase='Chaque jour compte, garde le rythme'; emoji='💧'; }
-    const max=Math.max(...vals), min=Math.min(...vals), range=(max-min)||1;
-    const W=300,H=54, step=W/(vals.length-1);
-    let d='';
-    vals.forEach((v,i)=>{ const x=i*step, y=H-4-((v-min)/range)*(H-8); d+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1)+' '; });
-    const area='M0,'+H+' '+d.replace(/^M/,'L')+' L'+W+','+H+' Z';
-    host.innerHTML =
-      '<div style="background:linear-gradient(150deg,#FFFEFB,#FAF3EA);border-radius:20px;padding:16px 18px;box-shadow:0 12px 30px rgba(46,33,28,0.08);">'+
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'+
-          '<div style="display:flex;align-items:center;gap:9px;"><span style="font-size:22px;">'+emoji+'</span><span style="font-family:var(--serif);font-size:16px;color:var(--ink);">'+phrase+'</span></div>'+
-          (delta!==0?'<span style="font-size:12px;font-weight:600;color:'+(delta>0?'#3E7A4E':'var(--accent)')+';">'+(delta>0?'+':'')+delta+'</span>':'')+
-        '</div>'+
-        '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;overflow:visible;">'+
-          '<path d="'+area+'" fill="var(--blush-soft)" opacity="0.5"/>'+
-          '<path d="'+d+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'+
-          '<circle cx="'+((vals.length-1)*step).toFixed(1)+'" cy="'+(H-4-((last-min)/range)*(H-8)).toFixed(1)+'" r="4" fill="var(--accent)"/>'+
-        '</svg>'+
-      '</div>';    host.style.display='block';
-  }
-
   // ===== Rappels (notifications) =====
   const REMINDER_ITEMS = [
     { id:'matin', body:'☀️ C\'est l\'heure de ton rituel du matin 🌸', defTime:'08:00' },
