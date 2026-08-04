@@ -146,14 +146,6 @@
   // Datepicker : extrait dans src/features/datepicker/ (exposé sur window par main.js).
 
 
-  // ===== Catégories de soins (ordre canonique d'une routine) =====
-  const CATS=[['demaquillant','🧼','Démaquillant / baume'],['nettoyant','🫧','Nettoyant'],['toner','💦','Lotion / toner'],['serum','✨','Sérum'],['yeux','👁️','Contour des yeux'],['creme','🧴','Crème hydratante'],['spf','☀️','Protection SPF'],['masque','🎭','Masque / exfoliant'],['cible','🩹','Soin ciblé'],['autre','🌿','Autre']];
-  const CAT_RANK={}; CATS.forEach((x,i)=>CAT_RANK[x[0]]=i);
-  window.CAT_RANK = CAT_RANK;   // partagée avec le module carnet feuilletable (lecture via window)
-  window.CATS = CATS;   // partagée avec le module Fiche produit (lecture via window)
-  function catLabel(k){ const f=CATS.find(x=>x[0]===k); return f ? f[1]+' '+f[2] : ''; }
-
-
 
   // Chat (Léa) : extrait dans src/features/chat/chat.js (exposé sur window par main.js).
   document.getElementById('chat-input').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendUserMsg(); } });
