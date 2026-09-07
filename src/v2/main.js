@@ -19,6 +19,7 @@
 import './app.css';
 import { sb } from '../core/supabase.js';
 import { composerRoutine, traceDuJour } from '../features/decision/decision.js';
+import { animerJardin } from './vie.js';
 
 const CATEGORIES = [
   ['demaquillant', 'Démaquillant'],
@@ -34,6 +35,52 @@ const CATEGORIES = [
 ];
 
 const NOM_CATEGORIE = Object.fromEntries(CATEGORIES);
+
+// Chaque categorie de produit a sa station dans le jardin. Ces illustrations
+// existaient deja dans l'application - c'est son identite, et rien ne sert de
+// la remplacer par des puces grises. Le moteur decide QUELLES stations
+// composent le chemin du soir ; le jardin les met en scene.
+const STATION = {
+  demaquillant: 'preparer',
+  nettoyant: 'nettoyer',
+  toner: 'equilibrer',
+  masque: 'masque',
+  cible: 'traiter',
+  serum: 'traiter',
+  yeux: 'yeux',
+  creme: 'hydrater',
+  spf: 'proteger',
+  autre: 'equilibrer',
+};
+
+// Les positions des stations, en pourcentage du jardin. UNE seule source de
+// verite : le sentier et les batisses lisent la meme liste, sinon le chemin
+// passe a cote des maisons - ce qui se voit au premier coup d'oeil.
+function pointsSentier(nombre) {
+  const pas = 100 / (nombre + 0.85);
+  const points = [[50, 1]];
+  for (let i = 0; i < nombre; i += 1) {
+    points.push([i % 2 === 0 ? 31 : 69, (i + 0.75) * pas + pas * 0.35]);
+  }
+  points.push([50, 99]);
+  return points;
+}
+
+// Une courbe lisse qui passe par chaque station : les points de controle sont
+// poses a mi-hauteur entre deux stations, ce qui donne le serpentin d'un
+// sentier de jardin plutot qu'une ligne brisee.
+function tracerSentier(nombre) {
+  if (nombre < 1) return '';
+  const points = pointsSentier(nombre);
+  let d = `M ${points[0][0]} ${points[0][1]}`;
+  for (let i = 1; i < points.length; i += 1) {
+    const [x0, y0] = points[i - 1];
+    const [x1, y1] = points[i];
+    const milieu = (y0 + y1) / 2;
+    d += ` C ${x0} ${milieu}, ${x1} ${milieu}, ${x1} ${y1}`;
+  }
+  return d;
+}
 
 // Mode demonstration (/refonte.html?demo) : l'application tourne avec une
 // salle de bain d'exemple, sans compte et sans ecrire une ligne en base.
@@ -239,9 +286,17 @@ async function chargerAbonnement() {
 // Rendu
 // ---------------------------------------------------------------------------
 
+let arreterVie = null;
+
 function rendre() {
+  // Chaque rendu remplace le DOM : sans cet arret, chaque bascule matin/soir
+  // laisserait derriere elle une boucle d'animation orpheline qui tourne dans
+  // le vide et mange la batterie.
+  if (arreterVie) { arreterVie(); arreterVie = null; }
   racine.innerHTML = etat.user ? vueApp() : vueSeuil();
   brancher();
+  const toile = racine.querySelector('canvas.vie');
+  if (toile) arreterVie = animerJardin(toile, etat.moment);
 }
 
 function vueSeuil() {
@@ -278,7 +333,7 @@ function vueApp() {
   const contenu = etat.onglet === 'aujourdhui' ? vueAujourdhui()
     : etat.onglet === 'produits' ? vueProduits()
       : vueAbonnement();
-  return `<div class="app">
+  return `<div class="app" data-moment="${etat.moment}">
     <div class="contenu">${contenu}</div>
     ${vueNav()}
   </div>`;
@@ -331,15 +386,30 @@ function vueAujourdhui() {
       <button class="bouton" data-onglet="produits">Ajouter mes produits</button>`;
   }
 
-  const etapes = routine.etapes.map((e) => `
-    <li class="etape">
-      <span class="rang">${e.rang}</span>
-      <div>
-        <div class="nom">${ech(e.nom)}</div>
-        <div class="meta">${ech(NOM_CATEGORIE[e.categorie] || e.categorie)}</div>
-        ${e.actifs.map((a) => `<span class="actif">${ech(a)}</span>`).join(' ')}
-      </div>
-    </li>`).join('');
+  const n = routine.etapes.length;
+  const points = pointsSentier(n);
+  const stations = routine.etapes.map((e, i) => {
+    const [x, y] = points[i + 1]; // points[0] est l'entree du jardin
+    return `
+      <li class="station" style="--x:${x}%; --y:${y}%; --ordre:${i}">
+        <img class="batisse" src="/img/bld/${STATION[e.categorie] || 'equilibrer'}.webp"
+          alt="" width="220" height="176" loading="lazy" />
+        <div class="etiquette">
+          <span class="num">${e.rang}</span>
+          <span class="nom">${ech(e.nom)}</span>
+          ${e.actifs.length ? `<span class="actif">${ech(e.actifs[0])}</span>` : ''}
+        </div>
+      </li>`;
+  }).join('');
+
+  const jardin = n ? `
+    <div class="jardin" style="--n:${n}">
+      <svg class="sentier" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="${tracerSentier(n)}" pathLength="1" />
+      </svg>
+      <canvas class="vie" aria-hidden="true"></canvas>
+      <ol class="stations">${stations}</ol>
+    </div>` : '';
 
   // Les raisons sont le produit. Sans elles, l'application redevient une liste.
   const ecartes = routine.ecartes.length ? `
@@ -379,7 +449,8 @@ function vueAujourdhui() {
       <button data-moment="soir" aria-pressed="${etat.moment === 'soir'}">Soir</button>
     </div>
 
-    ${etapes ? `<ul class="etapes">${etapes}</ul>` : ''}
+    ${jardin}
+    ${vueLea(routine)}
     ${notes}
     ${ecartes}
 
@@ -387,6 +458,22 @@ function vueAujourdhui() {
       ${fait ? 'Noté pour aujourd\'hui' : 'J\'ai appliqué cette routine'}
     </button>
     ${invitation}`;
+}
+
+// Lea dit UNE chose, celle qui apprend quelque chose. Les ecarts triviaux
+// (« a garder pour le soir ») ne lui vont pas : elle ne parle que quand elle a
+// une raison que la personne n'aurait pas trouvee seule.
+function vueLea(routine) {
+  const interessant = routine.ecartes.find((e) => /décape|dégrade|récupère|semaine|tire/i.test(e.raison));
+  const mot = routine.notes[0] || (interessant
+    ? `${interessant.produit.nom} attendra : ${interessant.raison.replace(/ — on garde.*$/, '')}.`
+    : null);
+  if (!mot) return '';
+  return `
+    <aside class="lea">
+      <span class="lea-nom">Léa</span>
+      <p class="lea-mot">${ech(mot)}</p>
+    </aside>`;
 }
 
 function vueProduits() {
@@ -507,7 +594,11 @@ function brancher() {
     rendre();
   });
 
-  surClic('[data-moment]', (e) => {
+  // `button[data-moment]` et non `[data-moment]` : le conteneur .app porte le
+  // meme attribut pour piloter l'ambiance, et sans cette precision l'evenement
+  // remontait jusqu'a lui, qui reecrivait l'etat avec la valeur en cours - la
+  // bascule ne changeait donc jamais de moment.
+  surClic('button[data-moment]', (e) => {
     etat.moment = e.currentTarget.dataset.moment;
     rendre();
   });
