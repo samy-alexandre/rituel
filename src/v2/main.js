@@ -19,8 +19,6 @@
 import './app.css';
 import { sb } from '../core/supabase.js';
 import { composerRoutine, traceDuJour } from '../features/decision/decision.js';
-import { animerJardin } from './vie.js';
-import { dessinerSentier } from './sentier.js';
 
 const CATEGORIES = [
   ['demaquillant', 'Démaquillant'],
@@ -54,18 +52,6 @@ const STATION = {
   autre: 'equilibrer',
 };
 
-// Les positions des stations, en pourcentage du jardin. UNE seule source de
-// verite : le sentier et les batisses lisent la meme liste, sinon le chemin
-// passe a cote des maisons - ce qui se voit au premier coup d'oeil.
-function pointsSentier(nombre) {
-  const pas = 100 / (nombre + 0.85);
-  const points = [[50, 1]];
-  for (let i = 0; i < nombre; i += 1) {
-    points.push([i % 2 === 0 ? 31 : 69, (i + 0.75) * pas + pas * 0.35]);
-  }
-  points.push([50, 99]);
-  return points;
-}
 
 // Mode demonstration (/refonte.html?demo) : l'application tourne avec une
 // salle de bain d'exemple, sans compte et sans ecrire une ligne en base.
@@ -414,20 +400,6 @@ function vueAujourdhui() {
   }
 
   const n = routine.etapes.length;
-  const points = pointsSentier(n);
-  const stations = routine.etapes.map((e, i) => {
-    const [x, y] = points[i + 1]; // points[0] est l'entree du jardin
-    return `
-      <li class="station" style="--x:${x}%; --y:${y}%; --ordre:${i}">
-        <img class="batisse" src="/img/bld/${STATION[e.categorie] || 'equilibrer'}.webp"
-          alt="" width="220" height="176" loading="lazy" />
-        <div class="etiquette">
-          <span class="num">${e.rang}</span>
-          <span class="nom">${ech(e.nom)}</span>
-          ${e.actifs.length ? `<span class="actif">${ech(e.actifs[0])}</span>` : ''}
-        </div>
-      </li>`;
-  }).join('');
 
   const jardin = n ? `
     <div class="jardin3d">
