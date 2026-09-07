@@ -615,6 +615,158 @@ p {
   line-height: 1.5;
 }
 
+/* ---------- le jardin en volume ---------- */
+
+.jardin3d {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--ombre);
+  background: var(--creux);
+}
+
+.jardin3d .scene {
+  display: block;
+  width: 100%;
+  /* Portrait franc : on regarde un chemin qui s'eloigne, pas un paysage. */
+  aspect-ratio: 3 / 4;
+  animation: paraitre 1.4s ease forwards;
+}
+
+/* Un voile en bas de la scene, pour que les etapes s'y posent sans coupure
+   nette entre le volume et le texte. */
+.jardin3d .voile-scene {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 130px;
+  background: linear-gradient(to bottom, transparent, var(--surface) 88%);
+  pointer-events: none;
+}
+
+.jardin3d .etapes3d {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 4px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+
+.jardin3d .etapes3d li {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  gap: 14px;
+  align-items: baseline;
+  padding: 15px 20px;
+  border-top: 1px solid var(--trait);
+}
+
+.jardin3d .etapes3d li:first-child {
+  border-top: none;
+}
+
+.jardin3d .etapes3d li[data-station] {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.jardin3d .etapes3d li.ici {
+  background: var(--accent-clair);
+}
+
+.jardin3d .etapes3d li.ici .nom {
+  font-weight: 500;
+}
+
+/* L'indice de geste : il disparait des qu'on a compris, et ne revient plus. */
+.jardin3d .indice {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 152px;
+  text-align: center;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  color: rgb(255 255 255 / 0.72);
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
+  pointer-events: none;
+  animation: respirer 2.6s ease-in-out infinite;
+}
+
+@keyframes respirer {
+  0%, 100% { opacity: 0.45; transform: translateY(0); }
+  50% { opacity: 0.95; transform: translateY(-5px); }
+}
+
+/* La carte de la station atteinte : posee sur la scene, pas au-dessus du
+   texte, pour qu'on garde le chemin sous les yeux. */
+.jardin3d .carte-station {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 126px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(14px);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 0 8px 26px -8px rgb(0 0 0 / 0.5);
+  animation: monter 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes monter {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.jardin3d .carte-station .rang {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pale);
+}
+
+.jardin3d .carte-station .nom {
+  font-family: var(--serif);
+  font-size: 23px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.jardin3d .carte-station .actif:not(:empty) {
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: 5px;
+}
+
+.jardin3d .etapes3d .rang {
+  font-family: var(--serif);
+  font-size: 19px;
+  color: var(--accent);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.jardin3d .etapes3d .nom {
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.jardin3d .etapes3d .actif {
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
 /* ---------- le jardin : la routine devient un chemin ---------- */
 
 /* Le voile reste leger : l'illustration EST le produit visuel de Rituel, la

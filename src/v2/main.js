@@ -280,14 +280,50 @@ function rendre() {
   if (arreterVie) { arreterVie(); arreterVie = null; }
   racine.innerHTML = etat.user ? vueApp() : vueSeuil();
   brancher();
-  const pave = racine.querySelector('canvas.pave');
-  if (pave) {
-    const n = pave.closest('.jardin').style.getPropertyValue('--n');
-    dessinerSentier(pave, pointsSentier(Number(n) || 1), etat.moment);
-  }
+  const scene = racine.querySelector('canvas.scene');
+  if (scene) {
+    const routine = composerRoutine({
+      produits: etat.produits,
+      moment: etat.moment,
+      historique: lireHistorique(),
+      date: aujourdhui(),
+      profil: etat.profil,
+    });
+    const carte = racine.querySelector('.carte-station');
+    const lignes = [...racine.querySelectorAll('.etapes3d li')];
 
-  const toile = racine.querySelector('canvas.vie');
-  if (toile) arreterVie = animerJardin(toile, etat.moment);
+    // Mise a jour CIBLEE du DOM : appeler rendre() ici demonterait la scene 3D
+    // et la rechargerait a chaque pas sur le chemin.
+    const montrer = (i) => {
+      const e = routine.etapes[i];
+      if (!e || !carte) return;
+      carte.querySelector('.rang').textContent = `Étape ${e.rang} sur ${routine.etapes.length}`;
+      carte.querySelector('.nom').textContent = e.nom;
+      carte.querySelector('.actif').textContent = e.actifs[0] || '';
+      carte.hidden = false;
+      lignes.forEach((l, k) => l.classList.toggle('ici', k === i));
+      racine.querySelector('.indice')?.setAttribute('hidden', '');
+    };
+
+    // Import differe : Three.js et les modeles pesent plus que tout le reste de
+    // l'application. Les ecrans Produits et Rituel+ ne les telechargent jamais.
+    import('./jardin3d.js').then(({ monterJardin3d }) => {
+      if (!scene.isConnected) return null;
+      return monterJardin3d(scene, routine.etapes, etat.moment, montrer);
+    }).then((arret) => {
+      if (!arret) return;
+      if (!scene.isConnected) { arret(); return; }
+      arreterVie = arret;
+      // Toucher une etape de la liste emmene le parcours jusqu'a elle.
+      lignes.forEach((l) => {
+        const aller = () => arret.allerA(Number(l.dataset.station));
+        l.addEventListener('click', aller);
+        l.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); aller(); }
+        });
+      });
+    }).catch((err) => console.error('jardin 3D :', err));
+  }
 }
 
 function vueSeuil() {
@@ -394,10 +430,23 @@ function vueAujourdhui() {
   }).join('');
 
   const jardin = n ? `
-    <div class="jardin" style="--n:${n}">
-      <canvas class="pave" aria-hidden="true"></canvas>
-      <canvas class="vie" aria-hidden="true"></canvas>
-      <ol class="stations">${stations}</ol>
+    <div class="jardin3d">
+      <canvas class="scene"></canvas>
+      <p class="indice">Glissez vers le haut pour avancer sur le chemin</p>
+      <div class="voile-scene"></div>
+      <div class="carte-station" hidden>
+        <span class="rang"></span>
+        <span class="nom"></span>
+        <span class="actif"></span>
+      </div>
+      <ol class="etapes3d">
+        ${routine.etapes.map((e, i) => `
+          <li data-station="${i}" tabindex="0" role="button">
+            <span class="rang">${e.rang}</span>
+            <span class="nom">${ech(e.nom)}</span>
+            ${e.actifs.length ? `<span class="actif">${ech(e.actifs[0])}</span>` : ''}
+          </li>`).join('')}
+      </ol>
     </div>` : '';
 
   // Les raisons sont le produit. Sans elles, l'application redevient une liste.
