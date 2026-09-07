@@ -159,7 +159,7 @@ Réponds toujours en français, avec le cœur. Sois cette présence rassurante e
     let data;
 
     if (engyKey) {
-      r = await fetch(process.env.ENGY_BASE_URL || 'https://api.electronhub.ai/v1/chat/completions', {
+      r = await fetch(process.env.ENGY_BASE_URL || 'https://api.engy.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
