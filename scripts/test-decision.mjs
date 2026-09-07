@@ -106,6 +106,26 @@ console.log('\nMemoire des jours precedents');
   verifie('un vieux passage ne bloque rien', noms(loin).includes('Crème rétinol 0.3'));
 }
 
+console.log('\nTolerance de la peau');
+{
+  // Deux passages de retinoide dans la semaine : une peau resistante en accepte
+  // un troisieme, une peau sensible non.
+  const historique = [
+    { date: '2026-09-02', actifs: ['retinoide'] },
+    { date: '2026-09-04', actifs: ['retinoide'] },
+  ];
+  const commun = { produits: [retinol, nettoyant], moment: 'soir', date: '2026-09-07', historique };
+
+  const sensible = composerRoutine({ ...commun, profil: { tolerance: 'sensible' } });
+  verifie('peau sensible : deux fois suffisent', !noms(sensible).includes('Crème rétinol 0.3'));
+
+  const resistante = composerRoutine({ ...commun, profil: { tolerance: 'resistante' } });
+  verifie('peau resistante : un troisieme passage est permis', noms(resistante).includes('Crème rétinol 0.3'));
+
+  const sansProfil = composerRoutine(commun);
+  verifie('sans profil, le reglage prudent s\'applique', noms(sansProfil).includes('Crème rétinol 0.3'));
+}
+
 console.log('\nCe que l\'application doit dire');
 {
   const sansSpf = composerRoutine({ produits: [nettoyant, creme], moment: 'matin', date: '2026-09-07' });

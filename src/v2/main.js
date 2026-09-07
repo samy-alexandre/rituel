@@ -53,8 +53,36 @@ const PRODUITS_DEMO = [
   { id: 'd8', nom: 'Fluide solaire SPF 50', categorie: 'spf' },
 ];
 
+// Le diagnostic. Trois questions, un seul ecran : chaque question de plus est
+// une personne de moins qui arrive jusqu'a la routine.
+const DIAGNOSTIC = [
+  {
+    cle: 'typePeau',
+    question: 'Votre peau, plutôt…',
+    choix: [['seche', 'Sèche'], ['normale', 'Normale'], ['mixte', 'Mixte'], ['grasse', 'Grasse']],
+  },
+  {
+    cle: 'tolerance',
+    question: 'Elle réagit…',
+    choix: [
+      ['sensible', 'Facilement — ça tiraille, ça rougit'],
+      ['normale', 'Normalement'],
+      ['resistante', 'Rarement — elle encaisse tout'],
+    ],
+  },
+  {
+    cle: 'objectif',
+    question: 'Ce que vous voulez changer',
+    choix: [
+      ['imperfections', 'Imperfections'], ['rides', 'Rides'],
+      ['taches', 'Taches'], ['hydratation', 'Hydratation'], ['eclat', 'Éclat'],
+    ],
+  },
+];
+
 const etat = {
   user: null,
+  profil: null,
   produits: [],
   onglet: 'aujourdhui',
   moment: momentParDefaut(),
@@ -100,6 +128,27 @@ function ech(s) {
 
 function cleHistorique() {
   return `rituel.v2.historique.${etat.user ? etat.user.id : 'anon'}`;
+}
+
+function cleProfil() {
+  return `rituel.v2.profil.${etat.user ? etat.user.id : 'anon'}`;
+}
+
+function lireProfil() {
+  try {
+    const brut = localStorage.getItem(cleProfil());
+    return brut ? JSON.parse(brut) : null;
+  } catch {
+    return null;
+  }
+}
+
+function ecrireProfil(profil) {
+  try {
+    localStorage.setItem(cleProfil(), JSON.stringify(profil));
+  } catch {
+    /* sans stockage, le diagnostic sera redemande - pas bloquant */
+  }
 }
 
 function lireHistorique() {
@@ -196,6 +245,9 @@ function vueSeuil() {
 }
 
 function vueApp() {
+  if (!etat.profil) {
+    return `<div class="app"><div class="contenu">${vueDiagnostic()}</div></div>`;
+  }
   const contenu = etat.onglet === 'aujourdhui' ? vueAujourdhui()
     : etat.onglet === 'produits' ? vueProduits()
       : vueAbonnement();
@@ -205,12 +257,38 @@ function vueApp() {
   </div>`;
 }
 
+function vueDiagnostic() {
+  const brouillon = etat.diagnostic || {};
+  const complet = DIAGNOSTIC.every((q) => brouillon[q.cle]);
+  return `
+    <div class="entete">
+      <span class="date">Trois questions, une fois</span>
+      <h1>Votre peau</h1>
+    </div>
+    <p style="color:var(--doux)">Rituel s'en sert pour régler le rythme des actifs
+    forts. Une peau qui réagit vite ne reçoit pas de rétinol au même rythme
+    qu'une peau qui encaisse.</p>
+    ${DIAGNOSTIC.map((q) => `
+      <div class="champ">
+        <label>${ech(q.question)}</label>
+        <div class="puces">
+          ${q.choix.map(([cle, libelle]) => `
+            <button type="button" class="puce" data-diag="${q.cle}" data-valeur="${cle}"
+              aria-pressed="${brouillon[q.cle] === cle}">${ech(libelle)}</button>`).join('')}
+        </div>
+      </div>`).join('')}
+    <button class="bouton" id="valider-diagnostic" ${complet ? '' : 'disabled'}>
+      ${complet ? 'C\'est parti' : 'Répondez aux trois'}
+    </button>`;
+}
+
 function vueAujourdhui() {
   const routine = composerRoutine({
     produits: etat.produits,
     moment: etat.moment,
     historique: lireHistorique(),
     date: aujourdhui(),
+    profil: etat.profil,
   });
 
   const titre = etat.moment === 'matin' ? 'Ce matin' : 'Ce soir';
@@ -373,6 +451,18 @@ function brancher() {
     racine.querySelector('#inscription')?.addEventListener('click', () => authentifier('inscription'));
   }
 
+  surClic('[data-diag]', (e) => {
+    const { diag, valeur } = e.currentTarget.dataset;
+    etat.diagnostic = { ...(etat.diagnostic || {}), [diag]: valeur };
+    rendre();
+  });
+
+  racine.querySelector('#valider-diagnostic')?.addEventListener('click', () => {
+    etat.profil = etat.diagnostic;
+    ecrireProfil(etat.profil);
+    rendre();
+  });
+
   surClic('[data-onglet]', (e) => {
     etat.onglet = e.currentTarget.dataset.onglet;
     etat.erreur = '';
@@ -524,12 +614,14 @@ async function demarrer() {
   if (DEMO) {
     etat.user = { id: 'demo' };
     etat.produits = PRODUITS_DEMO;
+    etat.profil = lireProfil();
     rendre();
     return;
   }
   const { data: { session } } = await sb.auth.getSession();
   etat.user = session ? session.user : null;
   if (etat.user) {
+    etat.profil = lireProfil();
     try {
       await Promise.all([chargerProduits(), chargerAbonnement()]);
     } catch (err) {

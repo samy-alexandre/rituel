@@ -160,6 +160,28 @@ function joursDepuis(historique, actif, aujourdhui) {
   return Math.round((new Date(aujourdhui) - dates[0]) / 86400000);
 }
 
+// Une peau sensible ne tolere pas le meme rythme qu'une peau resistante. C'est
+// la personnalisation la plus utile et la plus defendable : elle ne change pas
+// QUELS produits sont conseilles, elle change a quelle frequence les plus forts
+// reviennent. Une peau qui brule, c'est un abonnement qui s'arrete.
+const TOLERANCE = {
+  sensible: { facteur: 0.6, reposEnPlus: 1 },
+  normale: { facteur: 1, reposEnPlus: 0 },
+  resistante: { facteur: 1.34, reposEnPlus: 0 },
+};
+
+function reglesPour(actif, profil) {
+  const base = ACTIFS[actif];
+  const t = TOLERANCE[(profil && profil.tolerance) || 'normale'] || TOLERANCE.normale;
+  return {
+    ...base,
+    maxParSemaine: base.maxParSemaine
+      ? Math.max(1, Math.round(base.maxParSemaine * t.facteur))
+      : base.maxParSemaine,
+    reposApres: base.reposApres ? base.reposApres + t.reposEnPlus : base.reposApres,
+  };
+}
+
 /**
  * Compose la routine d'un moment donne.
  *
@@ -167,9 +189,12 @@ function joursDepuis(historique, actif, aujourdhui) {
  * @param {'matin'|'soir'} moment
  * @param {object[]} historique  - [{ date, actifs: [] }], le plus recent en premier
  * @param {string} date          - le jour considere, 'AAAA-MM-JJ'
+ * @param {object} profil        - { tolerance: 'sensible'|'normale'|'resistante', typePeau, objectif }
  * @returns {{moment, etapes, ecartes, notes}}
  */
-export function composerRoutine({ produits = [], moment = 'soir', historique = [], date } = {}) {
+export function composerRoutine({
+  produits = [], moment = 'soir', historique = [], date, profil = null,
+} = {}) {
   const aujourdhui = date || new Date().toISOString().slice(0, 10);
   const candidats = produits.map((p) => ({
     produit: p,
@@ -208,7 +233,7 @@ export function composerRoutine({ produits = [], moment = 'soir', historique = [
   //    cause numero un des abandons : la peau brule, la personne arrete tout.
   restants = restants.filter((c) => {
     for (const a of c.actifs) {
-      const regle = ACTIFS[a];
+      const regle = reglesPour(a, profil);
       if (!regle.maxParSemaine) continue;
       if (comptePassages(historique, a, 7, aujourdhui) >= regle.maxParSemaine) {
         garde(c, `${regle.nom} déjà utilisé ${regle.maxParSemaine} fois cette semaine`);
@@ -266,6 +291,11 @@ export function composerRoutine({ produits = [], moment = 'soir', historique = [
   }
   if (!etapes.length) {
     notes.push('Aucun produit ne convient à ce moment de la journée.');
+  }
+  if (profil && profil.tolerance === 'sensible'
+    && etapes.some((e) => e.actifs.length && ACTIFS.retinoide.nom !== undefined
+      && (e.actifs.includes(ACTIFS.retinoide.nom) || e.actifs.includes(ACTIFS.exfoliant.nom)))) {
+    notes.push('Votre peau étant sensible, les actifs forts reviennent moins souvent — c\'est voulu.');
   }
 
   return { moment, date: aujourdhui, etapes, ecartes, notes };
