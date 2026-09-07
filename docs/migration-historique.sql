@@ -45,6 +45,22 @@ create policy "chacun efface sa memoire"
   on public.historique_actifs for delete
   using (auth.uid() = user_id);
 
+-- LE PRIVILEGE, QU'ON OUBLIE TOUJOURS. Les politiques RLS decident QUELLES
+-- LIGNES un role peut voir ; elles ne lui donnent pas le droit d'ouvrir la
+-- table. Sans ce grant, une application pourtant connectee recoit
+-- « 42501 permission denied » et n'ecrit jamais rien - c'est exactement ce que
+-- la verification a montre apres la premiere execution.
+--
+-- `authenticated` seulement : une personne non connectee n'a rien a faire dans
+-- l'historique de la peau de quelqu'un.
+grant select, insert, update, delete
+  on table public.historique_actifs to authenticated;
+
 -- La lecture se fait toujours par utilisateur et par date.
 create index if not exists historique_actifs_user_date
   on public.historique_actifs (user_id, date desc);
+
+-- Verifie apres coup, en production, le 2026-09-07 :
+--   select policyname, cmd from pg_policies where tablename = 'historique_actifs';
+--   -> 4 lignes (SELECT, INSERT, UPDATE, DELETE)
+--   et un appel REST anonyme renvoie bien 401.
