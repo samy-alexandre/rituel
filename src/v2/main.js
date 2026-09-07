@@ -120,6 +120,9 @@ const etat = {
   profil: null,
   produits: [],
   historique: [],
+  // Les stations validees du moment en cours. Remises a zero au changement de
+  // moment : le chemin du matin et celui du soir ne se partagent pas.
+  validees: new Set(),
   onglet: 'aujourdhui',
   moment: momentParDefaut(),
   abonne: false,
@@ -243,6 +246,33 @@ async function chargerAbonnement() {
 // Rendu
 // ---------------------------------------------------------------------------
 
+// L'ARRIVEE AU BOUT DU CHEMIN.
+//
+// C'est le moment que Sam appelle « j'ai fait quelque chose aujourd'hui », et
+// c'est le coeur du produit. Il ne se felicite pas avec un score ni une
+// etoile : le jardin s'illumine, on annonce le nombre de soirs tenus, et ca
+// s'efface. Une barre d'experience ferait basculer l'application du cote du
+// jeu mobile, exactement ce qu'on evite depuis le debut.
+function feter() {
+  const jours = profondeurMemoire(lireHistorique(true)) + 1;
+  const app = racine.querySelector('.app');
+  if (!app) return;
+
+  const mot = document.createElement('div');
+  mot.className = 'arrivee';
+  mot.innerHTML = `
+    <span class="arrivee-titre">Chemin terminé</span>
+    <span class="arrivee-detail">${jours > 1 ? `${jours} jours que vous le tenez` : 'Votre premier soir'}</span>`;
+  app.appendChild(mot);
+  app.classList.add('illumine');
+
+  setTimeout(() => {
+    mot.classList.add('part');
+    app.classList.remove('illumine');
+    setTimeout(() => mot.remove(), 400);
+  }, 2600);
+}
+
 let arreterVie = null;
 // Un numero de generation par rendu. Le montage de la scene 3D est asynchrone
 // (import differe + chargement des modeles) : sans ce jeton, changer d'onglet
@@ -287,14 +317,23 @@ function rendre() {
 
     // Mise a jour CIBLEE du DOM : appeler rendre() ici demonterait la scene 3D
     // et la rechargerait a chaque pas sur le chemin.
+    let stationVue = -1;
     const montrer = (i) => {
       const e = routine.etapes[i];
       if (!e || !carte) return;
+      stationVue = i;
+      const faite = etat.validees.has(i);
       carte.querySelector('.rang').textContent = `Étape ${e.rang} sur ${routine.etapes.length}`;
       carte.querySelector('.nom').textContent = e.nom;
       carte.querySelector('.actif').textContent = e.actifs[0] || '';
+      const bouton = carte.querySelector('.valider');
+      bouton.textContent = faite ? 'Fait' : 'Appliqué';
+      bouton.disabled = faite;
       carte.hidden = false;
-      lignes.forEach((l, k) => l.classList.toggle('ici', k === i));
+      lignes.forEach((l, k) => {
+        l.classList.toggle('ici', k === i);
+        l.classList.toggle('faite', etat.validees.has(k));
+      });
       racine.querySelector('.indice')?.setAttribute('hidden', '');
     };
 
@@ -316,6 +355,33 @@ function rendre() {
         l.addEventListener('keydown', (ev) => {
           if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); aller(); }
         });
+      });
+
+      // Les stations deja validees aujourd'hui restent allumees au rechargement.
+      etat.validees.forEach((i) => arret.valider(i));
+
+      carte?.querySelector('.valider')?.addEventListener('click', async () => {
+        if (stationVue < 0 || etat.validees.has(stationVue)) return;
+        const faite = stationVue;
+        etat.validees.add(faite);
+        arret.valider(faite);
+        montrer(faite);
+
+        // On avance EXPLICITEMENT a la station suivante plutot que d'attendre
+        // que la camera se rapproche assez pour la detecter : la detection de
+        // proximite est un signal d'ambiance, pas un mecanisme de navigation,
+        // et le parcours restait bloque sur l'etape qu'on venait de finir.
+        if (faite + 1 < routine.etapes.length) {
+          setTimeout(() => { if (scene.isConnected) montrer(faite + 1); }, 760);
+        }
+
+        // La routine n'est consignee QUE lorsque le chemin est entierement
+        // parcouru : c'est l'arrivee au bout qui vaut « j'ai fait ma routine »,
+        // pas le premier produit applique.
+        if (arret.toutesValidees()) {
+          await consigner(routine);
+          feter();
+        }
       });
     }).catch((err) => console.error('jardin 3D :', err));
   }
@@ -421,6 +487,7 @@ function vueAujourdhui() {
           <span class="rang"></span>
           <span class="nom"></span>
           <span class="actif"></span>
+          <button class="valider" type="button">Appliqué</button>
         </div>
       </div>
       <ol class="etapes3d">
@@ -681,6 +748,9 @@ function brancher() {
   // bascule ne changeait donc jamais de moment.
   surClic('button[data-moment]', (e) => {
     etat.moment = e.currentTarget.dataset.moment;
+    // Changer de moment change de chemin : les stations validees du matin
+    // n'ont rien a dire sur celui du soir.
+    etat.validees = new Set();
     rendre();
   });
 

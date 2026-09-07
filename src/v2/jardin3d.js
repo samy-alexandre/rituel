@@ -24,8 +24,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const AMBIANCES = {
   soir: {
-    haut: 0x061310,
-    bas: 0x1d5f43,
+    haut: 0x040c0a,
+    bas: 0x0e3a2b,
     brume: 0x0a1c16,
     sol: 0x10251c,
     cle: 0xffb271,
@@ -396,7 +396,11 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     feu.position.copy(p).addScaledVector(cote, sens * 2.45);
     feu.position.y = 1.15;
     scene.add(feu);
-    lampes.push({ feu, phase: i * 1.7 });
+    // `validee` porte le sentiment de reussite : une station appliquee
+    // s'ALLUME et le reste. C'est la lumiere qui dit « j'ai fait ca », pas un
+    // score ni une etoile - le registre haut de gamme ne survivrait pas a une
+    // barre d'experience.
+    lampes.push({ feu, phase: i * 1.7, objet, validee: false, montee: 0 });
   });
 
   // Les lucioles, seulement le soir : des points additifs qui derivent.
@@ -533,10 +537,24 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
       }
     }
 
-    // Les lanternes vacillent, chacune a son rythme.
+    // Les lanternes vacillent, chacune a son rythme. Une station validee monte
+    // progressivement vers une lumiere trois fois plus forte : la montee est
+    // lente (une seconde et demie) parce qu'un evenement instantane ne se
+    // ressent pas - on doit VOIR le jardin s'allumer.
     for (const l of lampes) {
-      l.feu.intensity = A.puissanceLanterne
-        * (0.86 + Math.sin(t * 2.4 + l.phase) * 0.07 + Math.sin(t * 5.7 + l.phase * 2) * 0.05);
+      if (l.validee && l.montee < 1) l.montee = Math.min(1, l.montee + 0.011);
+      const vacille = 0.86 + Math.sin(t * 2.4 + l.phase) * 0.07
+        + Math.sin(t * 5.7 + l.phase * 2) * 0.05;
+      l.feu.intensity = A.puissanceLanterne * vacille * (1 + l.montee * 2.2);
+      if (l.montee > 0 && l.objet) {
+        // L'objet lui-meme se met a rendre la lumiere qu'il recoit.
+        l.objet.traverse((o) => {
+          if (o.material && o.material.emissive) {
+            o.material.emissive.setHex(A.lanterne);
+            o.material.emissiveIntensity = l.montee * 0.32;
+          }
+        });
+      }
     }
 
     if (lucioles) {
@@ -595,5 +613,18 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   };
 
   demonter.allerA = allerA;
+
+  // Allumer une station, et emmener le parcours a la suivante : le geste
+  // « appliqué » doit faire AVANCER, sinon on reste devant ce qu'on vient de
+  // finir et rien ne dit que le chemin progresse.
+  demonter.valider = (index) => {
+    const l = lampes[index];
+    if (!l || l.validee) return;
+    l.validee = true;
+    if (index + 1 < ancres.length) setTimeout(() => allerA(index + 1), 700);
+  };
+
+  demonter.toutesValidees = () => lampes.length > 0 && lampes.every((l) => l.validee);
+
   return demonter;
 }

@@ -811,6 +811,11 @@ p {
   right: 16px;
   bottom: 16px;
   line-height: 1.4;
+  /* Sans cela, glisser sur la carte pour avancer sur le chemin surligne le
+     texte au lieu de faire defiler la scene - le geste principal de l'ecran
+     tombe alors sur un menu de selection. */
+  user-select: none;
+  -webkit-user-select: none;
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   backdrop-filter: blur(14px);
   border-radius: 16px;
@@ -839,6 +844,102 @@ p {
   font-size: 23px;
   line-height: 1.15;
   letter-spacing: -0.01em;
+}
+
+/* Le bouton de validation, dans la carte : le geste se fait DEVANT la station
+   qu'on vient d'appliquer, pas en bas de page loin du chemin. */
+.jardin3d .carte-station .valider {
+  margin-top: 12px;
+  border: none;
+  background: var(--accent);
+  color: var(--fond);
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  transition:
+    transform var(--vite) var(--courbe),
+    background var(--normal) var(--courbe),
+    opacity var(--normal) var(--courbe);
+}
+
+.jardin3d .carte-station .valider:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.jardin3d .carte-station .valider:disabled {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  opacity: 0.75;
+}
+
+/* Une etape faite s'efface doucement dans la liste : elle a rempli son role. */
+.jardin3d .etapes3d li.faite .nom {
+  color: var(--pale);
+  text-decoration: line-through;
+  text-decoration-color: var(--trait-fort);
+}
+
+.jardin3d .etapes3d li.faite .rang {
+  color: var(--accent);
+  opacity: 0.6;
+}
+
+/* L'arrivee : le jardin s'illumine quelques secondes. */
+.app.illumine {
+  --feuille: rgb(79 196 138 / 0.18);
+}
+
+.app.illumine .jardin3d {
+  box-shadow:
+    var(--ombre),
+    0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent),
+    0 0 60px -10px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.arrivee {
+  position: fixed;
+  left: 50%;
+  bottom: 96px;
+  transform: translateX(-50%);
+  z-index: 40;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 18px;
+  padding: 16px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  box-shadow: 0 16px 44px -14px rgb(0 0 0 / 0.55);
+  animation: arriver 520ms var(--rebond) both;
+}
+
+.arrivee.part {
+  animation: partir 380ms var(--courbe) both;
+}
+
+.arrivee-titre {
+  font-family: var(--serif);
+  font-size: 24px;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+}
+
+.arrivee-detail {
+  font-size: 13.5px;
+  color: var(--doux);
+}
+
+@keyframes arriver {
+  from { opacity: 0; transform: translateX(-50%) translateY(18px) scale(0.94); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+@keyframes partir {
+  to { opacity: 0; transform: translateX(-50%) translateY(-10px); }
 }
 
 .jardin3d .carte-station .actif:not(:empty) {
