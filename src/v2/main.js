@@ -25,6 +25,7 @@ import {
   consigner as noterAuServeur,
   profondeur as profondeurMemoire,
 } from './historique.js';
+import { activerRappels, dejaDemande, enregistrerServiceWorker } from './rappels.js';
 
 const CATEGORIES = [
   ['demaquillant', 'Démaquillant'],
@@ -294,6 +295,42 @@ function feter() {
     app.classList.remove('illumine');
     setTimeout(() => mot.remove(), 400);
   }, 2600);
+
+  // Le rappel se propose ICI, une fois le chemin termine : la personne vient de
+  // voir ce que l'application lui apporte. Demande a l'ouverture, la permission
+  // est refusee par reflexe - et un refus est definitif, le navigateur ne
+  // repose plus jamais la question.
+  if (!dejaDemande()) setTimeout(proposerRappel, 3200);
+}
+
+function proposerRappel() {
+  const app = racine.querySelector('.app');
+  if (!app || racine.querySelector('.proposition')) return;
+
+  const bloc = document.createElement('div');
+  bloc.className = 'proposition';
+  bloc.innerHTML = `
+    <span class="proposition-titre">Vous rappeler demain ?</span>
+    <span class="proposition-detail">Un mot le soir, à l'heure où vous faites votre rituel.</span>
+    <div class="proposition-boutons">
+      <button class="bouton" data-rappel="oui">Oui, rappelez-moi</button>
+      <button class="lien-danger" data-rappel="non">Non merci</button>
+    </div>`;
+  app.appendChild(bloc);
+
+  bloc.querySelector('[data-rappel="non"]').addEventListener('click', () => bloc.remove());
+  bloc.querySelector('[data-rappel="oui"]').addEventListener('click', async () => {
+    bloc.querySelector('[data-rappel="oui"]').disabled = true;
+    const actif = await activerRappels(etat.user ? etat.user.id : null);
+    bloc.querySelector('.proposition-titre').textContent = actif
+      ? 'C\'est noté'
+      : 'Les rappels sont bloqués';
+    bloc.querySelector('.proposition-detail').textContent = actif
+      ? 'Rituel vous fera signe demain soir.'
+      : 'Vous pouvez les réactiver dans les réglages de votre navigateur.';
+    bloc.querySelector('.proposition-boutons').remove();
+    setTimeout(() => bloc.remove(), 3000);
+  });
 }
 
 let arreterVie = null;
@@ -1091,6 +1128,10 @@ async function supprimerCompte() {
 // ---------------------------------------------------------------------------
 
 async function demarrer() {
+  // Le service worker sert deja le hors-ligne et recevra les rappels. On
+  // l'enregistre sans attendre : il ne demande aucune autorisation.
+  void enregistrerServiceWorker();
+
   if (DEMO) {
     etat.user = { id: 'demo' };
     etat.produits = PRODUITS_DEMO;

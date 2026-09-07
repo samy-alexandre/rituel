@@ -921,6 +921,46 @@ p {
   animation: partir 380ms var(--courbe) both;
 }
 
+/* La proposition de rappel : elle arrive apres l'arrivee, jamais avant, et se
+   retire d'elle-meme. */
+.proposition {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 92px;
+  max-width: 528px;
+  margin: 0 auto;
+  z-index: 41;
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--trait-fort);
+  border-radius: 18px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 18px 44px -14px rgb(0 0 0 / 0.6);
+  animation: arriver 420ms var(--rebond) both;
+}
+
+.proposition-titre {
+  font-family: var(--serif);
+  font-size: 21px;
+}
+
+.proposition-detail {
+  font-size: 14.5px;
+  color: var(--doux);
+  line-height: 1.45;
+}
+
+.proposition-boutons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
 .arrivee-titre {
   font-family: var(--serif);
   font-size: 24px;
