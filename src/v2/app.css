@@ -18,40 +18,55 @@
   --r: 16px;
   --marge: 22px;
 
-  /* Matin : lumiere franche, vert profond. */
-  --fond: #f8f5f0;
+  /* MATIN — une serre au petit jour. Vert profond, corail, or.
+     Le beige d'origine etait sage ; il ne disait rien. Une application de soin
+     parle de vegetal et de peau : sa couleur doit venir de la. */
+  --fond: #f2f7f2;
   --surface: #ffffff;
-  --creux: #efeae2;
-  --encre: #191512;
-  --doux: #6b6157;
-  --pale: #a2978a;
-  --accent: #2f6b54;
-  --accent-clair: #e4eee9;
-  --alerte: #97562b;
-  --alerte-clair: #f8ebe0;
-  --trait: #e5ded3;
-  --trait-fort: #cfc5b6;
-  --halo: radial-gradient(120% 62% at 50% -14%, #fff5e0 0%, rgba(255, 245, 224, 0) 68%);
-  --ombre: 0 1px 2px rgb(25 21 18 / 0.05), 0 8px 24px -12px rgb(25 21 18 / 0.14);
+  --creux: #e4ede5;
+  --encre: #0f2419;
+  --doux: #4d6656;
+  --pale: #8ba394;
+  --accent: #10633f;
+  --accent-clair: #d9ecdf;
+  --chaud: #e0714a;
+  --chaud-clair: #fde8e0;
+  --or: #c2922f;
+  --alerte: #b4551f;
+  --alerte-clair: #fdeadf;
+  --trait: #d8e6da;
+  --trait-fort: #b7cdbc;
+  --halo:
+    radial-gradient(90% 46% at 12% -6%, rgb(224 113 74 / 0.14) 0%, rgb(224 113 74 / 0) 60%),
+    radial-gradient(120% 60% at 82% -12%, rgb(16 99 63 / 0.16) 0%, rgb(16 99 63 / 0) 62%);
+  --ombre: 0 1px 2px rgb(15 36 25 / 0.06), 0 12px 32px -14px rgb(15 36 25 / 0.22);
+  --feuille: rgb(16 99 63 / 0.07);
 }
 
-/* Soir : la piece est sombre, la lampe est ambree. */
+/* SOIR — la meme serre, la nuit. Vert profond presque noir, et la chaleur
+   d'une lampe : le corail devient la seule source vive de l'ecran. */
 .app[data-moment='soir'],
 body:has(.app[data-moment='soir']) {
-  --fond: #15110e;
-  --surface: #1e1815;
-  --creux: #261f1a;
-  --encre: #f3ece2;
-  --doux: #b0a396;
-  --pale: #7d7267;
-  --accent: #d3a06a;
-  --accent-clair: #2c221a;
-  --alerte: #d99a63;
-  --alerte-clair: #2e2119;
-  --trait: #2c2420;
-  --trait-fort: #3f342d;
-  --halo: radial-gradient(120% 58% at 50% -12%, #3a2a1c 0%, rgba(58, 42, 28, 0) 70%);
-  --ombre: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 30px -14px rgb(0 0 0 / 0.7);
+  --fond: #071410;
+  --surface: #0e211a;
+  --creux: #142a21;
+  --encre: #e9f4ec;
+  --doux: #9dbcaa;
+  --pale: #6c8d7b;
+  --accent: #4fc48a;
+  --accent-clair: #12332413;
+  --chaud: #ff8f61;
+  --chaud-clair: #2c1a14;
+  --or: #e5b455;
+  --alerte: #f0a06a;
+  --alerte-clair: #2a1a13;
+  --trait: #1b3529;
+  --trait-fort: #2c4d3c;
+  --halo:
+    radial-gradient(85% 42% at 14% -6%, rgb(255 143 97 / 0.2) 0%, rgb(255 143 97 / 0) 58%),
+    radial-gradient(120% 62% at 84% -10%, rgb(79 196 138 / 0.16) 0%, rgb(79 196 138 / 0) 64%);
+  --ombre: 0 1px 2px rgb(0 0 0 / 0.5), 0 16px 40px -16px rgb(0 0 0 / 0.85);
+  --feuille: rgb(79 196 138 / 0.09);
 }
 
 * {
@@ -155,13 +170,35 @@ textarea {
   color: var(--pale);
 }
 
+/* La typographie porte l'ecran. En 2026 le titre n'est pas une etiquette, il
+   est l'element le plus present de la page - et sur mobile c'est lui qui donne
+   a une application son air fini ou son air de brouillon. */
 h1 {
   font-family: var(--serif);
   font-weight: 400;
-  font-size: 44px;
-  line-height: 1.05;
+  font-size: clamp(46px, 15vw, 68px);
+  line-height: 0.94;
   margin: 0;
-  letter-spacing: -0.022em;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+/* Le second mot du titre prend l'accent : « Ce SOIR ». Une couleur dans le
+   titre suffit a le faire lire comme un objet compose, pas comme un libelle. */
+h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+/* Le feuillage, pose loin derriere tout le reste. */
+.feuillage {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 300px;
+  color: var(--feuille);
+  pointer-events: none;
+  z-index: 0;
 }
 
 h2 {

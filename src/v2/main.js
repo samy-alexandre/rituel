@@ -104,6 +104,17 @@ const DIAGNOSTIC = [
   },
 ];
 
+// Un feuillage pose derriere l'interface. Dessine plutot que texture : il suit
+// le theme (var(--feuille)) et pese quelques centaines d'octets.
+const FEUILLAGE = `
+  <svg class="feuillage" viewBox="0 0 400 300" aria-hidden="true" preserveAspectRatio="xMidYMin slice">
+    <g fill="currentColor">
+      <path d="M-10 40c60-34 118-26 150 14 12 15 16 33 12 52-38 6-72-4-96-26-19-17-31-38-66-40z"/>
+      <path d="M410 8c-58 6-104 38-118 84-5 17-3 34 5 49 38-4 68-24 86-52 14-22 19-47 27-81z"/>
+      <path d="M330 250c-40-18-80-10-104 22-9 12-13 26-11 40 30 6 57-2 76-20 15-14 25-27 39-42z"/>
+    </g>
+  </svg>`;
+
 const etat = {
   user: null,
   profil: null,
@@ -239,6 +250,20 @@ let arreterVie = null;
 // chaque aller-retour en empilait une de plus jusqu'a figer l'appareil.
 let generation = 0;
 
+// MODE INVITE : l'application entiere fonctionne sans compte.
+//
+// Mesure du marche, pas intuition : un mur d'inscription pose AVANT la
+// premiere valeur perd 20 a 40 % des personnes qui l'atteignent, et le retirer
+// remonte la retention a J1 de 15 a 30 %. C'est le changement au meilleur
+// retour de tout un parcours d'entree.
+//
+// L'ordre est donc : diagnostic -> produits -> LA ROUTINE S'AFFICHE -> et
+// seulement alors, « creez un compte pour ne pas perdre votre rituel ». Le
+// compte se justifie par ce qu'on a deja recu, il ne se demande pas d'avance.
+function estInvite() {
+  return !etat.user && !!etat.profil;
+}
+
 function rendre() {
   generation += 1;
   const mienne = generation;
@@ -331,6 +356,7 @@ function vueApp() {
     : etat.onglet === 'produits' ? vueProduits()
       : vueAbonnement();
   return `<div class="app" data-moment="${etat.moment}">
+    ${FEUILLAGE}
     <div class="contenu">${contenu}</div>
     ${vueNav()}
   </div>`;
@@ -370,7 +396,7 @@ function vueAujourdhui() {
     profil: etat.profil,
   });
 
-  const titre = etat.moment === 'matin' ? 'Ce matin' : 'Ce soir';
+  const titre = etat.moment === 'matin' ? 'Ce <em>matin</em>' : 'Ce <em>soir</em>';
 
   if (!etat.produits.length) {
     return `

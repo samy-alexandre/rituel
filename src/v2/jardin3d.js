@@ -24,14 +24,14 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const AMBIANCES = {
   soir: {
-    haut: 0x1b1410,
-    bas: 0x8a4a20,
-    brume: 0x2a1c14,
-    sol: 0x241b15,
-    cle: 0xffa855,
+    haut: 0x061310,
+    bas: 0x1d5f43,
+    brume: 0x0a1c16,
+    sol: 0x10251c,
+    cle: 0xffb271,
     intensiteCle: 2.6,
-    ciel: 0x2a2440,
-    remplissage: 0x6b4a30,
+    ciel: 0x15384c,
+    remplissage: 0x2c5a42,
     lanterne: 0xffb055,
     puissanceLanterne: 5.5,
     exposition: 1.05,
