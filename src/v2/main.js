@@ -151,14 +151,38 @@ function ecrireProfil(profil) {
   }
 }
 
-function lireHistorique() {
+// Ce que l'abonnement achete reellement : la profondeur de la memoire.
+//
+// Sept jours suffisent a voir le conseil fonctionner - « tu as mis du retinol
+// hier » marche des le premier soir, gratuitement. Ce qui se paie, c'est le
+// rythme sur des semaines : la frequence hebdomadaire d'un actif fort ne se
+// mesure pas sur une fenetre de sept jours glissants qui oublie a mesure.
+//
+// On ne bride jamais la justesse du conseil du jour. On bride sa portee.
+const MEMOIRE_GRATUITE = 7;
+
+function lireHistorique(complet = false) {
+  let liste = [];
   try {
     const brut = localStorage.getItem(cleHistorique());
-    const liste = brut ? JSON.parse(brut) : [];
-    return Array.isArray(liste) ? liste : [];
+    const lu = brut ? JSON.parse(brut) : [];
+    liste = Array.isArray(lu) ? lu : [];
   } catch {
     return []; // navigation privee, stockage refuse : on decide sans memoire
   }
+  if (complet || etat.abonne) return liste;
+  const limite = new Date();
+  limite.setDate(limite.getDate() - MEMOIRE_GRATUITE);
+  return liste.filter((h) => new Date(h.date) > limite);
+}
+
+// Depuis combien de jours cette personne tient son rituel : c'est l'argument
+// honnete de l'abonnement, et il ne s'affiche que quand il est vrai.
+function profondeurMemoire() {
+  const tout = lireHistorique(true);
+  if (!tout.length) return 0;
+  const plusVieux = tout.reduce((a, b) => (a.date < b.date ? a : b));
+  return Math.round((Date.now() - new Date(plusVieux.date)) / 86400000);
 }
 
 function ecrireHistorique(liste) {
@@ -171,7 +195,10 @@ function ecrireHistorique(liste) {
 
 function consigner(routine) {
   const trace = traceDuJour(routine);
-  const liste = lireHistorique().filter(
+  // lireHistorique(true) : on reecrit TOUJOURS a partir de l'historique complet.
+  // Repartir de la version tronquee pour les non-abonnes effacerait leur passe
+  // a chaque enregistrement - et donc la valeur meme qu'on leur propose d'acheter.
+  const liste = lireHistorique(true).filter(
     (h) => !(h.date === trace.date && h.moment === trace.moment),
   );
   liste.push(trace);
@@ -331,6 +358,16 @@ function vueAujourdhui() {
 
   const fait = dejaFait(etat.moment);
 
+  // L'invitation ne s'affiche que le jour ou elle devient vraie : quand la
+  // personne a vraiment plus d'historique que ce qu'on lui laisse voir.
+  const profondeur = profondeurMemoire();
+  const invitation = !etat.abonne && profondeur > MEMOIRE_GRATUITE ? `
+    <div class="verrou">
+      <p>Vous tenez votre rituel depuis ${profondeur} jours. Rituel n'en garde
+      que ${MEMOIRE_GRATUITE} en mémoire pour régler vos actifs forts.</p>
+      <button class="bouton secondaire" data-onglet="abonnement">Voir Rituel+</button>
+    </div>` : '';
+
   return `
     <div class="entete">
       <span class="date">${ech(dateLisible())}</span>
@@ -348,7 +385,8 @@ function vueAujourdhui() {
 
     <button class="bouton${fait ? ' secondaire' : ''}" id="applique" ${fait ? 'disabled' : ''}>
       ${fait ? 'Noté pour aujourd\'hui' : 'J\'ai appliqué cette routine'}
-    </button>`;
+    </button>
+    ${invitation}`;
 }
 
 function vueProduits() {
@@ -615,6 +653,21 @@ async function demarrer() {
     etat.user = { id: 'demo' };
     etat.produits = PRODUITS_DEMO;
     etat.profil = lireProfil();
+    // Trois semaines de rituel deja tenu : sans passe, la demonstration ne
+    // montre ni l'adaptation ni ce que l'abonnement apporte.
+    if (profondeurMemoire() < MEMOIRE_GRATUITE * 2) {
+      const passe = lireHistorique(true);
+      for (let j = 21; j >= 2; j -= 1) {
+        const d = new Date();
+        d.setDate(d.getDate() - j);
+        passe.push({
+          date: d.toISOString().slice(0, 10),
+          moment: 'soir',
+          actifs: j % 4 === 0 ? ['retinoide'] : j % 5 === 0 ? ['exfoliant'] : [],
+        });
+      }
+      ecrireHistorique(passe);
+    }
     rendre();
     return;
   }
