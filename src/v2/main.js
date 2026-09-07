@@ -436,7 +436,11 @@ function vueAujourdhui() {
       </div>
     </section>` : '';
 
-  const notes = routine.notes.map((n) => `<p class="note">${ech(n)}</p>`).join('');
+  // Lea a peut-etre deja pris la premiere note : on ne la redit pas.
+  const ditParLea = motDeLea(routine);
+  const notes = routine.notes
+    .filter((n) => n !== ditParLea)
+    .map((n) => `<p class="note">${ech(n)}</p>`).join('');
 
   const fait = dejaFait(etat.moment);
 
@@ -475,11 +479,19 @@ function vueAujourdhui() {
 // Lea dit UNE chose, celle qui apprend quelque chose. Les ecarts triviaux
 // (« a garder pour le soir ») ne lui vont pas : elle ne parle que quand elle a
 // une raison que la personne n'aurait pas trouvee seule.
-function vueLea(routine) {
+//
+// Elle rend aussi le mot qu'elle a pris, pour que l'affichage des notes ne le
+// repete pas juste en dessous - la meme phrase deux fois de suite fait perdre
+// toute autorite au conseil.
+function motDeLea(routine) {
   const interessant = routine.ecartes.find((e) => /décape|dégrade|récupère|semaine|tire/i.test(e.raison));
-  const mot = routine.notes[0] || (interessant
+  return routine.notes[0] || (interessant
     ? `${interessant.produit.nom} attendra : ${interessant.raison.replace(/ — on garde.*$/, '')}.`
     : null);
+}
+
+function vueLea(routine) {
+  const mot = motDeLea(routine);
   if (!mot) return '';
   return `
     <aside class="lea">
@@ -560,16 +572,40 @@ function vueAbonnement() {
     <button class="bouton secondaire" id="deconnexion">Se déconnecter</button>`;
 }
 
+// Le vocabulaire de la barre est botanique, pas generique. Un soleil, un
+// flacon et une etoile auraient pu appartenir a n'importe quelle application ;
+// une pousse, un flacon d'ou sort une feuille et une fleur qui s'ouvre disent
+// qu'on est entre quelque part.
+const ICONES = {
+  // Une jeune pousse a deux feuilles : le rituel du jour, ce qui recommence.
+  aujourdhui: '<path d="M12 21V11"/>'
+    + '<path d="M12 12.4C12 9.1 9.6 6.6 6.2 6.2 5.8 9.6 8.2 12.1 11.6 12.4z"/>'
+    + '<path d="M12.4 11.2c0-3.3 2.4-5.9 5.8-6.2.4 3.4-2 6-5.4 6.3z"/>',
+  // Un flacon d'ou s'echappe une feuille.
+  produits: '<path d="M10.5 3h3v3.4l2 3.2A2 2 0 0116 10.7V19a2 2 0 01-2 2h-4a2 2 0 01-2-2v-8.3c0-.4.1-.8.3-1.1l2.2-3.2V3z"/>'
+    + '<path d="M12 16.5c0-2 1.3-3.3 3.2-3.5-.1 2-1.3 3.3-3.2 3.5z"/>',
+  // Une fleur ouverte : ce qui s'epanouit quand on va plus loin.
+  abonnement: '<circle cx="12" cy="12" r="2.1"/>'
+    + '<path d="M12 9.9c0-2.5.8-4.4 0-5.9-.8 1.5 0 3.4 0 5.9z"/>'
+    + '<path d="M12 14.1c0 2.5-.8 4.4 0 5.9.8-1.5 0-3.4 0-5.9z"/>'
+    + '<path d="M9.9 12c-2.5 0-4.4-.8-5.9 0 1.5.8 3.4 0 5.9 0z"/>'
+    + '<path d="M14.1 12c2.5 0 4.4.8 5.9 0-1.5-.8-3.4 0-5.9 0z"/>'
+    + '<path d="M10.5 10.5C8.7 8.7 7 7.7 6.6 6.6c1.1.4 2.1 2.1 3.9 3.9z"/>'
+    + '<path d="M13.5 13.5c1.8 1.8 3.5 2.8 3.9 3.9-1.1-.4-2.1-2.1-3.9-3.9z"/>'
+    + '<path d="M13.5 10.5c1.8-1.8 3.5-2.8 3.9-3.9-1.1.4-2.1 2.1-3.9 3.9z"/>'
+    + '<path d="M10.5 13.5c-1.8 1.8-3.5 2.8-3.9 3.9 1.1-.4 2.1-2.1 3.9-3.9z"/>',
+};
+
 function vueNav() {
-  const item = (cle, libelle, chemin) => `
+  const item = (cle, libelle) => `
     <button data-onglet="${cle}" ${etat.onglet === cle ? 'aria-current="page"' : ''}>
-      <svg viewBox="0 0 24 24">${chemin}</svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[cle]}</svg>
       <span>${libelle}</span>
     </button>`;
   return `<nav class="nav">
-    ${item('aujourdhui', 'Aujourd\'hui', '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="4"/>')}
-    ${item('produits', 'Produits', '<path d="M10 3h4v3l1 2v11a2 2 0 01-2 2h-2a2 2 0 01-2-2V8l1-2V3z"/><path d="M9 12h6"/>')}
-    ${item('abonnement', 'Rituel+', '<path d="M12 4l2.2 5.2L20 10l-4.4 3.6L17 20l-5-3-5 3 1.4-6.4L4 10l5.8-.8L12 4z"/>')}
+    ${item('aujourdhui', 'Aujourd\'hui')}
+    ${item('produits', 'Produits')}
+    ${item('abonnement', 'Rituel+')}
   </nav>`;
 }
 

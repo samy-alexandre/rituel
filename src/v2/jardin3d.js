@@ -35,6 +35,8 @@ const AMBIANCES = {
     lanterne: 0xffb055,
     puissanceLanterne: 5.5,
     exposition: 1.05,
+    eau: 0x3c5a63,
+    verre: 0xd8c9a8,
   },
   matin: {
     haut: 0x9dc4de,
@@ -48,6 +50,8 @@ const AMBIANCES = {
     lanterne: 0xfff0cc,
     puissanceLanterne: 1.2,
     exposition: 1.15,
+    eau: 0x8fb4c4,
+    verre: 0xeae2d2,
   },
 };
 
@@ -82,6 +86,122 @@ function normaliser(objet, hauteurVoulue) {
   objet.position.y -= apres.min.y;
   return objet;
 }
+
+// LES STATIONS SONT DES OBJETS, PAS DES BORNES.
+//
+// Une lanterne repetee cinq fois dit « etape 1, etape 2, etape 3 » : c'est la
+// grammaire d'un jeu de progression, et ca se lit tout de suite comme tel. Un
+// objet different par geste - un bassin pour nettoyer, un flacon de verre sur
+// son socle pour un serum, une vasque d'eau pour hydrater - dit a la fois la
+// beaute et le sens. C'est le plus gros levier du rendu.
+//
+// Ces objets n'existent pas en CC0 : on les compose en geometrie primitive
+// avec des matieres soignees. Une pierre mate, une eau lisse et un verre en
+// transmission valent mieux qu'un modele de jeu approximatif.
+
+function matierePierre(soir) {
+  return new THREE.MeshStandardMaterial({
+    color: soir ? 0xb9a88f : 0xded3c0,
+    roughness: 0.95,
+    metalness: 0,
+    flatShading: true,
+  });
+}
+
+function matiereEau(A) {
+  return new THREE.MeshStandardMaterial({
+    color: A.eau,
+    roughness: 0.06,
+    metalness: 0.5,
+    envMapIntensity: 1,
+  });
+}
+
+function matiereVerre(A) {
+  return new THREE.MeshPhysicalMaterial({
+    color: A.verre,
+    roughness: 0.08,
+    metalness: 0,
+    transmission: 0.92,
+    thickness: 0.5,
+    ior: 1.46,
+    transparent: true,
+  });
+}
+
+// Un bassin de pierre : nettoyer, demaquiller. L'eau capte la lumiere du ciel
+// et devient le point brillant de la scene.
+function bassin(A, soir) {
+  const g = new THREE.Group();
+  const cuve = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.7, 0.34, 12), matierePierre(soir));
+  cuve.position.y = 0.17;
+  g.add(cuve);
+  const eau = new THREE.Mesh(new THREE.CircleGeometry(0.53, 20), matiereEau(A));
+  eau.rotation.x = -Math.PI / 2;
+  eau.position.y = 0.3;
+  g.add(eau);
+  return g;
+}
+
+// Un flacon de verre sur son socle : les serums et les soins cibles.
+function flacon(A, soir) {
+  const g = new THREE.Group();
+  const socle = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.3, 0.62), matierePierre(soir));
+  socle.position.y = 0.15;
+  g.add(socle);
+  const corps = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.42, 10), matiereVerre(A));
+  corps.position.y = 0.51;
+  g.add(corps);
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.16, 8), matiereVerre(A));
+  col.position.y = 0.79;
+  g.add(col);
+  const bouchon = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.09, 8), matierePierre(soir));
+  bouchon.position.y = 0.9;
+  g.add(bouchon);
+  return g;
+}
+
+// Une vasque large et basse : l'hydratation, la creme, le geste qui enveloppe.
+function vasque(A, soir) {
+  const g = new THREE.Group();
+  const pied = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 0.36, 10), matierePierre(soir));
+  pied.position.y = 0.18;
+  g.add(pied);
+  const coupe = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.4, 0.22, 16), matierePierre(soir));
+  coupe.position.y = 0.46;
+  g.add(coupe);
+  const eau = new THREE.Mesh(new THREE.CircleGeometry(0.66, 22), matiereEau(A));
+  eau.rotation.x = -Math.PI / 2;
+  eau.position.y = 0.55;
+  g.add(eau);
+  return g;
+}
+
+// Une pierre dressee : le masque, l'exfoliant, le geste rare et fort.
+function stele(A, soir) {
+  const g = new THREE.Group();
+  const p = new THREE.Mesh(new THREE.BoxGeometry(0.46, 1.05, 0.2), matierePierre(soir));
+  p.position.y = 0.52;
+  p.rotation.z = 0.035;
+  g.add(p);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.46, 0.12, 10), matierePierre(soir));
+  base.position.y = 0.06;
+  g.add(base);
+  return g;
+}
+
+const OBJET_DE = {
+  demaquillant: bassin,
+  nettoyant: bassin,
+  toner: vasque,
+  serum: flacon,
+  cible: flacon,
+  yeux: flacon,
+  creme: vasque,
+  autre: vasque,
+  masque: stele,
+  spf: stele,
+};
 
 function courbeDuSentier(nombre) {
   const points = [new THREE.Vector3(0, 0, 8)];
@@ -249,16 +369,27 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     const cote = new THREE.Vector3().crossVectors(tan, new THREE.Vector3(0, 1, 0)).normalize();
     const sens = i % 2 === 0 ? 1 : -1;
 
+    // L'objet du geste, pose au bord du chemin.
+    const composer = OBJET_DE[e.categorie] || vasque;
+    const objet = composer(A, soir);
+    objet.position.copy(p).addScaledVector(cote, sens * 1.7);
+    objet.rotation.y = -sens * 0.35 + (hasard() - 0.5) * 0.2;
+    scene.add(objet);
+
+    // Une lanterne discrete DERRIERE l'objet : elle l'eclaire au lieu de le
+    // remplacer, et c'est elle qui signale la station quand la brume avale le
+    // detail.
     if (lanterne) {
-      const l = normaliser(lanterne.clone(true), 1.5);
-      l.position.copy(p).addScaledVector(cote, sens * 1.85);
+      const l = normaliser(lanterne.clone(true), 1.15);
+      l.position.copy(p).addScaledVector(cote, sens * 2.75);
+      l.position.z -= 0.5;
       l.rotation.y = -sens * 0.4;
       scene.add(l);
     }
 
-    const feu = new THREE.PointLight(A.lanterne, A.puissanceLanterne, 9, 2);
-    feu.position.copy(p).addScaledVector(cote, sens * 1.85);
-    feu.position.y = 1.35;
+    const feu = new THREE.PointLight(A.lanterne, A.puissanceLanterne, 8.5, 2);
+    feu.position.copy(p).addScaledVector(cote, sens * 2.45);
+    feu.position.y = 1.15;
     scene.add(feu);
     lampes.push({ feu, phase: i * 1.7 });
   });
