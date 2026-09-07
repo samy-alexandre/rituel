@@ -20,6 +20,7 @@ import './app.css';
 import { sb } from '../core/supabase.js';
 import { composerRoutine, traceDuJour } from '../features/decision/decision.js';
 import { animerJardin } from './vie.js';
+import { dessinerSentier } from './sentier.js';
 
 const CATEGORIES = [
   ['demaquillant', 'Démaquillant'],
@@ -64,22 +65,6 @@ function pointsSentier(nombre) {
   }
   points.push([50, 99]);
   return points;
-}
-
-// Une courbe lisse qui passe par chaque station : les points de controle sont
-// poses a mi-hauteur entre deux stations, ce qui donne le serpentin d'un
-// sentier de jardin plutot qu'une ligne brisee.
-function tracerSentier(nombre) {
-  if (nombre < 1) return '';
-  const points = pointsSentier(nombre);
-  let d = `M ${points[0][0]} ${points[0][1]}`;
-  for (let i = 1; i < points.length; i += 1) {
-    const [x0, y0] = points[i - 1];
-    const [x1, y1] = points[i];
-    const milieu = (y0 + y1) / 2;
-    d += ` C ${x0} ${milieu}, ${x1} ${milieu}, ${x1} ${y1}`;
-  }
-  return d;
 }
 
 // Mode demonstration (/refonte.html?demo) : l'application tourne avec une
@@ -295,6 +280,12 @@ function rendre() {
   if (arreterVie) { arreterVie(); arreterVie = null; }
   racine.innerHTML = etat.user ? vueApp() : vueSeuil();
   brancher();
+  const pave = racine.querySelector('canvas.pave');
+  if (pave) {
+    const n = pave.closest('.jardin').style.getPropertyValue('--n');
+    dessinerSentier(pave, pointsSentier(Number(n) || 1), etat.moment);
+  }
+
   const toile = racine.querySelector('canvas.vie');
   if (toile) arreterVie = animerJardin(toile, etat.moment);
 }
@@ -404,9 +395,7 @@ function vueAujourdhui() {
 
   const jardin = n ? `
     <div class="jardin" style="--n:${n}">
-      <svg class="sentier" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path d="${tracerSentier(n)}" pathLength="1" />
-      </svg>
+      <canvas class="pave" aria-hidden="true"></canvas>
       <canvas class="vie" aria-hidden="true"></canvas>
       <ol class="stations">${stations}</ol>
     </div>` : '';
