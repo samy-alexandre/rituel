@@ -403,13 +403,15 @@ function vueAujourdhui() {
 
   const jardin = n ? `
     <div class="jardin3d">
-      <canvas class="scene"></canvas>
-      <p class="indice">Glissez vers le haut pour avancer sur le chemin</p>
-      <div class="voile-scene"></div>
-      <div class="carte-station" hidden>
-        <span class="rang"></span>
-        <span class="nom"></span>
-        <span class="actif"></span>
+      <div class="vue3d">
+        <canvas class="scene"></canvas>
+        <p class="indice">Glissez vers le haut pour avancer sur le chemin</p>
+        <div class="voile-scene"></div>
+        <div class="carte-station" hidden>
+          <span class="rang"></span>
+          <span class="nom"></span>
+          <span class="actif"></span>
+        </div>
       </div>
       <ol class="etapes3d">
         ${routine.etapes.map((e, i) => `

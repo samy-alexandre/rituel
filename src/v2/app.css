@@ -625,11 +625,22 @@ p {
   background: var(--creux);
 }
 
+/* La vue borne la scene : sans elle, la carte de station se positionnait par
+   rapport a TOUT le bloc (scene + liste) et tombait donc derriere la liste,
+   invisible. */
+.jardin3d .vue3d {
+  position: relative;
+  line-height: 0;
+}
+
 .jardin3d .scene {
   display: block;
   width: 100%;
-  /* Portrait franc : on regarde un chemin qui s'eloigne, pas un paysage. */
-  aspect-ratio: 3 / 4;
+  /* Portrait, mais borne a la hauteur de l'ecran : en 3/4 pur la scene
+     depassait le viewport et la carte de station tombait hors champ - on ne
+     voyait donc jamais l'information pour laquelle on avance sur le chemin. */
+  aspect-ratio: 4 / 5;
+  max-height: 54vh;
   animation: paraitre 1.4s ease forwards;
 }
 
@@ -686,7 +697,8 @@ p {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 152px;
+  bottom: 26px;
+  line-height: 1.4;
   text-align: center;
   font-size: 12.5px;
   letter-spacing: 0.06em;
@@ -703,11 +715,18 @@ p {
 
 /* La carte de la station atteinte : posee sur la scene, pas au-dessus du
    texte, pour qu'on garde le chemin sous les yeux. */
+/* `display: flex` ci-dessous l'emporte sur l'attribut hidden : sans cette
+   regle la carte reste affichee et vide tant qu'aucune station n'est atteinte. */
+.jardin3d .carte-station[hidden] {
+  display: none;
+}
+
 .jardin3d .carte-station {
   position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: 126px;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  line-height: 1.4;
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   backdrop-filter: blur(14px);
   border-radius: 16px;

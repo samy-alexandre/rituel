@@ -167,34 +167,48 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   const courbe = courbeDuSentier(etapes.length);
   const hasard = hasardDe(etapes.length * 977 + (soir ? 13 : 41));
 
-  const [dalle, buisson, fleur, lanterne] = await Promise.all([
-    charger(MODELES.dalle), charger(MODELES.buisson),
-    charger(MODELES.fleur), charger(MODELES.lanterne),
+  const [buisson, fleur, lanterne] = await Promise.all([
+    charger(MODELES.buisson), charger(MODELES.fleur), charger(MODELES.lanterne),
   ]);
 
   // Le sentier : de vraies dalles posees une a une, plus rares et plus larges
   // quand elles s'eloignent. Un ruban texture aurait fait moquette.
-  if (dalle) {
-    // Des dalles PLATES et espacees. Le premier essai en posait trois rangees
-    // serrees de cailloux anguleux : ca faisait un eboulis, pas un chemin. Une
-    // dalle de sentier est large, basse, et laisse voir la terre entre elles.
-    const total = 26 + etapes.length * 8;
+  // Les dalles. Un rocher aplati donnait un eboulis d'eclats anguleux : ce
+  // n'est pas la meme chose qu'une pierre taillee. Une dalle de sentier est un
+  // galet a six ou sept cotes, large, basse, et separee de sa voisine par un
+  // joint de terre. Une geometrie tenue en main donne exactement cela, et pese
+  // moins qu'un modele charge.
+  {
+    const matiereDalle = new THREE.MeshStandardMaterial({
+      color: soir ? 0xbba382 : 0xded2bb,
+      roughness: 0.92,
+      metalness: 0,
+      flatShading: true,
+    });
+    const total = 30 + etapes.length * 9;
     for (let i = 0; i < total; i += 1) {
       const t = i / total;
       const p = courbe.getPointAt(t);
       const tan = courbe.getTangentAt(t);
       const cote = new THREE.Vector3().crossVectors(tan, new THREE.Vector3(0, 1, 0)).normalize();
-      const rangee = 2;
-      for (let k = 0; k < rangee; k += 1) {
-        const d = normaliser(dalle.clone(true), 0.5);
-        const ecart = ((k + 0.5) / rangee - 0.5) * 1.5;
-        d.position.copy(p).addScaledVector(cote, ecart + (hasard() - 0.5) * 0.18);
-        d.position.y = 0.005;
-        d.rotation.y = hasard() * Math.PI * 2;
-        // Ecrasees au sol : c'est ce qui transforme un rocher en dalle.
-        d.scale.y *= 0.12;
-        d.scale.x *= 1.7 + hasard() * 0.5;
-        d.scale.z *= 1.7 + hasard() * 0.5;
+      for (let k = 0; k < 2; k += 1) {
+        const rayon = 0.44 + hasard() * 0.16;
+        const geo = new THREE.CylinderGeometry(rayon, rayon * 0.94, 0.07, 6 + Math.floor(hasard() * 2));
+        // Un leger froissement des sommets : sans lui les dalles sont trop
+        // parfaites et le sentier fait pave autoroutier.
+        const pos = geo.attributes.position;
+        for (let v = 0; v < pos.count; v += 1) {
+          pos.setX(v, pos.getX(v) * (0.93 + hasard() * 0.14));
+          pos.setZ(v, pos.getZ(v) * (0.93 + hasard() * 0.14));
+        }
+        geo.computeVertexNormals();
+
+        const d = new THREE.Mesh(geo, matiereDalle);
+        const ecart = (k - 0.5) * (0.72 + hasard() * 0.14);
+        d.position.copy(p).addScaledVector(cote, ecart + (hasard() - 0.5) * 0.1);
+        d.position.y = 0.035;
+        d.rotation.y = hasard() * Math.PI;
+        d.rotation.x = (hasard() - 0.5) * 0.04;
         scene.add(d);
       }
     }
