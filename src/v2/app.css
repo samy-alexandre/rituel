@@ -76,8 +76,8 @@ body {
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
   transition:
-    background 0.5s ease,
-    color 0.5s ease;
+    background var(--ample) var(--courbe),
+    color var(--ample) var(--courbe);
 }
 
 button {
@@ -119,7 +119,7 @@ textarea {
   margin: 0 auto;
   background: var(--fond);
   position: relative;
-  transition: background 0.5s ease;
+  transition: background var(--ample) var(--courbe);
 }
 
 /* La lumiere du moment, posee derriere le contenu. */
@@ -130,7 +130,7 @@ textarea {
   height: 420px;
   background: var(--halo);
   pointer-events: none;
-  transition: background 0.5s ease;
+  transition: background var(--ample) var(--courbe);
 }
 
 .contenu {
@@ -231,7 +231,7 @@ p {
   padding: 20px 20px 20px 16px;
   background: var(--surface);
   align-items: start;
-  transition: background 0.5s ease;
+  transition: background var(--ample) var(--courbe);
 }
 
 .etape:first-child {
@@ -587,8 +587,8 @@ p {
   margin: 0 auto;
   padding-bottom: env(safe-area-inset-bottom);
   transition:
-    background 0.5s ease,
-    border-color 0.5s ease;
+    background var(--ample) var(--courbe),
+    border-color var(--ample) var(--courbe);
 }
 
 .nav button {
@@ -688,7 +688,7 @@ p {
      voyait donc jamais l'information pour laquelle on avance sur le chemin. */
   aspect-ratio: 4 / 5;
   max-height: 54vh;
-  animation: paraitre 1.4s ease forwards;
+  animation: paraitre var(--ample) var(--courbe) forwards;
 }
 
 /* Un voile en bas de la scene, pour que les etapes s'y posent sans coupure
@@ -782,7 +782,7 @@ p {
   flex-direction: column;
   gap: 3px;
   box-shadow: 0 8px 26px -8px rgb(0 0 0 / 0.5);
-  animation: monter 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+  animation: monter var(--normal) var(--rebond);
 }
 
 @keyframes monter {
@@ -875,7 +875,7 @@ p {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  animation: paraitre 1.1s ease forwards;
+  animation: paraitre var(--ample) var(--courbe) forwards;
 }
 
 @keyframes paraitre {
@@ -949,7 +949,7 @@ p {
   gap: 5px;
   width: 150px;
   opacity: 0;
-  animation: surgir 0.62s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  animation: surgir var(--normal) var(--rebond) forwards;
   animation-delay: calc(0.34s + var(--ordre) * 0.17s);
 }
 
@@ -1036,17 +1036,108 @@ p {
   color: var(--encre);
 }
 
+/* ---------- motion ----------
+ *
+ * Trois regles tenues partout ici :
+ *
+ * 1. 150 a 300 ms. En dessous le geste n'est pas percu, au-dela de 500 ms
+ *    l'application traine. Les valeurs plus longues qui trainaient dans ce
+ *    fichier (1,4 s pour l'entree de la scene) ont ete ramenees dans la plage.
+ *
+ * 2. Une animation DIT quelque chose : que le geste a ete entendu, que le
+ *    contenu a change, qu'une chose arrive. Une animation qui ne dit rien est
+ *    du bruit, et le bruit se voit plus vite que la beaute.
+ *
+ * 3. « Reduire les animations » DESACTIVE, ca ne ralentit pas. C'est en bas de
+ *    ce fichier, et c'est une regle d'accessibilite, pas une option.
+ */
+
+:root {
+  --vite: 130ms;
+  --normal: 220ms;
+  --ample: 320ms;
+  /* Sortie franche, arrivee douce : le mouvement demarre vite et se pose. */
+  --courbe: cubic-bezier(0.2, 0, 0, 1);
+  --rebond: cubic-bezier(0.2, 0.9, 0.25, 1.05);
+}
+
+/* Le geste a ete entendu. C'est la seule animation qui compte vraiment sur
+   mobile : sans elle, un appui reste sans reponse pendant que le reseau
+   travaille. */
+.bouton,
+.puce,
+.bascule button,
+.nav button,
+.produit button,
+.lien-danger {
+  transition:
+    transform var(--vite) var(--courbe),
+    background var(--normal) var(--courbe),
+    color var(--normal) var(--courbe),
+    border-color var(--normal) var(--courbe),
+    filter var(--vite) var(--courbe);
+}
+
+.bouton:active:not(:disabled),
+.puce:active,
+.bascule button:active,
+.produit button:active,
+.lien-danger:active {
+  transform: scale(0.97);
+}
+
+.nav button:active {
+  transform: scale(0.92);
+}
+
+/* Le contenu a change. Un fondu court avec une remontee de quelques pixels :
+   l'oeil comprend qu'il regarde autre chose sans avoir a le lire. */
+.contenu > * {
+  animation: entrer var(--ample) var(--courbe) both;
+}
+
+.contenu > *:nth-child(2) { animation-delay: 40ms; }
+.contenu > *:nth-child(3) { animation-delay: 80ms; }
+.contenu > *:nth-child(4) { animation-delay: 120ms; }
+.contenu > *:nth-child(n + 5) { animation-delay: 150ms; }
+
+@keyframes entrer {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Les etapes de la routine arrivent l'une apres l'autre : la cascade dit
+   qu'elles ont un ORDRE, ce qui est exactement l'information du produit. */
+.jardin3d .etapes3d li {
+  animation: entrer var(--normal) var(--courbe) both;
+}
+
+.jardin3d .etapes3d li:nth-child(1) { animation-delay: 60ms; }
+.jardin3d .etapes3d li:nth-child(2) { animation-delay: 110ms; }
+.jardin3d .etapes3d li:nth-child(3) { animation-delay: 160ms; }
+.jardin3d .etapes3d li:nth-child(4) { animation-delay: 210ms; }
+.jardin3d .etapes3d li:nth-child(n + 5) { animation-delay: 260ms; }
+
 @media (prefers-reduced-motion: reduce) {
-  * {
+  /* Desactiver, pas ralentir : une personne sensible au mouvement ne veut pas
+     d'un parallaxe lent, elle n'en veut pas du tout. */
+  *,
+  *::before,
+  *::after {
     transition: none !important;
     animation: none !important;
   }
 
+  .contenu > *,
+  .jardin3d .etapes3d li,
   .station {
-    opacity: 1;
-  }
-
-  .sentier path {
-    stroke-dashoffset: 0;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
