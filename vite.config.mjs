@@ -17,13 +17,14 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
-    // Deux pages pendant la migration : index.html reste l'application servie
-    // aujourd'hui, refonte.html porte la v2 qui decide. Elles ne partagent que
-    // le client Supabase et le moteur de decision.
+    // La v2 EST l'application : elle occupe index.html, donc le manifeste,
+    // l'icone de l'ecran d'accueil et le futur emballage Play Store pointent
+    // dessus sans rien changer. L'ancienne reste accessible sur
+    // /classique.html le temps que la bascule soit jugee sure.
     rollupOptions: {
       input: {
         index: resolve(__dirname, 'index.html'),
-        refonte: resolve(__dirname, 'refonte.html'),
+        classique: resolve(__dirname, 'classique.html'),
       },
     },
   },

@@ -512,6 +512,53 @@ p {
   margin-top: 9px;
 }
 
+/* ---------- compte ---------- */
+
+.compte {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--trait);
+}
+
+.compte-email {
+  font-size: 15.5px;
+  color: var(--doux);
+  margin-bottom: 4px;
+}
+
+.succes {
+  color: var(--accent);
+  font-size: 14.5px;
+}
+
+/* La suppression n'est pas un bouton comme les autres : elle ne doit ni
+   attirer l'oeil ni ressembler a une action ordinaire. */
+.lien-danger {
+  background: none;
+  border: none;
+  color: var(--pale);
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 12px 0;
+  align-self: center;
+}
+
+.lien-danger:hover {
+  color: var(--alerte);
+}
+
+.avertissement {
+  background: var(--alerte-clair);
+  color: var(--alerte);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
 .verrou {
   border: 1px dashed var(--trait-fort);
   border-radius: var(--r);

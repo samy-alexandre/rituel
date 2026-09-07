@@ -2,7 +2,7 @@
   "name": "Rituel",
   "short_name": "Rituel",
   "id": "/?app=rituel",
-  "description": "Ton carnet de peau quotidien, avec ta coach Léa.",
+  "description": "Rituel vous dit quoi appliquer ce soir, dans quel ordre, avec les produits que vous avez déjà.",
   "lang": "fr",
   "dir": "ltr",
   "start_url": "/",

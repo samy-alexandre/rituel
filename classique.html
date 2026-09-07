@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no"/>
+<meta name="theme-color" content="#F7F1EA"/>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-180.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Rituel">
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Rituel · Ton carnet de peau</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Manrope:wght@300;400;500;600;700&display=optional" rel="stylesheet">
+
+<script>
+  if('serviceWorker' in navigator){
+    
+    navigator.serviceWorker.register('/sw.js');
+  }
+  const ml = document.createElement('link');
+  ml.rel='manifest';
+  document.head.appendChild(ml);
+</script>
+
+</head>
+<body class="no-select">
+
+<div id="app">
+ <div class="scroll-host" id="scroll-host">
+
+  <!-- ====================== AUTH ====================== -->
+  <div id="auth">
+    <svg class="auth-deco" viewBox="0 0 200 200" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.55"><circle cx="140" cy="60" r="16"/><circle cx="124" cy="68" r="13"/><circle cx="156" cy="68" r="13"/><circle cx="132" cy="82" r="13"/><circle cx="148" cy="82" r="13"/><circle cx="140" cy="72" r="7" fill="#E8A6A0"/><path d="M140 95 C140 130 138 150 130 175"/><path d="M138 120 C120 116 110 100 113 86 C130 92 138 104 138 120"/></g></svg>
+    <svg class="auth-deco-2" viewBox="0 0 200 200" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.5"><path d="M60 180 C60 130 62 100 70 60"/><path d="M66 110 C40 104 28 80 33 58 C62 66 66 86 66 110"/><path d="M66 90 C92 82 104 58 100 36 C72 44 66 66 66 90"/><circle cx="70" cy="44" r="11"/><circle cx="70" cy="44" r="4" fill="#C95A3F"/></g></svg>
+
+    <div class="auth-inner">
+      <div class="auth-brand">
+        <div class="auth-mark">Rituel</div>
+        <div class="auth-tagline">le carnet de ta peau</div>
+        <svg class="auth-floral" viewBox="0 0 120 30" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M2 15 H44"/><path d="M118 15 H76"/><circle cx="60" cy="15" r="5"/><circle cx="52" cy="15" r="3.5"/><circle cx="68" cy="15" r="3.5"/><circle cx="60" cy="9" r="3.5"/><circle cx="60" cy="21" r="3.5"/></g></svg>
+      </div>
+
+      <div id="landing">
+        <p style="font-family:var(--serif);font-style:italic;font-size:16px;color:var(--ink-soft);line-height:1.6;text-align:center;margin:6px 0 22px;">Suis ta peau jour après jour et comprends enfin ce qui la fait changer.</p>
+        <div class="land-card"><span>📷</span><div><b>Suis ta peau jour après jour</b><small>Photos, humeur, sommeil, hydratation.</small></div></div>
+        <div class="land-card"><span>🌿</span><div><b>Comprends ce qui marche</b><small>Produits, habitudes, cycle : tout au même endroit.</small></div></div>
+        <div class="land-card"><span>💬</span><div><b>Garde le cap avec Léa</b><small>Des conseils simples pour t'aider à ajuster ton rituel.</small></div></div>
+        <button class="btn btn-accent" onclick="startAuth('signup')" style="margin-top:20px;">Commencer mon rituel</button>
+        <button onclick="startAuth('login')" class="btn-soft" style="display:block;margin:12px auto 0;">J'ai déjà un compte</button>
+      </div>
+
+      <div class="auth-toggle hidden">
+        <button class="auth-tab active" id="tab-login" onclick="switchAuth('login')">Connexion</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchAuth('signup')">Inscription</button>
+      </div>
+
+      <!-- Login -->
+      <div class="auth-form hidden" id="form-login">
+        <div class="field">
+          <label>Adresse e-mail</label>
+          <input type="email" id="login-email" placeholder="toi@exemple.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="auth-forgot" onclick="forgotPassword()">Mot de passe oublié ?</div>
+        <div class="auth-error" id="login-error"></div>
+        <button class="btn btn-accent" onclick="doLogin()">Se connecter</button>
+      </div>
+
+      <!-- Signup -->
+      <div class="auth-form hidden" id="form-signup">
+        
+        <div class="field">
+          <label>Prénom</label>
+          <input type="text" id="signup-name" placeholder="Ton prénom" autocomplete="given-name">
+        </div>
+        <div style="display:flex;gap:10px;">
+          <div class="field" style="flex:1;">
+            <label>Âge</label>
+            <input type="number" id="signup-age" placeholder="Ton âge" min="13" max="120" inputmode="numeric">
+          </div>
+          <div class="field" style="flex:1.4;">
+            <label>Je suis</label>
+            <div style="display:flex;gap:6px;">
+              <button type="button" class="gender-pill" id="gp-femme" onclick="pickSignupGenre('femme')">Femme</button>
+              <button type="button" class="gender-pill" id="gp-homme" onclick="pickSignupGenre('homme')">Homme</button>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Adresse e-mail</label>
+          <input type="email" id="signup-email" placeholder="toi@exemple.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" id="signup-pass" placeholder="6 caractères minimum" autocomplete="new-password">
+        </div>
+        <label class="consent"><input type="checkbox" id="signup-consent"><span>J'accepte que Rituel utilise mes photos et données pour personnaliser mon suivi beauté. <a onclick="openPolicy()">Voir la politique de confidentialité</a></span></label>
+        <div class="auth-error" id="signup-error"></div>
+        <button class="btn btn-accent" onclick="doSignup()">Créer mon carnet Rituel</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ====================== ONBOARDING ====================== -->
+  <div id="onboarding">
+    <div class="onb-page active" data-page="0">
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+        <div class="welcome-mark" style="font-size:50px;">Rituel</div>
+        <svg style="width:90px;margin-bottom:32px;opacity:0.7;" viewBox="0 0 120 40" fill="none"><g stroke="#C95A3F" stroke-width="1" opacity="0.7"><path d="M4 20 H40"/><path d="M116 20 H80"/><circle cx="60" cy="20" r="6"/><circle cx="50" cy="20" r="4"/><circle cx="70" cy="20" r="4"/><circle cx="60" cy="12" r="4"/><circle cx="60" cy="28" r="4"/><circle cx="60" cy="20" r="2.5" fill="#C95A3F"/></g></svg>
+        <h1 class="display" style="font-size:34px;margin-bottom:16px;max-width:300px;">Un instant par jour,<br><em class="italic" style="color:var(--accent);">rien que pour toi</em></h1>
+        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">En quelques questions, on personnalise ton suivi : ton type de peau, tes objectifs et tes produits. On commence en douceur.</p>
+        <p style="color:var(--muted);max-width:290px;font-size:12.5px;line-height:1.55;margin-top:16px;">Prends le temps de bien répondre aux questions qui suivent : tout sera transmis à <b style="color:var(--accent-deep);">Léa</b>, ton aide bienveillante basée sur l'IA, qui t'accompagnera au quotidien.</p>
+      </div>
+      <div class="onb-actions">
+        <button class="btn btn-accent" onclick="onbNext()">Créer mon profil de peau</button>
+      </div>
+    </div>
+
+    <div class="onb-page" data-page="1">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
+      <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.6"><circle cx="30" cy="20" r="9"/><circle cx="21" cy="26" r="7"/><circle cx="39" cy="26" r="7"/><circle cx="30" cy="22" r="4" fill="#E8A6A0"/><path d="M30 38 C30 48 28 53 24 58"/></g></svg>
+      <div class="onb-progress"><div class="onb-dot active"></div><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Comment décrirais-tu <em>ta peau</em> ?</h2>
+      <p class="onb-sub">Pas d'inquiétude : ta peau évolue, tes réponses aussi.</p>
+      <div class="onb-options">
+        <button class="onb-opt" data-value="seche" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌾</span><div class="onb-opt-text"><div class="onb-opt-title">Sèche</div><div class="onb-opt-desc">Tiraille, manque d'éclat</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="mixte" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🍯</span><div class="onb-opt-text"><div class="onb-opt-title">Mixte</div><div class="onb-opt-desc">Zone T grasse, joues sèches</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="grasse" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">✨</span><div class="onb-opt-text"><div class="onb-opt-title">Grasse</div><div class="onb-opt-desc">Brillance, pores visibles</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="sensible" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Sensible</div><div class="onb-opt-desc">Rougeurs, réactivité</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="normale" onclick="toggleOpt(this,'skinType')"><span class="onb-opt-emoji">🌿</span><div class="onb-opt-text"><div class="onb-opt-title">Normale</div><div class="onb-opt-desc">Équilibrée, peu de soucis</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" onclick="openQuiz('onboarding')"><span class="onb-opt-emoji">✨</span><div class="onb-opt-text"><div class="onb-opt-title">Je ne sais pas</div><div class="onb-opt-desc">Faire le test pour découvrir</div></div><div class="onb-opt-check" style="visibility:hidden;"></div></button>
+      </div>
+      <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step1" disabled>Continuer</button></div>
+    </div>
+
+    <div class="onb-page" data-page="2">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
+      <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.55"><circle cx="30" cy="22" r="10"/><circle cx="30" cy="22" r="4" fill="#C95A3F"/><path d="M30 40 C30 50 28 54 23 58"/><path d="M30 46 C20 44 15 36 17 28 C27 31 30 38 30 46"/></g></svg>
+      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot active"></div><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Qu'aimerais-tu <em>améliorer</em> ?</h2>
+      <p class="onb-sub">Choisis tout ce qui te parle. On affinera ensemble, en douceur.</p>
+      <div class="onb-options">
+        <button class="onb-opt" data-value="acne" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🌷</span><div class="onb-opt-text"><div class="onb-opt-title">Acné, imperfections</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="taches" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🍃</span><div class="onb-opt-text"><div class="onb-opt-title">Taches, hyperpigmentation</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="rides" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🌹</span><div class="onb-opt-text"><div class="onb-opt-title">Rides, fermeté</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="eclat" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">💫</span><div class="onb-opt-text"><div class="onb-opt-title">Éclat, teint terne</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="pores" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">🌼</span><div class="onb-opt-text"><div class="onb-opt-title">Pores dilatés</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="cernes" onclick="toggleOptMulti(this,'concerns')"><span class="onb-opt-emoji">👁️</span><div class="onb-opt-text"><div class="onb-opt-title">Cernes, contour des yeux</div></div><div class="onb-opt-check"></div></button>
+        
+      </div>
+      <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step2">Continuer</button></div>
+    </div>
+
+    <div class="onb-page" data-page="3">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
+      <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.6"><circle cx="30" cy="20" r="9"/><circle cx="22" cy="25" r="6"/><circle cx="38" cy="25" r="6"/><circle cx="30" cy="22" r="4" fill="#E8A6A0"/><path d="M30 36 C30 48 28 52 25 58"/></g></svg>
+      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot active"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Quel est ton <em>objectif</em> du moment ?</h2>
+      <p class="onb-sub">Ton suivi avec Léa sera adapté à cet objectif. 🌸</p>
+      <div class="onb-options">
+        <button class="onb-opt" data-value="constance" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🪞</span><div class="onb-opt-text"><div class="onb-opt-title">Tenir un rituel</div><div class="onb-opt-desc">La régularité avant tout</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="comprendre" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🔍</span><div class="onb-opt-text"><div class="onb-opt-title">Comprendre ma peau</div><div class="onb-opt-desc">Voir ce qui marche et l'évolution</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="deux" onclick="toggleOpt(this,'goal')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Les deux</div><div class="onb-opt-desc">Tenir mon rituel et comprendre ma peau</div></div><div class="onb-opt-check"></div></button>
+        
+      </div>
+      <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step3" disabled>Continuer</button></div>
+    </div>
+
+    <div class="onb-page" data-page="4">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
+      <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#E8A6A0" stroke-width="1.2" opacity="0.6"><circle cx="30" cy="20" r="9"/><circle cx="22" cy="25" r="6"/><circle cx="38" cy="25" r="6"/><circle cx="30" cy="22" r="4" fill="#E8A6A0"/><path d="M30 36 C30 48 28 52 25 58"/></g></svg>
+      <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot active"></div><div class="onb-dot"></div></div>
+      <h2 class="onb-title">Une dernière chose <em>sur toi</em></h2>
+      <p class="onb-sub">Pour personnaliser un peu plus tes conseils. (Tu pourras le changer.)</p>
+      <div class="onb-options">
+        <button class="onb-opt" data-value="femme" onclick="toggleOpt(this,'genre')"><span class="onb-opt-emoji">🌸</span><div class="onb-opt-text"><div class="onb-opt-title">Femme</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="homme" onclick="toggleOpt(this,'genre')"><span class="onb-opt-emoji">🌿</span><div class="onb-opt-text"><div class="onb-opt-title">Homme</div></div><div class="onb-opt-check"></div></button>
+        <button class="onb-opt" data-value="autre" onclick="toggleOpt(this,'genre')"><span class="onb-opt-emoji">✨</span><div class="onb-opt-text"><div class="onb-opt-title">Autre / je préfère ne pas dire</div></div><div class="onb-opt-check"></div></button>
+      </div>
+      <div class="onb-actions"><button class="btn btn-accent" onclick="onbNext()" id="btn-step4" disabled>Continuer</button></div>
+    </div>
+
+    <div class="onb-page" data-page="5">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
+      <svg class="onb-floral-top" viewBox="0 0 60 60" fill="none"><g stroke="#C95A3F" stroke-width="1.2" opacity="0.55"><circle cx="30" cy="22" r="10"/><circle cx="30" cy="22" r="4" fill="#C95A3F"/><path d="M30 40 C30 50 28 54 23 58"/><path d="M30 46 C20 44 15 36 17 28 C27 31 30 38 30 46"/></g></svg>
+            <div class="onb-progress"><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot done"></div><div class="onb-dot active"></div></div>
+      <h2 class="onb-title">Tes <em>produits</em> du moment</h2>
+      <p class="onb-sub">Ajoute ceux que tu utilises déjà, ou passe : tu pourras le faire à tout moment.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="field" style="margin:0;"><input id="onb-prod-input" placeholder="Nom du produit (ex. Sérum vitamine C)" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('onb-brand-input').focus();}"></div>
+        <div style="display:flex;gap:8px;align-items:stretch;">
+          <div class="field" style="flex:1;margin:0;"><input id="onb-brand-input" placeholder="Marque" onkeydown="if(event.key==='Enter'){event.preventDefault();onbAddProduct();}"></div>
+          <button class="btn btn-accent" style="width:auto;padding:0 20px;margin:0;flex-shrink:0;" onclick="onbAddProduct()">＋</button>
+        </div>
+      </div>
+      <div id="onb-prod-list" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
+      <div class="onb-actions" style="gap:10px;">
+        <button class="btn btn-accent" onclick="onbNext()">Continuer</button>
+        <button class="btn btn-ghost" onclick="onbNext()">Passer cette étape</button>
+      </div>
+    </div>
+
+    <div class="onb-page" data-page="6">
+      <button class="onb-back" onclick="onbBack()" aria-label="Retour">‹</button>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+        <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--blush),var(--accent));display:flex;align-items:center;justify-content:center;color:white;margin-bottom:28px;box-shadow:var(--shadow);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2 class="display" style="font-size:34px;margin-bottom:16px;">Tout est <em class="italic" style="color:var(--accent);">prêt</em><span id="onb-name"></span> ✨</h2>
+        <p style="color:var(--ink-soft);max-width:300px;font-size:15px;line-height:1.6;">Léa t'attend dans l'app. Prends ta première photo dès aujourd'hui, c'est le point de départ de ton suivi</p>
+        <div style="margin-top:22px;display:flex;flex-direction:column;gap:9px;max-width:300px;text-align:left;">
+          <div style="display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--ink-soft);"><span>🌸</span><span>Rituel prend soin de toi, ce n'est pas un avis médical.</span></div>
+        </div>
+      </div>
+      <div class="onb-actions"><button class="btn btn-accent" onclick="finishOnboarding()">Entrer dans Rituel</button></div>
+    </div>
+  </div>
+
+  <!-- ====================== HOME ====================== -->
+  <div id="home" class="screen">
+    <div class="topbar">
+      <div class="topbar-greet">
+        <div class="topbar-date" id="topbar-date">MERCREDI 27 MAI</div>
+        <div class="topbar-name"><span id="greet-hello">Bonjour</span>, <em id="topbar-name">toi</em></div>
+        <div id="greet-invite" style="font-size:12.5px;color:var(--muted);margin-top:3px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="bell-btn" onclick="bellTap()" style="position:relative;" aria-label="Rappels">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 01-3.4 0" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="bell-dot" id="bell-dot" style="display:none;"></span>
+        <span id="chat-badge" style="display:none;position:absolute;top:1px;right:1px;min-width:15px;height:15px;border-radius:100px;background:var(--accent);color:#fff;font-size:9.5px;font-weight:700;line-height:15px;padding:0 3px;">1</span></button>
+        <div class="avatar" onclick="navTo('profile')" id="topbar-avatar">V</div>
+      </div>
+    </div>
+
+    <div class="section" id="lettre-cta" style="display:none;">
+      <div class="msg-card" style="margin:0;max-width:100%;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="openLettre()">
+        <div style="font-size:26px;">💌</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:var(--serif);font-size:15px;" id="lettre-cta-title">Ta lettre du mois est prête</div>
+          <div style="font-size:12px;color:var(--muted);">Le petit bilan doux de ta compagne de soin</div>
+        </div>
+        <div style="color:var(--muted);font-size:18px;">›</div>
+      </div>
+    </div>
+
+    <div class="section" id="bilan5-cta" style="display:none;">
+      <div class="msg-card" style="margin:0;max-width:100%;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="openBilan5()">
+        <div style="font-size:26px;">🌟</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:var(--serif);font-size:15px;">Ton premier bilan de peau est prêt</div>
+          <div style="font-size:12px;color:var(--muted);">5 jours de suivi : regarde ce que ça raconte</div>
+        </div>
+        <div style="color:var(--muted);font-size:18px;">›</div>
+      </div>
+    </div>
+      <div class="section" id="home-rituel-section">
+      <div id="home-rituel-empty" style="display:none;">
+        <div class="hr-empty">
+          <div class="hr-empty-ico">🌸</div>
+          <div class="hr-empty-title">Ton rituel t'attend</div>
+          <div class="hr-empty-sub">Compose ton rituel du matin ou du soir,<br>et coche tes étapes chaque jour.</div>
+          <button class="hr-empty-btn" onclick="navTo('ritual')">Créer mon rituel</button>
+        </div>
+      </div>
+      <div class="vy-hero" id="vy-hero" style="display:none;" onclick="openVoyage()"></div>
+      <div class="hr-card" id="hr-card">
+        <div class="hr-head">
+          <div class="hr-title-wrap">
+            <span class="hr-emoji" id="hr-emoji">☀️</span>
+            <div style="min-width:0;flex:1;">
+              <div class="hr-title" id="hr-title">Rituel du matin</div>
+              <div class="hr-sub" id="hr-sub">0 sur 0 · c'est parti 🌸</div>
+            </div>
+          </div>
+          <div class="hr-switch">
+            <button class="hr-sw-btn active" id="pb-matin" onclick="switchPeriod('matin')">☀️</button>
+            <button class="hr-sw-btn" id="pb-soir" onclick="switchPeriod('soir')">🌙</button>
+          </div>
+        </div>
+        <div class="hr-bar"><div class="hr-bar-fill" id="hr-bar-fill"></div></div>
+        <div id="hr-lists" style="display:none;">
+          <div class="routine-list" id="routine-matin"></div>
+          <div class="routine-list hidden" id="routine-soir"></div>
+        </div>
+        <button class="hr-listtoggle" id="hr-listtoggle" onclick="toggleHrList()">Voir en liste</button>
+      </div>
+    </div>
+
+    <div class="plant-card">
+      <div class="pc-row">
+        <div id="plant-host"></div>
+        <div class="pc-info">
+          <div class="streak-num"><em id="streak-num">0</em> <span id="streak-unit">jour</span></div>
+          <div class="streak-label" id="streak-label">Fais ton rituel pour démarrer ta série ✨</div>
+          <div class="streak-mini" id="streak-mini"></div>
+          <div class="plant-caption" id="plant-caption" style="display:none;"></div>
+          <span class="streak-flame" id="streak-flame" style="display:none;"></span>
+        </div>
+      </div>
+      <div class="pc-actions">
+        <button id="rest-btn" onclick="takeRestDay()">☁️ Repos</button>
+        <button onclick="openPlantSheet()">🪴 Plante</button>
+        <button onclick="shareStreakImage()" aria-label="Partager" class="pc-share">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="photo-mini" onclick="openPhotoChoice()">
+      <div class="photo-mini-thumb">
+        <div id="photo-empty" class="pm-empty" style="font-size:22px;color:var(--muted);">＋</div>
+        <div id="photo-display" class="pm-display hidden"><img id="photo-img" alt=""></div>
+      </div>
+      <div class="photo-mini-text">
+        <div class="photo-mini-title">Photo du <em class="italic">jour</em></div>
+        <div class="photo-mini-sub">Suis l'évolution de ta peau, jour après jour 🌸</div>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="handlePhoto(this)">
+    </div>
+
+    <div class="section" id="lea-photo-section" style="display:none;">
+      <button class="add-product-card" id="lea-photo-btn" style="margin-top:0;" onclick="askLeaPhoto()">✨ Demander l'avis de Léa sur ma photo</button>
+      <div id="lea-photo-result" style="display:none;margin-top:12px;"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3 class="section-title" onclick="openDaySheet()" style="cursor:pointer;">Ma <em>journée</em> <span style="color:var(--muted);font-weight:300;">›</span></h3></div>
+      <div class="stats-grid">
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Sommeil</div><div class="stat-tile-value" id="tile-sommeil">＋</div><div class="stat-tile-trend" id="tile-sommeil-sub"></div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Hydratation</div><div class="stat-tile-value" id="tile-hydra">＋</div><div class="stat-tile-trend" id="tile-hydra-sub"></div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Alimentation</div><div class="stat-tile-value" id="tile-alim">＋</div><div class="stat-tile-trend" id="tile-alim-sub"></div></div>
+        <div class="stat-tile" onclick="openDaySheet()" style="cursor:pointer;"><div class="stat-tile-label">Humeur du jour</div><div class="stat-tile-value" id="tile-humeur" style="font-size:30px;">＋</div><div class="stat-tile-trend" id="tile-humeur-sub"></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3 class="section-title">Pour <em>toi</em> aujourd'hui</h3></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div id="uv-card"></div>
+        <div id="cycle-section" style="display:none;"><div id="cycle-card"></div></div>
+        <div id="eclat-card" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h3 class="section-title">Mes <em>habitudes</em></h3></div>
+      <div id="habits-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <button class="add-product-card" onclick="openHabitForm()">＋ Nouvelle habitude</button>
+    </div>
+  </div>
+
+  <div id="journal" class="screen">
+    <div style="padding:26px 20px 0;">
+      <div class="rp-hello">Ton évolution 🌸</div>
+      <div id="suivi-accroche" style="display:none;margin-top:14px;"></div>
+    </div>
+    <div class="section section-cal" style="padding-top:16px;">
+      <div class="cal-card">
+      <div class="cal-head">
+        <button class="cal-nav" onclick="calMonth(-1)">‹</button>
+        <div class="cal-title" id="cal-title">…</div>
+        <button class="cal-nav" onclick="calMonth(1)">›</button>
+      </div>
+      <div class="cal-weekdays"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <span><i class="dot-complete"></i> Rituel complet</span>
+        <span><i class="dot-entry"></i> Noté</span>
+        <span>📷 Photo</span>
+      </div>
+    </div>
+    </div>
+
+    <!-- Vue d'ensemble -->
+    <div class="section" id="ov-section" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:6px 2px 12px;">
+        <div class="rp-label" style="margin:0;">Vue d'ensemble</div>
+        <div style="font-size:11.5px;color:var(--muted);">7 derniers jours</div>
+      </div>
+      <div class="ov-grid" id="ov-tiles"></div>
+    </div>
+
+    <!-- Évolution de ma peau -->
+    <div class="section" id="ev-section" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 2px 12px;">
+        <div class="rp-label" style="margin:0;">Évolution de ma peau</div>
+        <div class="ev-per">
+          <button class="ev-p sel" data-p="7" onclick="evSetPeriod(7)">7 j</button>
+          <button class="ev-p" data-p="30" onclick="evSetPeriod(30)">1 mois</button>
+          <button class="ev-p" data-p="365" onclick="evSetPeriod(365)">1 an</button>
+        </div>
+      </div>
+      <div class="ev-tabs" id="ev-tabs">
+        <button class="ev-tab sel" data-metric="score_peau" onclick="evSetMetric('score_peau')">État global</button>
+        <button class="ev-tab" data-metric="hydratation" onclick="evSetMetric('hydratation')">Hydratation</button>
+        <button class="ev-tab" data-metric="humeur" onclick="evSetMetric('humeur')">Humeur</button>
+      </div>
+      <div class="ev-card" id="ev-card"></div>
+    </div>
+
+
+    <div class="section" id="ba-section" style="display:none;">
+      <div class="rp-label">Avant / après</div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;padding:10px;">
+        <div style="position:relative;width:100%;aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:var(--surface-warm);">
+          <img id="ba-after-img" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+          <img id="ba-before-img" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;clip-path:inset(0 50% 0 0);">
+          <div id="ba-line" style="position:absolute;top:0;bottom:0;left:50%;width:2px;background:rgba(255,255,255,0.9);box-shadow:0 0 6px rgba(0,0,0,0.25);"></div>
+          <div id="ba-knob" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--accent-deep);pointer-events:none;">⇄</div>
+          <div class="photo-chip" id="ba-before-label" style="position:absolute;top:10px;left:10px;">Jour 1</div>
+          <div class="photo-chip" id="ba-after-label" style="position:absolute;top:10px;right:10px;">Aujourd'hui</div>
+          <input type="range" min="0" max="100" value="50" id="ba-range" oninput="baSlide(this.value)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;touch-action:pan-y;margin:0;">
+        </div>
+      </div>
+      <div class="ba-caption" id="ba-caption"></div>
+      <button class="add-product-card" style="margin-top:14px;" onclick="openTimelapse()">▶ Voir l'évolution en accéléré <span class="plus-pill">PLUS</span></button>
+    </div>
+
+    <div class="section" id="eclat-section" style="display:none;">
+      <div class="rp-label">Évolution de l'éclat</div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:12px;color:var(--muted);">Tes derniers relevés</span><span style="font-family:var(--serif);"><em id="eclat-last" style="font-size:22px;color:var(--accent);font-style:italic;">…</em><span style="font-size:12px;color:var(--muted);"> /100</span></span></div>
+        <div id="eclat-graph"></div>
+      </div>
+    </div>
+
+    <div class="section" id="week-recap" style="display:none;">
+      <div class="rp-label">Ma semaine</div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;gap:14px;">
+        <div id="wr-summary" style="font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink-soft);line-height:1.5;">…</div>
+        <div class="stats-grid" id="wr-tiles" style="grid-template-columns:1fr 1fr;gap:10px;"></div>
+      </div>
+    </div>
+
+    <div class="section" id="insights-section" style="display:none;">
+      <div class="rp-label">Tes découvertes <span class="plus-pill">PLUS</span></div>
+      <div id="insights-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;">De petites observations sur tes données · des pistes, pas des vérités 🌿</div>
+    </div>
+
+    <div class="section" id="memory-section" style="display:none;">
+      <div class="rp-label">Il y a quelque temps</div>
+      <div class="ba-card" style="flex-direction:column;align-items:stretch;padding:10px;gap:10px;">
+        <img id="memory-img" alt="" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;">
+        <div id="memory-caption" style="font-size:13px;color:var(--ink-soft);text-align:center;line-height:1.5;"></div>
+      </div>
+    </div>
+
+    <div class="rp-label" style="padding:0 20px;margin:8px 20px 12px;">Mes photos</div>
+    <div class="journal-grid" id="journal-grid"></div>
+
+    <div style="height:24px;"></div>
+  </div>
+
+  <!-- ====================== CHAT ====================== -->
+  <div id="ritual" class="screen">
+    <div id="parcours-root"></div>
+  </div>
+
+  <div id="chat" class="chat-screen">
+    <div class="chat-header">
+      <button class="chat-back" onclick="closeChat()" aria-label="Retour"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="chat-avatar-large">L</div>
+      <div style="flex:1;"><div class="chat-coach-name"><span id="chat-coach-name-text">Léa</span> <span style="font-size:11px;color:var(--muted);letter-spacing:0.1em;">· COMPAGNE DE ROUTINE</span></div><div class="chat-coach-status">● En ligne</div></div>
+      
+    </div>
+    <div id="lea-proactive-line" style="display:none;"></div><div id="lea-tip-body" style="display:none;"></div>
+    <div class="chat-feed" id="chat-feed">
+      <div class="chat-day">VOTRE COMPAGNE DE ROUTINE</div>
+      <div class="msg msg-ai" id="chat-intro">Coucou 🌸 Moi c'est Léa, ta compagne de soin. Je suis là pour t'aider avec ta peau, tes produits, ta routine… ou juste pour répondre à tes questions, sans jugement. Dis-moi tout, qu'est-ce qui t'amène aujourd'hui ?</div>
+      <div class="msg-suggestions" id="chat-starter">
+        <button class="sugg" onclick="leaQuick('Quel rituel du soir pour ma peau ?')">Quel rituel du soir ?</button>
+        <button class="sugg" onclick="leaQuick('Je peux mélanger rétinol et vitamine C ?')">Rétinol + vitamine C ?</button>
+        <button class="sugg" onclick="leaQuick('Comment estomper mes taches ?')">Estomper mes taches ?</button>
+      </div>
+    </div>
+    <div class="chat-quota" id="chat-quota" style="display:none;"></div>
+    <div class="chat-input-bar">
+      <textarea class="chat-input" id="chat-input" placeholder="Pose ta question…" rows="1" oninput="resizeChat(this)"></textarea>
+      <button class="chat-send" onclick="sendUserMsg()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="chat-locked-note" id="chat-locked-note">
+          <div>Tu as utilisé tes 5 échanges du jour 🌸</div>
+          <button class="chat-plus-btn" onclick="openPlusSheet('Léa illimitée, pour continuer votre conversation quand tu veux 💬')">Passer à Rituel+ · Léa illimitée</button>
+        </div>
+    </div>
+    
+  </div>
+
+  <!-- ====================== ROUTINE ====================== -->
+  <div id="routine" class="screen">
+    <div class="topbar">
+      <div class="topbar-greet"><div class="topbar-name" style="display:flex;align-items:baseline;gap:8px;">Mes <em style="font-style:italic;color:var(--accent);">produits</em> <span id="prod-count" style="font-family:var(--sans);font-style:normal;font-size:15px;color:var(--muted);font-weight:500;">0</span></div></div>
+      <div style="display:flex;gap:8px;align-items:center;"><button class="add-btn" onclick="toggleProductView()" id="prodview-toggle" aria-label="Changer de vue" style="padding:8px 11px;display:flex;align-items:center;justify-content:center;font-size:15px;">☰</button><button class="add-btn" onclick="openBarcodeSheet()" style="padding:8px 10px;display:flex;align-items:center;justify-content:center;" aria-label="Scanner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/><line x1="13" y1="8" x2="13" y2="16"/><line x1="17" y1="8" x2="17" y2="16"/></svg></button></div>
+    </div>
+
+    <div class="section">
+      <div class="sort-bar">
+        <button type="button" class="sort-btn" id="sort-btn" onclick="toggleSortMenu(event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+          <span id="sort-label">Par catégorie</span>
+          <span class="chev">▾</span>
+        </button>
+        <button type="button" class="np-btn" onclick="openProductForm()">＋ Nouveau produit</button>
+        <div class="sort-menu" id="sort-menu"></div>
+      </div>
+      
+      <div id="products-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
+
+  </div>
+
+  <!-- ====================== PROFILE ====================== -->
+  <div id="profile" class="screen">
+    <div class="profile-hero">
+      <svg class="profile-floral" viewBox="0 0 120 40" fill="none"><g stroke="#E8A6A0" stroke-width="1" opacity="0.6"><path d="M8 20 H44"/><path d="M112 20 H76"/><circle cx="60" cy="20" r="6"/><circle cx="50" cy="20" r="4"/><circle cx="70" cy="20" r="4"/><circle cx="60" cy="12" r="4"/><circle cx="60" cy="28" r="4"/></g></svg>
+      <div class="profile-avatar-xl" id="profile-avatar">V</div>
+      <div class="profile-name" id="profile-name">toi</div>
+      <div class="profile-meta" id="profile-email">membre depuis aujourd'hui</div>
+      <div class="profile-badges" id="profile-badges"></div>
+    </div>
+
+      
+    <div class="premium-card" onclick="openPlusSheet()">
+      <div class="premium-eyebrow">RITUEL+</div>
+      <div class="premium-title">Une compagne <em>illimitée</em>, un suivi tout en finesse</div>
+      <div class="premium-desc">Photos haute résolution, comparaisons avant/après, conseils approfondis.</div>
+      <button class="premium-btn" onclick="openPlusSheet()">Découvrir · 1 mois offert →</button>
+    </div>
+
+    <div class="profile-section">
+      <div class="eyebrow" style="margin-bottom:12px;padding-left:8px;">PRÉFÉRENCES</div>
+      <div class="menu-list">
+        <div class="menu-item" onclick="openSkinSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Ma peau</div><div class="menu-meta" id="menu-skin-meta">type & préoccupations</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openCycleSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 019 9" stroke-linecap="round"/></svg></div><div class="menu-label">Suivi de cycle</div><div class="menu-meta" id="menu-cycle-meta">…</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openBadgesSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0V4z" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 5H4v2a3 3 0 003 3M17 5h3v2a3 3 0 01-3 3" stroke-linecap="round"/></svg></div><div class="menu-label">Mes badges</div><div class="menu-meta">souvenirs</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+      <div class="menu-item" onclick="openThemeSheet()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2a10 10 0 0 0 0 20c.5 0 1-.5 1-1.5s-.5-1-.5-2 .5-1.5 1.5-1.5h2a4 4 0 0 0 4-4 8 8 0 0 0-8-8z"/></svg></div><div class="menu-label">Thème & couleurs</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.4"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+        <div class="menu-item" onclick="showToast('Bientôt disponible 🌸')"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" stroke-linecap="round"/></svg></div><div class="menu-label">Programme Éclat 30 jours</div><div class="menu-meta">bientôt</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openLettresList()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mes lettres</div><div class="menu-meta">💌</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <div class="eyebrow" style="margin-bottom:12px;padding-left:8px;">COMPTE</div>
+      <div id="premium-manage" style="display:none;margin:0 0 12px;background:var(--surface);border-radius:20px;padding:16px 18px 14px;box-shadow:0 6px 18px rgba(46,33,28,0.05);">
+        <div style="display:flex;align-items:center;gap:11px;">
+          <span style="width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,#F8D9AE,#F3C393);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🌸</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14.5px;font-weight:600;color:var(--ink);" id="premium-title">Rituel+ actif</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;" id="premium-renew">—</div>
+          </div>
+        </div>
+        <div id="premium-note" style="font-size:11.5px;color:var(--ink-soft);background:var(--surface-warm);border-radius:12px;padding:10px 12px;margin-top:12px;line-height:1.45;">—</div>
+        <button class="pm-btn" onclick="openBillingPortal()" id="premium-btn">Gérer mon abonnement</button>
+      </div>
+      <div class="menu-list">
+        <div class="menu-item" onclick="exportData()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Exporter mes données</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="exportCarnetPDF()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M9 13h6M9 17h4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Mon carnet (PDF) <span class="plus-pill">PLUS</span></div><div class="menu-meta">joli résumé</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="openPolicy()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-4z" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Politique de confidentialité</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="doLogout()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label">Se déconnecter</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+        <div class="menu-item" onclick="deleteAccount()"><div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="menu-label" style="color:var(--accent);">Supprimer mon compte et mes données</div><div class="menu-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:24px;color:var(--muted);font-size:11px;letter-spacing:0.1em;">RITUEL · VERSION 26.2<br><span class="italic serif">· ton carnet de peau ·</span></div>
+  </div>
+
+ </div><!-- /scroll-host -->
+
+  <nav class="nav hidden" id="nav">
+    <div class="nav-item active" data-screen="home" onclick="navTo('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-9 9 9M5 10v10a2 2 0 002 2h3v-6h4v6h3a2 2 0 002-2V10" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Aujourd'hui</div></div>
+    <div class="nav-item" data-screen="routine" onclick="navTo('routine')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2h4v3l1.2 2A3 3 0 0116 8.7V19a2 2 0 01-2 2h-4a2 2 0 01-2-2V8.7a3 3 0 01.8-1.7L10 5V2z" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 12h7" stroke-linecap="round"/></svg><div class="nav-label">Produits</div></div>
+    <div class="nav-item" data-screen="ritual" onclick="navTo('ritual')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Rituel</div></div>
+    <div class="nav-item" data-screen="profile" onclick="navTo('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="nav-label">Moi</div></div>
+  </nav>
+
+  <!-- ====================== FICHE HABITUDE ====================== -->
+<div class="sheet-overlay" id="habit-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="habit-sheet-title">Nouvelle habitude</div>
+      <label class="dd-lbl">Icône</label>
+      <div class="emoji-picker" id="habit-emoji-picker" style="margin:8px 0 16px;"></div>
+      <div class="field"><label>Nom de l'habitude</label><input id="hf-nom" placeholder="Ex. Boire 2L d'eau, Sport, Masque…"></div>
+      <div class="auth-error" id="hf-error" style="margin-top:10px;"></div>
+      <button class="btn btn-accent" style="margin-top:14px;" onclick="saveHabit()">Enregistrer</button>
+      <button class="btn" id="hf-delete" style="margin-top:10px;background:transparent;color:var(--accent);display:none;" onclick="deleteHabit()">Supprimer cette habitude</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeHabitSheet()">Annuler</button>
+    </div>
+  </div>
+
+  <!-- ====================== THÈME ====================== -->
+  <div class="sheet-overlay" id="theme-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Thème de l'app</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Choisis ton ambiance de couleur · c'est gratuit 🌸</p>
+      <div id="theme-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeThemeSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="plant-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ta plante</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Choisis ta plante 🌱 De <b style="color:var(--accent-deep);font-weight:600;">nouvelles variétés se débloquent</b> au fil de ta série de rituel (3, 7, 14, 30 jours).</p>
+      <div id="plant-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closePlantSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="timelapse-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ton évolution ✨</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Tes photos jour après jour 🌸</p>
+      <div style="position:relative;width:100%;aspect-ratio:3/4;border-radius:18px;overflow:hidden;background:var(--surface-warm);">
+        <img id="tl-img" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <div id="tl-date" style="position:absolute;bottom:0;left:0;right:0;padding:12px 14px;background:linear-gradient(transparent,rgba(40,28,22,0.6));color:#fff;font-family:var(--serif);font-size:15px;"></div>
+      </div>
+      <input type="range" id="tl-range" min="0" max="0" value="0" style="width:100%;margin:16px 0 8px;accent-color:var(--accent);">
+      <div style="display:flex;justify-content:center;"><button id="tl-play" class="btn btn-accent" style="width:auto;padding:11px 26px;" onclick="tlToggle()">⏸ Pause</button></div>
+      <button class="btn btn-ghost" style="margin-top:12px;" onclick="closeTimelapse()">Fermer</button>
+    </div>
+  </div>
+
+  <div id="rj-sheet" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:385;flex-direction:column;padding:max(20px,env(safe-area-inset-top)) 22px max(24px,env(safe-area-inset-bottom));overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0;"><div class="eyebrow" id="rj-count">ÉTAPE 1/4</div><button onclick="closeRituelJour()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;">✕</button></div>
+    <div class="onb-progress" id="rj-progress" style="margin:14px 0 18px;flex-shrink:0;"></div>
+    <div id="rj-body" style="flex:1;display:flex;flex-direction:column;"></div>
+    <div style="flex-shrink:0;margin-top:14px;" id="rj-footer">
+      <button class="btn btn-accent" id="rj-next" onclick="rjNext()">Continuer</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" id="rj-skip" onclick="rjNext(true)">Passer cette étape</button>
+    </div>
+  </div>
+
+  <div id="guided-sheet" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:380;flex-direction:column;padding:max(20px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));">
+    <div style="display:flex;justify-content:space-between;align-items:center;"><div class="eyebrow" id="gd-count">ÉTAPE 1/5</div><button onclick="closeGuided()" style="background:none;border:none;font-size:22px;color:var(--muted);">✕</button></div>
+    <div class="onb-progress" id="gd-progress" style="margin:14px 0 0;"></div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+      <div id="gd-emoji" style="font-size:64px;margin-bottom:18px;">🧴</div>
+      <div id="gd-name" class="serif" style="font-size:30px;line-height:1.15;max-width:300px;">…</div>
+      <div id="gd-effets" style="color:var(--muted);font-size:14px;margin-top:10px;max-width:280px;line-height:1.5;"></div>
+    </div>
+    <button class="btn btn-accent" id="gd-next" onclick="guidedNext()">Étape suivante</button>
+    <button class="btn btn-ghost" style="margin-top:8px;" onclick="guidedPrev()" id="gd-prev">Précédent</button>
+  </div>
+
+  <div class="sheet-overlay" id="eclat-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Programme <em style="font-style:italic;color:var(--accent);">Éclat</em> 30 jours</div>
+      <div id="eclat-body"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeEclatSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="bilan5-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">🌟 Ton premier bilan</div>
+      <div id="bilan5-body" style="font-size:13.5px;color:var(--ink-soft);line-height:1.6;"></div>
+      <p style="color:var(--muted);font-size:11px;text-align:center;margin-top:14px;">Et chaque semaine, ton récap t'attend dans le journal 🌿</p>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeBilan5()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="lettre-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">💌 La lettre du mois</div>
+      <div id="lettre-body" style="font-size:13.5px;color:var(--ink-soft);line-height:1.65;"></div>
+      <p style="color:var(--muted);font-size:11px;text-align:center;margin-top:14px;">Tu retrouveras toutes tes lettres dans ton profil 🌸</p>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeLettre()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="lettres-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Mes lettres</div>
+      <div id="lettres-list"></div>
+      <button class="btn btn-ghost" style="margin-top:10px;" onclick="closeLettresList()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="rituel-select-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Mon rituel actif</div>
+      <p style="color:var(--muted);font-size:12px;margin:0 0 12px;line-height:1.5;">Un seul rituel actif à la fois : c'est lui (et lui seul) qui s'affiche sur Aujourd'hui.</p>
+      <div id="rituel-select-list"></div>
+      <button class="btn btn-ghost" style="margin-top:10px;" onclick="closeRituelSelect()">Fermer</button>
+    </div>
+  </div>
+
+  
+  
+  <!-- Actions sur un rituel -->
+  <div class="sheet-overlay" id="ract-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="ract-title">Mon rituel</div>
+      <div class="ract-list" id="ract-list"></div>
+      <button class="btn btn-ghost" onclick="closeRituelActions()">Annuler</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="plus-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Rituel<span style="color:var(--accent);">+</span></div>
+      <p id="plus-reason" style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Pour aller plus loin avec ta compagne de soin, sans limite 🌸</p>
+
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:18px;">
+        <div>💬 <b>Léa illimitée</b> — pose-lui toutes tes questions</div>
+        <div>📸 <b>Analyse de tes photos</b> par Léa</div>
+        <div>📊 <b>Tes découvertes</b> — ce que tes données racontent</div>
+        <div>🎞️ <b>Timelapse</b> — ton évolution en accéléré</div>
+        <div>💌 <b>La lettre du mois</b> · 📄 <b>Ton carnet PDF</b></div>
+      </div>
+
+      <div class="plus-plans">
+        <button class="plus-plan plus-buy" id="plus-buy-an" onclick="startCheckout('an')">
+          <span class="pp-badge">2 mois offerts</span>
+          <span class="pp-price">29 €</span>
+          <span class="pp-per">par an</span>
+          <span class="pp-eq">soit 2,42 €/mois</span>
+        </button>
+        <button class="plus-plan plus-buy" id="plus-buy-mois" onclick="startCheckout('mois')">
+          <span class="pp-price">3,99 €</span>
+          <span class="pp-per">par mois</span>
+          <span class="pp-eq">sans engagement</span>
+        </button>
+      </div>
+
+      <p style="text-align:center;font-size:11px;color:var(--muted);margin:14px 0 8px;line-height:1.5;">
+        Renouvellement automatique · <b>annulable à tout moment</b> depuis ton profil<br>
+        Paiement sécurisé par Stripe 🌸
+      </p>
+      <button class="btn btn-ghost" onclick="closePlusSheet()">Plus tard</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="badges-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Mes badges</div>
+      <p id="badges-count" style="color:var(--muted);font-size:13px;margin:-10px 0 16px;">…</p>
+      <div id="badges-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeBadgesSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="photo-choice">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ta photo du jour</div>
+      <button class="btn btn-accent" onclick="closePhotoChoice();camOpen()">📷 Caméra HD</button>
+      <button class="btn" style="margin-top:10px;background:var(--surface-warm);color:var(--ink);" onclick="closePhotoChoice();document.getElementById('photo-input').click()">🖼️ Choisir dans la galerie</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closePhotoChoice()">Annuler</button>
+    </div>
+  </div>
+
+  <div id="cam-sheet" style="display:none;position:fixed;inset:0;background:#0E0A08;z-index:400;">
+    <video id="cam-video" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;"><div style="width:62vw;max-width:300px;aspect-ratio:3/4;border:2px solid rgba(255,255,255,0.55);border-radius:50%;"></div></div>
+    <div id="cam-hint" style="position:absolute;top:max(18px,env(safe-area-inset-top));left:0;right:0;text-align:center;color:rgba(255,255,255,0.85);font-size:13px;">Place ton visage dans l'ovale, lumière face à toi ✨</div>
+    <div style="position:absolute;bottom:max(26px,env(safe-area-inset-bottom));left:0;right:0;display:flex;align-items:center;justify-content:center;gap:44px;">
+      <button onclick="camFlip()" style="width:48px;height:48px;border-radius:50%;border:none;background:rgba(255,255,255,0.18);color:#fff;font-size:20px;">↺</button>
+      <button onclick="camCapture()" style="width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,0.25);"></button>
+      <button onclick="camClose()" style="width:48px;height:48px;border-radius:50%;border:none;background:rgba(255,255,255,0.18);color:#fff;font-size:20px;">✕</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="barcode-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Scanner un produit</div>
+      <div id="bc-video-wrap" style="display:none;position:relative;border-radius:18px;overflow:hidden;background:#1c1512;aspect-ratio:3/4;">
+        <video id="bc-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>
+        <div style="position:absolute;inset:0;margin:22% 12%;border:2px solid rgba(255,255,255,0.65);border-radius:14px;pointer-events:none;"></div>
+      </div>
+      <div id="bc-status" style="color:var(--muted);font-size:13px;line-height:1.5;margin:12px 2px;text-align:center;"></div>
+        <a id="bc-google" class="btn-soft" target="_blank" rel="noopener" style="display:none;margin-top:10px;">🔎 Chercher en ligne</a>
+      <div class="field"><label>Ou tape le code-barres</label><input id="bc-manual" inputmode="numeric" placeholder="Ex. 3600523351441"></div>
+      <button class="btn btn-accent" style="margin-top:12px;" onclick="bcLookupManual()">Chercher</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeBarcodeSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="cycle-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Suivi de cycle</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Optionnel et discret 🌸 Pour relier l'état de ta peau à ton cycle. Ces infos restent dans ton compte, rien d'autre.</p>
+      <div class="rit-type" style="margin:0 0 6px;">
+        <button class="rit-opt" id="cy-on" onclick="cySetEnabled(true)">🩸<span>Activé</span></button>
+        <button class="rit-opt" id="cy-off" onclick="cySetEnabled(false)">🌙<span>Désactivé</span></button>
+      </div>
+      <div id="cy-body">
+        <div class="field" style="margin-top:14px;"><label>Premier jour de tes dernières règles</label><input type="text" readonly id="cy-start" placeholder="Choisir une date" onclick="dpOpen('cy-start')" style="cursor:pointer;"></div>
+        <button onclick="cyToday()" class="btn-soft" style="display:block;margin:12px auto 0;">Mes règles commencent aujourd'hui</button>
+        <div class="field" style="margin-top:14px;"><label>Durée moyenne du cycle (jours)</label><input type="number" id="cy-length" min="20" max="45" value="28"></div>
+      </div>
+      <button class="btn btn-accent" style="margin-top:14px;" onclick="saveCycle()">Enregistrer</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeCycleSheet()">Fermer</button>
+      <p style="color:var(--muted);font-size:11px;line-height:1.5;margin:12px 2px 0;text-align:center;">Estimation indicative · ce n'est ni un outil médical, ni un moyen de contraception.</p>
+    </div>
+  </div>
+
+  <div id="lea-bubble" class="lea-bubble" style="display:none;" aria-label="Parler à Léa">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+    <!-- ============ NOUVEAU MOT DE PASSE (recuperation) ============ -->
+  <div class="sheet-overlay" id="pwreset-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Nouveau mot de passe</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 16px;line-height:1.5;">Choisis un nouveau mot de passe pour ton compte 🌸</p>
+      <div class="field">
+        <label>Nouveau mot de passe</label>
+        <input type="password" id="pwreset-input" placeholder="6 caractères minimum" autocomplete="new-password">
+      </div>
+      <div class="auth-error" id="pwreset-error"></div>
+      <button class="btn btn-accent" id="pwreset-btn" onclick="pwUpdate()">Valider mon nouveau mot de passe</button>
+    </div>
+  </div>
+
+  <!-- ====================== RAPPELS ====================== -->
+  <div class="sheet-overlay" id="reminder-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Mes rappels</div>
+      <div style="background:var(--surface-warm);border-radius:14px;padding:14px;margin:4px 0 16px;">
+        <div style="font-weight:600;font-size:13px;">🔔 Rappels même app fermée</div>
+        <p style="font-size:12px;color:var(--muted);margin:6px 0 10px;line-height:1.5;">Reçois ta notification du matin et du soir directement sur ton téléphone, même quand l'app est fermée.</p>
+        <button class="btn btn-accent" id="push-btn" style="padding:11px;" onclick="togglePush()">Activer les notifications</button>
+        <div id="push-status" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.4;"></div>
+      </div>
+
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeReminderSheet()">Fermer</button>
+    </div>
+  </div>
+
+  <!-- ====================== DÉTAIL D'UN JOUR ====================== -->
+  <div class="sheet-overlay" id="day-detail">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="dd-title">Jour</div>
+
+      <div id="dd-photo-wrap" style="margin-bottom:12px;"></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+        <button type="button" class="btn-outline-sm" onclick="document.getElementById('dd-photo-input').click()">📷 Ajouter / changer la photo</button>
+        <input type="file" id="dd-photo-input" accept="image/*" style="display:none" onchange="ddPhotoPreview(this)">
+      </div>
+
+      <label class="dd-lbl">Humeur</label>
+      <div class="mood-row" id="dd-mood-row" style="margin-top:8px;">
+        <button class="mood-btn" onclick="ddPickMood(this,1)"><div class="mood-emoji">😣</div><div class="mood-label">Difficile</div></button>
+        <button class="mood-btn" onclick="ddPickMood(this,2)"><div class="mood-emoji">😕</div><div class="mood-label">Moyenne</div></button>
+        <button class="mood-btn" onclick="ddPickMood(this,3)"><div class="mood-emoji">😌</div><div class="mood-label">Bien</div></button>
+        <button class="mood-btn" onclick="ddPickMood(this,4)"><div class="mood-emoji">😊</div><div class="mood-label">Top</div></button>
+        <button class="mood-btn" onclick="ddPickMood(this,5)"><div class="mood-emoji">✨</div><div class="mood-label">Sublime</div></button>
+      </div>
+      <div class="intensity hidden" id="dd-intensity-box" style="margin-top:12px;">
+        <div class="intensity-head"><span>Intensité</span><span id="dd-intensity-val">50%</span></div>
+        <input type="range" min="0" max="100" value="50" step="5" class="intensity-slider" id="dd-intensity" oninput="document.getElementById('dd-intensity-val').textContent=this.value+'%'">
+      </div>
+
+      <div class="intensity" style="margin-top:14px;"><div class="intensity-head"><span>💤 Sommeil</span><span id="dd-sommeil-val">7h</span></div><input type="range" min="0" max="12" value="7" step="0.5" class="intensity-slider" id="dd-sommeil" oninput="ddTouch('som');document.getElementById('dd-sommeil-val').textContent=fmtSleep(this.value)"></div>
+      <div class="intensity" style="margin-top:14px;"><div class="intensity-head"><span>💧 Hydratation</span><span id="dd-hydra-val">6 verres</span></div><input type="range" min="0" max="12" value="6" step="1" class="intensity-slider" id="dd-hydra" oninput="ddTouch('hyd');ddHydraLbl(this.value)"></div>
+      <div class="intensity" style="margin-top:14px;margin-bottom:18px;"><div class="intensity-head"><span>🥗 Alimentation</span><span id="dd-alim-val">Équilibrée</span></div><input type="range" min="1" max="5" value="3" step="1" class="intensity-slider" id="dd-alim" oninput="ddTouch('ali');document.getElementById('dd-alim-val').textContent=ALIM_LABELS[this.value]||'…'"></div>
+
+      <div class="rem-row"><div class="rem-label">☀️ Rituel du matin faite</div><label class="switch"><input type="checkbox" id="dd-matin"><span class="sl"></span></label></div>
+      <div class="rem-row"><div class="rem-label">🌙 Rituel du soir faite</div><label class="switch"><input type="checkbox" id="dd-soir"><span class="sl"></span></label></div>
+
+      <label class="dd-lbl" style="margin-top:16px;display:block;">Mes habitudes</label>
+      <div id="dd-habits" style="margin-top:8px;"></div>
+
+      <label class="dd-lbl" style="margin-top:16px;display:block;">Note</label>
+      <textarea id="dd-note" class="day-note" style="margin-top:8px;" placeholder="Un mot sur ce jour…"></textarea>
+
+      <button class="btn btn-accent" style="margin-top:16px;" onclick="saveDayDetail()">Enregistrer</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeDayDetail()">Fermer</button>
+    </div>
+  </div>
+
+  <!-- ====================== FICHE MA JOURNÉE ====================== -->
+  <div class="sheet-overlay" id="day-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ma journée</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 20px;line-height:1.5;">Note ton sommeil, ton hydratation et ton alimentation. Léa s'en servira pour des conseils plus justes 🌸</p>
+
+      <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;display:block;margin-bottom:10px;">Comment va ta peau ?</label>
+
+      <div class="mood-row" id="ds-mood">
+        <button class="mood-btn" onclick="selectMood(this,1)"><div class="mood-emoji">😣</div><div class="mood-label">Difficile</div></button>
+        <button class="mood-btn" onclick="selectMood(this,2)"><div class="mood-emoji">😕</div><div class="mood-label">Moyenne</div></button>
+        <button class="mood-btn" onclick="selectMood(this,3)"><div class="mood-emoji">😌</div><div class="mood-label">Bien</div></button>
+        <button class="mood-btn" onclick="selectMood(this,4)"><div class="mood-emoji">😊</div><div class="mood-label">Top</div></button>
+        <button class="mood-btn" onclick="selectMood(this,5)"><div class="mood-emoji">✨</div><div class="mood-label">Sublime</div></button>
+      </div>
+      <div class="intensity hidden" id="intensity-box">
+        <div class="intensity-head"><span>Intensité du ressenti</span><span id="intensity-val">50%</span></div>
+        <input type="range" min="0" max="100" value="50" step="5" class="intensity-slider" id="intensity-slider" oninput="onIntensity(this.value)" onchange="saveMood()">
+      <div style="height:14px;"></div>
+
+            </div>
+<div class="intensity" style="margin-bottom:14px;">
+        <div class="intensity-head"><span>💤 Sommeil</span><span id="ds-sommeil-val">7h</span></div>
+        <input type="range" min="0" max="12" value="7" step="0.5" class="intensity-slider" id="ds-sommeil" oninput="onDaySommeil(this.value)">
+      </div>
+
+      <div class="intensity" style="margin-bottom:14px;">
+        <div class="intensity-head"><span>💧 Hydratation</span><span id="ds-hydra-val">6 verres</span></div>
+        <input type="range" min="0" max="12" value="6" step="1" class="intensity-slider" id="ds-hydra" oninput="onDayHydra(this.value)">
+      </div>
+
+      <div class="intensity" style="margin-bottom:20px;">
+        <div class="intensity-head"><span>🥗 Alimentation</span><span id="ds-alim-val">Équilibrée</span></div>
+        <input type="range" min="1" max="5" value="3" step="1" class="intensity-slider" id="ds-alim" oninput="onDayAlim(this.value)">
+      </div>
+
+      <button class="btn btn-accent" onclick="saveDay()">Enregistrer ma journée</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeDaySheet()">Annuler</button>
+    </div>
+  </div>
+
+  <!-- ====================== FICHE MA PEAU ====================== -->
+  <div class="sheet-overlay" id="skin-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ma peau</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 18px;line-height:1.5;">Ta peau évolue, ton profil aussi. Modifie-le quand tu veux 🌸</p>
+      <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;">Type de peau</label>
+      <div id="skin-type-opts" class="onb-options" style="margin:10px 0 10px;"></div>
+      <button onclick="openQuiz('profile')" style="background:transparent;border:none;color:var(--accent-deep);font-size:13px;cursor:pointer;display:block;margin:0 0 18px 4px;font-weight:600;">🧪 Je ne sais pas · faire le test</button>
+      <label style="font-size:12px;font-weight:600;color:var(--ink-soft);padding-left:4px;">Mes préoccupations</label>
+      <div id="skin-concern-opts" class="onb-options" style="margin:10px 0 20px;"></div>
+      <button class="btn btn-accent" onclick="saveSkinProfile()">Enregistrer</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeSkinSheet()">Annuler</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="quiz-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div id="quiz-body"></div>
+      <button class="btn btn-ghost" style="margin-top:14px;" onclick="closeQuiz()">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="rituel-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="rd-head">
+        <div class="sheet-title" id="rd-title" style="margin:0;">Créer un rituel</div>
+        <button type="button" class="rd-bell" id="rd-bell" onclick="rdToggleRemPanel()" aria-label="Rappels">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="rd-bell-dot" id="rd-bell-dot"></span>
+        </button>
+      </div>
+      <input id="rd-nom" class="rd-nom" placeholder="Rituel du matin">
+      
+      <div id="rd-hebdo-day" style="display:none;margin:4px 0 8px;">
+        
+        <div style="display:flex;gap:5px;">
+          <button type="button" class="rd-day rd-hday" data-hday="1" onclick="rdPickHebdoDay(1)">L</button>
+          <button type="button" class="rd-day rd-hday" data-hday="2" onclick="rdPickHebdoDay(2)">M</button>
+          <button type="button" class="rd-day rd-hday" data-hday="3" onclick="rdPickHebdoDay(3)">M</button>
+          <button type="button" class="rd-day rd-hday" data-hday="4" onclick="rdPickHebdoDay(4)">J</button>
+          <button type="button" class="rd-day rd-hday" data-hday="5" onclick="rdPickHebdoDay(5)">V</button>
+          <button type="button" class="rd-day rd-hday" data-hday="6" onclick="rdPickHebdoDay(6)">S</button>
+          <button type="button" class="rd-day rd-hday on" data-hday="0" onclick="rdPickHebdoDay(0)">D</button>
+        </div>
+      </div>
+
+      <!-- Semainier de rappels -->
+      <div id="rd-rem-panel" style="display:none;margin-top:14px;background:var(--surface-warm);border-radius:16px;padding:14px;">
+        <input type="checkbox" id="rd-rem-on" style="display:none;">
+        <div class="rd-rem-row" id="rd-time-matin">
+          <span class="rd-rem-lbl">☀️ Heure du rappel</span>
+          <input type="time" id="rd-h-matin" value="08:00" class="rd-time">
+        </div>
+        <div class="rd-rem-row" id="rd-time-soir">
+          <span class="rd-rem-lbl">🌙 Heure du rappel</span>
+          <input type="time" id="rd-h-soir" value="21:00" class="rd-time">
+        </div>
+        
+      </div>
+
+      
+      <div id="rd-products" style="display:flex;flex-direction:column;gap:8px;margin:10px 0;"></div>
+      <div id="rd-conflicts"></div>
+      <button class="add-product-card" style="margin-top:0;" onclick="openRdPicker()">＋ Ajouter des produits</button>
+      <div class="rd-actions">
+        <button class="rd-cancel" onclick="closeRituelSheet()">Annuler</button>
+        <button class="rd-save" onclick="saveRituel()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="rd-picker">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Ajouter des produits</div>
+      <p style="color:var(--muted);font-size:13px;margin:-10px 0 14px;line-height:1.5;">Choisis les produits de ce rituel 🌸</p>
+      <div style="display:flex;gap:5px;margin-bottom:14px;">
+        <button type="button" class="sort-chip sel" data-rdsort="fav" onclick="setRdSort('fav')">Favoris</button>
+        <button type="button" class="sort-chip" data-rdsort="alpha" onclick="setRdSort('alpha')">A-Z</button>
+        <button type="button" class="sort-chip" data-rdsort="perem" onclick="setRdSort('perem')">Date</button>
+        <div class="cat-dd" style="position:relative;flex-shrink:0;">
+          <button type="button" class="sort-chip" id="rd-cat-btn" onclick="toggleRdCatDD()" style="display:flex;align-items:center;gap:5px;">Catégorie <span style="font-size:8px;opacity:0.6;">▼</span></button>
+          <div class="cat-dd-menu" id="rd-cat-menu">
+            <button type="button" class="cat-dd-opt sel" data-cat="all" onclick="pickRdCat('all','Catégorie')">Toutes</button>
+            <button type="button" class="cat-dd-opt" data-cat="demaquillant" onclick="pickRdCat('demaquillant','Démaquillant')">Démaquillant</button>
+            <button type="button" class="cat-dd-opt" data-cat="nettoyant" onclick="pickRdCat('nettoyant','Nettoyant')">Nettoyant</button>
+            <button type="button" class="cat-dd-opt" data-cat="toner" onclick="pickRdCat('toner','Lotion / toner')">Lotion / toner</button>
+            <button type="button" class="cat-dd-opt" data-cat="serum" onclick="pickRdCat('serum','Sérum')">Sérum</button>
+            <button type="button" class="cat-dd-opt" data-cat="yeux" onclick="pickRdCat('yeux','Yeux')">Yeux</button>
+            <button type="button" class="cat-dd-opt" data-cat="creme" onclick="pickRdCat('creme','Crème')">Crème</button>
+            <button type="button" class="cat-dd-opt" data-cat="spf" onclick="pickRdCat('spf','SPF')">SPF</button>
+            <button type="button" class="cat-dd-opt" data-cat="masque" onclick="pickRdCat('masque','Masque / exfo')">Masque / exfo</button>
+            <button type="button" class="cat-dd-opt" data-cat="cible" onclick="pickRdCat('cible','Soin ciblé')">Soin ciblé</button>
+            <button type="button" class="cat-dd-opt" data-cat="autre" onclick="pickRdCat('autre','Autre')">Autre</button>
+          </div>
+        </div>
+      </div>
+      <div id="rd-picker-list" style="display:flex;flex-direction:column;gap:8px;min-height:50vh;"></div>
+      <button class="btn btn-accent" style="margin-top:14px;" onclick="confirmRdPicker()">Ajouter à mon rituel</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeRdPicker()">Fermer</button>
+    </div>
+  </div>
+
+  <!-- ====================== FICHE PRODUIT ====================== -->
+  <div class="sheet-overlay" id="product-sheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">
+        <div class="sheet-title" id="product-sheet-title" style="margin:0;">Nouveau produit</div>
+        <div style="display:flex;align-items:center;gap:9px;flex-shrink:0;">
+          <div style="position:relative;">
+            <button type="button" id="pf-icon-btn" onclick="pfToggleIconPicker()" style="width:78px;height:78px;border-radius:50%;border:2px solid var(--line);background:var(--surface-warm);font-size:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0;transition:all .15s;">🧴</button>
+            <span class="pf-pencil" onclick="pfToggleIconPicker()">✎</span>
+          </div>
+          <input type="file" id="pf-photo-input" accept="image/*" capture="environment" style="display:none;" onchange="pfPhotoPreview(this)">
+        </div>
+      </div>
+      <div id="pf-icon-picker" style="display:none;margin-top:12px;padding:12px;background:var(--surface-warm);border-radius:14px;"></div>
+
+      <div class="field"><label>Catégorie</label><div id="pf-cats" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;"><button type="button" class="rj-chip" data-cat="demaquillant" onclick="pfSetCat(this,'demaquillant')">🧼 Démaquillant</button><button type="button" class="rj-chip" data-cat="nettoyant" onclick="pfSetCat(this,'nettoyant')">🫧 Nettoyant</button><button type="button" class="rj-chip" data-cat="toner" onclick="pfSetCat(this,'toner')">💦 Lotion / toner</button><button type="button" class="rj-chip" data-cat="serum" onclick="pfSetCat(this,'serum')">✨ Sérum</button><button type="button" class="rj-chip" data-cat="yeux" onclick="pfSetCat(this,'yeux')">👁️ Yeux</button><button type="button" class="rj-chip" data-cat="creme" onclick="pfSetCat(this,'creme')">🧴 Crème</button><button type="button" class="rj-chip" data-cat="spf" onclick="pfSetCat(this,'spf')">☀️ SPF</button><button type="button" class="rj-chip" data-cat="masque" onclick="pfSetCat(this,'masque')">🎭 Masque / exfo</button><button type="button" class="rj-chip" data-cat="cible" onclick="pfSetCat(this,'cible')">🩹 Soin ciblé</button><button type="button" class="rj-chip" data-cat="autre" onclick="pfSetCat(this,'autre')">🌿 Autre</button></div></div>
+      <!-- 2 colonnes : Nom/Marque + Effets/Prix -->
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <div class="pf-grid">
+          <div class="field" style="margin:0;min-width:0;"><label>Nom *</label><input id="pf-nom" placeholder="Sérum vitamine C" style="width:100%;box-sizing:border-box;"></div>
+          <div class="field" style="margin:0;min-width:0;"><label>Marque</label><input id="pf-marque" placeholder="La Roche-Posay" style="width:100%;box-sizing:border-box;"></div>
+          <div class="field" style="margin:0;min-width:0;"><label>Prix en €</label><input id="pf-prix" type="number" inputmode="decimal" placeholder="15" style="width:100%;box-sizing:border-box;"></div>
+        </div>
+      </div>
+
+      <!-- Effets : sélection multiple par pastilles + effet personnalisé -->
+      <div class="field" style="margin-top:12px;"><label>Effets <span style="color:var(--muted);font-weight:400;">· plusieurs possibles</span></label>
+        <div id="pf-effets-chips" class="pf-eff-chips"></div>
+        <div class="pf-eff-add">
+          <input id="pf-effets" maxlength="34" placeholder="Ajouter un effet…" style="flex:1;min-width:0;box-sizing:border-box;" onkeydown="pfEffKeydown(event)">
+          <button type="button" class="pf-eff-addbtn" onclick="pfEffAddCustom()">Ajouter</button>
+        </div>
+      </div>
+
+      <!-- Conservation du produit (toutes les infos ensemble) -->
+      <div style="margin-top:18px;">
+        <div class="pf-grid">
+          <div class="field" style="margin:0;min-width:0;"><label>Date de péremption</label><input id="pf-peremption" type="text" readonly placeholder="Choisir" onclick="dpOpen('pf-peremption')" style="cursor:pointer;width:100%;box-sizing:border-box;" onchange="pfRefreshPerem()"></div>
+          <div class="field" style="margin:0;min-width:0;"><label>Date d'ouverture</label><input id="pf-ouverture" type="text" readonly placeholder="Choisir" onclick="dpOpen('pf-ouverture')" style="cursor:pointer;width:100%;box-sizing:border-box;" onchange="pfRefreshPerem()"></div>
+        </div>
+        <div style="margin-top:12px;">
+          <label style="font-size:12px;font-weight:500;color:var(--ink-soft);padding-left:4px;">Durée de conservation après ouverture</label>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <button type="button" class="pf-mois-btn" data-mois="3" onclick="pfSetMois(3)">3M</button>
+            <button type="button" class="pf-mois-btn" data-mois="6" onclick="pfSetMois(6)">6M</button>
+            <button type="button" class="pf-mois-btn" data-mois="9" onclick="pfSetMois(9)">9M</button>
+            <button type="button" class="pf-mois-btn" data-mois="12" onclick="pfSetMois(12)">12M</button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="auth-error" id="pf-error" style="margin-top:12px;"></div>
+      <button class="btn btn-accent" style="margin-top:8px;" onclick="saveProduct()">Enregistrer</button>
+      <button class="btn" id="pf-delete" style="margin-top:10px;background:transparent;color:var(--accent);display:none;" onclick="deleteProduct()">Supprimer ce produit</button>
+      <button class="btn btn-ghost" style="margin-top:6px;" onclick="closeProductSheet()">Annuler</button>
+    </div>
+  </div>
+
+  <!-- ====================== POLITIQUE DE CONFIDENTIALITÉ ====================== -->
+  <div class="policy" id="policy">
+    <div class="policy-head">
+      <div class="ptitle">Politique de confidentialité</div>
+      <button class="policy-close" onclick="closePolicy()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="policy-body">
+      <p><strong>Dernière mise à jour :</strong> <span id="policy-date">19 juin 2026</span></p>
+
+      <p>Rituel (« l'application », « nous ») attache une grande importance à la protection de vos données, en particulier vos photos de peau et, si vous l'activez, vos données de cycle, qui sont des données de santé sensibles. Cette politique explique quelles données sont collectées, pourquoi, avec qui elles sont partagées et quels sont vos droits, conformément au Règlement Général sur la Protection des Données (RGPD).</p>
+
+      <h2>1. Responsable du traitement</h2>
+      <p>L'application Rituel est éditée sous le nom commercial « Rituel ». Pour toute question relative à vos données : <strong>rituel.app.contact@gmail.com</strong>.</p>
+
+      <h2>2. Données que nous collectons</h2>
+      <ul>
+        <li><strong>Compte</strong> : adresse e-mail, prénom.</li>
+        <li><strong>Profil peau</strong> : type de peau, préoccupations, objectif, genre (facultatif).</li>
+        <li><strong>Journal quotidien</strong> : photos de votre peau, humeur, ressenti, score d'éclat, notes.</li>
+        <li><strong>Bien-être</strong> : sommeil, hydratation, alimentation, habitudes que vous suivez.</li>
+        <li><strong>Produits</strong> : noms et marques des produits que vous ajoutez, codes-barres que vous scannez.</li>
+        <li><strong>Cycle (facultatif)</strong> : si vous activez le suivi du cycle, les informations liées à vos règles. Ce sont des <strong>données de santé</strong>, traitées uniquement avec votre consentement explicite.</li>
+        <li><strong>Localisation (facultatif)</strong> : si vous l'autorisez, votre position approximative, utilisée pour les alertes UV / SPF. Vous pouvez refuser sans perdre l'accès au reste de l'app.</li>
+        <li><strong>Conversations avec Léa</strong> : les messages que vous échangez avec votre compagne de soin.</li>
+        <li><strong>Notifications</strong> : si vous les activez, un identifiant technique d'abonnement (sans contenu personnel).</li>
+        <li><strong>Données locales</strong> : certaines préférences sont enregistrées dans la mémoire de votre appareil (stockage local).</li>
+      </ul>
+
+      <h2>3. Pourquoi nous les utilisons</h2>
+      <p>Uniquement pour vous fournir le service : suivre l'évolution de votre peau dans le temps, personnaliser les conseils, faire fonctionner votre compagne de soin Léa et les analyses photo, vous envoyer vos rappels et vos alertes UV. <strong>Nous ne vendons jamais vos données et n'affichons aucune publicité.</strong></p>
+
+      <h2>4. Bases légales</h2>
+      <ul>
+        <li><strong>Votre consentement</strong> : pour vos photos, vos données de cycle (santé), votre localisation et les notifications. Vous pouvez le retirer à tout moment.</li>
+        <li><strong>L'exécution du service</strong> : pour la gestion de votre compte et de votre journal, indispensables au fonctionnement de l'app.</li>
+      </ul>
+
+      <h2>5. Avec qui vos données sont partagées</h2>
+      <p>Nous faisons appel à des prestataires techniques (sous-traitants) qui traitent des données pour notre compte :</p>
+      <ul>
+        <li><strong>Supabase</strong> : hébergement de la base de données et stockage de vos photos, sur des serveurs situés dans l'<strong>Union Européenne</strong>. Vos photos sont conservées dans un espace privé, non public.</li>
+        <li><strong>Vercel</strong> : hébergement de l'application et de ses fonctions.</li>
+        <li><strong>Anthropic</strong> : fournisseur de l'intelligence artificielle de Léa. Vos messages à Léa et, lorsque vous demandez une analyse, vos photos, sont transmis à Anthropic pour générer une réponse.</li>
+        <li><strong>Open-Meteo</strong> : données météo et indice UV, à partir de votre localisation (si activée).</li>
+        <li><strong>Open Beauty Facts</strong> : informations produit, à partir du code-barres scanné.</li>
+      </ul>
+
+      <h2>6. Transferts hors Union Européenne</h2>
+      <p>Le traitement par l'IA (Anthropic) peut impliquer un transfert de vos données vers les <strong>États-Unis</strong>. Ce transfert est encadré par des garanties appropriées : Anthropic adhère aux clauses contractuelles types de la Commission européenne pour le traitement des données hors UE. Si vous ne souhaitez pas que vos photos soient analysées par l'IA, n'utilisez pas la fonction d'analyse photo.</p>
+
+      <h2>7. Combien de temps</h2>
+      <p>Vos données sont conservées tant que votre compte est actif. Lorsque vous supprimez votre compte, vos photos, votre journal, votre profil et vos données de cycle sont effacés.</p>
+
+      <h2>8. Sécurité</h2>
+      <p>Vos données sont chiffrées pendant leur transmission, vos photos sont stockées dans un espace privé et l'accès est restreint. Aucun système n'étant infaillible, choisissez un mot de passe solide.</p>
+
+      <h2>9. Vos droits (RGPD)</h2>
+      <ul>
+        <li><strong>Accès et portabilité</strong> : exporter vos données depuis l'app (Moi → Exporter mes données).</li>
+        <li><strong>Effacement</strong> : supprimer votre compte et toutes vos données (Moi → Supprimer mon compte).</li>
+        <li><strong>Rectification</strong> : modifier vos informations directement dans l'app.</li>
+        <li><strong>Opposition et limitation</strong> : vous pouvez vous opposer à certains traitements ou en demander la limitation.</li>
+        <li><strong>Retrait du consentement</strong> : à tout moment, notamment en désactivant le cycle, la localisation ou les notifications.</li>
+      </ul>
+      <p>Pour exercer vos droits ou poser une question : <strong>rituel.app.contact@gmail.com</strong>. Vous pouvez également introduire une réclamation auprès de la CNIL (www.cnil.fr) si vous estimez que vos droits ne sont pas respectés.</p>
+
+      <h2>10. Âge minimum</h2>
+      <p>L'application est destinée aux personnes de <strong>15 ans et plus</strong>. En dessous de cet âge, l'accord d'un parent ou tuteur est nécessaire.</p>
+
+      <h2>11. Léa, votre compagne de soin</h2>
+      <p>Léa est un assistant de conseil beauté, <strong>pas un professionnel de santé</strong>. Ses suggestions ne remplacent jamais l'avis d'un dermatologue ou d'un médecin. Pour tout problème de peau persistant, douloureux ou préoccupant, consultez un professionnel de santé.</p>
+    </div>
+  </div>
+</div>
+<!-- Bouton + flottant (FAB) -->
+
+  <div id="product-book" class="pb-overlay"></div>
+  <div id="rituel-chemin" class="cm-overlay"></div>
+  <div id="voyage" class="cm-overlay"></div>
+
+  <!-- Datepicker custom -->
+  <div class="dp-overlay" id="dp-overlay" onclick="if(event.target===this)dpClose()">
+    <div class="dp-card">
+      <div class="dp-head">
+        <button type="button" class="dp-nav" onclick="dpPrevMonth()" aria-label="Mois précédent">‹</button>
+        <button type="button" class="dp-title" id="dp-title" onclick="dpToggleYears()">—</button>
+        <button type="button" class="dp-nav" onclick="dpNextMonth()" aria-label="Mois suivant">›</button>
+      </div>
+      <div class="dp-years" id="dp-years"></div>
+      <div class="dp-grid" id="dp-dow"></div>
+      <div class="dp-grid" id="dp-days" style="margin-top:4px;"></div>
+      <div class="dp-foot">
+        <button type="button" class="dp-btn dp-btn-clear" onclick="dpClear()">Effacer</button>
+        <button type="button" class="dp-btn dp-btn-today" onclick="dpToday()">Aujourd'hui</button>
+      </div>
+    </div>
+  </div>
+
+
+  
+
+  <!-- Popup aide rituel -->
+  <div id="rituel-help-overlay" onclick="if(event.target===this)closeRituelHelp()" style="display:none;position:fixed;inset:0;background:rgba(46,33,28,0.45);backdrop-filter:blur(6px);z-index:600;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--surface);border-radius:22px;padding:24px 22px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+      <div style="font-family:var(--serif);font-size:20px;color:var(--ink);margin-bottom:14px;">Comment créer un rituel ?</div>
+      <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.7;">
+        <div style="display:flex;gap:10px;margin-bottom:12px;"><span style="color:var(--accent);font-weight:600;">1.</span><span>Crée un rituel et donne-lui un nom (ex. « Rituel du matin »).</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:12px;"><span style="color:var(--accent);font-weight:600;">2.</span><span>Choisis quand tu le fais : matin, soir ou les deux.</span></div>
+        <div style="display:flex;gap:10px;"><span style="color:var(--accent);font-weight:600;">3.</span><span>Ajoute tes produits, puis glisse les cartes pour les ordonner. Les étapes se numérotent toutes seules 🌸</span></div>
+      </div>
+      <button onclick="closeRituelHelp()" style="width:100%;margin-top:18px;padding:12px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:14px;cursor:pointer;">J'ai compris</button>
+    </div>
+  </div>
+
+  <!-- Barre de sélection multiple (bas) -->
+  <div id="selection-bar" style="position:fixed;left:0;right:0;bottom:0;z-index:550;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 20px rgba(46,33,28,0.12);padding:14px 20px calc(14px + env(safe-area-inset-bottom));transform:translateY(120%);transition:transform .25s cubic-bezier(.2,.8,.2,1);display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto;">
+    <button onclick="exitSelectionMode()" style="background:var(--surface-warm);border:none;border-radius:12px;padding:11px 16px;font-family:inherit;font-size:13px;color:var(--ink-soft);cursor:pointer;">Annuler</button>
+    <div id="selection-count" style="flex:1;text-align:center;font-size:13px;color:var(--ink);font-weight:500;">0 sélectionné</div>
+    <button onclick="askDeleteSelected()" style="background:#B23A1E;border:none;border-radius:12px;padding:11px 18px;font-family:inherit;font-size:13px;color:#fff;cursor:pointer;font-weight:500;">Supprimer</button>
+  </div>
+
+  <!-- Popup confirmation suppression -->
+  <div id="del-confirm-overlay" onclick="if(event.target===this)closeDeleteConfirm()" style="display:none;position:fixed;inset:0;background:rgba(46,33,28,0.45);backdrop-filter:blur(6px);z-index:700;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--surface);border-radius:22px;padding:24px 22px;max-width:320px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);text-align:center;">
+      <div style="font-size:32px;margin-bottom:10px;">🗑️</div>
+      <div style="font-family:var(--serif);font-size:19px;color:var(--ink);margin-bottom:8px;">Êtes-vous sûr ?</div>
+      <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:20px;">Tu vas supprimer <span id="del-confirm-count">ce produit</span>. Cette action est définitive.</div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeDeleteConfirm()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-family:inherit;font-size:14px;cursor:pointer;">Annuler</button>
+        <button onclick="confirmDeleteSelected()" style="flex:1;padding:12px;border-radius:12px;border:none;background:#B23A1E;color:#fff;font-family:inherit;font-size:14px;cursor:pointer;">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

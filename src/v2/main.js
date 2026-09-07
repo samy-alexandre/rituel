@@ -1,8 +1,9 @@
 // Rituel v2 — l'application qui decide.
 //
-// Elle ne remplace pas encore l'ancienne : elle vit a cote, sur /refonte.html,
-// le temps d'etre jugee. C'est la migration documentee exigee par le projet,
-// pas un remplacement en force.
+// Elle EST l'application : elle occupe index.html, donc le manifeste, l'icone
+// de l'ecran d'accueil et le futur emballage Play Store pointent dessus sans
+// rien changer. L'ancienne reste servie sur /classique.html le temps que la
+// bascule soit jugee sure - migration documentee, pas suppression en force.
 //
 // Ce qu'elle sait faire, et rien d'autre :
 //   - savoir qui vous etes (Supabase, deja en place) ;
@@ -11,14 +12,19 @@
 //   - se souvenir de ce que vous avez applique, pour que demain en tienne compte ;
 //   - vendre l'abonnement (Stripe, deja en place).
 //
-// L'historique vit dans le navigateur pour cette premiere version. C'est un
-// choix assume : il rend la memoire testable par douze personnes des ce soir,
-// sans migration de base. La persistance serveur est l'etape d'apres, pas un
-// prerequis pour savoir si l'idee tient.
+// L'historique est persiste cote serveur des que la table existe (voir
+// src/v2/historique.js et docs/migration-historique.sql), avec repli local
+// automatique. C'est la seule chose que l'abonnement vend : une memoire qui
+// disparait au changement de telephone n'est pas une memoire.
 
 import './app.css';
 import { sb } from '../core/supabase.js';
 import { composerRoutine, traceDuJour } from '../features/decision/decision.js';
+import {
+  lireHistorique as chargerHistorique,
+  consigner as noterAuServeur,
+  profondeur as profondeurMemoire,
+} from './historique.js';
 
 const CATEGORIES = [
   ['demaquillant', 'Démaquillant'],
@@ -53,7 +59,7 @@ const STATION = {
 };
 
 
-// Mode demonstration (/refonte.html?demo) : l'application tourne avec une
+// Mode demonstration (/?demo) : l'application tourne avec une
 // salle de bain d'exemple, sans compte et sans ecrire une ligne en base.
 // Ce n'est pas un artifice de test - c'est ce qui permet de juger le conseil
 // AVANT de creer un compte, et c'est exactement ce qu'on demandera aux douze
@@ -102,6 +108,7 @@ const etat = {
   user: null,
   profil: null,
   produits: [],
+  historique: [],
   onglet: 'aujourdhui',
   moment: momentParDefaut(),
   abonne: false,
@@ -144,10 +151,6 @@ function ech(s) {
 // C'est la seule donnee qui rend le conseil de demain different de celui d'hier.
 // ---------------------------------------------------------------------------
 
-function cleHistorique() {
-  return `rituel.v2.historique.${etat.user ? etat.user.id : 'anon'}`;
-}
-
 function cleProfil() {
   return `rituel.v2.profil.${etat.user ? etat.user.id : 'anon'}`;
 }
@@ -179,48 +182,20 @@ function ecrireProfil(profil) {
 // On ne bride jamais la justesse du conseil du jour. On bride sa portee.
 const MEMOIRE_GRATUITE = 7;
 
+// L'historique COMPLET vit dans etat.historique, charge une fois au demarrage
+// depuis le serveur (voir historique.js). Les vues sont synchrones : elles ne
+// doivent jamais attendre le reseau pour afficher la routine du jour.
 function lireHistorique(complet = false) {
-  let liste = [];
-  try {
-    const brut = localStorage.getItem(cleHistorique());
-    const lu = brut ? JSON.parse(brut) : [];
-    liste = Array.isArray(lu) ? lu : [];
-  } catch {
-    return []; // navigation privee, stockage refuse : on decide sans memoire
-  }
+  const liste = etat.historique || [];
   if (complet || etat.abonne) return liste;
   const limite = new Date();
   limite.setDate(limite.getDate() - MEMOIRE_GRATUITE);
   return liste.filter((h) => new Date(h.date) > limite);
 }
 
-// Depuis combien de jours cette personne tient son rituel : c'est l'argument
-// honnete de l'abonnement, et il ne s'affiche que quand il est vrai.
-function profondeurMemoire() {
-  const tout = lireHistorique(true);
-  if (!tout.length) return 0;
-  const plusVieux = tout.reduce((a, b) => (a.date < b.date ? a : b));
-  return Math.round((Date.now() - new Date(plusVieux.date)) / 86400000);
-}
-
-function ecrireHistorique(liste) {
-  try {
-    localStorage.setItem(cleHistorique(), JSON.stringify(liste.slice(-90)));
-  } catch {
-    /* le conseil du jour reste juste, seule la memoire manque */
-  }
-}
-
-function consigner(routine) {
+async function consigner(routine) {
   const trace = traceDuJour(routine);
-  // lireHistorique(true) : on reecrit TOUJOURS a partir de l'historique complet.
-  // Repartir de la version tronquee pour les non-abonnes effacerait leur passe
-  // a chaque enregistrement - et donc la valeur meme qu'on leur propose d'acheter.
-  const liste = lireHistorique(true).filter(
-    (h) => !(h.date === trace.date && h.moment === trace.moment),
-  );
-  liste.push(trace);
-  ecrireHistorique(liste);
+  etat.historique = await noterAuServeur(etat.user ? etat.user.id : null, trace);
 }
 
 function dejaFait(moment) {
@@ -258,8 +233,15 @@ async function chargerAbonnement() {
 // ---------------------------------------------------------------------------
 
 let arreterVie = null;
+// Un numero de generation par rendu. Le montage de la scene 3D est asynchrone
+// (import differe + chargement des modeles) : sans ce jeton, changer d'onglet
+// pendant le chargement laissait une scene orpheline tourner pour toujours, et
+// chaque aller-retour en empilait une de plus jusqu'a figer l'appareil.
+let generation = 0;
 
 function rendre() {
+  generation += 1;
+  const mienne = generation;
   // Chaque rendu remplace le DOM : sans cet arret, chaque bascule matin/soir
   // laisserait derriere elle une boucle d'animation orpheline qui tourne dans
   // le vide et mange la batterie.
@@ -294,11 +276,13 @@ function rendre() {
     // Import differe : Three.js et les modeles pesent plus que tout le reste de
     // l'application. Les ecrans Produits et Rituel+ ne les telechargent jamais.
     import('./jardin3d.js').then(({ monterJardin3d }) => {
-      if (!scene.isConnected) return null;
+      if (mienne !== generation || !scene.isConnected) return null;
       return monterJardin3d(scene, routine.etapes, etat.moment, montrer);
     }).then((arret) => {
       if (!arret) return;
-      if (!scene.isConnected) { arret(); return; }
+      // Un rendu plus recent est arrive pendant le chargement : cette scene est
+      // deja perimee, on la demonte au lieu de la laisser tourner.
+      if (mienne !== generation || !scene.isConnected) { arret(); return; }
       arreterVie = arret;
       // Toucher une etape de la liste emmene le parcours jusqu'a elle.
       lignes.forEach((l) => {
@@ -446,7 +430,7 @@ function vueAujourdhui() {
 
   // L'invitation ne s'affiche que le jour ou elle devient vraie : quand la
   // personne a vraiment plus d'historique que ce qu'on lui laisse voir.
-  const profondeur = profondeurMemoire();
+  const profondeur = profondeurMemoire(lireHistorique(true));
   const invitation = !etat.abonne && profondeur > MEMOIRE_GRATUITE ? `
     <div class="verrou">
       <p>Vous tenez votre rituel depuis ${profondeur} jours. Rituel n'en garde
@@ -540,6 +524,28 @@ function vueProduits() {
     ${formulaire}`;
 }
 
+// Le bloc compte. Sans suppression de compte, une application est refusee au
+// Play Store et hors du RGPD - ce n'est pas une finition, c'est un prerequis
+// de publication. Le mot de passe oublie est du meme ordre : sans lui, le
+// premier utilisateur qui l'oublie est perdu pour toujours.
+function vueCompte() {
+  const email = etat.user && etat.user.email ? etat.user.email : '';
+  return `
+    <section class="compte">
+      <p class="legende">Votre compte</p>
+      ${email ? `<p class="compte-email">${ech(email)}</p>` : ''}
+      ${etat.message ? `<p class="succes">${ech(etat.message)}</p>` : ''}
+      <button class="bouton secondaire" id="motdepasse">Changer mon mot de passe</button>
+      <button class="bouton secondaire" id="deconnexion">Se déconnecter</button>
+      <button class="lien-danger" id="supprimer-compte">
+        ${etat.confirmeSuppression ? 'Confirmer : tout effacer définitivement' : 'Supprimer mon compte'}
+      </button>
+      ${etat.confirmeSuppression ? `
+        <p class="avertissement">Vos produits, votre historique et votre compte
+        seront effacés sans retour possible. Touchez à nouveau pour confirmer.</p>` : ''}
+    </section>`;
+}
+
 function vueAbonnement() {
   if (etat.abonne) {
     return `
@@ -547,7 +553,8 @@ function vueAbonnement() {
       <div class="offre">
         <p>Votre abonnement est actif. Merci — c'est ce qui fait vivre l'application.</p>
         <button class="bouton secondaire" id="portail">Gérer mon abonnement</button>
-      </div>`;
+      </div>
+      ${vueCompte()}`;
   }
 
   return `
@@ -569,7 +576,7 @@ function vueAbonnement() {
         ${etat.occupe ? 'Ouverture du paiement…' : 'S\'abonner'}
       </button>
     </div>
-    <button class="bouton secondaire" id="deconnexion">Se déconnecter</button>`;
+    ${vueCompte()}`;
 }
 
 // Le vocabulaire de la barre est botanique, pas generique. Un soleil, un
@@ -651,12 +658,16 @@ function brancher() {
     rendre();
   });
 
-  racine.querySelector('#applique')?.addEventListener('click', () => {
-    consigner(composerRoutine({
+  racine.querySelector('#applique')?.addEventListener('click', async (e) => {
+    // Le bouton se desactive tout de suite : sans cela un double appui note
+    // deux fois la meme routine pendant l'aller-retour reseau.
+    e.currentTarget.disabled = true;
+    await consigner(composerRoutine({
       produits: etat.produits,
       moment: etat.moment,
       historique: lireHistorique(),
       date: aujourdhui(),
+      profil: etat.profil,
     }));
     rendre();
   });
@@ -690,7 +701,21 @@ function brancher() {
     await sb.auth.signOut();
     etat.user = null;
     etat.produits = [];
+    etat.historique = [];
     rendre();
+  });
+
+  racine.querySelector('#motdepasse')?.addEventListener('click', envoyerLienMotDePasse);
+
+  // Deux appuis pour supprimer : la premiere touche arme, la seconde execute.
+  // Une action irreversible ne doit jamais partir sur un seul geste.
+  racine.querySelector('#supprimer-compte')?.addEventListener('click', () => {
+    if (!etat.confirmeSuppression) {
+      etat.confirmeSuppression = true;
+      rendre();
+      return;
+    }
+    supprimerCompte();
   });
 }
 
@@ -785,6 +810,55 @@ async function souscrire() {
   }
 }
 
+async function envoyerLienMotDePasse() {
+  if (DEMO || !etat.user) return;
+  etat.message = '';
+  etat.erreur = '';
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(etat.user.email, {
+      redirectTo: window.location.origin,
+    });
+    if (error) throw error;
+    etat.message = 'Un lien vient de partir vers votre adresse.';
+  } catch (err) {
+    console.error(err);
+    etat.erreur = 'Le lien n\'a pas pu être envoyé.';
+  }
+  rendre();
+}
+
+async function supprimerCompte() {
+  if (DEMO) { etat.confirmeSuppression = false; return rendre(); }
+  etat.occupe = true;
+  rendre();
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const r = await fetch('/api/delete-account', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    if (!r.ok) throw new Error(await r.text());
+    // On efface aussi ce qui reste dans ce navigateur : un compte supprime ne
+    // doit pas laisser derriere lui l'historique de la peau de quelqu'un.
+    try {
+      localStorage.removeItem(cleProfil());
+      localStorage.removeItem(`rituel.v2.historique.${etat.user.id}`);
+    } catch { /* stockage indisponible : rien a nettoyer */ }
+    await sb.auth.signOut();
+    etat.user = null;
+    etat.produits = [];
+    etat.historique = [];
+    etat.profil = null;
+  } catch (err) {
+    console.error(err);
+    etat.erreur = 'La suppression a échoué. Réessayez dans un instant.';
+  } finally {
+    etat.confirmeSuppression = false;
+    etat.occupe = false;
+    rendre();
+  }
+}
+
 // ---------------------------------------------------------------------------
 
 async function demarrer() {
@@ -793,20 +867,19 @@ async function demarrer() {
     etat.produits = PRODUITS_DEMO;
     etat.profil = lireProfil();
     // Trois semaines de rituel deja tenu : sans passe, la demonstration ne
-    // montre ni l'adaptation ni ce que l'abonnement apporte.
-    if (profondeurMemoire() < MEMOIRE_GRATUITE * 2) {
-      const passe = lireHistorique(true);
-      for (let j = 21; j >= 2; j -= 1) {
-        const d = new Date();
-        d.setDate(d.getDate() - j);
-        passe.push({
-          date: d.toISOString().slice(0, 10),
-          moment: 'soir',
-          actifs: j % 4 === 0 ? ['retinoide'] : j % 5 === 0 ? ['exfoliant'] : [],
-        });
-      }
-      ecrireHistorique(passe);
+    // montre ni l'adaptation ni ce que l'abonnement apporte. En demonstration
+    // l'historique reste en memoire vive, rien n'est ecrit nulle part.
+    const passe = [];
+    for (let j = 21; j >= 2; j -= 1) {
+      const d = new Date();
+      d.setDate(d.getDate() - j);
+      passe.push({
+        date: d.toISOString().slice(0, 10),
+        moment: 'soir',
+        actifs: j % 4 === 0 ? ['retinoide'] : j % 5 === 0 ? ['exfoliant'] : [],
+      });
     }
+    etat.historique = passe;
     rendre();
     return;
   }
@@ -815,7 +888,13 @@ async function demarrer() {
   if (etat.user) {
     etat.profil = lireProfil();
     try {
-      await Promise.all([chargerProduits(), chargerAbonnement()]);
+      // L'abonnement d'abord : il decide de la profondeur de memoire lue.
+      await chargerAbonnement();
+      const [, historique] = await Promise.all([
+        chargerProduits(),
+        chargerHistorique(etat.user.id),
+      ]);
+      etat.historique = historique;
     } catch (err) {
       console.error(err);
       etat.erreur = 'Vos produits n\'ont pas pu être chargés.';

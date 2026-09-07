@@ -117,15 +117,20 @@ function matiereEau(A) {
   });
 }
 
+// Le verre est IMITE, pas simule. `transmission` de MeshPhysicalMaterial rend
+// la scene dans une texture a chaque image et par objet : avec un flacon par
+// station, cela figeait deja un ordinateur de bureau, donc n'aurait aucune
+// chance sur un telephone. Un standard translucide, tres lisse et legerement
+// emissif, donne le meme eclat pour un cout normal.
 function matiereVerre(A) {
-  return new THREE.MeshPhysicalMaterial({
+  return new THREE.MeshStandardMaterial({
     color: A.verre,
-    roughness: 0.08,
-    metalness: 0,
-    transmission: 0.92,
-    thickness: 0.5,
-    ior: 1.46,
+    roughness: 0.12,
+    metalness: 0.1,
     transparent: true,
+    opacity: 0.72,
+    emissive: A.verre,
+    emissiveIntensity: 0.12,
   });
 }
 
