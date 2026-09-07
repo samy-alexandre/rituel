@@ -166,7 +166,9 @@ Réponds toujours en français, avec le cœur. Sois cette présence rassurante e
           authorization: 'Bearer ' + engyKey
         },
         body: JSON.stringify({
-          model: process.env.ENGY_MODELE || 'deepseek-v4-flash',
+          // Le nom EXACT, releve sur /v1/models du compte : « deepseek-v4-flash »
+          // tout court renvoie un 404 « model not found ».
+          model: process.env.ENGY_MODELE || 'deepseek-v4-flash-0731',
           max_tokens: 1024,
           messages: [{ role: 'system', content: system }, ...messages]
         })
