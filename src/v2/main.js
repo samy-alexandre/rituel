@@ -668,7 +668,41 @@ function vueProduits() {
 // Play Store et hors du RGPD - ce n'est pas une finition, c'est un prerequis
 // de publication. Le mot de passe oublie est du meme ordre : sans lui, le
 // premier utilisateur qui l'oublie est perdu pour toujours.
+// Sans compte : l'invitation a en creer un, formulee par ce qu'on RISQUE de
+// perdre, jamais par ce qu'on doit donner. C'est le seul endroit de
+// l'application ou l'inscription est proposee, et elle arrive apres la valeur.
+function vueInscription() {
+  const jours = profondeurMemoire(lireHistorique(true));
+  return `
+    <section class="compte">
+      <p class="legende">Garder votre rituel</p>
+      <p style="color:var(--doux);font-size:15.5px;line-height:1.5">
+        ${etat.produits.length || jours
+    ? `Vos ${etat.produits.length} produit${etat.produits.length > 1 ? 's' : ''}${jours ? ` et vos ${jours} jours de mémoire vivent` : ' vivent'} dans ce navigateur. Un compte les emmène sur votre téléphone, et les retrouve si vous le changez.`
+    : 'Un compte garde vos produits et votre mémoire d\'un appareil à l\'autre.'}
+      </p>
+      <form id="form-inscription" style="display:flex;flex-direction:column;gap:12px">
+        <div class="champ">
+          <label for="email">Adresse e-mail</label>
+          <input id="email" type="email" autocomplete="email" required />
+        </div>
+        <div class="champ">
+          <label for="mdp">Mot de passe</label>
+          <input id="mdp" type="password" autocomplete="new-password" required minlength="6" />
+        </div>
+        ${etat.erreur ? `<p class="erreur">${ech(etat.erreur)}</p>` : ''}
+        <button class="bouton" type="submit" ${etat.occupe ? 'disabled' : ''}>
+          ${etat.occupe ? 'Un instant…' : 'Créer mon compte'}
+        </button>
+        <button class="bouton secondaire" type="button" id="connexion" ${etat.occupe ? 'disabled' : ''}>
+          J'ai déjà un compte
+        </button>
+      </form>
+    </section>`;
+}
+
 function vueCompte() {
+  if (!etat.user) return vueInscription();
   const email = etat.user && etat.user.email ? etat.user.email : '';
   return `
     <section class="compte">
@@ -850,6 +884,12 @@ function brancher() {
 
   racine.querySelector('#motdepasse')?.addEventListener('click', envoyerLienMotDePasse);
 
+  racine.querySelector('#form-inscription')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    authentifier('inscription');
+  });
+  racine.querySelector('#connexion')?.addEventListener('click', () => authentifier('connexion'));
+
   // Deux appuis pour supprimer : la premiere touche arme, la seconde execute.
   // Une action irreversible ne doit jamais partir sur un seul geste.
   racine.querySelector('#supprimer-compte')?.addEventListener('click', () => {
@@ -865,14 +905,23 @@ function brancher() {
 async function authentifier(mode) {
   const email = racine.querySelector('#email').value.trim();
   const password = racine.querySelector('#mdp').value;
+  // Ce qu'on a en invite, capture AVANT que la session change : apres
+  // connexion, les cles de stockage ne sont plus les memes.
+  const produitsInvite = lireProduitsInvite();
+  const profilInvite = etat.profil;
+
   etat.occupe = true;
   etat.erreur = '';
   rendre();
   try {
-    const { error } = mode === 'inscription'
+    const { data, error } = mode === 'inscription'
       ? await sb.auth.signUp({ email, password })
       : await sb.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    if (data && data.user) {
+      etat.user = data.user;
+      await migrerVersLeCompte(produitsInvite, profilInvite);
+    }
   } catch (err) {
     etat.erreur = mode === 'inscription'
       ? 'Impossible de créer le compte. Cette adresse est peut-être déjà utilisée.'
@@ -953,6 +1002,41 @@ async function souscrire() {
     etat.occupe = false;
     rendre();
   }
+}
+
+// LA MIGRATION DE L'INVITE VERS SON COMPTE.
+//
+// Sans elle, le mode invite serait un piege : on saisit sa salle de bain, on
+// tient son rituel une semaine, puis creer un compte efface tout. Personne ne
+// pardonnerait ca, et personne ne le refera une seconde fois.
+async function migrerVersLeCompte(produitsInvite, profilInvite) {
+  // Le profil, d'abord : il est sous la cle « anon », il doit passer sous
+  // l'identifiant du compte.
+  if (profilInvite) {
+    etat.profil = profilInvite;
+    ecrireProfil(profilInvite);
+  }
+
+  if (produitsInvite.length) {
+    try {
+      const { error } = await sb.from('products').insert(
+        produitsInvite.map((p) => ({
+          user_id: etat.user.id, nom: p.nom, categorie: p.categorie,
+        })),
+      );
+      if (error) throw error;
+      ecrireProduitsInvite([]);
+    } catch (err) {
+      // On NE VIDE PAS le stockage si l'envoi echoue : mieux vaut un doublon
+      // possible qu'une salle de bain perdue.
+      console.error('migration des produits :', err);
+    }
+  }
+
+  // L'historique se recolle tout seul : chargerHistorique fusionne le local
+  // avec le serveur et pousse au serveur ce qu'il ignorait.
+  etat.historique = await chargerHistorique(etat.user.id);
+  await chargerProduits();
 }
 
 async function envoyerLienMotDePasse() {
