@@ -8,10 +8,9 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
+  // Pas de garde ici : Engy peut repondre seul, sans cle Anthropic. Le controle
+  // se fait au moment de l'appel, quand on sait quel fournisseur reste.
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: "Clé API manquante (ANTHROPIC_API_KEY)." });
-  }
 
   // ----- Léa : illimitée avec Rituel+, sinon 5 échanges par jour -----
   const DAILY_AI_LIMIT = 5;
@@ -146,7 +145,45 @@ LA PERSONNE${prenom ? ` (prénom : ${prenom})` : ''}
 
 Réponds toujours en français, avec le cœur. Sois cette présence rassurante et bienveillante qu'on a envie de retrouver chaque jour.${goalBlock}`;
 
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    // DEUX FOURNISSEURS, DANS CET ORDRE.
+    //
+    // Engy d'abord quand sa cle est presente : c'est le fournisseur que Genesis
+    // utilise deja, et DeepSeek V4 Flash y honore `tool_choice` force - ce qui
+    // sera indispensable le jour ou Lea DECLENCHERA des actions au lieu de
+    // seulement repondre. Anthropic reste le repli.
+    //
+    // L'interface est celle d'OpenAI des deux cotes ici : un seul format de
+    // reponse a traiter en aval, quel que soit celui qui a repondu.
+    const engyKey = process.env.ENGY_API_KEY;
+    let r;
+    let data;
+
+    if (engyKey) {
+      r = await fetch(process.env.ENGY_BASE_URL || 'https://api.electronhub.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: 'Bearer ' + engyKey
+        },
+        body: JSON.stringify({
+          model: process.env.ENGY_MODELE || 'deepseek-v4-flash',
+          max_tokens: 1024,
+          messages: [{ role: 'system', content: system }, ...messages]
+        })
+      });
+      data = await r.json();
+      if (!data.error && data.choices && data.choices[0]) {
+        const texte = data.choices[0].message && data.choices[0].message.content;
+        if (texte) return res.status(200).json({ reply: texte });
+      }
+      // Engy a echoue : on ne renvoie pas d'erreur, on essaie le repli.
+    }
+
+    if (!apiKey) {
+      return res.status(500).json({ error: "Aucun fournisseur disponible (ENGY_API_KEY ou ANTHROPIC_API_KEY)." });
+    }
+
+    r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -161,7 +198,7 @@ Réponds toujours en français, avec le cœur. Sois cette présence rassurante e
       })
     });
 
-    const data = await r.json();
+    data = await r.json();
     if (data.error) {
       return res.status(500).json({ error: data.error.message || 'Erreur côté IA' });
     }

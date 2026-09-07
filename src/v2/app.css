@@ -1190,28 +1190,198 @@ p {
 
 /* ---------- Lea ---------- */
 
+/* Lea, presente dans l'ecran principal et touchable : son mot du jour est la
+   porte de la conversation. Reléguée dans un onglet « chat », elle ne serait
+   ouverte par personne. */
 .lea {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 44px 1fr auto;
   gap: 14px;
-  align-items: baseline;
+  align-items: center;
+  width: 100%;
+  text-align: left;
   background: var(--creux);
+  border: 1px solid var(--trait);
   border-radius: var(--r);
-  padding: 18px 20px;
-  border-left: 3px solid var(--accent);
+  padding: 16px 18px;
+  color: inherit;
+}
+
+.lea-visage {
+  width: 44px;
+  height: 44px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.lea-visage .lea-fond {
+  fill: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.lea-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .lea-nom {
   font-family: var(--serif);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--accent);
-  letter-spacing: 0.02em;
 }
 
 .lea-mot {
-  font-size: 15.5px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.45;
   color: var(--encre);
+}
+
+.lea-fleche {
+  color: var(--pale);
+  font-size: 18px;
+}
+
+/* La conversation : par-dessus, jamais a la place - on garde le chemin sous
+   les yeux pendant qu'on lui parle. */
+.lea-panneau {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 560px;
+  margin: 0 auto;
+  z-index: 50;
+  height: min(74dvh, 620px);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--trait-fort);
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -20px 60px -20px rgb(0 0 0 / 0.6);
+  animation: monter-panneau 280ms var(--courbe) both;
+}
+
+@keyframes monter-panneau {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+.lea-entete {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--trait);
+}
+
+.lea-entete .lea-visage {
+  width: 40px;
+  height: 40px;
+}
+
+.lea-role {
+  font-size: 12.5px;
+  color: var(--pale);
+}
+
+.lea-fermer {
+  border: none;
+  background: var(--creux);
+  color: var(--doux);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.lea-fil {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bulle {
+  max-width: 84%;
+  padding: 12px 15px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.bulle.elle {
+  background: var(--creux);
+  align-self: flex-start;
+  border-bottom-left-radius: 5px;
+}
+
+.bulle.moi {
+  background: var(--accent);
+  color: var(--fond);
+  align-self: flex-end;
+  border-bottom-right-radius: 5px;
+}
+
+.bulle.erreur-bulle {
+  background: var(--alerte-clair);
+  color: var(--alerte);
+  align-self: flex-start;
+}
+
+/* L'attente : trois points qui respirent. Sans elle, l'application parait
+   cassee pendant les deux secondes ou le modele reflechit. */
+.bulle.attente {
+  display: flex;
+  gap: 5px;
+  padding: 15px;
+}
+
+.bulle.attente span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pale);
+  animation: pulser 1.2s ease-in-out infinite;
+}
+
+.bulle.attente span:nth-child(2) { animation-delay: 0.15s; }
+.bulle.attente span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes pulser {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+.lea-saisie {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--trait);
+}
+
+.lea-saisie input {
+  flex: 1;
+  background: var(--creux);
+  border: 1px solid var(--trait);
+  border-radius: 999px;
+  padding: 13px 18px;
+  font-size: 16px;
+}
+
+.lea-saisie button {
+  border: none;
+  background: var(--accent);
+  color: var(--fond);
+  width: 46px;
+  border-radius: 50%;
+  font-size: 19px;
 }
 
 /* ---------- motion ----------

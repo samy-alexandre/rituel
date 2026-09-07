@@ -26,6 +26,7 @@ import {
   profondeur as profondeurMemoire,
 } from './historique.js';
 import { activerRappels, dejaDemande, enregistrerServiceWorker } from './rappels.js';
+import { VISAGE, demanderALea } from './lea.js';
 
 const CATEGORIES = [
   ['demaquillant', 'Démaquillant'],
@@ -124,6 +125,7 @@ const etat = {
   // Les stations validees du moment en cours. Remises a zero au changement de
   // moment : le chemin du matin et celui du soir ne se partagent pas.
   validees: new Set(),
+  lea: { ouverte: false, messages: [], occupe: false, erreur: '' },
   onglet: 'aujourdhui',
   moment: momentParDefaut(),
   abonne: false,
@@ -508,6 +510,7 @@ function vueApp() {
   return `<div class="app" data-moment="${etat.moment}">
     ${FEUILLAGE}
     <div class="contenu">${contenu}</div>
+    ${etat.lea.ouverte ? vueConversation() : ''}
     ${vueNav()}
   </div>`;
 }
@@ -651,14 +654,48 @@ function motDeLea(routine) {
     : null);
 }
 
+// Lea prend un visage et devient touchable : son mot du jour ouvre la
+// conversation. C'est sa presence permanente dans l'ecran principal - elle
+// n'est pas releguee dans un onglet « chat » que personne n'ouvre.
 function vueLea(routine) {
   const mot = motDeLea(routine);
   if (!mot) return '';
   return `
-    <aside class="lea">
-      <span class="lea-nom">Léa</span>
-      <p class="lea-mot">${ech(mot)}</p>
-    </aside>`;
+    <button class="lea" id="ouvrir-lea" type="button">
+      ${VISAGE}
+      <span class="lea-texte">
+        <span class="lea-nom">Léa</span>
+        <span class="lea-mot">${ech(mot)}</span>
+      </span>
+      <span class="lea-fleche" aria-hidden="true">→</span>
+    </button>`;
+}
+
+// La conversation. Elle s'ouvre par-dessus, elle ne remplace pas l'ecran : on
+// garde le chemin sous les yeux pendant qu'on lui parle.
+function vueConversation() {
+  const fil = etat.lea.messages.map((m) => `
+    <div class="bulle ${m.role === 'user' ? 'moi' : 'elle'}">${ech(m.content)}</div>`).join('');
+  return `
+    <div class="lea-panneau" role="dialog" aria-label="Conversation avec Léa">
+      <div class="lea-entete">
+        ${VISAGE}
+        <div>
+          <div class="lea-nom">Léa</div>
+          <div class="lea-role">Elle connaît votre routine du jour</div>
+        </div>
+        <button class="lea-fermer" id="fermer-lea" aria-label="Fermer">×</button>
+      </div>
+      <div class="lea-fil" id="lea-fil">
+        ${fil || '<div class="bulle elle">Demandez-moi pourquoi j\'ai écarté un produit, ou ce que vaut celui que vous hésitez à acheter.</div>'}
+        ${etat.lea.occupe ? '<div class="bulle elle attente"><span></span><span></span><span></span></div>' : ''}
+        ${etat.lea.erreur ? `<div class="bulle erreur-bulle">${ech(etat.lea.erreur)}</div>` : ''}
+      </div>
+      <form class="lea-saisie" id="form-lea">
+        <input id="lea-champ" placeholder="Votre question…" autocomplete="off" />
+        <button type="submit" aria-label="Envoyer" ${etat.lea.occupe ? 'disabled' : ''}>↑</button>
+      </form>
+    </div>`;
 }
 
 function vueProduits() {
@@ -919,6 +956,25 @@ function brancher() {
     rendre();
   });
 
+  racine.querySelector('#ouvrir-lea')?.addEventListener('click', () => {
+    etat.lea.ouverte = true;
+    etat.lea.erreur = '';
+    rendre();
+    racine.querySelector('#lea-champ')?.focus();
+  });
+
+  racine.querySelector('#fermer-lea')?.addEventListener('click', () => {
+    etat.lea.ouverte = false;
+    rendre();
+  });
+
+  racine.querySelector('#form-lea')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const champ = racine.querySelector('#lea-champ');
+    const question = champ.value.trim();
+    if (question) parlerALea(question);
+  });
+
   racine.querySelector('#motdepasse')?.addEventListener('click', envoyerLienMotDePasse);
 
   racine.querySelector('#form-inscription')?.addEventListener('submit', (e) => {
@@ -1074,6 +1130,39 @@ async function migrerVersLeCompte(produitsInvite, profilInvite) {
   // avec le serveur et pousse au serveur ce qu'il ignorait.
   etat.historique = await chargerHistorique(etat.user.id);
   await chargerProduits();
+}
+
+async function parlerALea(question) {
+  etat.lea.messages.push({ role: 'user', content: question });
+  etat.lea.occupe = true;
+  etat.lea.erreur = '';
+  rendre();
+
+  try {
+    // La routine lui est donnee telle que le MOTEUR l'a decidee : elle
+    // commente une decision deja prise, elle n'en prend pas.
+    const reponse = await demanderALea({
+      messages: etat.lea.messages,
+      routine: composerRoutine({
+        produits: etat.produits,
+        moment: etat.moment,
+        historique: lireHistorique(),
+        date: aujourdhui(),
+        profil: etat.profil,
+      }),
+      profil: etat.profil,
+      userId: etat.user ? etat.user.id : null,
+    });
+    etat.lea.messages.push({ role: 'assistant', content: reponse });
+  } catch (err) {
+    console.error(err);
+    etat.lea.erreur = 'Léa ne répond pas pour le moment.';
+  } finally {
+    etat.lea.occupe = false;
+    rendre();
+    const fil = racine.querySelector('#lea-fil');
+    if (fil) fil.scrollTop = fil.scrollHeight;
+  }
 }
 
 async function envoyerLienMotDePasse() {
