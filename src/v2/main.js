@@ -220,7 +220,30 @@ function dejaFait(moment) {
 // Donnees distantes
 // ---------------------------------------------------------------------------
 
+// En mode invite les produits vivent dans le navigateur. Ils seront transferes
+// au compte le jour de l'inscription : personne ne doit ressaisir sa salle de
+// bain parce qu'il a fini par creer un compte.
+const CLE_PRODUITS_INVITE = 'rituel.v2.produits.invite';
+
+function lireProduitsInvite() {
+  try {
+    const lu = JSON.parse(localStorage.getItem(CLE_PRODUITS_INVITE) || '[]');
+    return Array.isArray(lu) ? lu : [];
+  } catch {
+    return [];
+  }
+}
+
+function ecrireProduitsInvite(liste) {
+  try {
+    localStorage.setItem(CLE_PRODUITS_INVITE, JSON.stringify(liste));
+  } catch {
+    /* stockage refuse : les produits ne survivront pas a la fermeture */
+  }
+}
+
 async function chargerProduits() {
+  if (!etat.user) { etat.produits = lireProduitsInvite(); return; }
   const { data, error } = await sb
     .from('products')
     .select('id,nom,categorie,effets')
@@ -301,7 +324,11 @@ function rendre() {
   // laisserait derriere elle une boucle d'animation orpheline qui tourne dans
   // le vide et mange la batterie.
   if (arreterVie) { arreterVie(); arreterVie = null; }
-  racine.innerHTML = etat.user ? vueApp() : vueSeuil();
+  // Le routage du parcours d'entree. Personne ne voit d'ecran de connexion
+  // avant d'avoir recu quelque chose : sans profil on pose les trois questions,
+  // avec un profil l'application fonctionne, compte ou pas. L'inscription
+  // n'apparait qu'a la fin, et seulement pour ne pas perdre ce qu'on a deja.
+  racine.innerHTML = (etat.user || etat.profil) ? vueApp() : vueDiagnosticSeul();
   brancher();
   const scene = racine.querySelector('canvas.scene');
   if (scene) {
@@ -414,9 +441,29 @@ function vueSeuil() {
     </div>`;
 }
 
+// L'ecran d'entree : une promesse, puis les trois questions. Aucun champ de
+// connexion, aucun mot de passe. C'est la premiere chose que voit quelqu'un
+// qui arrive, et elle doit donner envie d'aller plus loin, pas de partir.
+function vueDiagnosticSeul() {
+  return `<div class="app" data-moment="${etat.moment}">
+    ${FEUILLAGE}
+    <div class="contenu">
+      <div class="entete">
+        <span class="date">Rituel</span>
+        <h1>Quoi mettre <em>ce soir</em></h1>
+      </div>
+      <p class="promesse">Vous avez déjà les produits. Rituel vous dit lesquels
+      appliquer, dans quel ordre, et lesquels laisser de côté — parce qu'il se
+      souvient de ce que vous avez mis hier.</p>
+      ${vueDiagnostic()}
+    </div>
+  </div>`;
+}
+
 function vueApp() {
   if (!etat.profil) {
-    return `<div class="app"><div class="contenu">${vueDiagnostic()}</div></div>`;
+    return `<div class="app" data-moment="${etat.moment}">${FEUILLAGE}
+      <div class="contenu">${vueDiagnostic()}</div></div>`;
   }
   const contenu = etat.onglet === 'aujourdhui' ? vueAujourdhui()
     : etat.onglet === 'produits' ? vueProduits()
@@ -839,8 +886,9 @@ async function authentifier(mode) {
 
 async function ajouterProduit(nom, categorie) {
   if (!nom) { etat.erreur = 'Donnez un nom au produit.'; return rendre(); }
-  if (DEMO) {
-    etat.produits = [...etat.produits, { id: `d${Date.now()}`, nom, categorie }];
+  if (DEMO || !etat.user) {
+    etat.produits = [...etat.produits, { id: `l${Date.now()}`, nom, categorie }];
+    if (!DEMO) ecrireProduitsInvite(etat.produits);
     etat.ajout = null;
     return rendre();
   }
@@ -863,8 +911,9 @@ async function ajouterProduit(nom, categorie) {
 }
 
 async function supprimerProduit(id) {
-  if (DEMO) {
+  if (DEMO || !etat.user) {
     etat.produits = etat.produits.filter((p) => p.id !== id);
+    if (!DEMO) ecrireProduitsInvite(etat.produits);
     return rendre();
   }
   try {
@@ -981,6 +1030,18 @@ async function demarrer() {
   }
   const { data: { session } } = await sb.auth.getSession();
   etat.user = session ? session.user : null;
+
+  // Sans compte, l'application tourne quand meme : profil et produits viennent
+  // du navigateur. C'est ce qui permet de recevoir la premiere routine avant
+  // d'avoir donne quoi que ce soit.
+  if (!etat.user) {
+    etat.profil = lireProfil();
+    etat.produits = lireProduitsInvite();
+    etat.historique = await chargerHistorique(null);
+    rendre();
+    return;
+  }
+
   if (etat.user) {
     etat.profil = lireProfil();
     try {
