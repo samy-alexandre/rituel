@@ -135,8 +135,6 @@ const ANIMAUX = {
 const PETITS = {
   papillon: '/models/animaux/papillon.glb',
   lapin: '/models/animaux/lapin.glb',
-  ecureuil: '/models/animaux/ecureuil.glb',
-  oiseau: '/models/animaux/oiseau.glb',
 };
 
 const HAUT = new THREE.Vector3(0, 1, 0);
@@ -464,7 +462,13 @@ function hasardDe(graine) {
   };
 }
 
-export async function monterJardin3d(canvas, etapes, moment, surStation = () => {}) {
+export async function monterJardin3d(
+  canvas,
+  etapes,
+  moment,
+  surStation = () => {},
+  surTouche = () => {},
+) {
   const A = AMBIANCES[moment] || AMBIANCES.soir;
   const calme = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const soir = moment === 'soir';
@@ -582,13 +586,12 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
 
   const [
     fougere, herbe, fleur, fleur2, biche, renard, cerf,
-    papillon, lapin, ecureuil, oiseau,
+    papillon, lapin,
   ] = await Promise.all([
     charger(MODELES.fougere), charger(MODELES.herbe),
     charger(MODELES.fleur), charger(MODELES.fleur2),
     chargerAnime(ANIMAUX.biche), chargerAnime(ANIMAUX.renard), chargerAnime(ANIMAUX.cerf),
-    charger(PETITS.papillon), chargerAnime(PETITS.lapin), charger(PETITS.ecureuil),
-    charger(PETITS.oiseau),
+    charger(PETITS.papillon), chargerAnime(PETITS.lapin),
   ]);
 
   // On ne patine plus qu'a peine. Le patinage servait a sauver des assets de
@@ -663,6 +666,31 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     const terrasse = new THREE.Mesh(geo, matTerrasse);
     terrasse.receiveShadow = true;
     scene.add(terrasse);
+  }
+
+  const ancres = etapes.map((_, i) => Math.min(0.9, (i + 0.8) / (etapes.length + 0.9)));
+
+  // LA CLAIRIERE DE CHAQUE STATION.
+  //
+  // Sam : « y'a trop de plantes dans les stations, on les voit plus ». En
+  // multipliant la vegetation par quatre grace a l'instanciation, on l'a semee
+  // partout - y compris sur le seul objet que l'ecran est cense montrer. Une
+  // station a donc son degagement : rien ne pousse a moins de trois unites de
+  // l'objet du geste. C'est aussi ce qui fait qu'un jardin entretenu se lit
+  // comme entretenu.
+  const clairieres = etapes.map((_, i) => {
+    const t = ancres[i];
+    const p = courbe.getPointAt(t);
+    const cote = new THREE.Vector3().crossVectors(courbe.getTangentAt(t), HAUT).normalize();
+    const sens = i % 2 === 0 ? 1 : -1;
+    return p.clone().addScaledVector(cote, sens * 2.1);
+  });
+
+  function loinDesStations(x, z) {
+    for (const c of clairieres) {
+      if (Math.hypot(c.x - x, c.z - z) < 3.1) return false;
+    }
+    return true;
   }
 
   // L'INSTANCIATION : UN SEUL DESSIN POUR TOUTE UNE ESPECE.
@@ -753,17 +781,21 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   // Un emplacement au bord du sentier, du cote qu'on veut, jamais dessus.
   function auBordDuChemin(ecartMin, ecartMax) {
     return () => {
-      const t = hasard() * 0.97;
-      const p = courbe.getPointAt(t);
-      const cote = new THREE.Vector3().crossVectors(courbe.getTangentAt(t), HAUT).normalize();
-      const sens = hasard() < 0.5 ? -1 : 1;
-      const d = sens * (ecartMin + hasard() * (ecartMax - ecartMin));
-      return {
-        x: p.x + cote.x * d,
-        z: p.z + cote.z * d,
-        tour: hasard() * Math.PI * 2,
-        taille: 0.75 + hasard() * 0.6,
-      };
+      let x = 0;
+      let z = 0;
+      // Jusqu'a douze essais pour tomber hors des clairieres. Au-dela on
+      // accepte : mieux vaut une plante mal placee qu'une boucle sans fin.
+      for (let essai = 0; essai < 12; essai += 1) {
+        const t = hasard() * 0.97;
+        const p = courbe.getPointAt(t);
+        const cote = new THREE.Vector3().crossVectors(courbe.getTangentAt(t), HAUT).normalize();
+        const sens = hasard() < 0.5 ? -1 : 1;
+        const d = sens * (ecartMin + hasard() * (ecartMax - ecartMin));
+        x = p.x + cote.x * d;
+        z = p.z + cote.z * d;
+        if (loinDesStations(x, z)) break;
+      }
+      return { x, z, tour: hasard() * Math.PI * 2, taille: 0.75 + hasard() * 0.6 };
     };
   }
 
@@ -818,7 +850,6 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   // Les ancres : la position sur la courbe de chaque etape. C'est la meme
   // liste qui place les lanternes et qui sert de point d'arret au doigt -
   // sinon le parcours s'arreterait a cote des stations.
-  const ancres = etapes.map((_, i) => Math.min(0.9, (i + 0.8) / (etapes.length + 0.9)));
 
   // LE BELVEDERE.
   //
@@ -865,7 +896,7 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
       const modele = hasard() < 0.55 ? herbe : fougere;
       if (!modele) continue;
       const angle = hasard() * Math.PI * 2;
-      const distance = 2.5 + hasard() * 1.6;
+      const distance = 3.4 + hasard() * 1.5;
       const plante = normaliser(unePlante(modele, hasard), 0.55 + hasard() * 0.95);
       plante.position.x = objet.position.x + Math.cos(angle) * distance;
       plante.position.z = objet.position.z + Math.sin(angle) * distance;
@@ -890,7 +921,7 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     // s'ALLUME et le reste. C'est la lumiere qui dit « j'ai fait ca », pas un
     // score ni une etoile - le registre haut de gamme ne survivrait pas a une
     // barre d'experience.
-    lampes.push({ feu, phase: i * 1.7, objet, validee: false, montee: 0, sens });
+    lampes.push({ feu, phase: i * 1.7, objet, validee: false, montee: 0, sens, fete: -1, onde: null });
   });
 
   // Les lucioles, seulement le soir : des points additifs qui derivent.
@@ -926,6 +957,28 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     }));
     scene.add(lucioles);
   }
+
+  // « FAUDRAIT VOIR VISUELLEMENT QU'ON PEUT CLIQUER DESSUS ».
+  //
+  // Rien ne signalait que l'objet du geste repondait au doigt. Un contour
+  // surligne ou une pastille auraient ramene le vocabulaire du jeu ; un anneau
+  // pose au sol, tres pale, qui respire lentement, dit « ici » sans rien
+  // promettre d'autre. Il ne suit QUE la station en cours - deux anneaux
+  // allumes en meme temps redeviendraient une liste a cocher.
+  const halo = new THREE.Mesh(
+    new THREE.RingGeometry(1.05, 1.22, 48),
+    new THREE.MeshBasicMaterial({
+      color: A.lanterne,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
+  );
+  halo.rotation.x = -Math.PI / 2;
+  halo.position.y = 0.05;
+  halo.visible = false;
+  scene.add(halo);
 
   // ---------------------------------------------------------------------
   // LA VIE DANS LE JARDIN
@@ -1165,6 +1218,12 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     } else if (h.style === 'trottine') {
       o.position.y = bouge ? Math.abs(Math.sin(t * 9 + h.phase)) * 0.04 : 0;
     } else if (h.style === 'vol') {
+      // Meme ruse que le papillon : vu du dessus, des ailes qui battent sont
+      // une envergure qui se resserre et s'ouvre. Plus lentement qu'un
+      // papillon, avec des plane entre deux series de battements.
+      const serie = 0.5 + 0.5 * Math.sin(t * 0.7 + h.phase);
+      const battement = 1 - serie * 0.45 * Math.abs(Math.cos(t * 7 + h.phase));
+      h.corps.scale.x = h.largeur * battement;
       o.position.y = h.hauteurVol + Math.sin(t * 1.7 + h.phase) * 0.45;
       h.corps.rotation.z = Math.sin(t * 2.3 + h.phase) * 0.22;
     } else if (h.style === 'volette') {
@@ -1188,8 +1247,6 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
 
   poserPetit(papillon, 0.19, 0.4, 'volette', 5, 5);
   poserPetit(lapin, 0.36, 0.45, 'anime', 3, 5);
-  poserPetit(ecureuil, 0.3, 0.55, 'trottine', 2, 4.5);
-  poserPetit(oiseau, 0.28, 0.6, 'vol', 3, 8);
 
   // ---------------------------------------------------------------------
   // Le parcours. C'est ce qui separe un decor d'un produit : on AVANCE sur le
@@ -1226,13 +1283,53 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
 
   const surDebut = (e) => {
     const y = e.touches ? e.touches[0].clientY : e.clientY;
-    saisie = { y, depart: progres };
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    saisie = { y, x, depart: progres, quand: performance.now(), bouge: 0 };
     canvas.setPointerCapture?.(e.pointerId ?? 1);
   };
+
+  // TOUCHER L'OBJET, PAS UN BOUTON.
+  //
+  // Le geste le plus naturel devant un flacon pose sur une pierre est de le
+  // toucher. Il fallait viser un mot souligne en bas d'ecran. Un rayon tire
+  // depuis le doigt suffit a savoir quelle station on vise ; et comme un objet
+  // vu de quinze metres est petit, on accepte aussi un doigt pose a moins de
+  // soixante pixels de son centre - on valide une intention, pas un pixel.
+  const rayon = new THREE.Raycaster();
+  const pointeur = new THREE.Vector2();
+  const auMonde = new THREE.Vector3();
+
+  function stationTouchee(clientX, clientY) {
+    const r = canvas.getBoundingClientRect();
+    pointeur.x = ((clientX - r.left) / r.width) * 2 - 1;
+    pointeur.y = -((clientY - r.top) / r.height) * 2 + 1;
+    rayon.setFromCamera(pointeur, camera);
+
+    for (let i = 0; i < lampes.length; i += 1) {
+      if (lampes[i].objet && rayon.intersectObject(lampes[i].objet, true).length) return i;
+    }
+
+    let meilleur = -1;
+    let plusPres = 60;
+    for (let i = 0; i < lampes.length; i += 1) {
+      const o = lampes[i].objet;
+      if (!o) continue;
+      auMonde.copy(o.position);
+      auMonde.y += 0.4;
+      auMonde.project(camera);
+      const ex = (auMonde.x * 0.5 + 0.5) * r.width;
+      const ey = (-auMonde.y * 0.5 + 0.5) * r.height;
+      const d = Math.hypot(ex - (clientX - r.left), ey - (clientY - r.top));
+      if (d < plusPres) { plusPres = d; meilleur = i; }
+    }
+    return meilleur;
+  }
 
   const surDeplacement = (e) => {
     if (!saisie) return;
     const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    saisie.bouge = Math.max(saisie.bouge, Math.hypot(x - saisie.x, y - saisie.y));
     // Glisser vers le HAUT fait avancer : le geste suit le chemin qui defile,
     // comme on pousserait le decor derriere soi.
     const delta = (saisie.y - y) / canvas.clientHeight;
@@ -1241,18 +1338,39 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     e.preventDefault();
   };
 
-  const surFin = () => {
+  const surFin = (e, vraiRelachement = false) => {
     if (!saisie) return;
+    // Un appui court et immobile est un TAP, pas un glissement avorte.
+    const bref = performance.now() - saisie.quand < 450 && saisie.bouge < 9;
+    const px = e && (e.changedTouches ? e.changedTouches[0].clientX : e.clientX);
+    const py = e && (e.changedTouches ? e.changedTouches[0].clientY : e.clientY);
     saisie = null;
     poser();
+    if (!vraiRelachement || !bref) return;
+    if (!Number.isFinite(px) || !Number.isFinite(py)) return;
+    try {
+      const i = stationTouchee(px, py);
+      if (i >= 0) surTouche(i);
+    } catch (err) {
+      // Un doigt ne doit jamais pouvoir casser la scene.
+      console.warn('station touchee :', err);
+    }
   };
 
   canvas.style.touchAction = 'none';
   canvas.addEventListener('pointerdown', surDebut);
   canvas.addEventListener('pointermove', surDeplacement, { passive: false });
-  canvas.addEventListener('pointerup', surFin);
+  canvas.addEventListener('pointerup', (e) => surFin(e, true));
   canvas.addEventListener('pointercancel', surFin);
   canvas.addEventListener('pointerleave', surFin);
+
+  // Le halo suit la station regardee, et s'eteint des qu'elle est appliquee.
+  function poserHalo(index) {
+    const l = lampes[index];
+    if (!l || !l.objet || l.validee) { halo.visible = false; return; }
+    halo.position.set(l.objet.position.x, 0.05, l.objet.position.z);
+    halo.visible = true;
+  }
 
   // Aller a une station donnee, appele depuis l'interface.
   function allerA(index) {
@@ -1339,7 +1457,9 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
       const proche = plusProche(ici);
       if (proche !== stationCourante && Math.abs(arrets[proche] - ici) < 0.02) {
         stationCourante = proche;
-        surStation(proche >= ancres.length ? -1 : proche);
+        const quelle = proche >= ancres.length ? -1 : proche;
+        if (quelle >= 0) poserHalo(quelle); else halo.visible = false;
+        surStation(quelle);
       }
     }
 
@@ -1349,6 +1469,29 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     // ressent pas - on doit VOIR le jardin s'allumer.
     for (const l of lampes) {
       if (l.validee && l.montee < 1) l.montee = Math.min(1, l.montee + 0.011);
+
+      // Le halo se pose sur la station en cours, tant qu'elle n'est pas faite.
+      if (halo.visible) {
+        halo.material.opacity = 0.1 + Math.abs(Math.sin(t * 1.25)) * 0.16;
+      }
+
+      if (l.fete >= 0 && l.fete < 1) {
+        l.fete = Math.min(1, l.fete + dt * 0.85);
+        // Une cloche : l'objet monte vite, marque le sommet, redescend.
+        const cloche = Math.sin(Math.min(1, l.fete * 1.5) * Math.PI);
+        if (l.objet) l.objet.position.y = l.hauteurBase + cloche * 0.26;
+        if (l.onde) {
+          const k = 1 + l.fete * 5.5;
+          l.onde.scale.set(k, k, 1);
+          l.onde.material.opacity = 0.55 * (1 - l.fete);
+          if (l.fete >= 1) {
+            scene.remove(l.onde);
+            l.onde.geometry.dispose();
+            l.onde.material.dispose();
+            l.onde = null;
+          }
+        }
+      }
       const vacille = 0.86 + Math.sin(t * 2.4 + l.phase) * 0.07
         + Math.sin(t * 5.7 + l.phase * 2) * 0.05;
       // Une station validee s'allume, mais dans un monde clair il suffit de
@@ -1395,6 +1538,7 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   // qui charge lentement, bien plus d'une seconde.
   if (ancres.length) {
     stationCourante = 0;
+    poserHalo(0);
     surStation(0);
   }
 
@@ -1466,11 +1610,39 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   // Allumer une station, et emmener le parcours a la suivante : le geste
   // « appliqué » doit faire AVANCER, sinon on reste devant ce qu'on vient de
   // finir et rien ne dit que le chemin progresse.
-  demonter.valider = (index) => {
+  demonter.valider = (index, celebrer = true) => {
     const l = lampes[index];
     if (!l || l.validee) return;
     l.validee = true;
-    if (index + 1 < ancres.length) setTimeout(() => allerA(index + 1), 700);
+    halo.visible = false;
+
+    // LA RECOMPENSE, SANS ETOILE NI SCORE.
+    //
+    // L'objet se souleve d'un souffle et retombe, et une onde part de son pied.
+    // C'est tout. Une gerbe d'etincelles ou un « +1 » ramenerait l'ecran au jeu
+    // de progression qu'on a passe la journee a en sortir - ici, ce qu'on veut
+    // dire est « c'est fait », pas « bravo ».
+    if (celebrer && l.objet) {
+      l.fete = 0;
+      l.hauteurBase = l.objet.position.y;
+      const onde = new THREE.Mesh(
+        new THREE.RingGeometry(0.55, 0.68, 44),
+        new THREE.MeshBasicMaterial({
+          color: A.lanterne,
+          transparent: true,
+          opacity: 0.6,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        }),
+      );
+      onde.rotation.x = -Math.PI / 2;
+      onde.position.set(l.objet.position.x, 0.06, l.objet.position.z);
+      scene.add(onde);
+      l.onde = onde;
+    }
+
+    // Assez de temps pour voir l'objet retomber avant que la camera reparte.
+    if (index + 1 < ancres.length) setTimeout(() => allerA(index + 1), celebrer ? 1500 : 700);
   };
 
   demonter.toutesValidees = () => lampes.length > 0 && lampes.every((l) => l.validee);

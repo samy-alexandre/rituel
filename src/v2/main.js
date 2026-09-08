@@ -428,11 +428,16 @@ function rendre() {
       if (souffle) souffle.hidden = true;
     };
 
+    // Toucher l'objet dans le jardin vaut le meme geste que le mot « Appliquer ».
+    // L'indirection est necessaire : la scene demande cette fonction pour se
+    // monter, alors qu'elle ne peut etre ecrite qu'une fois la scene montee.
+    let appliquerStation = () => {};
+
     // Import differe : Three.js et les modeles pesent plus que tout le reste de
     // l'application. Les ecrans Produits et Rituel+ ne les telechargent jamais.
     import('./jardin3d.js').then(({ monterJardin3d }) => {
       if (mienne !== generation || !scene.isConnected) return null;
-      return monterJardin3d(scene, routine.etapes, etat.moment, montrer);
+      return monterJardin3d(scene, routine.etapes, etat.moment, montrer, (i) => appliquerStation(i));
     }).then((arret) => {
       if (!arret) return;
       // Un rendu plus recent est arrive pendant le chargement : cette scene est
@@ -440,12 +445,13 @@ function rendre() {
       if (mienne !== generation || !scene.isConnected) { arret(); return; }
       arreterVie = arret;
 
-      // Les stations deja validees aujourd'hui restent allumees au rechargement.
-      etat.validees.forEach((i) => arret.valider(i));
+      // Les stations deja validees aujourd'hui restent allumees au rechargement,
+      // mais SANS rejouer leur animation : on ne fete pas ce qu'on a fait hier.
+      etat.validees.forEach((i) => arret.valider(i, false));
 
-      legende?.querySelector('.valider')?.addEventListener('click', async () => {
-        if (stationVue < 0 || etat.validees.has(stationVue)) return;
-        const faite = stationVue;
+      appliquerStation = async (i) => {
+        if (i < 0 || i >= routine.etapes.length || etat.validees.has(i)) return;
+        const faite = i;
         etat.validees.add(faite);
         arret.valider(faite);
         montrer(faite);
@@ -455,7 +461,7 @@ function rendre() {
         // proximite est un signal d'ambiance, pas un mecanisme de navigation,
         // et le parcours restait bloque sur l'etape qu'on venait de finir.
         if (faite + 1 < routine.etapes.length) {
-          setTimeout(() => { if (scene.isConnected) montrer(faite + 1); }, 760);
+          setTimeout(() => { if (scene.isConnected) montrer(faite + 1); }, 1500);
         }
 
         // La routine n'est consignee QUE lorsque le chemin est entierement
@@ -465,7 +471,9 @@ function rendre() {
           await consigner(routine);
           feter();
         }
-      });
+      };
+
+      legende?.querySelector('.valider')?.addEventListener('click', () => appliquerStation(stationVue));
     }).catch((err) => console.error('jardin 3D :', err));
   }
 }
