@@ -126,6 +126,20 @@ const ANIMAUX = {
   cerf: '/models/animaux/cerf.glb',
 };
 
+// LE PETIT PEUPLE.
+//
+// Les trois grands portent leurs propres animations ; ceux-la n'en ont aucune,
+// et c'est tres bien : un lapin n'a pas besoin d'un squelette pour etre vivant,
+// il a besoin de BONDIR. Le mouvement est donc ecrit ici - bonds, trottinement,
+// vol - ce qui coute quelques kilo-octets au lieu de plusieurs mega.
+const PETITS = {
+  papillon: '/models/animaux/papillon.glb',
+  lapin: '/models/animaux/lapin.glb',
+  ecureuil: '/models/animaux/ecureuil.glb',
+  oiseau: '/models/animaux/oiseau.glb',
+  herisson: '/models/animaux/herisson.glb',
+};
+
 const HAUT = new THREE.Vector3(0, 1, 0);
 const chargeur = new GLTFLoader();
 const cache = new Map();
@@ -539,10 +553,15 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   const courbe = courbeDuSentier(etapes.length);
   const hasard = hasardDe(etapes.length * 977 + (soir ? 13 : 41));
 
-  const [fougere, herbe, rocher, fleur, fleur2, biche, renard, cerf] = await Promise.all([
+  const [
+    fougere, herbe, rocher, fleur, fleur2, biche, renard, cerf,
+    papillon, lapin, ecureuil, oiseau, herisson,
+  ] = await Promise.all([
     charger(MODELES.fougere), charger(MODELES.herbe), charger(MODELES.rocher),
     charger(MODELES.fleur), charger(MODELES.fleur2),
     chargerAnime(ANIMAUX.biche), chargerAnime(ANIMAUX.renard), chargerAnime(ANIMAUX.cerf),
+    charger(PETITS.papillon), charger(PETITS.lapin), charger(PETITS.ecureuil),
+    charger(PETITS.oiseau), charger(PETITS.herisson),
   ]);
 
   // On ne patine plus qu'a peine. Le patinage servait a sauver des assets de
@@ -868,7 +887,7 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
         // et sortir du monde.
         const dx = this.ancre.x - this.objet.position.x;
         const dz = this.ancre.z - this.objet.position.z;
-        if (Math.hypot(dx, dz) > 5.5) {
+        if (Math.hypot(dx, dz) > 16) {
           const vers = Math.atan2(dx, dz);
           let ecartAngle = ((vers - y + Math.PI) % (Math.PI * 2)) - Math.PI;
           this.objet.rotation.y += ecartAngle * Math.min(1, dt * 1.1);
@@ -889,55 +908,97 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   poserAnimal(renard, 0.68, 0.66, -3.4);
   poserAnimal(cerf, 1.7, 0.86, 4.6);
 
-  // LES PAPILLONS.
+  // LE PETIT PEUPLE, ET SA DEAMBULATION.
   //
-  // Dessines plutot que telecharges : deux triangles par aile, et tout est dans
-  // le mouvement. Un papillon ne vole pas droit - il monte, decroche, repart.
-  // Trois sinusoides de periodes premieres entre elles suffisent a produire une
-  // trajectoire qu'on ne peut pas anticiper, et c'est ca qui fait vivant.
-  const papillons = [];
-  {
-    const teintes = [0xf7e9a0, 0xe8b98a, 0xf3f0e4, 0xd8a7c4];
-    // Deux lobes : l'aile avant, plus grande et pointue vers l'avant, et
-    // l'aile arriere, courte et ronde. C'est ce decrochement qui fait lire
-    // « papillon » plutot que « triangle ».
-    const aile = new THREE.BufferGeometry();
-    aile.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
-      0, 0, 0.01, 0.062, 0.004, -0.048, 0.072, 0.002, 0.016,
-      0, 0, 0.01, 0.072, 0.002, 0.016, 0.04, 0.001, 0.056,
-    ]), 3));
-    aile.computeVertexNormals();
+  // Les papillons etaient deux triangles plats - « c'est encore des SVG », et
+  // c'etait vrai. Ce sont maintenant de vrais modeles, comme les autres.
+  //
+  // Chacun se donne un but quelque part dans une zone LARGE, s'y rend, attend,
+  // s'en donne un autre. La zone deborde volontairement du cadre : ils sortent
+  // de l'ecran et reviennent, ce qui est la seule facon de faire croire que le
+  // jardin continue en dehors de ce qu'on en voit.
+  const habitants = [];
 
-    for (let i = 0; i < 11; i += 1) {
-      const corps = new THREE.Group();
-      const matiere = new THREE.MeshStandardMaterial({
-        color: teintes[Math.floor(hasard() * teintes.length)],
-        roughness: 0.72,
-        metalness: 0,
-        side: THREE.DoubleSide,
-        emissive: 0xffffff,
-        emissiveIntensity: 0.12,
-      });
-      const gauche = new THREE.Mesh(aile, matiere);
-      const droite = new THREE.Mesh(aile, matiere);
-      droite.scale.x = -1;
-      corps.add(gauche, droite);
-      corps.scale.setScalar(0.85 + hasard() * 0.55);
+  function poserPetit(modele, hauteur, t, style, combien, portee) {
+    if (!modele) return;
+    for (let i = 0; i < combien; i += 1) {
+      const point = courbe.getPointAt(Math.min(0.97, Math.max(0.02, t + (hasard() - 0.5) * 0.55)));
+      const o = normaliser(modele.clone(true), hauteur * (0.8 + hasard() * 0.45));
+      const ancre = new THREE.Vector3(
+        point.x + (hasard() - 0.5) * portee,
+        0,
+        point.z + (hasard() - 0.5) * portee,
+      );
+      o.position.copy(ancre);
+      o.traverse((n) => { if (n.isMesh) { n.castShadow = true; n.frustumCulled = false; } });
+      scene.add(o);
 
-      const t = 0.1 + hasard() * 0.85;
-      const p = courbe.getPointAt(t);
-      papillons.push({
-        objet: corps,
-        gauche,
-        droite,
-        base: new THREE.Vector3(p.x + (hasard() - 0.5) * 3.4, 0.8 + hasard() * 1.4, p.z + (hasard() - 0.5) * 3),
-        phase: hasard() * 9,
-        vitesse: 0.5 + hasard() * 0.5,
-        rayon: 0.8 + hasard() * 1.6,
+      habitants.push({
+        objet: o,
+        ancre,
+        style,
+        portee,
+        but: ancre.clone(),
+        attente: hasard() * 4,
+        vitesse: style === 'vol' ? 1.5 + hasard() * 1.1 : 0.5 + hasard() * 0.55,
+        phase: hasard() * 10,
+        hauteurVol: style === 'vol' ? 1.4 + hasard() * 2 : (style === 'volette' ? 0.55 + hasard() * 1.1 : 0),
       });
-      scene.add(corps);
     }
   }
+
+  function vivreHabitant(h, dt, t) {
+    const o = h.objet;
+    const dx = h.but.x - o.position.x;
+    const dz = h.but.z - o.position.z;
+    const reste = Math.hypot(dx, dz);
+
+    if (reste < 0.35) {
+      h.attente -= dt;
+      if (h.attente <= 0) {
+        // Un nouveau but, quelque part dans sa zone. Rien ne l'y oblige, rien
+        // ne l'attend : c'est ce qui fait qu'il a l'air de vivre sa vie.
+        h.but.set(
+          h.ancre.x + (hasard() - 0.5) * h.portee,
+          0,
+          h.ancre.z + (hasard() - 0.5) * h.portee,
+        );
+        h.attente = h.style === 'vol' ? 0.2 + hasard() : 1.5 + hasard() * 6;
+      }
+    } else {
+      const cap = Math.atan2(dx, dz);
+      // Il tourne avant d'avancer : pivoter d'un bloc fait patiner un jouet.
+      let ecart = ((cap - o.rotation.y + Math.PI) % (Math.PI * 2)) - Math.PI;
+      o.rotation.y += ecart * Math.min(1, dt * 4);
+      const pas = Math.min(reste, h.vitesse * dt);
+      o.position.x += Math.sin(o.rotation.y) * pas;
+      o.position.z += Math.cos(o.rotation.y) * pas;
+    }
+
+    if (h.style === 'bond') {
+      // Le lapin ne marche pas : il pousse, plane, retombe. La valeur absolue
+      // d'un sinus donne exactement cette courbe-la.
+      const saut = Math.abs(Math.sin(t * 4.5 + h.phase));
+      o.position.y = reste > 0.35 ? saut * 0.28 : 0;
+      o.rotation.x = reste > 0.35 ? -saut * 0.22 : 0;
+    } else if (h.style === 'trottine') {
+      o.position.y = reste > 0.35 ? Math.abs(Math.sin(t * 9 + h.phase)) * 0.045 : 0;
+    } else if (h.style === 'vol') {
+      o.position.y = h.hauteurVol + Math.sin(t * 1.7 + h.phase) * 0.45;
+      o.rotation.z = Math.sin(t * 2.3 + h.phase) * 0.25;
+    } else if (h.style === 'volette') {
+      // Le papillon ne va jamais droit : il monte, decroche, repart.
+      o.position.y = h.hauteurVol + Math.sin(t * 3.1 + h.phase) * 0.3
+        + Math.sin(t * 7.3 + h.phase * 2) * 0.09;
+      o.rotation.z = Math.sin(t * 6 + h.phase) * 0.5;
+    }
+  }
+
+  poserPetit(papillon, 0.19, 0.4, 'volette', 14, 4.5);
+  poserPetit(lapin, 0.42, 0.45, 'bond', 10, 4.5);
+  poserPetit(ecureuil, 0.32, 0.5, 'trottine', 7, 4);
+  poserPetit(herisson, 0.28, 0.5, 'trottine', 6, 4);
+  poserPetit(oiseau, 0.3, 0.5, 'vol', 9, 7);
 
   // ---------------------------------------------------------------------
   // Le parcours. C'est ce qui separe un decor d'un produit : on AVANCE sur le
@@ -1131,20 +1192,7 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     tPrecedent = t;
     for (const b of betes) b.vivre(dt);
 
-    // Les papillons. Trois sinusoides de periodes premieres entre elles : la
-    // trajectoire ne se repete jamais a l'oeil, et c'est tout ce qu'il faut.
-    for (const p of papillons) {
-      const a = t * p.vitesse + p.phase;
-      p.objet.position.set(
-        p.base.x + Math.sin(a) * p.rayon + Math.sin(a * 2.3) * 0.28,
-        p.base.y + Math.sin(a * 1.7) * 0.32 + Math.sin(a * 3.1) * 0.11,
-        p.base.z + Math.cos(a * 0.8) * p.rayon,
-      );
-      p.objet.rotation.y = -a * 0.8;
-      const battement = 0.55 + Math.sin(t * 14 + p.phase) * 0.85;
-      p.gauche.rotation.z = battement;
-      p.droite.rotation.z = -battement;
-    }
+    for (const h of habitants) vivreHabitant(h, dt, t);
 
     rendu.render(scene, camera);
     brut = requestAnimationFrame(image);
