@@ -10,7 +10,10 @@
 //                    → l'utilisateur en ligne a TOUJOURS la dernière version ; hors-ligne, repli.
 //  - autre origine (Supabase, fonts) et /api/* : laissés au navigateur (jamais mis en cache ici).
 
-const CACHE = 'rituel-v2';
+// Le nom porte la version des ASSETS : le changer purge tout l'ancien cache
+// chez les gens qui ont deja ouvert l'application. Necessaire ici, parce que
+// les textures d'avant pesaient 7,7 Mo et dormaient encore dans leur telephone.
+const CACHE = 'rituel-v3-assets';
 
 self.addEventListener('install', function () {
   self.skipWaiting();
@@ -63,6 +66,22 @@ self.addEventListener('fetch', function (e) {
 
   // Assets hashés → immuables → cache-first.
   if (url.pathname.startsWith('/assets/')) {
+    e.respondWith(cacheFirst(req));
+    return;
+  }
+  // LES ASSETS LOURDS SONT IMMUABLES DE FAIT.
+  //
+  // Modeles, textures, ciel et decodeur Draco tombaient dans « le reste », donc
+  // en reseau-d'abord : quatre megaoctets retelecharges A CHAQUE OUVERTURE de
+  // l'application. Sur un telephone en 4G, c'est plusieurs secondes d'attente
+  // avant la premiere image, a chaque fois. Ils ne sont pas hashes par Vite,
+  // mais ils changent si rarement que la version du cache suffit a les
+  // invalider - et un deploiement qui les touche change ce nom.
+  if (/\.(glb|gltf|bin|hdr|wasm)$/.test(url.pathname)
+    || url.pathname.startsWith('/models/')
+    || url.pathname.startsWith('/textures/')
+    || url.pathname.startsWith('/hdri/')
+    || url.pathname.startsWith('/draco/')) {
     e.respondWith(cacheFirst(req));
     return;
   }

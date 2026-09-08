@@ -104,8 +104,8 @@ const RECUL = 8.2;
 const MODELES = {
   fleur: '/models/flower-2zT-C10njmX.glb',
   fleur2: '/models/flower-dYQFgjU5Eqx.glb',
-  fougere: '/models/fern_02/fern_02.glb',
-  herbe: '/models/grass_medium_01/grass_medium_01.glb',
+  fougere: '/models/fern_02/fern_02.gltf',
+  herbe: '/models/grass_medium_01/grass_medium_01.gltf',
 };
 
 // Le ciel qui eclaire la scene. Un HDRI d'un vrai jardin : c'est lui qui donne
@@ -160,7 +160,12 @@ function chargerAnime(url) {
 function charger(url) {
   if (!cache.has(url)) {
     cache.set(url, new Promise((resolve) => {
-      chargeur.load(url, (g) => resolve(g.scene), undefined, () => resolve(null));
+      chargeur.load(url, (g) => resolve(g.scene), undefined, (err) => {
+        // Sans ce message, un chemin faux vide la scene en silence : c'est
+        // exactement ce qui est arrive en renommant deux fichiers.
+        console.error('modele introuvable :', url, err && err.message);
+        resolve(null);
+      });
     }));
   }
   return cache.get(url);
@@ -477,6 +482,18 @@ export async function monterJardin3d(
   surStation = () => {},
   surTouche = () => {},
 ) {
+  // TOUT CE QUI COUTE SE REGLE ICI.
+  //
+  // Un telephone n'a pas seulement moins de puissance : il a une batterie et il
+  // chauffe. Une scene qui tourne a 60 images par seconde en continu le fait
+  // ralentir au bout d'une minute, quel que soit son processeur - c'est le
+  // ralentissement thermique, et c'est souvent lui qu'on prend pour un bug.
+  const petitEcran = Math.min(window.innerWidth, window.innerHeight) < 720;
+  const densite = petitEcran ? 0.5 : 1;
+  // Trente images par seconde suffisent tres largement a une camera qui derive
+  // lentement et a des betes qui broutent. C'est deux fois moins de travail
+  // pour le processeur graphique, et une image que personne ne distingue.
+  const cadence = petitEcran ? 1000 / 31 : 0;
   const A = AMBIANCES[moment] || AMBIANCES.soir;
   const calme = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const soir = moment === 'soir';
@@ -560,7 +577,6 @@ export async function monterJardin3d(
   scene.add(new THREE.HemisphereLight(A.ciel, A.remplissage, soir ? 0.55 : 0.8));
   const cle = new THREE.DirectionalLight(A.cle, A.intensiteCle);
   cle.castShadow = true;
-  const petitEcran = Math.min(window.innerWidth, window.innerHeight) < 700;
   cle.shadow.mapSize.set(petitEcran ? 512 : 1024, petitEcran ? 512 : 1024);
   cle.shadow.camera.near = 1;
   cle.shadow.camera.far = 62;
@@ -809,28 +825,13 @@ export async function monterJardin3d(
 
   // La vegetation : clairsemee, et toujours EN DEHORS du sentier. Le luxe est
   // dans le vide qu'on laisse, pas dans le nombre de plantes.
-  const semer = (modele, combien, hauteur, ecartMin, ecartMax) => {
-    if (!modele) return;
-    for (let i = 0; i < combien; i += 1) {
-      const t = hasard() * 0.97;
-      const p = courbe.getPointAt(t);
-      const tan = courbe.getTangentAt(t);
-      const cote = new THREE.Vector3().crossVectors(tan, new THREE.Vector3(0, 1, 0)).normalize();
-      const sens = hasard() < 0.5 ? -1 : 1;
-      const o = normaliser(unePlante(modele, hasard), hauteur * (0.75 + hasard() * 0.6));
-      o.position.copy(p).addScaledVector(cote, sens * (ecartMin + hasard() * (ecartMax - ecartMin)));
-      o.rotation.y = hasard() * Math.PI * 2;
-      o.traverse((n) => { if (n.isMesh) n.castShadow = true; });
-      scene.add(o);
-    }
-  };
 
   // Beaucoup plus qu'avant, pour deux appels de dessin par espece.
-  semerInstancie(herbe, 230, 0.9, auBordDuChemin(1.8, 9));
-  semerInstancie(fougere, 85, 1.4, auBordDuChemin(2.2, 8));
+  semerInstancie(herbe, Math.round(230 * densite), 0.9, auBordDuChemin(1.8, 9));
+  semerInstancie(fougere, Math.round(85 * densite), 1.4, auBordDuChemin(2.2, 8));
   // Non patinees, volontairement : ce sont les seuls accents vifs.
-  semerInstancie(fleur, 55, 0.42, auBordDuChemin(1.6, 6.5), 'entier');
-  semerInstancie(fleur2, 40, 0.38, auBordDuChemin(1.7, 7), 'entier');
+  semerInstancie(fleur, Math.round(55 * densite), 0.42, auBordDuChemin(1.6, 6.5), 'entier');
+  semerInstancie(fleur2, Math.round(40 * densite), 0.38, auBordDuChemin(1.7, 7), 'entier');
 
   // LE LOINTAIN, DEVANT LE BOUT DU CHEMIN.
   //
@@ -848,8 +849,8 @@ export async function monterJardin3d(
       tour: hasard() * Math.PI * 2,
       taille: hauteurMin,
     });
-    semerInstancie(fougere, 40, 2.2, auLoinPlace(0.6 + hasard() * 0.9));
-    semerInstancie(herbe, 60, 1.5, auLoinPlace(0.6 + hasard() * 0.9));
+    semerInstancie(fougere, Math.round(40 * densite), 2.2, auLoinPlace(0.6 + hasard() * 0.9));
+    semerInstancie(herbe, Math.round(60 * densite), 1.5, auLoinPlace(0.6 + hasard() * 0.9));
 
   }
 
@@ -1391,6 +1392,26 @@ export async function monterJardin3d(
   // part et d'autre du sentier, et basculer d'un coup ferait un a-coup.
   let decal = (lampes.length ? lampes[0].sens : 1) * 1.15;
   let tPrecedent = 0;
+  let derniereImage = 0;
+
+  // MODE MESURE : ouvrir /?perf affiche la cadence reelle et le cout de la
+  // scene, en haut a gauche. Sans telephone sous la main, c'est le seul moyen
+  // de savoir ce qui se passe vraiment chez la personne qui trouve que « ca
+  // bug » - un chiffre vaut mieux qu'une supposition.
+  const mesure = /[?&]perf(=|&|$)/.test(window.location.search)
+    ? document.createElement('div')
+    : null;
+  if (mesure) {
+    mesure.style.cssText = 'position:fixed;top:8px;left:8px;z-index:99;'
+      + 'font:11px/1.45 ui-monospace,monospace;background:rgba(0,0,0,.72);color:#7dff9b;'
+      + 'padding:7px 9px;border-radius:7px;white-space:pre;pointer-events:none';
+    document.body.appendChild(mesure);
+    // En mode mesure seulement : de quoi inspecter la scene depuis la console.
+    window.__scene = scene;
+    window.__rendu = rendu;
+  }
+  let imagesMesurees = 0;
+  let debutMesure = performance.now();
   const t0 = performance.now();
 
   function dimensionner() {
@@ -1402,6 +1423,10 @@ export async function monterJardin3d(
   }
 
   function image(maintenant) {
+    brut = requestAnimationFrame(image);
+    if (cadence && maintenant - derniereImage < cadence) return;
+    derniereImage = maintenant;
+
     const t = (maintenant - t0) / 1000;
     // Le pas de temps se calcule ICI, avant tout ce qui s'en sert. Declare plus
     // bas, il etait dans sa zone morte temporelle au moment ou l'animation de
@@ -1541,7 +1566,23 @@ export async function monterJardin3d(
     for (const h of habitants) vivreHabitant(h, dt, t);
 
     rendu.render(scene, camera);
-    brut = requestAnimationFrame(image);
+
+    if (mesure) {
+      imagesMesurees += 1;
+      const ecoule = maintenant - debutMesure;
+      if (ecoule > 1000) {
+        const i = rendu.info;
+        mesure.textContent = [
+          `${Math.round((imagesMesurees * 1000) / ecoule)} i/s`,
+          `${i.render.calls} dessins`,
+          `${(i.render.triangles / 1000).toFixed(0)}k triangles`,
+          `x${rendu.getPixelRatio()} px`,
+          `${window.innerWidth}x${window.innerHeight}`,
+        ].join(String.fromCharCode(10));
+        imagesMesurees = 0;
+        debutMesure = maintenant;
+      }
+    }
   }
 
   // La premiere station est annoncee DES le montage. Attendre que la camera
