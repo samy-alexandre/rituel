@@ -105,7 +105,6 @@ const MODELES = {
   fleur2: '/models/flower-dYQFgjU5Eqx.glb',
   fougere: '/models/fern_02/fern_02.gltf',
   herbe: '/models/grass_medium_01/grass_medium_01.gltf',
-  rocher: '/models/boulder_01/boulder_01.gltf',
 };
 
 // Le ciel qui eclaire la scene. Un HDRI d'un vrai jardin : c'est lui qui donne
@@ -159,6 +158,30 @@ function charger(url) {
     }));
   }
   return cache.get(url);
+}
+
+// UN FICHIER DE VEGETATION CONTIENT PLUSIEURS PLANTES, PAS UNE.
+//
+// C'est ce qui a mis le telephone a genoux. `grass_medium_01` porte DIX-SEPT
+// touffes distinctes dans un seul fichier - 24 700 triangles et 17 dessins - et
+// on clonait les dix-sept a chaque fois qu'on voulait une touffe. Semees
+// soixante-dix fois, cela faisait a soi seul 1,7 million de triangles et 1 190
+// appels de dessin.
+//
+// On ne prend donc qu'UNE plante du lot, tiree au sort. Le fichier devient une
+// banque de variantes - ce qu'il a toujours ete - et chaque exemplaire coute
+// dix-sept fois moins cher tout en etant PLUS varie qu'avant.
+function unePlante(modele, tirage) {
+  const parties = [];
+  modele.traverse((o) => { if (o.isMesh) parties.push(o); });
+  if (parties.length < 2) return modele.clone(true);
+  const choisie = parties[Math.floor(tirage() * parties.length)].clone();
+  choisie.position.set(0, 0, 0);
+  choisie.rotation.set(0, 0, 0);
+  choisie.scale.set(1, 1, 1);
+  const g = new THREE.Group();
+  g.add(choisie);
+  return g;
 }
 
 // Met un modele a une taille voulue et le pose sur le sol, quelle que soit
@@ -468,7 +491,10 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 300);
 
   const rendu = new THREE.WebGLRenderer({ canvas, antialias: true });
-  rendu.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  // Un ecran de telephone a souvent un ratio de 3 : rendre a 3x quadruple
+  // (voire multiplie par neuf) le nombre de pixels pour un gain que personne
+  // ne voit sur une scene aussi douce. On plafonne a 1,6.
+  rendu.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
   // LES OMBRES. Il n'y en avait aucune, et c'est ce qui faisait le plus de mal :
   // sans ombre portee, rien n'est POSE. Les objets flottent au-dessus du sol,
   // la lumiere n'a pas de direction lisible, et l'oeil classe l'image en
@@ -522,7 +548,8 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   scene.add(new THREE.HemisphereLight(A.ciel, A.remplissage, soir ? 0.55 : 0.8));
   const cle = new THREE.DirectionalLight(A.cle, A.intensiteCle);
   cle.castShadow = true;
-  cle.shadow.mapSize.set(1024, 1024);
+  const petitEcran = Math.min(window.innerWidth, window.innerHeight) < 700;
+  cle.shadow.mapSize.set(petitEcran ? 512 : 1024, petitEcran ? 512 : 1024);
   cle.shadow.camera.near = 1;
   cle.shadow.camera.far = 62;
   // Une carte d'ombre serree autour de la station regardee : 1024 pixels
@@ -554,10 +581,10 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   const hasard = hasardDe(etapes.length * 977 + (soir ? 13 : 41));
 
   const [
-    fougere, herbe, rocher, fleur, fleur2, biche, renard, cerf,
+    fougere, herbe, fleur, fleur2, biche, renard, cerf,
     papillon, lapin, ecureuil, oiseau,
   ] = await Promise.all([
-    charger(MODELES.fougere), charger(MODELES.herbe), charger(MODELES.rocher),
+    charger(MODELES.fougere), charger(MODELES.herbe),
     charger(MODELES.fleur), charger(MODELES.fleur2),
     chargerAnime(ANIMAUX.biche), chargerAnime(ANIMAUX.renard), chargerAnime(ANIMAUX.cerf),
     charger(PETITS.papillon), chargerAnime(PETITS.lapin), charger(PETITS.ecureuil),
@@ -570,7 +597,6 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   // de la teinte de l'heure, pour que tout appartienne au meme lieu.
   if (fougere) patiner(fougere, A.feuillage, 0.62);
   if (herbe) patiner(herbe, A.feuillage, 0.42);
-  if (rocher) patiner(rocher, A.pierre, 0.22);
 
   // PLUS AUCUNE PIERRE POSEE.
   //
@@ -639,6 +665,108 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     scene.add(terrasse);
   }
 
+  // L'INSTANCIATION : UN SEUL DESSIN POUR TOUTE UNE ESPECE.
+  //
+  // C'est la technique qui deplace vraiment le plafond. Le cout d'une scene sur
+  // telephone ne se mesure pas d'abord en triangles mais en APPELS DE DESSIN :
+  // chaque objet pose separement oblige le processeur a re-parler a la carte
+  // graphique. Trois mille appels tuent un telephone qui avalerait sans broncher
+  // les triangles correspondants.
+  //
+  // Un InstancedMesh dit l'inverse : « voici une geometrie, et voici les quatre
+  // cents endroits ou la dessiner ». Un seul appel. La vegetation ne coute donc
+  // presque plus rien a multiplier - on peut en mettre beaucoup PLUS qu'avant,
+  // et non moins.
+  const matriceTemp = new THREE.Matrix4();
+  const quatTemp = new THREE.Quaternion();
+  const echelleTemp = new THREE.Vector3();
+  const posTemp = new THREE.Vector3();
+
+  // DEUX SORTES DE FICHIERS, DEUX TRAITEMENTS.
+  //
+  // `grass_medium_01` contient dix-sept touffes DIFFERENTES : on repartit les
+  // exemplaires entre elles, et chacune est une plante entiere.
+  //
+  // Une fleur, elle, est livree en MORCEAUX - petales, tige, feuilles. Les
+  // repartir revenait a semer des petales tout seuls, d'ou les grandes formes
+  // roses plates qui flottaient au-dessus de l'herbe. Il faut alors dessiner
+  // TOUTES les parties aux MEMES endroits, chacune gardant sa place dans la
+  // plante.
+  function semerInstancie(modele, combien, hauteur, placer, mode = 'variantes') {
+    if (!modele) return;
+    modele.updateMatrixWorld(true);
+    const parties = [];
+    modele.traverse((o) => { if (o.isMesh) parties.push(o); });
+    if (!parties.length) return;
+
+    // La hauteur de reference : celle de la plante entiere en mode « entier »,
+    // celle de chaque variante sinon.
+    const boiteTout = new THREE.Box3().setFromObject(modele);
+    const hautTout = (boiteTout.max.y - boiteTout.min.y) || 1;
+
+    const lots = parties.map(() => []);
+    if (mode === 'entier') {
+      const places = [];
+      for (let i = 0; i < combien; i += 1) places.push(placer());
+      lots.forEach((_, i) => { lots[i] = places; });
+    } else {
+      for (let i = 0; i < combien; i += 1) {
+        lots[Math.floor(hasard() * parties.length)].push(placer());
+      }
+    }
+
+    const locale = new THREE.Matrix4();
+    parties.forEach((partie, i) => {
+      const places = lots[i];
+      if (!places.length) return;
+      const geo = partie.geometry;
+      if (!geo.boundingBox) geo.computeBoundingBox();
+
+      let hautRef = hautTout;
+      let basRef = boiteTout.min.y;
+      if (mode !== 'entier') {
+        hautRef = (geo.boundingBox.max.y - geo.boundingBox.min.y) || 1;
+        basRef = geo.boundingBox.min.y;
+      }
+
+      const tas = new THREE.InstancedMesh(geo, partie.material, places.length);
+      tas.castShadow = true;
+      tas.receiveShadow = true;
+      places.forEach((place, k) => {
+        const facteur = (hauteur * place.taille) / hautRef;
+        echelleTemp.setScalar(facteur);
+        quatTemp.setFromAxisAngle(HAUT, place.tour);
+        posTemp.set(place.x, -basRef * facteur, place.z);
+        matriceTemp.compose(posTemp, quatTemp, echelleTemp);
+        // En mode « entier », chaque morceau garde sa position dans la plante.
+        if (mode === 'entier') {
+          locale.copy(partie.matrixWorld);
+          matriceTemp.multiply(locale);
+        }
+        tas.setMatrixAt(k, matriceTemp);
+      });
+      tas.instanceMatrix.needsUpdate = true;
+      scene.add(tas);
+    });
+  }
+
+  // Un emplacement au bord du sentier, du cote qu'on veut, jamais dessus.
+  function auBordDuChemin(ecartMin, ecartMax) {
+    return () => {
+      const t = hasard() * 0.97;
+      const p = courbe.getPointAt(t);
+      const cote = new THREE.Vector3().crossVectors(courbe.getTangentAt(t), HAUT).normalize();
+      const sens = hasard() < 0.5 ? -1 : 1;
+      const d = sens * (ecartMin + hasard() * (ecartMax - ecartMin));
+      return {
+        x: p.x + cote.x * d,
+        z: p.z + cote.z * d,
+        tour: hasard() * Math.PI * 2,
+        taille: 0.75 + hasard() * 0.6,
+      };
+    };
+  }
+
   // La vegetation : clairsemee, et toujours EN DEHORS du sentier. Le luxe est
   // dans le vide qu'on laisse, pas dans le nombre de plantes.
   const semer = (modele, combien, hauteur, ecartMin, ecartMax) => {
@@ -649,7 +777,7 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
       const tan = courbe.getTangentAt(t);
       const cote = new THREE.Vector3().crossVectors(tan, new THREE.Vector3(0, 1, 0)).normalize();
       const sens = hasard() < 0.5 ? -1 : 1;
-      const o = normaliser(modele.clone(true), hauteur * (0.75 + hasard() * 0.6));
+      const o = normaliser(unePlante(modele, hasard), hauteur * (0.75 + hasard() * 0.6));
       o.position.copy(p).addScaledVector(cote, sens * (ecartMin + hasard() * (ecartMax - ecartMin)));
       o.rotation.y = hasard() * Math.PI * 2;
       o.traverse((n) => { if (n.isMesh) n.castShadow = true; });
@@ -657,14 +785,12 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     }
   };
 
-  semer(herbe, 16 + etapes.length * 3, 0.95, 2.2, 9);
-  semer(fougere, 7 + etapes.length, 1.45, 2.4, 7);
-  // Peu de rochers, et gros : « un seul bel arbre vaut mieux que quinze arbres
-  // moyens ». Ce sont eux qui donnent l'echelle du lieu.
-  semer(rocher, 3 + Math.floor(etapes.length / 2), 2.4, 4, 11);
+  // Beaucoup plus qu'avant, pour deux appels de dessin par espece.
+  semerInstancie(herbe, 420, 0.9, auBordDuChemin(1.8, 10));
+  semerInstancie(fougere, 150, 1.4, auBordDuChemin(2.2, 8.5));
   // Non patinees, volontairement : ce sont les seuls accents vifs.
-  semer(fleur, 12 + etapes.length * 2, 0.45, 1.6, 5.5);
-  semer(fleur2, 10 + etapes.length * 2, 0.4, 1.7, 6);
+  semerInstancie(fleur, 90, 0.42, auBordDuChemin(1.6, 6.5), 'entier');
+  semerInstancie(fleur2, 70, 0.38, auBordDuChemin(1.7, 7), 'entier');
 
   // LE LOINTAIN, DEVANT LE BOUT DU CHEMIN.
   //
@@ -676,21 +802,15 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     const bout = courbe.getPointAt(1);
     const avant = courbe.getTangentAt(1);
     const cote = new THREE.Vector3().crossVectors(avant, HAUT).normalize();
-    const auLoin = (modele, combien, hauteur) => {
-      if (!modele) return;
-      for (let i = 0; i < combien; i += 1) {
-        const devant = 8 + hasard() * 62;
-        const lateral = (hasard() - 0.5) * 78;
-        const o = normaliser(modele.clone(true), hauteur * (0.55 + hasard() * 0.95));
-        o.position.x = bout.x + avant.x * devant + cote.x * lateral;
-        o.position.z = bout.z + avant.z * devant + cote.z * lateral;
-        o.rotation.y = hasard() * Math.PI * 2;
-        scene.add(o);
-      }
-    };
-    auLoin(rocher, 16, 3.4);
-    auLoin(fougere, 26, 2.2);
-    auLoin(herbe, 30, 1.4);
+    const auLoinPlace = (hauteurMin) => () => ({
+      x: bout.x + avant.x * (8 + hasard() * 62) + cote.x * ((hasard() - 0.5) * 78),
+      z: bout.z + avant.z * (8 + hasard() * 62) + cote.z * ((hasard() - 0.5) * 78),
+      tour: hasard() * Math.PI * 2,
+      taille: hauteurMin,
+    });
+    semerInstancie(fougere, 70, 2.2, auLoinPlace(0.6 + hasard() * 0.9));
+    semerInstancie(herbe, 110, 1.5, auLoinPlace(0.6 + hasard() * 0.9));
+
   }
 
   // Une lanterne par etape : c'est elle qui dit « il se passe quelque chose
@@ -746,7 +866,7 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
       if (!modele) continue;
       const angle = hasard() * Math.PI * 2;
       const distance = 2.5 + hasard() * 1.6;
-      const plante = normaliser(modele.clone(true), 0.55 + hasard() * 0.95);
+      const plante = normaliser(unePlante(modele, hasard), 0.55 + hasard() * 0.95);
       plante.position.x = objet.position.x + Math.cos(angle) * distance;
       plante.position.z = objet.position.z + Math.sin(angle) * distance;
       plante.rotation.y = hasard() * Math.PI * 2;
@@ -1276,6 +1396,22 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   if (ancres.length) {
     stationCourante = 0;
     surStation(0);
+  }
+
+  // Mesure temporaire du cout de la scene.
+  {
+    let images = 0;
+    const debutMesure = performance.now();
+    const compter = () => { images += 1; requestAnimationFrame(compter); };
+    requestAnimationFrame(compter);
+    setTimeout(() => {
+      const i = rendu.info;
+      window.__rendu = rendu; window.__scene = scene;
+      console.log('[perf] triangles', i.render.triangles, '| calls', i.render.calls,
+        '| geo', i.memory.geometries, '| tex', i.memory.textures,
+        '| objets', scene.children.length, '| dpr', rendu.getPixelRatio(),
+        '| fps', Math.round(images / ((performance.now() - debutMesure) / 1000)));
+    }, 9000);
   }
 
   dimensionner();
