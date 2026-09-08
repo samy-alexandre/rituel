@@ -22,6 +22,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
+import { clone as clonerSquelette } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // LA BRUME EST CLAIRE, TOUJOURS.
 //
@@ -137,7 +138,6 @@ const PETITS = {
   lapin: '/models/animaux/lapin.glb',
   ecureuil: '/models/animaux/ecureuil.glb',
   oiseau: '/models/animaux/oiseau.glb',
-  herisson: '/models/animaux/herisson.glb',
 };
 
 const HAUT = new THREE.Vector3(0, 1, 0);
@@ -555,13 +555,13 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
 
   const [
     fougere, herbe, rocher, fleur, fleur2, biche, renard, cerf,
-    papillon, lapin, ecureuil, oiseau, herisson,
+    papillon, lapin, ecureuil, oiseau,
   ] = await Promise.all([
     charger(MODELES.fougere), charger(MODELES.herbe), charger(MODELES.rocher),
     charger(MODELES.fleur), charger(MODELES.fleur2),
     chargerAnime(ANIMAUX.biche), chargerAnime(ANIMAUX.renard), chargerAnime(ANIMAUX.cerf),
-    charger(PETITS.papillon), charger(PETITS.lapin), charger(PETITS.ecureuil),
-    charger(PETITS.oiseau), charger(PETITS.herisson),
+    charger(PETITS.papillon), chargerAnime(PETITS.lapin), charger(PETITS.ecureuil),
+    charger(PETITS.oiseau),
   ]);
 
   // On ne patine plus qu'a peine. Le patinage servait a sauver des assets de
@@ -738,11 +738,14 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     // Trois plantes autour de lui, a des distances et des tailles toutes
     // differentes, lui donnent son assise - c'est l'accompagnement d'une nature
     // morte, pas un decor de fond.
+    // L'objet du geste est mis a l'echelle 1,45 : une vasque fait donc pres de
+    // deux unites de rayon. Semer sa vegetation a 1,15 la faisait pousser DANS
+    // le bassin. On part du bord de l'objet, pas de son centre.
     for (let v = 0; v < 3; v += 1) {
       const modele = hasard() < 0.55 ? herbe : fougere;
       if (!modele) continue;
       const angle = hasard() * Math.PI * 2;
-      const distance = 1.15 + hasard() * 1.5;
+      const distance = 2.5 + hasard() * 1.6;
       const plante = normaliser(modele.clone(true), 0.55 + hasard() * 0.95);
       plante.position.x = objet.position.x + Math.cos(angle) * distance;
       plante.position.z = objet.position.z + Math.sin(angle) * distance;
@@ -919,22 +922,58 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   // jardin continue en dehors de ce qu'on en voit.
   const habitants = [];
 
-  function poserPetit(modele, hauteur, t, style, combien, portee) {
-    if (!modele) return;
+  // `source` est soit une scene simple, soit un gltf complet. Dans le second
+  // cas la bete porte ses propres animations et on s'en sert : un lapin qui a
+  // un clip « Walk » n'a pas besoin qu'on lui invente des bonds.
+  function poserPetit(source, hauteur, t, style, combien, portee) {
+    if (!source) return;
+    const gltf = source.scene ? source : null;
+    const modele = gltf ? gltf.scene : source;
     for (let i = 0; i < combien; i += 1) {
       const point = courbe.getPointAt(Math.min(0.97, Math.max(0.02, t + (hasard() - 0.5) * 0.55)));
-      const o = normaliser(modele.clone(true), hauteur * (0.8 + hasard() * 0.45));
+      // Un modele squelette ne se clone pas comme un maillage : sans
+      // SkeletonUtils, tous les exemplaires partagent le meme squelette et
+      // bougent donc exactement ensemble.
+      const brut = gltf ? clonerSquelette(modele) : modele.clone(true);
+      const corps = normaliser(brut, hauteur * (0.8 + hasard() * 0.45));
       const ancre = new THREE.Vector3(
         point.x + (hasard() - 0.5) * portee,
         0,
         point.z + (hasard() - 0.5) * portee,
       );
-      o.position.copy(ancre);
-      o.traverse((n) => { if (n.isMesh) { n.castShadow = true; n.frustumCulled = false; } });
-      scene.add(o);
+
+      // DEUX OBJETS, PAS UN.
+      //
+      // Le pivot porte la position et le CAP ; le corps porte le tangage et le
+      // roulis. Tout mettre sur le meme objet donnait des lapins couches sur le
+      // flanc : les angles d'Euler s'appliquent dans le repere global, donc des
+      // qu'une bete tournait vers l'est, son tangage la basculait sur le cote.
+      const pivot = new THREE.Group();
+      pivot.position.copy(ancre);
+      pivot.add(corps);
+      corps.traverse((n) => { if (n.isMesh) { n.castShadow = true; n.frustumCulled = false; } });
+      scene.add(pivot);
+
+      let mixeur = null;
+      const actions = {};
+      if (gltf && gltf.animations && gltf.animations.length) {
+        mixeur = new THREE.AnimationMixer(corps);
+        for (const clip of gltf.animations) {
+          const nom = clip.name.split('|').pop();
+          if (!actions[nom]) actions[nom] = mixeur.clipAction(clip);
+        }
+        const depart = actions.Idle || Object.values(actions)[0];
+        depart.play();
+        depart.time = hasard() * (depart.getClip().duration || 1);
+      }
 
       habitants.push({
-        objet: o,
+        objet: pivot,
+        corps,
+        mixeur,
+        actions,
+        actionCourante: 'Idle',
+        largeur: corps.scale.x,
         ancre,
         style,
         portee,
@@ -963,42 +1002,74 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
           0,
           h.ancre.z + (hasard() - 0.5) * h.portee,
         );
-        h.attente = h.style === 'vol' ? 0.2 + hasard() : 1.5 + hasard() * 6;
+        h.attente = h.style === 'volette' ? hasard() * 0.4
+          : h.style === 'vol' ? 0.2 + hasard()
+            : 1.5 + hasard() * 6;
       }
     } else {
       const cap = Math.atan2(dx, dz);
       // Il tourne avant d'avancer : pivoter d'un bloc fait patiner un jouet.
       let ecart = ((cap - o.rotation.y + Math.PI) % (Math.PI * 2)) - Math.PI;
-      o.rotation.y += ecart * Math.min(1, dt * 4);
-      const pas = Math.min(reste, h.vitesse * dt);
+      o.rotation.y += ecart * Math.min(1, dt * (h.style === 'volette' ? 9 : 4));
+      const irregulier = h.style === 'volette'
+        ? 0.45 + Math.abs(Math.sin(t * 5 + h.phase)) * 1.5
+        : 1;
+      const pas = Math.min(reste, h.vitesse * irregulier * dt);
       o.position.x += Math.sin(o.rotation.y) * pas;
       o.position.z += Math.cos(o.rotation.y) * pas;
+    }
+
+    const bouge = reste > 0.35;
+
+    // Une bete qui porte ses propres clips les utilise : on bascule entre
+    // marcher et attendre, avec un fondu court. Rien de procedural ici.
+    if (h.mixeur) {
+      h.mixeur.update(dt);
+      const voulu = bouge ? (h.actions.Walk ? 'Walk' : 'Run') : 'Idle';
+      if (voulu !== h.actionCourante && h.actions[voulu]) {
+        const suivante = h.actions[voulu];
+        suivante.reset().play();
+        const avant = h.actions[h.actionCourante];
+        if (avant && avant !== suivante) avant.crossFadeTo(suivante, 0.3, false);
+        h.actionCourante = voulu;
+      }
+      return;
     }
 
     if (h.style === 'bond') {
       // Le lapin ne marche pas : il pousse, plane, retombe. La valeur absolue
       // d'un sinus donne exactement cette courbe-la.
       const saut = Math.abs(Math.sin(t * 4.5 + h.phase));
-      o.position.y = reste > 0.35 ? saut * 0.28 : 0;
-      o.rotation.x = reste > 0.35 ? -saut * 0.22 : 0;
+      o.position.y = bouge ? saut * 0.26 : 0;
+      h.corps.rotation.x = bouge ? -saut * 0.2 : 0;
     } else if (h.style === 'trottine') {
-      o.position.y = reste > 0.35 ? Math.abs(Math.sin(t * 9 + h.phase)) * 0.045 : 0;
+      o.position.y = bouge ? Math.abs(Math.sin(t * 9 + h.phase)) * 0.04 : 0;
     } else if (h.style === 'vol') {
       o.position.y = h.hauteurVol + Math.sin(t * 1.7 + h.phase) * 0.45;
-      o.rotation.z = Math.sin(t * 2.3 + h.phase) * 0.25;
+      h.corps.rotation.z = Math.sin(t * 2.3 + h.phase) * 0.22;
     } else if (h.style === 'volette') {
-      // Le papillon ne va jamais droit : il monte, decroche, repart.
-      o.position.y = h.hauteurVol + Math.sin(t * 3.1 + h.phase) * 0.3
-        + Math.sin(t * 7.3 + h.phase * 2) * 0.09;
-      o.rotation.z = Math.sin(t * 6 + h.phase) * 0.5;
+      // LE BATTEMENT, SANS SQUELETTE.
+      //
+      // Le modele est un seul maillage : ses ailes ne sont pas des objets
+      // separes, on ne peut pas les faire pivoter. Mais vu de dessus - et la
+      // camera est en plongee - un papillon qui bat des ailes ne fait qu'une
+      // chose : son envergure se resserre et s'ouvre. Ecraser l'axe de
+      // l'envergure donne donc exactement la bonne lecture, pour un cosinus.
+      const battement = 0.28 + 0.72 * Math.abs(Math.cos(t * 11 + h.phase));
+      h.corps.scale.x = h.largeur * battement;
+      // Et il ne plane jamais : il monte, decroche, repart de travers.
+      o.position.y = h.hauteurVol
+        + Math.sin(t * 2.9 + h.phase) * 0.26
+        + Math.sin(t * 6.7 + h.phase * 2) * 0.11
+        + Math.sin(t * 13.3 + h.phase) * 0.035;
+      h.corps.rotation.z = Math.sin(t * 3.4 + h.phase) * 0.42;
     }
   }
 
-  poserPetit(papillon, 0.19, 0.4, 'volette', 14, 4.5);
-  poserPetit(lapin, 0.42, 0.45, 'bond', 10, 4.5);
-  poserPetit(ecureuil, 0.32, 0.5, 'trottine', 7, 4);
-  poserPetit(herisson, 0.28, 0.5, 'trottine', 6, 4);
-  poserPetit(oiseau, 0.3, 0.5, 'vol', 9, 7);
+  poserPetit(papillon, 0.19, 0.4, 'volette', 5, 5);
+  poserPetit(lapin, 0.36, 0.45, 'anime', 3, 5);
+  poserPetit(ecureuil, 0.3, 0.55, 'trottine', 2, 4.5);
+  poserPetit(oiseau, 0.28, 0.6, 'vol', 3, 8);
 
   // ---------------------------------------------------------------------
   // Le parcours. C'est ce qui separe un decor d'un produit : on AVANCE sur le
