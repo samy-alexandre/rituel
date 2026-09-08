@@ -475,6 +475,7 @@ function rendre() {
 
       legende?.querySelector('.valider')?.addEventListener('click', () => appliquerStation(stationVue));
     }).catch((err) => console.error('jardin 3D :', err));
+
   }
 }
 
@@ -677,6 +678,7 @@ function vueAujourdhui() {
       </div>
 
       <p class="souffle">Glissez pour avancer sur le chemin</p>
+
 
       <div class="dessous" data-ouvert="false">
         <button class="poignee" type="button" aria-expanded="false">

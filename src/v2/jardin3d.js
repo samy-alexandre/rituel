@@ -22,6 +22,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { clone as clonerSquelette } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // LA BRUME EST CLAIRE, TOUJOURS.
@@ -103,8 +104,8 @@ const RECUL = 8.2;
 const MODELES = {
   fleur: '/models/flower-2zT-C10njmX.glb',
   fleur2: '/models/flower-dYQFgjU5Eqx.glb',
-  fougere: '/models/fern_02/fern_02.gltf',
-  herbe: '/models/grass_medium_01/grass_medium_01.gltf',
+  fougere: '/models/fern_02/fern_02.glb',
+  herbe: '/models/grass_medium_01/grass_medium_01.glb',
 };
 
 // Le ciel qui eclaire la scene. Un HDRI d'un vrai jardin : c'est lui qui donne
@@ -138,7 +139,14 @@ const PETITS = {
 };
 
 const HAUT = new THREE.Vector3(0, 1, 0);
+// Les modeles sont compresses en Draco : leur geometrie n'est plus lisible
+// telle quelle, il faut un decodeur. Il pese 700 Ko en WebAssembly, arrive une
+// seule fois, et fait gagner bien plus que son poids sur les modeles.
+const decodeurDraco = new DRACOLoader();
+decodeurDraco.setDecoderPath('/draco/');
+
 const chargeur = new GLTFLoader();
+chargeur.setDRACOLoader(decodeurDraco);
 const cache = new Map();
 
 // Les animaux gardent leur gltf entier : c'est lui qui porte les animations,
@@ -506,7 +514,7 @@ export async function monterJardin3d(
   // jugeait trop couteuses ; c'etait vrai avec quarante lanternes, ca ne l'est
   // plus avec une carte unique qui suit la station regardee.
   rendu.shadowMap.enabled = true;
-  rendu.shadowMap.type = THREE.PCFSoftShadowMap;
+  rendu.shadowMap.type = THREE.PCFShadowMap;
   // Le ton mapping fait la moitie du rendu : sans lui les hautes lumieres
   // brulent et la scene a l'air d'une capture de moteur de jeu des annees 2000.
   rendu.toneMapping = THREE.ACESFilmicToneMapping;
@@ -818,11 +826,11 @@ export async function monterJardin3d(
   };
 
   // Beaucoup plus qu'avant, pour deux appels de dessin par espece.
-  semerInstancie(herbe, 420, 0.9, auBordDuChemin(1.8, 10));
-  semerInstancie(fougere, 150, 1.4, auBordDuChemin(2.2, 8.5));
+  semerInstancie(herbe, 230, 0.9, auBordDuChemin(1.8, 9));
+  semerInstancie(fougere, 85, 1.4, auBordDuChemin(2.2, 8));
   // Non patinees, volontairement : ce sont les seuls accents vifs.
-  semerInstancie(fleur, 90, 0.42, auBordDuChemin(1.6, 6.5), 'entier');
-  semerInstancie(fleur2, 70, 0.38, auBordDuChemin(1.7, 7), 'entier');
+  semerInstancie(fleur, 55, 0.42, auBordDuChemin(1.6, 6.5), 'entier');
+  semerInstancie(fleur2, 40, 0.38, auBordDuChemin(1.7, 7), 'entier');
 
   // LE LOINTAIN, DEVANT LE BOUT DU CHEMIN.
   //
@@ -840,8 +848,8 @@ export async function monterJardin3d(
       tour: hasard() * Math.PI * 2,
       taille: hauteurMin,
     });
-    semerInstancie(fougere, 70, 2.2, auLoinPlace(0.6 + hasard() * 0.9));
-    semerInstancie(herbe, 110, 1.5, auLoinPlace(0.6 + hasard() * 0.9));
+    semerInstancie(fougere, 40, 2.2, auLoinPlace(0.6 + hasard() * 0.9));
+    semerInstancie(herbe, 60, 1.5, auLoinPlace(0.6 + hasard() * 0.9));
 
   }
 
@@ -1395,6 +1403,12 @@ export async function monterJardin3d(
 
   function image(maintenant) {
     const t = (maintenant - t0) / 1000;
+    // Le pas de temps se calcule ICI, avant tout ce qui s'en sert. Declare plus
+    // bas, il etait dans sa zone morte temporelle au moment ou l'animation de
+    // validation le lisait : cliquer sur une station levait donc une exception
+    // qui arretait net la boucle de rendu - l'ecran se figeait.
+    const dt = Math.min(0.05, t - tPrecedent);
+    tPrecedent = t;
 
     // La camera SUIT le parcours : elle se pose un peu en arriere de la
     // position visee, assez pour que la station qu'on atteint reste devant
@@ -1522,8 +1536,6 @@ export async function monterJardin3d(
     }
 
     // Les betes vivent leur vie.
-    const dt = Math.min(0.05, t - tPrecedent);
-    tPrecedent = t;
     for (const b of betes) b.vivre(dt);
 
     for (const h of habitants) vivreHabitant(h, dt, t);
@@ -1540,22 +1552,6 @@ export async function monterJardin3d(
     stationCourante = 0;
     poserHalo(0);
     surStation(0);
-  }
-
-  // Mesure temporaire du cout de la scene.
-  {
-    let images = 0;
-    const debutMesure = performance.now();
-    const compter = () => { images += 1; requestAnimationFrame(compter); };
-    requestAnimationFrame(compter);
-    setTimeout(() => {
-      const i = rendu.info;
-      window.__rendu = rendu; window.__scene = scene;
-      console.log('[perf] triangles', i.render.triangles, '| calls', i.render.calls,
-        '| geo', i.memory.geometries, '| tex', i.memory.textures,
-        '| objets', scene.children.length, '| dpr', rendu.getPixelRatio(),
-        '| fps', Math.round(images / ((performance.now() - debutMesure) / 1000)));
-    }, 9000);
   }
 
   dimensionner();
