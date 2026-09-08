@@ -302,8 +302,19 @@ function matierePBR(base, repetition, teinte, rugosite = 1) {
 // randonnee » - et c'est juste : un jardin ou l'on marche est vert, un desert
 // de sable ne raconte rien. L'herbe donne aussi au vert des plantes une raison
 // d'etre la, alors qu'il flottait sur du minéral.
-function matiereSol(A) {
-  return matierePBR('herbe', 58, new THREE.Color(A.sol).lerp(new THREE.Color(A.brume), 0.34));
+function matiereSol(A, allege = false) {
+  const m = matierePBR('herbe', 58, new THREE.Color(A.sol).lerp(new THREE.Color(A.brume), 0.34));
+  if (allege) {
+    // Le sol occupe la totalite de l'ecran : chaque carte qu'il porte se paie
+    // a CHAQUE pixel. Sur telephone on ne garde que la couleur - le relief de
+    // l'herbe ne se lit de toute facon pas a cette distance, et les deux
+    // cartes retirees sont deux lectures de texture par pixel en moins.
+    m.normalMap = null;
+    m.roughnessMap = null;
+    m.roughness = 0.95;
+    m.needsUpdate = true;
+  }
+  return m;
 }
 
 function matiereEau(A) {
@@ -489,7 +500,7 @@ export async function monterJardin3d(
   // ralentir au bout d'une minute, quel que soit son processeur - c'est le
   // ralentissement thermique, et c'est souvent lui qu'on prend pour un bug.
   const petitEcran = Math.min(window.innerWidth, window.innerHeight) < 720;
-  const densite = petitEcran ? 0.5 : 1;
+  const densite = petitEcran ? 0.36 : 1;
   // Trente images par seconde suffisent tres largement a une camera qui derive
   // lentement et a des betes qui broutent. C'est deux fois moins de travail
   // pour le processeur graphique, et une image que personne ne distingue.
@@ -520,17 +531,22 @@ export async function monterJardin3d(
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 300);
 
   const rendu = new THREE.WebGLRenderer({ canvas, antialias: true });
-  // Un ecran de telephone a souvent un ratio de 3 : rendre a 3x quadruple
-  // (voire multiplie par neuf) le nombre de pixels pour un gain que personne
-  // ne voit sur une scene aussi douce. On plafonne a 1,6.
-  rendu.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+  // LE PIXEL RATIO EST LE PREMIER LEVIER, ET DE LOIN.
+  //
+  // Mesure sur le telephone de Sam : 20 images par seconde pour 700 000
+  // triangles seulement. A ce rapport-la, ce n'est pas la geometrie qui coince
+  // mais le REMPLISSAGE - le nombre de pixels multiplie par le cout du nuanceur
+  // a chaque pixel. Or rendre a 1,6 fois la resolution, c'est 2,6 fois plus de
+  // pixels a calculer, pour une difference que personne ne voit a bout de bras
+  // sur une scene aussi douce.
+  rendu.setPixelRatio(petitEcran ? 1 : Math.min(window.devicePixelRatio || 1, 1.6));
   // LES OMBRES. Il n'y en avait aucune, et c'est ce qui faisait le plus de mal :
   // sans ombre portee, rien n'est POSE. Les objets flottent au-dessus du sol,
   // la lumiere n'a pas de direction lisible, et l'oeil classe l'image en
   // « rendu 3D » plutot qu'en « photographie ». Le commentaire d'origine les
   // jugeait trop couteuses ; c'etait vrai avec quarante lanternes, ca ne l'est
   // plus avec une carte unique qui suit la station regardee.
-  rendu.shadowMap.enabled = true;
+  rendu.shadowMap.enabled = !petitEcran;
   rendu.shadowMap.type = THREE.PCFShadowMap;
   // Le ton mapping fait la moitie du rendu : sans lui les hautes lumieres
   // brulent et la scene a l'air d'une capture de moteur de jeu des annees 2000.
@@ -561,7 +577,7 @@ export async function monterJardin3d(
     pmrem.dispose();
   }, undefined, () => pmrem.dispose());
 
-  const sol = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), matiereSol(A));
+  const sol = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), matiereSol(A, petitEcran));
   sol.rotation.x = -Math.PI / 2;
   sol.receiveShadow = true;
   scene.add(sol);
@@ -576,7 +592,7 @@ export async function monterJardin3d(
   // L'appoint seulement : l'essentiel de l'indirect vient de `scene.environment`.
   scene.add(new THREE.HemisphereLight(A.ciel, A.remplissage, soir ? 0.55 : 0.8));
   const cle = new THREE.DirectionalLight(A.cle, A.intensiteCle);
-  cle.castShadow = true;
+  cle.castShadow = !petitEcran;
   cle.shadow.mapSize.set(petitEcran ? 512 : 1024, petitEcran ? 512 : 1024);
   cle.shadow.camera.near = 1;
   cle.shadow.camera.far = 62;
