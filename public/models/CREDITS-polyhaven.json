@@ -1,0 +1,51 @@
+{
+  "source": "https://polyhaven.com",
+  "licence": "CC0 (domaine public, usage commercial libre)",
+  "verifie_le": "2026-09-08",
+  "assets": [
+    {
+      "slug": "chinese_garden",
+      "type": "hdri",
+      "fichier": "public/hdri/jardin_1k.hdr"
+    },
+    {
+      "slug": "aerial_sand",
+      "type": "texture",
+      "fichiers": [
+        "sable_diff.jpg",
+        "sable_nor.jpg",
+        "sable_arm.jpg"
+      ]
+    },
+    {
+      "slug": "fern_02",
+      "type": "model"
+    },
+    {
+      "slug": "grass_medium_01",
+      "type": "model"
+    },
+    {
+      "slug": "boulder_01",
+      "type": "model"
+    },
+    {
+      "slug": "Animated Animal Pack — Deer",
+      "source": "poly.pizza / Quaternius",
+      "licence": "CC0",
+      "fichier": "public/models/animaux/biche.glb"
+    },
+    {
+      "slug": "Animated Animal Pack — Fox",
+      "source": "poly.pizza / Quaternius",
+      "licence": "CC0",
+      "fichier": "public/models/animaux/renard.glb"
+    },
+    {
+      "slug": "Animated Animal Pack — Stag",
+      "source": "poly.pizza / Quaternius",
+      "licence": "CC0",
+      "fichier": "public/models/animaux/cerf.glb"
+    }
+  ]
+}

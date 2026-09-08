@@ -699,98 +699,13 @@ p {
   line-height: 1.5;
 }
 
-/* ---------- le jardin en volume ---------- */
 
-.jardin3d {
-  position: relative;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: var(--ombre);
-  background: var(--creux);
-}
 
-/* La vue borne la scene : sans elle, la carte de station se positionnait par
-   rapport a TOUT le bloc (scene + liste) et tombait donc derriere la liste,
-   invisible. */
-.jardin3d .vue3d {
-  position: relative;
-  line-height: 0;
-}
 
-.jardin3d .scene {
-  display: block;
-  width: 100%;
-  /* Portrait, mais borne a la hauteur de l'ecran : en 3/4 pur la scene
-     depassait le viewport et la carte de station tombait hors champ - on ne
-     voyait donc jamais l'information pour laquelle on avance sur le chemin. */
-  aspect-ratio: 4 / 5;
-  max-height: 54vh;
-  animation: paraitre var(--ample) var(--courbe) forwards;
-}
 
-/* Un voile en bas de la scene, pour que les etapes s'y posent sans coupure
-   nette entre le volume et le texte. */
-.jardin3d .voile-scene {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 130px;
-  background: linear-gradient(to bottom, transparent, var(--surface) 88%);
-  pointer-events: none;
-}
 
-.jardin3d .etapes3d {
-  position: relative;
-  list-style: none;
-  margin: 0;
-  padding: 0 0 4px;
-  background: var(--surface);
-  display: flex;
-  flex-direction: column;
-}
 
-.jardin3d .etapes3d li {
-  display: grid;
-  grid-template-columns: 30px 1fr auto;
-  gap: 14px;
-  align-items: baseline;
-  padding: 15px 20px;
-  border-top: 1px solid var(--trait);
-}
 
-.jardin3d .etapes3d li:first-child {
-  border-top: none;
-}
-
-.jardin3d .etapes3d li[data-station] {
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.jardin3d .etapes3d li.ici {
-  background: var(--accent-clair);
-}
-
-.jardin3d .etapes3d li.ici .nom {
-  font-weight: 500;
-}
-
-/* L'indice de geste : il disparait des qu'on a compris, et ne revient plus. */
-.jardin3d .indice {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 26px;
-  line-height: 1.4;
-  text-align: center;
-  font-size: 12.5px;
-  letter-spacing: 0.06em;
-  color: rgb(255 255 255 / 0.72);
-  text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
-  pointer-events: none;
-  animation: respirer 2.6s ease-in-out infinite;
-}
 
 @keyframes respirer {
   0%, 100% { opacity: 0.45; transform: translateY(0); }
@@ -799,103 +714,20 @@ p {
 
 /* La carte de la station atteinte : posee sur la scene, pas au-dessus du
    texte, pour qu'on garde le chemin sous les yeux. */
-/* `display: flex` ci-dessous l'emporte sur l'attribut hidden : sans cette
-   regle la carte reste affichee et vide tant qu'aucune station n'est atteinte. */
-.jardin3d .carte-station[hidden] {
-  display: none;
-}
 
-.jardin3d .carte-station {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 16px;
-  line-height: 1.4;
-  /* Sans cela, glisser sur la carte pour avancer sur le chemin surligne le
-     texte au lieu de faire defiler la scene - le geste principal de l'ecran
-     tombe alors sur un menu de selection. */
-  user-select: none;
-  -webkit-user-select: none;
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
-  backdrop-filter: blur(14px);
-  border-radius: 16px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  box-shadow: 0 8px 26px -8px rgb(0 0 0 / 0.5);
-  animation: monter var(--normal) var(--rebond);
-}
 
 @keyframes monter {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.jardin3d .carte-station .rang {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--pale);
-}
 
-.jardin3d .carte-station .nom {
-  font-family: var(--serif);
-  font-size: 23px;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-}
 
-/* Le bouton de validation, dans la carte : le geste se fait DEVANT la station
-   qu'on vient d'appliquer, pas en bas de page loin du chemin. */
-.jardin3d .carte-station .valider {
-  margin-top: 12px;
-  border: none;
-  background: var(--accent);
-  color: var(--fond);
-  border-radius: 999px;
-  padding: 12px 18px;
-  font-size: 15px;
-  font-weight: 500;
-  transition:
-    transform var(--vite) var(--courbe),
-    background var(--normal) var(--courbe),
-    opacity var(--normal) var(--courbe);
-}
 
-.jardin3d .carte-station .valider:active:not(:disabled) {
-  transform: scale(0.96);
-}
-
-.jardin3d .carte-station .valider:disabled {
-  background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  opacity: 0.75;
-}
-
-/* Une etape faite s'efface doucement dans la liste : elle a rempli son role. */
-.jardin3d .etapes3d li.faite .nom {
-  color: var(--pale);
-  text-decoration: line-through;
-  text-decoration-color: var(--trait-fort);
-}
-
-.jardin3d .etapes3d li.faite .rang {
-  color: var(--accent);
-  opacity: 0.6;
-}
 
 /* L'arrivee : le jardin s'illumine quelques secondes. */
 .app.illumine {
   --feuille: rgb(79 196 138 / 0.18);
-}
-
-.app.illumine .jardin3d {
-  box-shadow:
-    var(--ombre),
-    0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent),
-    0 0 60px -10px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 .arrivee {
@@ -980,35 +812,6 @@ p {
 
 @keyframes partir {
   to { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-}
-
-.jardin3d .carte-station .actif:not(:empty) {
-  font-size: 10.5px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-top: 5px;
-}
-
-.jardin3d .etapes3d .rang {
-  font-family: var(--serif);
-  font-size: 19px;
-  color: var(--accent);
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.jardin3d .etapes3d .nom {
-  font-size: 16px;
-  line-height: 1.3;
-}
-
-.jardin3d .etapes3d .actif {
-  font-size: 10px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--accent);
-  white-space: nowrap;
 }
 
 /* ---------- le jardin : la routine devient un chemin ---------- */
@@ -1460,17 +1263,7 @@ p {
   }
 }
 
-/* Les etapes de la routine arrivent l'une apres l'autre : la cascade dit
-   qu'elles ont un ORDRE, ce qui est exactement l'information du produit. */
-.jardin3d .etapes3d li {
-  animation: entrer var(--normal) var(--courbe) both;
-}
 
-.jardin3d .etapes3d li:nth-child(1) { animation-delay: 60ms; }
-.jardin3d .etapes3d li:nth-child(2) { animation-delay: 110ms; }
-.jardin3d .etapes3d li:nth-child(3) { animation-delay: 160ms; }
-.jardin3d .etapes3d li:nth-child(4) { animation-delay: 210ms; }
-.jardin3d .etapes3d li:nth-child(n + 5) { animation-delay: 260ms; }
 
 @media (prefers-reduced-motion: reduce) {
   /* Desactiver, pas ralentir : une personne sensible au mouvement ne veut pas
@@ -1481,11 +1274,432 @@ p {
     transition: none !important;
     animation: none !important;
   }
+}
 
-  .contenu > *,
-  .jardin3d .etapes3d li,
-  .station {
-    opacity: 1 !important;
-    transform: none !important;
+/* =====================================================================
+   LE PARCOURS — l'ecran EST le lieu.
+
+   Ce bloc remplace l'ancien « jardin3d » : une vignette 3D posee dans une
+   carte, suivie d'une liste 1-2-3-4-5 et d'un bouton, le tout dans un scroll.
+   Cette composition-la disait « checklist avec une animation ». Or c'est la
+   composition qu'on lit en trois secondes, avant meme de comprendre ce que
+   fait l'application.
+
+   Ici le monde occupe l'ecran entier et l'interface se reduit a deux legendes
+   posees dessus, comme les cartels d'une exposition.
+   ===================================================================== */
+
+.parcours {
+  /* La 3D est passee a une brume CLAIRE : le monde est desormais ivoire le
+     matin, gris-bleu le soir. Une interface sombre par-dessus jurerait, donc
+     le parcours porte sa propre encre - sombre sur papier - au lieu d'heriter
+     du theme sombre de l'application. */
+  --papier: #f3eee4;
+  --encre-monde: #23282c;
+  --encre-douce: #6d737a;
+  --nav-h: calc(68px + env(safe-area-inset-bottom));
+  --poignee-h: 54px;
+
+  position: fixed;
+  inset: 0;
+  max-width: 560px;
+  margin-inline: auto;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.app[data-moment='soir'] .parcours {
+  --papier: #e9eaec;
+}
+
+/* Le parcours prend tout : la page ne defile plus. */
+.contenu:has(.parcours) {
+  padding: 0;
+  gap: 0;
+}
+
+.app:has(.parcours) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.parcours .scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  animation: paraitre var(--ample) var(--courbe) forwards;
+}
+
+/* LE GRAIN. Quelques lignes, et c'est probablement le meilleur rapport
+   effet/effort de tout le fichier : une image de synthese est parfaitement
+   propre, et cette proprete est exactement ce qui la trahit. Un voile de
+   grain tres faible suffit a la faire lire comme une photographie. */
+.parcours .vignettage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(125% 90% at 50% 38%, transparent 62%, rgb(30 34 38 / 0.1) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: cover, 140px 140px;
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+}
+
+/* LE VOILE DE PAPIER.
+   La legende est en encre sombre ; posee directement sur le ciel bleu-gris du
+   soir, elle se lisait mal. Un degrade qui monte depuis le bas donne au texte
+   son fond, exactement comme la bande claire au pied d'une couverture de
+   magazine - et il ne touche pas au tiers superieur de l'image. */
+.parcours .voile-bas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 54%;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    var(--papier) 12%,
+    color-mix(in srgb, var(--papier) 78%, transparent) 38%,
+    color-mix(in srgb, var(--papier) 30%, transparent) 68%,
+    transparent 100%
+  );
+}
+
+/* ---------- le repere : tout ce qui reste du tableau de bord ---------- */
+
+.parcours .repere {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: calc(env(safe-area-inset-top) + 20px) 22px 0;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.parcours .repere-moment {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--encre-monde);
+  opacity: 0.72;
+}
+
+.parcours .repere-pas {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--encre-monde);
+  opacity: 0.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.parcours .repere-pas b {
+  font-weight: 500;
+  opacity: 1;
+}
+
+/* La bascule matin/soir perd sa pilule : ici, deux mots et un trait. */
+.parcours .bascule {
+  margin-left: auto;
+  background: none;
+  padding: 0;
+  gap: 14px;
+  align-self: center;
+}
+
+.parcours .bascule button {
+  padding: 0;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--encre-monde);
+  opacity: 0.4;
+  border-radius: 0;
+  border-bottom: 1px solid transparent;
+  box-shadow: none;
+  background: none;
+}
+
+.parcours .bascule button[aria-pressed='true'] {
+  opacity: 0.9;
+  font-weight: 400;
+  background: none;
+  box-shadow: none;
+  border-bottom-color: currentcolor;
+}
+
+/* ---------- la legende : l'information vit dans le monde ---------- */
+
+.parcours .legende {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: calc(var(--nav-h) + var(--poignee-h) + 26px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  animation: monter 620ms var(--courbe) both;
+}
+
+.parcours .legende[hidden] {
+  display: none;
+}
+
+.parcours .legende-rang {
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: var(--encre-douce);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Serif, poids normal, corps genereux : c'est la typographie qui tue
+   l'esthetique jeu, avant meme la 3D. */
+.parcours .legende-nom {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(28px, 7.6vw, 37px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: var(--encre-monde);
+  margin: 2px 0 0;
+  text-wrap: balance;
+}
+
+.parcours .legende-sous {
+  font-size: 12.5px;
+  letter-spacing: 0.05em;
+  color: var(--encre-douce);
+  margin: 7px 0 0;
+}
+
+/* Pas un bouton massif : un mot et un filet. Un bouton plein rendrait a
+   l'ecran l'allure d'un formulaire, et a l'instant celle d'une validation. */
+.parcours .legende .valider {
+  margin-top: 18px;
+  padding: 0 0 5px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--encre-monde) 40%, transparent);
+  border-radius: 0;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--encre-monde);
+  transition:
+    opacity 0.3s var(--courbe),
+    border-color 0.3s var(--courbe);
+}
+
+.parcours .legende .valider:disabled {
+  opacity: 0.4;
+  border-bottom-color: transparent;
+}
+
+.parcours .legende.faite .legende-nom {
+  opacity: 0.55;
+}
+
+.parcours .souffle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--nav-h) + var(--poignee-h) + 6px);
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--encre-douce);
+  margin: 0;
+  animation: respirer 3.4s ease-in-out infinite;
+}
+
+.parcours .souffle[hidden] {
+  display: none;
+}
+
+/* Le mot du bout du chemin. Il remplace la legende de station, donc il en
+   prend le registre : serif, pose, sans clignotement. */
+.parcours .souffle.fin {
+  font-family: var(--serif);
+  font-size: 21px;
+  letter-spacing: 0;
+  color: var(--encre-monde);
+  animation: monter 900ms var(--courbe) both;
+  bottom: calc(var(--nav-h) + var(--poignee-h) + 30px);
+}
+
+@keyframes respirer {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes monter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- le dessous : les raisons, quand on les veut ---------- */
+
+.parcours .dessous {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--nav-h);
+  max-height: 74%;
+  display: flex;
+  flex-direction: column;
+  /* FERME, LE PANNEAU N'EXISTE PAS.
+     Une bande blanche permanente en bas de l'ecran reprenait visuellement le
+     dessus sur le jardin - c'est redevenu une interface posee sur une image.
+     Il ne reste qu'une phrase; le fond n'apparait qu'a l'ouverture. */
+  background: transparent;
+  border-top: 1px solid transparent;
+  border-radius: 22px 22px 0 0;
+  transform: translateY(calc(100% - var(--poignee-h)));
+  transition:
+    transform 620ms var(--courbe),
+    background 400ms var(--courbe);
+}
+
+.parcours .dessous[data-ouvert='true'] {
+  background: color-mix(in srgb, var(--papier) 96%, transparent);
+  backdrop-filter: blur(20px);
+  border-top-color: color-mix(in srgb, var(--encre-monde) 12%, transparent);
+}
+
+.parcours .dessous[data-ouvert='true'] {
+  transform: translateY(0);
+}
+
+.parcours .poignee {
+  flex: none;
+  height: var(--poignee-h);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  padding: 0 24px;
+}
+
+/* Le trait de poignee ne se voit que quand le panneau est ouvrable a vue :
+   ferme, il ajoutait un element d'interface pour rien. */
+.parcours .poignee-trait {
+  width: 26px;
+  height: 1px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--encre-monde) 18%, transparent);
+  opacity: 0;
+  transition: opacity 400ms var(--courbe);
+}
+
+.parcours .dessous[data-ouvert='true'] .poignee-trait {
+  opacity: 1;
+}
+
+.parcours .poignee-mot {
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  color: var(--encre-douce);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.parcours .dessous-corps {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--encre-monde);
+}
+
+/* Le contenu du panneau herite du theme sombre de l'application : on le
+   ramene sur le papier clair, sans toucher aux autres ecrans. */
+.parcours .dessous-corps .note,
+.parcours .dessous-corps .pourquoi,
+.parcours .dessous-corps .legende {
+  color: var(--encre-douce);
+}
+
+.parcours .dessous-corps .quoi,
+.parcours .dessous-corps .lea-mot,
+.parcours .dessous-corps .lea-nom {
+  color: var(--encre-monde);
+}
+
+.parcours .dessous-corps .legende {
+  position: static;
+  display: block;
+  animation: none;
+}
+
+.parcours .dessous-corps .ecarte,
+.parcours .dessous-corps .lea,
+.parcours .dessous-corps .verrou {
+  background: color-mix(in srgb, #fff 42%, transparent);
+  border-color: color-mix(in srgb, var(--encre-monde) 12%, transparent);
+}
+
+.parcours .dessous-corps .bouton {
+  background: var(--encre-monde);
+  color: var(--papier);
+}
+
+.parcours .dessous-corps .bouton.secondaire {
+  background: none;
+  color: var(--encre-douce);
+  border: 1px solid color-mix(in srgb, var(--encre-monde) 20%, transparent);
+}
+
+/* La barre de navigation passe au clair avec le monde : une bande sombre
+   sous un jardin ivoire couperait l'ecran en deux. */
+/* Le parcours est en position fixed avec z-index 1, la nav n'en avait aucun :
+   le panneau ferme passait DEVANT la barre au lieu de glisser dessous. */
+.app:has(.parcours) .nav {
+  z-index: 4;
+  background: #f3eee4;
+  border-top-color: rgb(35 40 44 / 0.1);
+}
+
+.app:has(.parcours) .nav button {
+  color: rgb(35 40 44 / 0.45);
+}
+
+.app:has(.parcours) .nav button[aria-current='page'] {
+  color: rgb(35 40 44 / 0.92);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parcours .souffle,
+  .parcours .legende {
+    animation: none;
+  }
+
+  .parcours .dessous {
+    transition: none;
   }
 }

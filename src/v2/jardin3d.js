@@ -21,50 +21,122 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
 
+// LA BRUME EST CLAIRE, TOUJOURS.
+//
+// C'est la correction la plus importante de cette palette. La version
+// precedente eloignait vers du vert-noir (0x0a1c16) : le fond s'ASSOMBRISSAIT
+// avec la distance, ce qui est la signature d'un niveau de jeu - un espace
+// clos dont on devine les murs. Une photographie fait l'inverse : la
+// profondeur delave vers la lumiere. Premier plan net, jardin intermediaire
+// adouci, arriere-plan presque blanc. C'est ce qui fait qu'un lieu semble
+// continuer au-dela du cadre, et ca supprime tout bord de monde sans avoir a
+// construire quoi que ce soit au loin.
+//
+// Et il n'y a plus d'orange. Un soleil orange rasant plus des lanternes
+// ambrees, c'est le cliche exact du jeu mobile. Le soir de Rituel est une
+// heure bleue - ciel bleu-gris profond, lumiere creme - qui se photographie
+// au lieu de se rendre.
 const AMBIANCES = {
   soir: {
-    haut: 0x040c0a,
-    bas: 0x0e3a2b,
-    brume: 0x0a1c16,
-    sol: 0x10251c,
-    cle: 0xffb271,
+    haut: 0x2f3d4c,
+    bas: 0x8e96a3,
+    brume: 0x828c99,
+    sol: 0x4b544f,
+    cle: 0xf2e8db,
     intensiteCle: 2.6,
-    ciel: 0x15384c,
-    remplissage: 0x2c5a42,
-    lanterne: 0xffb055,
-    puissanceLanterne: 5.5,
-    exposition: 1.05,
-    eau: 0x3c5a63,
-    verre: 0xd8c9a8,
+    ciel: 0x93a3b5,
+    remplissage: 0x59615c,
+    lanterne: 0xf7ecd6,
+    puissanceLanterne: 2.1,
+    exposition: 1.12,
+    eau: 0x2e3b45,
+    verre: 0xe9e3d7,
+    pierre: 0xa2a6a2,
+    dalle: 0xacada6,
+    feuillage: 0x59654f,
   },
   matin: {
-    haut: 0x9dc4de,
-    bas: 0xf6e3bd,
-    brume: 0xd7cdb6,
-    sol: 0x5c6b46,
-    cle: 0xfff0d2,
-    intensiteCle: 3.1,
-    ciel: 0xbfd4e8,
-    remplissage: 0x8fa070,
-    lanterne: 0xfff0cc,
-    puissanceLanterne: 1.2,
+    haut: 0xc6d7e3,
+    bas: 0xf4ede1,
+    brume: 0xf2ebe1,
+    sol: 0x9ca487,
+    cle: 0xfff7ea,
+    intensiteCle: 3.2,
+    ciel: 0xe1eaf1,
+    remplissage: 0xbab69c,
+    lanterne: 0xfff5e4,
+    puissanceLanterne: 0.5,
     exposition: 1.15,
-    eau: 0x8fb4c4,
-    verre: 0xeae2d2,
+    eau: 0x4a6472,
+    verre: 0xefebe1,
+    pierre: 0xe3ded2,
+    dalle: 0xe1dccf,
+    feuillage: 0x7d8a66,
   },
 };
 
+// Le point de vue, en unites de monde. 17 de haut pour 15 de recul : le regard
+// tombe a 49 degres, dans la fourchette d'une prise de vue en plongee douce.
+// A cette inclinaison la ligne d'horizon sort du cadre par le haut, et c'est
+// voulu - un horizon, un ciel spectaculaire et une silhouette de decor au fond
+// sont trois signaux « niveau de jeu ». Il ne reste que le sol qui se delave
+// dans la lumiere, comme le fond d'une nature morte.
+// Preset editorial : ~57 degres de plongee a quinze unites. Le cadrage
+// precedent, plus large, montrait « le niveau entier » ; celui-ci dit
+// « regarde cet endroit ». C'est la difference entre un plan d'ensemble et une
+// photographie d'objet.
+const HAUTEUR = 12.6;
+const RECUL = 8.2;
+
 // Modeles retenus : les plus legers a licence verifiee, dans un style coherent.
+// DE VRAIS OBJETS, PAS DES SILHOUETTES.
+//
+// Les modeles Quaternius etaient du low-poly de jeu : meme detextures et
+// reteints, leur geometrie restait lisible comme « asset 3D stylise » - de
+// grosses spheres polygonales assemblees. Ceux-ci sont des scans
+// photogrammetriques de Poly Haven, en CC0 : une fougere est une fougere, un
+// rocher a la surface d'un vrai rocher. C'est le seul moyen d'arreter de
+// bricoler des primitives.
 const MODELES = {
-  dalle: '/models/rock-OQvi8PIZ40.glb',
-  buisson: '/models/bush-ooG6CkLyE8.glb',
   fleur: '/models/flower-2zT-C10njmX.glb',
-  lanterne: '/models/lantern-CtHBJ1ufeW.glb',
+  fleur2: '/models/flower-dYQFgjU5Eqx.glb',
+  fougere: '/models/fern_02/fern_02.gltf',
+  herbe: '/models/grass_medium_01/grass_medium_01.gltf',
+  rocher: '/models/boulder_01/boulder_01.gltf',
 };
 
+// Le ciel qui eclaire la scene. Un HDRI d'un vrai jardin : c'est lui qui donne
+// aux matieres leur lumiere indirecte et leurs reflets, et aucun reglage
+// manuel de lampes n'approche ce qu'une capture reelle fournit gratuitement.
+const CIEL_HDR = '/hdri/jardin_1k.hdr';
+
+// LA VIE.
+//
+// Un jardin sans un seul etre vivant est un caveau, si soigne soit-il. Ces
+// trois-la sont animes (24 a 26 clips chacun) et surtout ils sont COLORES :
+// on ne les patine pas. Dans une scene volontairement desaturee, un pelage
+// roux est le seul accent, et c'est exactement ce qu'il doit etre - le regard
+// va la, se rend compte que quelque chose bouge, et le lieu cesse d'etre une
+// image pour devenir un endroit.
+const ANIMAUX = {
+  biche: '/models/animaux/biche.glb',
+  renard: '/models/animaux/renard.glb',
+  cerf: '/models/animaux/cerf.glb',
+};
+
+const HAUT = new THREE.Vector3(0, 1, 0);
 const chargeur = new GLTFLoader();
 const cache = new Map();
+
+// Les animaux gardent leur gltf entier : c'est lui qui porte les animations,
+// alors que `charger` ne rend que la scene.
+function chargerAnime(url) {
+  return new Promise((resolve) => {
+    chargeur.load(url, resolve, undefined, () => resolve(null));
+  });
+}
 
 function charger(url) {
   if (!cache.has(url)) {
@@ -99,21 +171,99 @@ function normaliser(objet, hauteurVoulue) {
 // avec des matieres soignees. Une pierre mate, une eau lisse et un verre en
 // transmission valent mieux qu'un modele de jeu approximatif.
 
-function matierePierre(soir) {
-  return new THREE.MeshStandardMaterial({
-    color: soir ? 0xb9a88f : 0xded3c0,
-    roughness: 0.95,
-    metalness: 0,
-    flatShading: true,
+function matierePierre(A) {
+  return matierePBR('pierre', 2, A.pierre, 0.95);
+}
+
+// PATINER UN MODELE DE JEU.
+//
+// Un asset low-poly gratuit reste lisible comme un asset de jeu meme sous une
+// belle lumiere, et c'est presque toujours sa COULEUR qui le trahit : un vert
+// franc, sature, decide par son auteur pour se voir de loin dans un niveau.
+// On tire donc chaque matiere vers le vert sauge desature de la palette. Les
+// clones partagent leurs matieres avec le modele source : teinter la source
+// une fois suffit, et ne coute rien par instance.
+function patiner(modele, teinte, force) {
+  const cible = new THREE.Color(teinte);
+  modele.traverse((o) => {
+    if (!o.material) return;
+    for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+      // On GARDE la texture. La version precedente la supprimait pour sauver
+      // des assets de jeu dont le vert sature trahissait tout ; avec des scans,
+      // la retirer detruirait la seule chose qui les rend credibles. On se
+      // contente de faire glisser leur teinte vers celle de l'heure.
+      if (m.color) m.color.lerp(cible, force);
+      if ('roughness' in m) m.roughness = Math.max(m.roughness ?? 1, 0.85);
+      if ('metalness' in m) m.metalness = 0;
+    }
   });
+  return modele;
+}
+
+// LE SOL VIENT D'UNE VRAIE MESURE, PLUS D'UN BRUIT PEINT.
+//
+// Les deux versions precedentes dessinaient le sol au canvas : d'abord des
+// sillons de rateau (un motif regulier sur 70 % de l'image - le pire defaut de
+// la scene), puis du bruit multi-echelle (mieux, mais toujours un aplat gris
+// sans relief). Aucune des deux n'avait ce qu'une surface reelle a : une carte
+// de NORMALES et une carte de RUGOSITE. Ce sont elles qui font qu'un grain
+// accroche la lumiere rasante et que la surface cesse d'etre du papier peint.
+//
+// Ici : un sable aerien scanne, en CC0. Trois cartes, 1,3 Mo, et le sol se met
+// enfin a exister sous la lumiere.
+const chargeurTexture = new THREE.TextureLoader();
+const cacheTexture = new Map();
+
+// Une texture chargee une seule fois par couple fichier/repetition. Sans ce
+// cache, chaque vasque du chemin retelechargerait ses trois cartes.
+function carte(url, repetition, srgb = false) {
+  const cle = url + '@' + repetition;
+  if (!cacheTexture.has(cle)) {
+    const t = chargeurTexture.load(url);
+    t.wrapS = THREE.RepeatWrapping;
+    t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(repetition, repetition);
+    t.anisotropy = 8;
+    if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+    cacheTexture.set(cle, t);
+  }
+  return cacheTexture.get(cle);
+}
+
+// TOUTE SURFACE PORTE UNE MATIERE MESUREE.
+//
+// C'etait le defaut que Sam a pointe : le sol avait ses cartes, mais la vasque,
+// le flacon, la stele et la terrasse n'etaient que des couleurs unies. Une
+// couleur unie ne recoit pas la lumiere - elle la subit. Trois cartes (couleur,
+// normales, rugosite) et la meme geometrie se met a exister.
+//
+// La carte ARM empile occlusion (R), rugosite (V) et metal (B) : Three.js lit
+// la rugosite dans le canal vert, ce qui suffit.
+function matierePBR(base, repetition, teinte, rugosite = 1) {
+  return new THREE.MeshStandardMaterial({
+    map: carte(`/textures/${base}_diff.jpg`, repetition, true),
+    normalMap: carte(`/textures/${base}_nor.jpg`, repetition),
+    roughnessMap: carte(`/textures/${base}_arm.jpg`, repetition),
+    color: teinte,
+    roughness: rugosite,
+    metalness: 0,
+  });
+}
+
+// Le sol n'est plus du sable. « Le sol ca doit etre de l'herbe non ? comme une
+// randonnee » - et c'est juste : un jardin ou l'on marche est vert, un desert
+// de sable ne raconte rien. L'herbe donne aussi au vert des plantes une raison
+// d'etre la, alors qu'il flottait sur du minéral.
+function matiereSol(A) {
+  return matierePBR('herbe', 58, new THREE.Color(A.sol).lerp(new THREE.Color(A.brume), 0.34));
 }
 
 function matiereEau(A) {
   return new THREE.MeshStandardMaterial({
     color: A.eau,
-    roughness: 0.06,
-    metalness: 0.5,
-    envMapIntensity: 1,
+    roughness: 0.03,
+    metalness: 0.32,
+    envMapIntensity: 1.1,
   });
 }
 
@@ -136,60 +286,107 @@ function matiereVerre(A) {
 
 // Un bassin de pierre : nettoyer, demaquiller. L'eau capte la lumiere du ciel
 // et devient le point brillant de la scene.
-function bassin(A, soir) {
+function bassin(A) {
   const g = new THREE.Group();
-  const cuve = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.7, 0.34, 12), matierePierre(soir));
-  cuve.position.y = 0.17;
-  g.add(cuve);
-  const eau = new THREE.Mesh(new THREE.CircleGeometry(0.53, 20), matiereEau(A));
+
+  // UNE VASQUE EST UN PROFIL TOURNE, PAS UN CYLINDRE.
+  //
+  // La version precedente empilait un cylindre PLEIN, une paroi et un disque
+  // d'eau : le dessus du cylindre masquait l'eau, et il ne restait qu'un galet
+  // blanc bombe. Un LatheGeometry fait tourner une coupe autour de son axe -
+  // le bord exterieur monte, la levre s'affine, l'interieur redescend. Le creux
+  // existe vraiment, donc l'eau se voit, et la levre attrape la lumiere rasante
+  // sur toute sa circonference. C'est ce liser clair qui dit « taille ».
+  const coupe = [
+    [0.001, 0], [0.6, 0], [0.66, 0.27], [0.645, 0.34],
+    [0.53, 0.325], [0.46, 0.12], [0.001, 0.1],
+  ].map(([x, y]) => new THREE.Vector2(x, y));
+
+  const pierre = matierePBR('pierre', 2, A.pierre, 0.94);
+  pierre.side = THREE.DoubleSide;
+  const vasqueMesh = new THREE.Mesh(new THREE.LatheGeometry(coupe, 26), pierre);
+  g.add(vasqueMesh);
+
+  // L'eau se pose sous la levre. Presque noire et tres lisse : un miroir clair
+  // sur un jardin clair ne se voit pas, alors qu'une eau sombre renvoie le ciel
+  // et devient le seul point brillant de l'image.
+  const eau = new THREE.Mesh(new THREE.CircleGeometry(0.5, 40), matiereEau(A));
   eau.rotation.x = -Math.PI / 2;
-  eau.position.y = 0.3;
+  eau.position.y = 0.28;
   g.add(eau);
   return g;
 }
 
-// Un flacon de verre sur son socle : les serums et les soins cibles.
-function flacon(A, soir) {
+// LE FLACON — la station la plus frequente, et c'etait la plus laide.
+//
+// C'etait un empilement de primitives : une BOITE pour le socle, trois
+// cylindres pour le corps, le col et le bouchon. Vu en plongee, l'ensemble
+// lisait « cube blanc », et comme serum, soin cible et contour des yeux le
+// partagent, on le voyait trois fois par routine.
+//
+// Ici, un profil tourne, comme la vasque : epaule arrondie, col resserre,
+// verre translucide, et une dalle ronde plutot qu'un cube.
+function flacon(A) {
   const g = new THREE.Group();
-  const socle = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.3, 0.62), matierePierre(soir));
-  socle.position.y = 0.15;
-  g.add(socle);
-  const corps = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.42, 10), matiereVerre(A));
-  corps.position.y = 0.51;
+
+  const dalle = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.37, 0.07, 20), matierePierre(A));
+  dalle.position.y = 0.035;
+  g.add(dalle);
+
+  const coupe = [
+    [0.001, 0], [0.15, 0.008], [0.163, 0.05], [0.158, 0.27],
+    [0.118, 0.345], [0.055, 0.4], [0.052, 0.47], [0.001, 0.47],
+  ].map(([x, y]) => new THREE.Vector2(x, y));
+  const corps = new THREE.Mesh(new THREE.LatheGeometry(coupe, 24), matiereVerre(A));
+  corps.position.y = 0.07;
   g.add(corps);
-  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.16, 8), matiereVerre(A));
-  col.position.y = 0.79;
-  g.add(col);
-  const bouchon = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.09, 8), matierePierre(soir));
-  bouchon.position.y = 0.9;
+
+  // Le bouchon est mat : c'est le contraste mat/translucide qui fait lire le
+  // verre. Deux surfaces brillantes l'une sur l'autre ne disent rien.
+  const bouchon = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.062, 0.058, 0.085, 18),
+    matierePBR('pierre', 3, new THREE.Color(A.pierre).multiplyScalar(0.86), 0.65),
+  );
+  bouchon.position.y = 0.585;
   g.add(bouchon);
   return g;
 }
 
-// Une vasque large et basse : l'hydratation, la creme, le geste qui enveloppe.
-function vasque(A, soir) {
+// LA VASQUE — l'hydratation, le geste qui enveloppe. Meme principe que le
+// bassin : un profil tourne, une eau posee sous la levre. Elle s'en distingue
+// par sa forme, evasee et montee sur un pied, la ou le bassin est pose a terre.
+function vasque(A) {
   const g = new THREE.Group();
-  const pied = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 0.36, 10), matierePierre(soir));
-  pied.position.y = 0.18;
+
+  const pied = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.26, 0.3, 18), matierePierre(A));
+  pied.position.y = 0.15;
   g.add(pied);
-  const coupe = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.4, 0.22, 16), matierePierre(soir));
-  coupe.position.y = 0.46;
-  g.add(coupe);
-  const eau = new THREE.Mesh(new THREE.CircleGeometry(0.66, 22), matiereEau(A));
+
+  const coupe = [
+    [0.001, 0], [0.5, 0.04], [0.56, 0.19], [0.545, 0.235],
+    [0.45, 0.215], [0.36, 0.06], [0.001, 0.045],
+  ].map(([x, y]) => new THREE.Vector2(x, y));
+  const pierre = matierePBR('pierre', 2, A.pierre, 0.94);
+  pierre.side = THREE.DoubleSide;
+  const coupeMesh = new THREE.Mesh(new THREE.LatheGeometry(coupe, 24), pierre);
+  coupeMesh.position.y = 0.29;
+  g.add(coupeMesh);
+
+  const eau = new THREE.Mesh(new THREE.CircleGeometry(0.44, 32), matiereEau(A));
   eau.rotation.x = -Math.PI / 2;
-  eau.position.y = 0.55;
+  eau.position.y = 0.48;
   g.add(eau);
   return g;
 }
 
 // Une pierre dressee : le masque, l'exfoliant, le geste rare et fort.
-function stele(A, soir) {
+function stele(A) {
   const g = new THREE.Group();
-  const p = new THREE.Mesh(new THREE.BoxGeometry(0.46, 1.05, 0.2), matierePierre(soir));
+  const p = new THREE.Mesh(new THREE.BoxGeometry(0.46, 1.05, 0.2), matierePierre(A));
   p.position.y = 0.52;
   p.rotation.z = 0.035;
   g.add(p);
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.46, 0.12, 10), matierePierre(soir));
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.46, 0.12, 10), matierePierre(A));
   base.position.y = 0.06;
   g.add(base);
   return g;
@@ -209,7 +406,7 @@ const OBJET_DE = {
 };
 
 function courbeDuSentier(nombre) {
-  const points = [new THREE.Vector3(0, 0, 8)];
+  const points = [new THREE.Vector3(0, 0, 22)];
   for (let i = 0; i < nombre; i += 1) {
     points.push(new THREE.Vector3(
       (i % 2 === 0 ? -1 : 1) * (1.9 + (i % 3) * 0.35),
@@ -236,107 +433,191 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   const soir = moment === 'soir';
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(A.brume, 0.021);
+  // Reglee pour que la station visee reste nette (~15 % de brume a 24 unites)
+  // et que tout ce qui depasse 90 unites ait disparu dans la lumiere. Le bord
+  // du sol est a 150 : personne ne le verra jamais.
+  scene.fog = new THREE.FogExp2(A.brume, 0.017);
   scene.background = new THREE.Color(A.brume);
 
-  const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 300);
-  camera.position.set(0, 3.1, 11);
+  // LA CAMERA FAIT 80 % DU TRAVAIL.
+  //
+  // C'est le seul reglage qui, a lui seul, fait basculer la lecture de « jeu »
+  // a « objet de beaute ». L'ancienne camera etait a 3,1 unites du sol avec un
+  // champ de 58 degres : la hauteur d'un personnage, l'ouverture d'un moteur
+  // de jeu. On regardait le monde depuis l'interieur, comme un joueur.
+  //
+  // Ici : haute, tres inclinee (~48 degres), et surtout un champ SERRE. Un
+  // champ serre vu de loin est une perspective quasi orthographique - c'est
+  // exactement ce qui separe la photographie de produit (au teleobjectif, sans
+  // deformation) de la capture de jeu (grand angle, fuyantes violentes). On
+  // regarde le jardin, on ne l'habite pas.
+  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 300);
 
   const rendu = new THREE.WebGLRenderer({ canvas, antialias: true });
   rendu.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  // LES OMBRES. Il n'y en avait aucune, et c'est ce qui faisait le plus de mal :
+  // sans ombre portee, rien n'est POSE. Les objets flottent au-dessus du sol,
+  // la lumiere n'a pas de direction lisible, et l'oeil classe l'image en
+  // « rendu 3D » plutot qu'en « photographie ». Le commentaire d'origine les
+  // jugeait trop couteuses ; c'etait vrai avec quarante lanternes, ca ne l'est
+  // plus avec une carte unique qui suit la station regardee.
+  rendu.shadowMap.enabled = true;
+  rendu.shadowMap.type = THREE.PCFSoftShadowMap;
   // Le ton mapping fait la moitie du rendu : sans lui les hautes lumieres
   // brulent et la scene a l'air d'une capture de moteur de jeu des annees 2000.
   rendu.toneMapping = THREE.ACESFilmicToneMapping;
   rendu.toneMappingExposure = A.exposition;
   rendu.outputColorSpace = THREE.SRGBColorSpace;
 
-  // Le ciel : un degrade peint, pose loin derriere. Il donne la couleur de
-  // l'heure sans qu'aucun objet n'ait a la porter.
-  const toileCiel = document.createElement('canvas');
-  toileCiel.width = 4;
-  toileCiel.height = 256;
-  const cctx = toileCiel.getContext('2d');
-  const grad = cctx.createLinearGradient(0, 0, 0, 256);
-  grad.addColorStop(0, `#${new THREE.Color(A.haut).getHexString()}`);
-  grad.addColorStop(0.55, `#${new THREE.Color(A.bas).getHexString()}`);
-  grad.addColorStop(1, `#${new THREE.Color(A.brume).getHexString()}`);
-  cctx.fillStyle = grad;
-  cctx.fillRect(0, 0, 4, 256);
-  const texCiel = new THREE.CanvasTexture(toileCiel);
-  texCiel.colorSpace = THREE.SRGBColorSpace;
-  scene.add(new THREE.Mesh(
-    new THREE.SphereGeometry(140, 20, 14),
-    new THREE.MeshBasicMaterial({ map: texCiel, side: THREE.BackSide, fog: false, depthWrite: false }),
-  ));
+  // L'ENVIRONNEMENT VIENT D'UN VRAI CIEL.
+  //
+  // On derivait l'environnement du degrade peint : mieux que rien, mais un
+  // degrade n'a ni nuages, ni soleil, ni variation - donc les reflets restaient
+  // plats et les matieres mortes. Un HDRI capture dans un vrai jardin porte
+  // toute cette information d'un coup. C'est ce qui separe « rendu 3D » de
+  // « photographie », bien plus que n'importe quel reglage de materiau.
+  //
+  // Il pese 1,7 Mo : on ne l'attend PAS pour afficher la scene. Elle s'allume
+  // d'abord avec ses lampes, puis s'enrichit quand le ciel arrive - un premier
+  // ecran rapide vaut mieux qu'un bel ecran en retard.
+  const pmrem = new THREE.PMREMGenerator(rendu);
+  pmrem.compileEquirectangularShader();
+  let cielCharge = null;
+  new HDRLoader().load(CIEL_HDR, (hdr) => {
+    hdr.mapping = THREE.EquirectangularReflectionMapping;
+    cielCharge = pmrem.fromEquirectangular(hdr).texture;
+    scene.environment = cielCharge;
+    // Le fond, lui, reste la brume - voir plus haut.
+    hdr.dispose();
+    pmrem.dispose();
+  }, undefined, () => pmrem.dispose());
 
-  // Le sol prend une teinte proche de la brume : sinon la ligne d'horizon
-  // tranche net entre la terre et le ciel, et la profondeur s'effondre.
-  const sol = new THREE.Mesh(
-    new THREE.PlaneGeometry(300, 300),
-    new THREE.MeshStandardMaterial({
-      color: new THREE.Color(A.sol).lerp(new THREE.Color(A.brume), 0.45),
-      roughness: 1,
-      metalness: 0,
-    }),
-  );
+  const sol = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), matiereSol(A));
   sol.rotation.x = -Math.PI / 2;
+  sol.receiveShadow = true;
   scene.add(sol);
 
   // Lumiere : une cle rasante tres basse (soleil couchant ou lever), un ciel
   // qui remplit le haut, un rebond depuis le sol. Trois sources, pas une.
-  scene.add(new THREE.HemisphereLight(A.ciel, A.remplissage, soir ? 0.75 : 1.5));
+  // La part du ciel est volontairement forte : c'est la lumiere indirecte qui
+  // fait « photographie en exterieur », alors qu'une cle dominante fait
+  // « projecteur de scene ». Et la cle est montee : rasante au ras du sol elle
+  // decoupait des silhouettes noires: sous une camera en plongee, il faut
+  // qu'elle eclaire aussi le dessus des choses.
+  // L'appoint seulement : l'essentiel de l'indirect vient de `scene.environment`.
+  scene.add(new THREE.HemisphereLight(A.ciel, A.remplissage, soir ? 0.55 : 0.8));
   const cle = new THREE.DirectionalLight(A.cle, A.intensiteCle);
-  cle.position.set(soir ? -9 : 9, 3.4, -16);
+  cle.castShadow = true;
+  cle.shadow.mapSize.set(1024, 1024);
+  cle.shadow.camera.near = 1;
+  cle.shadow.camera.far = 62;
+  // Une carte d'ombre serree autour de la station regardee : 1024 pixels
+  // etales sur tout le jardin donneraient un escalier, etales sur 26 unites
+  // ils donnent un contour net que le filtrage adoucit ensuite.
+  cle.shadow.camera.left = -13;
+  cle.shadow.camera.right = 13;
+  cle.shadow.camera.top = 13;
+  cle.shadow.camera.bottom = -13;
+  cle.shadow.bias = -0.0016;
+  cle.shadow.normalBias = 0.025;
   scene.add(cle);
+  scene.add(cle.target);
+
+  // Le soleil se deplace avec le regard, sinon la carte d'ombre reste au point
+  // de depart et les ombres disparaissent des qu'on avance sur le chemin.
+  const ECART_SOLEIL = new THREE.Vector3(soir ? -15 : 15, 15, -13);
+  function poserSoleil(centre) {
+    cle.position.set(
+      centre.x + ECART_SOLEIL.x,
+      ECART_SOLEIL.y,
+      centre.z + ECART_SOLEIL.z,
+    );
+    cle.target.position.set(centre.x, 0, centre.z);
+    cle.target.updateMatrixWorld();
+  }
 
   const courbe = courbeDuSentier(etapes.length);
   const hasard = hasardDe(etapes.length * 977 + (soir ? 13 : 41));
 
-  const [buisson, fleur, lanterne] = await Promise.all([
-    charger(MODELES.buisson), charger(MODELES.fleur), charger(MODELES.lanterne),
+  const [fougere, herbe, rocher, fleur, fleur2, biche, renard, cerf] = await Promise.all([
+    charger(MODELES.fougere), charger(MODELES.herbe), charger(MODELES.rocher),
+    charger(MODELES.fleur), charger(MODELES.fleur2),
+    chargerAnime(ANIMAUX.biche), chargerAnime(ANIMAUX.renard), chargerAnime(ANIMAUX.cerf),
   ]);
 
-  // Le sentier : de vraies dalles posees une a une, plus rares et plus larges
-  // quand elles s'eloignent. Un ruban texture aurait fait moquette.
-  // Les dalles. Un rocher aplati donnait un eboulis d'eclats anguleux : ce
-  // n'est pas la meme chose qu'une pierre taillee. Une dalle de sentier est un
-  // galet a six ou sept cotes, large, basse, et separee de sa voisine par un
-  // joint de terre. Une geometrie tenue en main donne exactement cela, et pese
-  // moins qu'un modele charge.
-  {
-    const matiereDalle = new THREE.MeshStandardMaterial({
-      color: soir ? 0xbba382 : 0xded2bb,
-      roughness: 0.92,
-      metalness: 0,
-      flatShading: true,
-    });
-    const total = 30 + etapes.length * 9;
-    for (let i = 0; i < total; i += 1) {
-      const t = i / total;
-      const p = courbe.getPointAt(t);
-      const tan = courbe.getTangentAt(t);
-      const cote = new THREE.Vector3().crossVectors(tan, new THREE.Vector3(0, 1, 0)).normalize();
-      for (let k = 0; k < 2; k += 1) {
-        const rayon = 0.44 + hasard() * 0.16;
-        const geo = new THREE.CylinderGeometry(rayon, rayon * 0.94, 0.07, 6 + Math.floor(hasard() * 2));
-        // Un leger froissement des sommets : sans lui les dalles sont trop
-        // parfaites et le sentier fait pave autoroutier.
-        const pos = geo.attributes.position;
-        for (let v = 0; v < pos.count; v += 1) {
-          pos.setX(v, pos.getX(v) * (0.93 + hasard() * 0.14));
-          pos.setZ(v, pos.getZ(v) * (0.93 + hasard() * 0.14));
-        }
-        geo.computeVertexNormals();
+  // On ne patine plus qu'a peine. Le patinage servait a sauver des assets de
+  // jeu ; ceux-ci sont des scans, leurs matieres sont mesurees, et les ecraser
+  // reviendrait a jeter exactement ce pour quoi on les a pris. Juste un souffle
+  // de la teinte de l'heure, pour que tout appartienne au meme lieu.
+  if (fougere) patiner(fougere, A.feuillage, 0.62);
+  if (herbe) patiner(herbe, A.feuillage, 0.42);
+  if (rocher) patiner(rocher, A.pierre, 0.22);
 
-        const d = new THREE.Mesh(geo, matiereDalle);
-        const ecart = (k - 0.5) * (0.72 + hasard() * 0.14);
-        d.position.copy(p).addScaledVector(cote, ecart + (hasard() - 0.5) * 0.1);
-        d.position.y = 0.035;
-        d.rotation.y = hasard() * Math.PI;
-        d.rotation.x = (hasard() - 0.5) * 0.04;
-        scene.add(d);
+  // PLUS AUCUNE PIERRE POSEE.
+  //
+  // Il y avait ici un sentier de dalles taillees, semees une a une le long de
+  // la courbe. Vu en plongee, ca donnait exactement ceci : une file de
+  // polygones clairs, regulierement espaces, sur un fond uni. C'est le dessin
+  // litteral d'une checklist, et c'est le langage visuel d'un jeu de
+  // plateformes. Le raffiner n'aurait servi a rien - il fallait le supprimer.
+  //
+  // A la place, une bande minerale CONTINUE : une terrasse de pierre claire qui
+  // traverse le jardin, dont la largeur respire legerement pour qu'elle ne
+  // ressemble pas a une route. Elle ne compte rien, elle ne segmente rien. Elle
+  // ne fait que porter le regard d'une clairiere a la suivante.
+  {
+    const longueur = courbe.getLength();
+    const pas = 14 * (etapes.length + 2);
+    const sommets = new Float32Array((pas + 1) * 2 * 3);
+    const coord = new Float32Array((pas + 1) * 2 * 2);
+    const faces = [];
+    const cote = new THREE.Vector3();
+
+    for (let i = 0; i <= pas; i += 1) {
+      const t = i / pas;
+      const point = courbe.getPointAt(t);
+      cote.crossVectors(courbe.getTangentAt(t), HAUT).normalize();
+      // La largeur ondule sur deux frequences : une terrasse taillee n'est pas
+      // un ruban d'autoroute, mais elle n'est pas non plus decoupee au hasard.
+      const demi = (1.3 + Math.sin(t * 31) * 0.2 + Math.sin(t * 8.5) * 0.16) / 2;
+      const g = point.clone().addScaledVector(cote, -demi);
+      const d = point.clone().addScaledVector(cote, demi);
+      sommets.set([g.x, 0.022, g.z, d.x, 0.022, d.z], i * 6);
+      // Les coordonnees de texture se mesurent en UNITES DE MONDE, pas en
+      // fraction de ruban : sinon la meme tuile se repete cent fois sur la
+      // longueur et donne un motif d'ecailles - exactement le motif regulier
+      // qu'on vient de chasser du sol.
+      const v = (t * longueur) / 25;
+      coord.set([0, v, demi * 2 / 25, v], i * 4);
+      if (i < pas) {
+        const k = i * 2;
+        faces.push(k, k + 1, k + 2, k + 1, k + 3, k + 2);
       }
     }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(sommets, 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(coord, 2));
+    geo.setIndex(faces);
+    geo.computeVertexNormals();
+
+    // « Il ne doit pas ressembler a une route, il doit ressembler a une partie
+    // du paysage » : la terrasse n'est donc qu'un peu plus claire et un peu plus
+    // lisse que la terre autour. C'est la matiere qui la distingue, pas le
+    // contraste.
+    // Un vrai sentier de randonnee : la terre tassee et l'herbe rase d'un
+    // passage. C'est une texture a part entiere, pas le sol du dessous
+    // reteinte - la difference de MATIERE fait tout le travail, et le chemin
+    // cesse d'etre une bande peinte pour devenir un endroit ou l'on marche.
+    const matTerrasse = matierePBR(
+      'sentier',
+      13,
+      new THREE.Color(A.sol).lerp(new THREE.Color(A.brume), 0.3).lerp(new THREE.Color(A.dalle), 0.4),
+      0.95,
+    );
+    const terrasse = new THREE.Mesh(geo, matTerrasse);
+    terrasse.receiveShadow = true;
+    scene.add(terrasse);
   }
 
   // La vegetation : clairsemee, et toujours EN DEHORS du sentier. Le luxe est
@@ -352,19 +633,67 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
       const o = normaliser(modele.clone(true), hauteur * (0.75 + hasard() * 0.6));
       o.position.copy(p).addScaledVector(cote, sens * (ecartMin + hasard() * (ecartMax - ecartMin)));
       o.rotation.y = hasard() * Math.PI * 2;
+      o.traverse((n) => { if (n.isMesh) n.castShadow = true; });
       scene.add(o);
     }
   };
 
-  semer(buisson, 16 + etapes.length * 3, 0.9, 2.2, 7);
-  semer(fleur, 10 + etapes.length * 2, 0.42, 1.9, 5);
+  semer(herbe, 16 + etapes.length * 3, 0.95, 2.2, 9);
+  semer(fougere, 7 + etapes.length, 1.45, 2.4, 7);
+  // Peu de rochers, et gros : « un seul bel arbre vaut mieux que quinze arbres
+  // moyens ». Ce sont eux qui donnent l'echelle du lieu.
+  semer(rocher, 3 + Math.floor(etapes.length / 2), 2.4, 4, 11);
+  // Non patinees, volontairement : ce sont les seuls accents vifs.
+  semer(fleur, 12 + etapes.length * 2, 0.45, 1.6, 5.5);
+  semer(fleur2, 10 + etapes.length * 2, 0.4, 1.7, 6);
+
+  // LE LOINTAIN, DEVANT LE BOUT DU CHEMIN.
+  //
+  // Tout etait seme le long du sentier, donc dans les dix premieres unites. Au
+  // belvedere la camera regarde DEVANT la fin de la courbe : elle y trouvait un
+  // desert. Ces silhouettes ne seront jamais vues de pres - elles n'existent
+  // que pour peupler cet horizon et donner a la brume de quoi mordre.
+  {
+    const bout = courbe.getPointAt(1);
+    const avant = courbe.getTangentAt(1);
+    const cote = new THREE.Vector3().crossVectors(avant, HAUT).normalize();
+    const auLoin = (modele, combien, hauteur) => {
+      if (!modele) return;
+      for (let i = 0; i < combien; i += 1) {
+        const devant = 8 + hasard() * 62;
+        const lateral = (hasard() - 0.5) * 78;
+        const o = normaliser(modele.clone(true), hauteur * (0.55 + hasard() * 0.95));
+        o.position.x = bout.x + avant.x * devant + cote.x * lateral;
+        o.position.z = bout.z + avant.z * devant + cote.z * lateral;
+        o.rotation.y = hasard() * Math.PI * 2;
+        scene.add(o);
+      }
+    };
+    auLoin(rocher, 16, 3.4);
+    auLoin(fougere, 26, 2.2);
+    auLoin(herbe, 30, 1.4);
+  }
 
   // Une lanterne par etape : c'est elle qui dit « il se passe quelque chose
   // ici », et c'est la seule source de couleur chaude du soir.
   // Les ancres : la position sur la courbe de chaque etape. C'est la meme
   // liste qui place les lanternes et qui sert de point d'arret au doigt -
   // sinon le parcours s'arreterait a cote des stations.
-  const ancres = etapes.map((_, i) => Math.min(0.93, (i + 0.8) / (etapes.length + 0.9)));
+  const ancres = etapes.map((_, i) => Math.min(0.9, (i + 0.8) / (etapes.length + 0.9)));
+
+  // LE BELVEDERE.
+  //
+  // Idee de Sam, et c'est la meilleure du lot : il ne se passait RIEN au bout du
+  // chemin. On validait la derniere station et on restait le nez sur le sol, en
+  // plongee, devant un jardin qui ne disait pas qu'on avait fini.
+  //
+  // Il y a donc un arret de plus que de stations. En l'atteignant, la camera se
+  // releve : la plongee a 57 degres s'ouvre vers l'horizon, le ciel entre dans
+  // le cadre pour la seule et unique fois du parcours, et le lieu se revele plus
+  // grand qu'on ne le croyait. C'est la recompense, et elle ne coute ni score,
+  // ni etoile, ni animation de jeu - juste un mouvement de tete.
+  const BELVEDERE = 0.965;
+  const arrets = [...ancres, BELVEDERE];
 
   const lampes = [];
   etapes.forEach((e, i) => {
@@ -376,21 +705,40 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
 
     // L'objet du geste, pose au bord du chemin.
     const composer = OBJET_DE[e.categorie] || vasque;
-    const objet = composer(A, soir);
-    objet.position.copy(p).addScaledVector(cote, sens * 1.7);
+    const objet = composer(A);
+    objet.scale.setScalar(1.45);
+    objet.position.copy(p).addScaledVector(cote, sens * 2.1);
+    objet.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     objet.rotation.y = -sens * 0.35 + (hasard() - 0.5) * 0.2;
     scene.add(objet);
 
-    // Une lanterne discrete DERRIERE l'objet : elle l'eclaire au lieu de le
-    // remplacer, et c'est elle qui signale la station quand la brume avale le
-    // detail.
-    if (lanterne) {
-      const l = normaliser(lanterne.clone(true), 1.15);
-      l.position.copy(p).addScaledVector(cote, sens * 2.75);
-      l.position.z -= 0.5;
-      l.rotation.y = -sens * 0.4;
-      scene.add(l);
+    // UNE STATION N'EST PAS UN OBJET POSE SUR UN DESERT.
+    //
+    // La vegetation etait semee au hasard le long du chemin, donc jamais la ou
+    // se porte le regard : le sujet se retrouvait seul au milieu du gravier.
+    // Trois plantes autour de lui, a des distances et des tailles toutes
+    // differentes, lui donnent son assise - c'est l'accompagnement d'une nature
+    // morte, pas un decor de fond.
+    for (let v = 0; v < 3; v += 1) {
+      const modele = hasard() < 0.55 ? herbe : fougere;
+      if (!modele) continue;
+      const angle = hasard() * Math.PI * 2;
+      const distance = 1.15 + hasard() * 1.5;
+      const plante = normaliser(modele.clone(true), 0.55 + hasard() * 0.95);
+      plante.position.x = objet.position.x + Math.cos(angle) * distance;
+      plante.position.z = objet.position.z + Math.sin(angle) * distance;
+      plante.rotation.y = hasard() * Math.PI * 2;
+      plante.traverse((n) => { if (n.isMesh) n.castShadow = true; });
+      scene.add(plante);
     }
+
+    // LA SOURCE EST INVISIBLE.
+    //
+    // Il y avait ici un modele de lampion, repete a chaque etape. C'etait le
+    // dernier objet ouvertement « jeu » de la scene : une borne de niveau, et
+    // en plus la seule chose qui restait orange. On garde sa lumiere et on
+    // supprime sa silhouette - une lumiere dont on ne voit pas la source
+    // eclaire l'objet du geste au lieu de rivaliser avec lui.
 
     const feu = new THREE.PointLight(A.lanterne, A.puissanceLanterne, 8.5, 2);
     feu.position.copy(p).addScaledVector(cote, sens * 2.45);
@@ -400,14 +748,18 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     // s'ALLUME et le reste. C'est la lumiere qui dit « j'ai fait ca », pas un
     // score ni une etoile - le registre haut de gamme ne survivrait pas a une
     // barre d'experience.
-    lampes.push({ feu, phase: i * 1.7, objet, validee: false, montee: 0 });
+    lampes.push({ feu, phase: i * 1.7, objet, validee: false, montee: 0, sens });
   });
 
   // Les lucioles, seulement le soir : des points additifs qui derivent.
   let lucioles = null;
   let baseLucioles = [];
   if (soir) {
-    const combien = 70;
+    // Vingt-deux, et non soixante-dix. Un nuage de points lumineux dense est
+    // un effet de jeu ; ce qu'on veut ici est la poussiere qu'on voit flotter
+    // dans un rai de lumiere sur une photographie - assez rare pour qu'on ne
+    // sache pas dire si on l'a vraiment vue.
+    const combien = 22;
     const pos = new Float32Array(combien * 3);
     for (let i = 0; i < combien; i += 1) {
       const p = courbe.getPointAt(hasard() * 0.95);
@@ -422,10 +774,10 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     lucioles = new THREE.Points(geo, new THREE.PointsMaterial({
-      color: 0xffd489,
-      size: 0.11,
+      color: 0xf6f0e4,
+      size: 0.07,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.5,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
@@ -434,21 +786,182 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   }
 
   // ---------------------------------------------------------------------
+  // LA VIE DANS LE JARDIN
+  // ---------------------------------------------------------------------
+
+  // UNE BETE QUI FAIT SA VIE.
+  //
+  // Premiere version : un seul clip choisi par expression reguliere sur
+  // « eat|graz|idle ». Elle tombait raide. La raison est idiote et vaut d'etre
+  // ecrite : **`Death` contient `eat`** (D-eat-h), et c'est le premier clip du
+  // fichier. La bete jouait sa mort en boucle.
+  //
+  // Corrige, mais surtout remplace : une seule animation en boucle, meme la
+  // bonne, se repere en trois secondes et fait automate. Ici la bete enchaine
+  // des occupations tirees au sort - brouter longtemps, relever la tete,
+  // marcher un peu - avec un fondu entre les deux. Elle ne fait rien d'utile,
+  // et c'est exactement le but : elle vit a cote, sans nous attendre.
+  const betes = [];
+
+  function poserAnimal(gltf, hauteur, t, ecart) {
+    if (!gltf || !gltf.scene) return;
+    const p = courbe.getPointAt(t);
+    const cote = new THREE.Vector3().crossVectors(courbe.getTangentAt(t), HAUT).normalize();
+    const o = normaliser(gltf.scene, hauteur);
+    o.position.x = p.x + cote.x * ecart;
+    o.position.z = p.z + cote.z * ecart;
+    o.rotation.y = hasard() * Math.PI * 2;
+    o.traverse((n) => { if (n.isMesh) { n.castShadow = true; n.frustumCulled = false; } });
+    scene.add(o);
+
+    const mixeur = new THREE.AnimationMixer(o);
+    // Chaque clip existe en double dans ces fichiers, avec et sans le prefixe
+    // de l'armature. On ne garde que le premier de chaque nom.
+    const actions = {};
+    for (const clip of gltf.animations || []) {
+      const nom = clip.name.split('|').pop();
+      if (!actions[nom]) actions[nom] = mixeur.clipAction(clip);
+    }
+
+    const repertoire = [
+      { nom: 'Eating', min: 8, max: 16 },
+      { nom: 'Idle', min: 4, max: 9 },
+      { nom: 'Idle_2', min: 3, max: 7 },
+      { nom: 'Idle_Headlow', min: 4, max: 8 },
+      { nom: 'Idle_2_HeadLow', min: 4, max: 8 },
+      { nom: 'Walk', min: 3, max: 6, avance: 0.45 },
+    ].filter((c) => actions[c.nom]);
+    if (!repertoire.length) return;
+
+    const bete = {
+      objet: o,
+      mixeur,
+      ancre: o.position.clone(),
+      courant: null,
+      action: null,
+      reste: 0,
+      changer() {
+        // Jamais deux fois la meme occupation d'affilee.
+        let suivant = this.courant;
+        for (let i = 0; i < 6 && suivant === this.courant; i += 1) {
+          suivant = repertoire[Math.floor(hasard() * repertoire.length)];
+        }
+        const action = actions[suivant.nom];
+        action.reset().play();
+        if (this.action && this.action !== action) this.action.crossFadeTo(action, 0.7, false);
+        this.action = action;
+        this.courant = suivant;
+        this.reste = suivant.min + hasard() * (suivant.max - suivant.min);
+      },
+      vivre(dt) {
+        this.mixeur.update(dt);
+        this.reste -= dt;
+        if (this.reste <= 0) this.changer();
+        if (!this.courant || !this.courant.avance) return;
+
+        const y = this.objet.rotation.y;
+        this.objet.position.x += Math.sin(y) * this.courant.avance * dt;
+        this.objet.position.z += Math.cos(y) * this.courant.avance * dt;
+
+        // Elle reste dans son coin : au-dela, elle se retourne doucement vers
+        // son point de depart. Sans cela elle finirait par traverser le jardin
+        // et sortir du monde.
+        const dx = this.ancre.x - this.objet.position.x;
+        const dz = this.ancre.z - this.objet.position.z;
+        if (Math.hypot(dx, dz) > 5.5) {
+          const vers = Math.atan2(dx, dz);
+          let ecartAngle = ((vers - y + Math.PI) % (Math.PI * 2)) - Math.PI;
+          this.objet.rotation.y += ecartAngle * Math.min(1, dt * 1.1);
+        } else {
+          this.objet.rotation.y += (hasard() - 0.5) * dt * 0.5;
+        }
+      },
+    };
+    // Chacune demarre a un moment different, sinon elles broutent en choeur.
+    bete.changer();
+    bete.reste *= hasard();
+    if (bete.action) bete.action.time = hasard() * (bete.action.getClip().duration || 1);
+    betes.push(bete);
+  }
+
+  // Assez loin pour qu'on ne les detaille pas, assez pres pour qu'on les voie.
+  poserAnimal(biche, 1.5, 0.3, 3.6);
+  poserAnimal(renard, 0.68, 0.66, -3.4);
+  poserAnimal(cerf, 1.7, 0.86, 4.6);
+
+  // LES PAPILLONS.
+  //
+  // Dessines plutot que telecharges : deux triangles par aile, et tout est dans
+  // le mouvement. Un papillon ne vole pas droit - il monte, decroche, repart.
+  // Trois sinusoides de periodes premieres entre elles suffisent a produire une
+  // trajectoire qu'on ne peut pas anticiper, et c'est ca qui fait vivant.
+  const papillons = [];
+  {
+    const teintes = [0xf7e9a0, 0xe8b98a, 0xf3f0e4, 0xd8a7c4];
+    // Deux lobes : l'aile avant, plus grande et pointue vers l'avant, et
+    // l'aile arriere, courte et ronde. C'est ce decrochement qui fait lire
+    // « papillon » plutot que « triangle ».
+    const aile = new THREE.BufferGeometry();
+    aile.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+      0, 0, 0.01, 0.062, 0.004, -0.048, 0.072, 0.002, 0.016,
+      0, 0, 0.01, 0.072, 0.002, 0.016, 0.04, 0.001, 0.056,
+    ]), 3));
+    aile.computeVertexNormals();
+
+    for (let i = 0; i < 11; i += 1) {
+      const corps = new THREE.Group();
+      const matiere = new THREE.MeshStandardMaterial({
+        color: teintes[Math.floor(hasard() * teintes.length)],
+        roughness: 0.72,
+        metalness: 0,
+        side: THREE.DoubleSide,
+        emissive: 0xffffff,
+        emissiveIntensity: 0.12,
+      });
+      const gauche = new THREE.Mesh(aile, matiere);
+      const droite = new THREE.Mesh(aile, matiere);
+      droite.scale.x = -1;
+      corps.add(gauche, droite);
+      corps.scale.setScalar(0.85 + hasard() * 0.55);
+
+      const t = 0.1 + hasard() * 0.85;
+      const p = courbe.getPointAt(t);
+      papillons.push({
+        objet: corps,
+        gauche,
+        droite,
+        base: new THREE.Vector3(p.x + (hasard() - 0.5) * 3.4, 0.8 + hasard() * 1.4, p.z + (hasard() - 0.5) * 3),
+        phase: hasard() * 9,
+        vitesse: 0.5 + hasard() * 0.5,
+        rayon: 0.8 + hasard() * 1.6,
+      });
+      scene.add(corps);
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // Le parcours. C'est ce qui separe un decor d'un produit : on AVANCE sur le
   // chemin avec le doigt, on s'arrete a chaque station, on valide, on repart.
   // ---------------------------------------------------------------------
 
-  let progres = 0; // 0 = entree du jardin, 1 = fin du sentier
+  // On DEMARRE a la premiere station, on n'y glisse pas. Partir de l'entree du
+  // jardin obligeait a regarder la camera avancer toute seule avant de pouvoir
+  // agir : une animation d'intro qu'on subit, et le premier ecran de
+  // l'application montrait un chemin vide plutot que le premier geste du soir.
   let cible = ancres.length ? ancres[0] : 0;
+  let progres = cible; // 0 = entree du jardin, 1 = fin du sentier
   let stationCourante = -1;
   let saisie = null;
 
   const DEBUT = 0.02;
 
-  function plusProche(p) {
+  // Sur les ARRETS, pas sur les ancres : le belvedere est un point d'arret a
+  // part entiere, sinon le doigt glissait dessus et revenait a la derniere
+  // station sans qu'on puisse s'y poser.
+  function plusProche(p, liste = arrets) {
     let meilleur = 0;
-    for (let i = 1; i < ancres.length; i += 1) {
-      if (Math.abs(ancres[i] - p) < Math.abs(ancres[meilleur] - p)) meilleur = i;
+    for (let i = 1; i < liste.length; i += 1) {
+      if (Math.abs(liste[i] - p) < Math.abs(liste[meilleur] - p)) meilleur = i;
     }
     return meilleur;
   }
@@ -456,7 +969,7 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   function poser() {
     // Sans saisie en cours, on glisse vers l'ancre visee : le chemin se cale
     // toujours sur une station, jamais entre deux.
-    cible = ancres.length ? ancres[plusProche(progres)] : DEBUT;
+    cible = arrets.length ? arrets[plusProche(progres)] : DEBUT;
   }
 
   const surDebut = (e) => {
@@ -496,6 +1009,10 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   }
 
   let brut = null;
+  // Le decalage de cadrage se rattrape en douceur : les stations alternent de
+  // part et d'autre du sentier, et basculer d'un coup ferait un a-coup.
+  let decal = (lampes.length ? lampes[0].sens : 1) * 1.15;
+  let tPrecedent = 0;
   const t0 = performance.now();
 
   function dimensionner() {
@@ -514,26 +1031,63 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
     // soi plutot que de defiler dans le dos.
     progres += (cible - progres) * 0.09;
     const ici = Math.max(0, Math.min(0.97, progres));
-    // Assez en arriere et assez haut pour que le premier plan ne mange pas le
-    // cadre : a hauteur d'yeux et colle au sol, les dalles remplissaient tout.
-    const derriere = Math.max(0, ici - 0.1);
-    const devant = Math.min(0.995, ici + 0.06);
-    const pc = courbe.getPointAt(derriere);
-    const pv = courbe.getPointAt(devant);
+
+    // Le recul se mesure en UNITES DE MONDE, pas en fraction de parcours :
+    // sinon le cadrage changeait avec le nombre d'etapes de la journee, et une
+    // routine de trois produits n'etait pas photographiee comme une routine de
+    // six. La camera se pose toujours a la meme distance derriere le point
+    // regarde, quelle que soit la longueur du chemin.
+    const pv = courbe.getPointAt(ici);
+    const tan = courbe.getTangentAt(ici);
+    const cote = new THREE.Vector3().crossVectors(tan, HAUT).normalize();
+
+    // ON NE CADRE PAS SUR LE CHEMIN.
+    //
+    // Viser le sentier le placait pile au milieu de l'image, ou il la coupait
+    // en deux dans la hauteur, pendant que la station - le vrai sujet - se
+    // faisait rogner par le bord. On vise desormais le MILIEU entre le sentier
+    // et l'objet du geste : le chemin tombe sur un tiers, l'objet sur l'autre.
+    // C'est la regle de composition la plus vieille du monde, et elle vaut plus
+    // ici que n'importe quel reglage de matiere.
+    // Le relevement : nul sur tout le parcours, complet au belvedere.
+    const depart = ancres.length ? ancres[ancres.length - 1] : 0.85;
+    const brut01 = (ici - depart) / Math.max(0.001, BELVEDERE - depart);
+    const o = Math.max(0, Math.min(1, brut01));
+    const ouverture = o * o * (3 - 2 * o);
+
+    const idx = plusProche(ici);
+    const sensIci = lampes.length ? lampes[Math.min(idx, lampes.length - 1)].sens : 1;
+    // Au belvedere on recentre : le cadrage decale sert a poser un objet dans
+    // le tiers de l'image, et il n'y a plus d'objet a poser.
+    decal += (sensIci * 1.15 * (1 - ouverture) - decal) * 0.055;
+    const vise = pv.clone().addScaledVector(cote, decal);
+
+    const hauteur = HAUTEUR + (2.4 - HAUTEUR) * ouverture;
+    const recul = RECUL + (6 - RECUL) * ouverture;
 
     camera.position.set(
-      pc.x + Math.sin(t * 0.13) * 0.16,
-      3.1 + Math.sin(t * 0.21) * 0.07,
-      pc.z,
+      vise.x - tan.x * recul + Math.sin(t * 0.13) * 0.1,
+      hauteur + Math.sin(t * 0.21) * 0.05,
+      vise.z - tan.z * recul,
     );
-    camera.lookAt(pv.x, 0.9, pv.z);
+    // En plongee on vise le sol - c'est ce qui incline le regard vers le bas et
+    // donne le plan de dessus adouci d'une nature morte. Au belvedere le point
+    // regarde part loin devant et remonte : l'horizon entre dans le cadre.
+    camera.lookAt(
+      vise.x + tan.x * 34 * ouverture,
+      0.45 + 2.9 * ouverture,
+      vise.z + tan.z * 34 * ouverture,
+    );
+    poserSoleil(vise);
 
-    // Prevenir l'interface quand on arrive vraiment sur une station.
-    if (ancres.length) {
+    // Prevenir l'interface quand on arrive vraiment sur un arret. L'index egal
+    // au nombre de stations est le belvedere : l'interface le recoit comme -1 et
+    // retire sa legende, parce qu'il n'y a plus de produit a appliquer.
+    if (arrets.length) {
       const proche = plusProche(ici);
-      if (proche !== stationCourante && Math.abs(ancres[proche] - ici) < 0.02) {
+      if (proche !== stationCourante && Math.abs(arrets[proche] - ici) < 0.02) {
         stationCourante = proche;
-        surStation(proche);
+        surStation(proche >= ancres.length ? -1 : proche);
       }
     }
 
@@ -545,7 +1099,10 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
       if (l.validee && l.montee < 1) l.montee = Math.min(1, l.montee + 0.011);
       const vacille = 0.86 + Math.sin(t * 2.4 + l.phase) * 0.07
         + Math.sin(t * 5.7 + l.phase * 2) * 0.05;
-      l.feu.intensity = A.puissanceLanterne * vacille * (1 + l.montee * 2.2);
+      // Une station validee s'allume, mais dans un monde clair il suffit de
+      // peu : tripler la lumiere brulait la pierre et redonnait a l'instant
+      // l'allure d'une recompense de jeu.
+      l.feu.intensity = A.puissanceLanterne * vacille * (1 + l.montee * 1.1);
       if (l.montee > 0 && l.objet) {
         // L'objet lui-meme se met a rendre la lumiere qu'il recoit.
         l.objet.traverse((o) => {
@@ -566,11 +1123,40 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
         p[i * 3 + 2] = b.v.z + Math.cos(t * b.vitesse * 0.55 + b.phase) * 0.6;
       }
       lucioles.geometry.attributes.position.needsUpdate = true;
-      lucioles.material.opacity = 0.72 + Math.sin(t * 1.6) * 0.2;
+      lucioles.material.opacity = 0.34 + Math.sin(t * 1.6) * 0.12;
+    }
+
+    // Les betes vivent leur vie.
+    const dt = Math.min(0.05, t - tPrecedent);
+    tPrecedent = t;
+    for (const b of betes) b.vivre(dt);
+
+    // Les papillons. Trois sinusoides de periodes premieres entre elles : la
+    // trajectoire ne se repete jamais a l'oeil, et c'est tout ce qu'il faut.
+    for (const p of papillons) {
+      const a = t * p.vitesse + p.phase;
+      p.objet.position.set(
+        p.base.x + Math.sin(a) * p.rayon + Math.sin(a * 2.3) * 0.28,
+        p.base.y + Math.sin(a * 1.7) * 0.32 + Math.sin(a * 3.1) * 0.11,
+        p.base.z + Math.cos(a * 0.8) * p.rayon,
+      );
+      p.objet.rotation.y = -a * 0.8;
+      const battement = 0.55 + Math.sin(t * 14 + p.phase) * 0.85;
+      p.gauche.rotation.z = battement;
+      p.droite.rotation.z = -battement;
     }
 
     rendu.render(scene, camera);
     brut = requestAnimationFrame(image);
+  }
+
+  // La premiere station est annoncee DES le montage. Attendre que la camera
+  // ait fini de converger vers elle laissait une seconde d'ecran muet, ou l'on
+  // voit un jardin sans savoir ce qu'on est cense y faire - et sur un telephone
+  // qui charge lentement, bien plus d'une seconde.
+  if (ancres.length) {
+    stationCourante = 0;
+    surStation(0);
   }
 
   dimensionner();
@@ -587,8 +1173,16 @@ export async function monterJardin3d(canvas, etapes, moment, surStation = () => 
   };
   document.addEventListener('visibilitychange', surVisibilite);
 
-  if (calme) rendu.render(scene, camera);
-  else brut = requestAnimationFrame(image);
+  if (calme) {
+    // Meme sans animation, il faut UNE passe complete : `rendu.render` seul
+    // laissait la camera a l'origine, donc une image vide. Qui demande moins de
+    // mouvement demande une image fixe, pas une image absente.
+    image(t0);
+    if (brut) cancelAnimationFrame(brut);
+    brut = null;
+  } else {
+    brut = requestAnimationFrame(image);
+  }
 
   const demonter = () => {
     if (brut) cancelAnimationFrame(brut);

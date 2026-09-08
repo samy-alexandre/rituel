@@ -378,29 +378,54 @@ function rendre() {
       date: aujourdhui(),
       profil: etat.profil,
     });
-    const carte = racine.querySelector('.carte-station');
-    const lignes = [...racine.querySelectorAll('.etapes3d li')];
+    const legende = racine.querySelector('.legende');
+    const pas = racine.querySelector('.pas-ici');
 
     // Mise a jour CIBLEE du DOM : appeler rendre() ici demonterait la scene 3D
     // et la rechargerait a chaque pas sur le chemin.
     let stationVue = -1;
+    const souffle = racine.querySelector('.souffle');
+
     const montrer = (i) => {
+      // LE BELVEDERE (i = -1). Il n'y a plus de produit a appliquer : la
+      // legende se retire entierement et le lieu reste seul dans le cadre, avec
+      // une seule ligne. C'est le seul moment du parcours ou l'interface
+      // disparait pour de bon - et c'est ce qui doit donner « j'ai fait quelque
+      // chose aujourd'hui » sans score ni etoile.
+      if (i < 0) {
+        stationVue = -1;
+        if (legende) legende.hidden = true;
+        if (pas) pas.textContent = '—';
+        if (souffle) {
+          const tout = etat.validees.size >= routine.etapes.length;
+          souffle.textContent = tout
+            ? (etat.moment === 'matin' ? 'Votre matin est complet' : 'Votre soir est complet')
+            : 'Le bout du chemin';
+          souffle.classList.add('fin');
+          souffle.hidden = false;
+        }
+        return;
+      }
+      if (souffle) souffle.classList.remove('fin');
       const e = routine.etapes[i];
-      if (!e || !carte) return;
+      if (!e || !legende) return;
       stationVue = i;
       const faite = etat.validees.has(i);
-      carte.querySelector('.rang').textContent = `Étape ${e.rang} sur ${routine.etapes.length}`;
-      carte.querySelector('.nom').textContent = e.nom;
-      carte.querySelector('.actif').textContent = e.actifs[0] || '';
-      const bouton = carte.querySelector('.valider');
-      bouton.textContent = faite ? 'Fait' : 'Appliqué';
+      legende.querySelector('.legende-rang').textContent = String(e.rang).padStart(2, '0');
+      legende.querySelector('.legende-nom').textContent = e.nom;
+      // Une legende de magazine, pas une fiche : le nom, puis une ligne fine
+      // qui dit l'actif et le moment. Rien d'autre n'a sa place ici.
+      legende.querySelector('.legende-sous').textContent = [
+        e.actifs[0],
+        etat.moment === 'matin' ? 'le matin' : 'le soir',
+      ].filter(Boolean).join(' · ');
+      const bouton = legende.querySelector('.valider');
+      bouton.textContent = faite ? 'Appliqué' : 'Appliquer';
       bouton.disabled = faite;
-      carte.hidden = false;
-      lignes.forEach((l, k) => {
-        l.classList.toggle('ici', k === i);
-        l.classList.toggle('faite', etat.validees.has(k));
-      });
-      racine.querySelector('.indice')?.setAttribute('hidden', '');
+      legende.classList.toggle('faite', faite);
+      legende.hidden = false;
+      if (pas) pas.textContent = String(i + 1).padStart(2, '0');
+      if (souffle) souffle.hidden = true;
     };
 
     // Import differe : Three.js et les modeles pesent plus que tout le reste de
@@ -414,19 +439,11 @@ function rendre() {
       // deja perimee, on la demonte au lieu de la laisser tourner.
       if (mienne !== generation || !scene.isConnected) { arret(); return; }
       arreterVie = arret;
-      // Toucher une etape de la liste emmene le parcours jusqu'a elle.
-      lignes.forEach((l) => {
-        const aller = () => arret.allerA(Number(l.dataset.station));
-        l.addEventListener('click', aller);
-        l.addEventListener('keydown', (ev) => {
-          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); aller(); }
-        });
-      });
 
       // Les stations deja validees aujourd'hui restent allumees au rechargement.
       etat.validees.forEach((i) => arret.valider(i));
 
-      carte?.querySelector('.valider')?.addEventListener('click', async () => {
+      legende?.querySelector('.valider')?.addEventListener('click', async () => {
         if (stationVue < 0 || etat.validees.has(stationVue)) return;
         const faite = stationVue;
         etat.validees.add(faite);
@@ -564,29 +581,6 @@ function vueAujourdhui() {
 
   const n = routine.etapes.length;
 
-  const jardin = n ? `
-    <div class="jardin3d">
-      <div class="vue3d">
-        <canvas class="scene"></canvas>
-        <p class="indice">Glissez vers le haut pour avancer sur le chemin</p>
-        <div class="voile-scene"></div>
-        <div class="carte-station" hidden>
-          <span class="rang"></span>
-          <span class="nom"></span>
-          <span class="actif"></span>
-          <button class="valider" type="button">Appliqué</button>
-        </div>
-      </div>
-      <ol class="etapes3d">
-        ${routine.etapes.map((e, i) => `
-          <li data-station="${i}" tabindex="0" role="button">
-            <span class="rang">${e.rang}</span>
-            <span class="nom">${ech(e.nom)}</span>
-            ${e.actifs.length ? `<span class="actif">${ech(e.actifs[0])}</span>` : ''}
-          </li>`).join('')}
-      </ol>
-    </div>` : '';
-
   // Les raisons sont le produit. Sans elles, l'application redevient une liste.
   const ecartes = routine.ecartes.length ? `
     <section>
@@ -618,26 +612,76 @@ function vueAujourdhui() {
       <button class="bouton secondaire" data-onglet="abonnement">Voir Rituel+</button>
     </div>` : '';
 
-  return `
-    <div class="entete">
-      <span class="date">${ech(dateLisible())}</span>
-      <h1>${titre}</h1>
-    </div>
-
+  const bascule = `
     <div class="bascule" role="group" aria-label="Moment de la journée">
       <button data-moment="matin" aria-pressed="${etat.moment === 'matin'}">Matin</button>
       <button data-moment="soir" aria-pressed="${etat.moment === 'soir'}">Soir</button>
-    </div>
+    </div>`;
 
-    ${jardin}
-    ${vueLea(routine)}
-    ${notes}
-    ${ecartes}
-
+  const fin = `
     <button class="bouton${fait ? ' secondaire' : ''}" id="applique" ${fait ? 'disabled' : ''}>
       ${fait ? 'Noté pour aujourd\'hui' : 'J\'ai appliqué cette routine'}
     </button>
     ${invitation}`;
+
+  // Aucune etape a parcourir : on retombe sur une page ordinaire. Un monde en
+  // plein ecran sans rien a y faire serait un decor, pas un produit.
+  if (!n) {
+    return `
+      <div class="entete">
+        <span class="date">${ech(dateLisible())}</span>
+        <h1>${titre}</h1>
+      </div>
+      ${bascule}${vueLea(routine)}${notes}${ecartes}${fin}`;
+  }
+
+  // L'ECRAN EST LE LIEU.
+  //
+  // Avant : une carte 3D de la taille d'une vignette, puis la liste 1-2-3-4-5,
+  // puis les notes, puis un bouton - un empilement qu'on faisait defiler. La
+  // composition disait « checklist avec une animation », et c'est la
+  // composition qu'on lit en trois secondes, pas la qualite du moteur qui
+  // decide la routine.
+  //
+  // Maintenant : le jardin occupe l'ecran entier, une seule station a la fois,
+  // et l'interface se reduit a deux legendes posees dessus. Tout le reste - les
+  // raisons, le mot de Lea, la fin de la routine - vit dans un panneau qu'on
+  // tire depuis le bas quand on le veut. Rien n'est perdu ; ce qui change est
+  // ce qu'on voit d'abord.
+  const motLea = motDeLea(routine);
+  return `
+    <div class="parcours">
+      <canvas class="scene"></canvas>
+      <div class="vignettage" aria-hidden="true"></div>
+      <div class="voile-bas" aria-hidden="true"></div>
+
+      <header class="repere">
+        <span class="repere-moment">${etat.moment === 'matin' ? 'Ce matin' : 'Ce soir'}</span>
+        <span class="repere-pas"><b class="pas-ici">01</b> / ${String(n).padStart(2, '0')}</span>
+        ${bascule}
+      </header>
+
+      <div class="legende" hidden>
+        <span class="legende-rang"></span>
+        <h2 class="legende-nom"></h2>
+        <p class="legende-sous"></p>
+        <button class="valider" type="button">Appliqué</button>
+      </div>
+
+      <p class="souffle">Glissez pour avancer sur le chemin</p>
+
+      <div class="dessous" data-ouvert="false">
+        <button class="poignee" type="button" aria-expanded="false">
+          <span class="poignee-trait" aria-hidden="true"></span>
+          <span class="poignee-mot">${ech(motLea || (routine.ecartes.length
+            ? `${routine.ecartes.length} produit${routine.ecartes.length > 1 ? 's' : ''} écarté${routine.ecartes.length > 1 ? 's' : ''} ${etat.moment === 'matin' ? 'ce matin' : 'ce soir'}`
+            : 'Votre routine, en détail'))}</span>
+        </button>
+        <div class="dessous-corps">
+          ${vueLea(routine)}${notes}${ecartes}${fin}
+        </div>
+      </div>
+    </div>`;
 }
 
 // Lea dit UNE chose, celle qui apprend quelque chose. Les ecarts triviaux
@@ -873,6 +917,17 @@ function surClic(selecteur, fn) {
 }
 
 function brancher() {
+  // Le panneau du dessous s'ouvre SANS repasser par rendre() : un rendu
+  // complet demonterait la scene 3D et la rechargerait, ce qui reviendrait a
+  // faire clignoter le jardin chaque fois qu'on veut lire pourquoi un produit
+  // est ecarte.
+  const dessous = racine.querySelector('.dessous');
+  dessous?.querySelector('.poignee')?.addEventListener('click', () => {
+    const ouvert = dessous.dataset.ouvert !== 'true';
+    dessous.dataset.ouvert = String(ouvert);
+    dessous.querySelector('.poignee')?.setAttribute('aria-expanded', String(ouvert));
+  });
+
   const form = racine.querySelector('#form-auth');
   if (form) {
     form.addEventListener('submit', (e) => { e.preventDefault(); authentifier('connexion'); });
